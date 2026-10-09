@@ -1,0 +1,37 @@
+{
+  "id": "silvio",
+  "make": "Nissun",
+  "model": "Silvio",
+  "year": 1991,
+  "blurb": "Turbo four, rear-wheel drive, 31 years old. Every one of them has been drifted into something.",
+  "drivetrain": "RWD",
+  "mass": 1240,
+  "wheelbase": 2.475,
+  "cg_front": 1.18,
+  "cg_height": 0.48,
+  "track": 1.47,
+  "length": 4.52,
+  "width": 1.69,
+  "cda": 0.66,
+  "steer_lock": 0.6,
+  "engine": {
+    "name": "2.0 L turbo inline-4",
+    "idle_rpm": 850,
+    "redline_rpm": 7000,
+    "limiter_rpm": 7300,
+    "inertia": 0.21,
+    "clutch_torque": 420,
+    "torque_curve": [[800, 120], [1500, 150], [2500, 185], [3500, 245], [4500, 262], [5500, 255], [6500, 228], [7300, 200], [8000, 170]],
+    "turbo": { "spool_rpm": 3200, "lag": 0.55, "no_boost": 0.66 }
+  },
+  "gearbox": {
+    "gears": [3.32, 1.90, 1.31, 1.00, 0.86],
+    "reverse": 3.38,
+    "final": 4.08,
+    "efficiency": 0.86,
+    "shift_time": 0.22
+  },
+  "brakes": { "max_torque": 4600, "bias": 0.64 },
+  "tires": { "radius": 0.31, "tread_mm": 8.0, "driven_inertia": 2.4, "size": "205/55R16" },
+  "paint": "#c8342c"
+}
