@@ -42,6 +42,12 @@ func _init() -> void:
 	_books()
 	_days()
 	_fixes()
+	_regulars()
+	_memory()
+	_courier()
+	_audit()
+	_sounds()
+	_layout()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
 
@@ -309,4 +315,289 @@ func _fixes() -> void:
 	StoryState.avatar = keep
 	check("fix 3: Frank ran the shop; the counter was somebody else's", " ".join(CounterScene.BRIEFS[0]).contains("THE COUNTER WAS SOMEBODY ELSE'S"))
 	check("there's no Vinny on the napkins", not FileAccess.get_file_as_string("res://counter/counter_scene.gd").contains("-V\""))
+	done(sc)
+
+# ------------------------------------------------------------------ Desk 2.1: the regulars
+
+## Whoever's booked into the day's line with this id ({} if nobody).
+func booked(sc: CounterScene, id: String) -> Dictionary:
+	for x in sc.arrivals:
+		if String(x.c.get("regular", "")) == id: return x.c
+	return {}
+
+## Put somebody at the window and stamp them.
+func serve(sc: CounterScene, c: Dictionary, s: String) -> void:
+	sc.waiting.push_front(c)
+	sc.next_customer()
+	stamp_now(sc, s)
+	sc.press()
+
+func _regulars() -> void:
+	# Jayden's bald tire: what you stamp on Tuesday decides who comes back on Friday of week two
+	for way in ["DENIED", "APPROVED", "WALKED"]:
+		DeskBook.reset()
+		var sc := desk(81)
+		sc.start_day(1)
+		sc.press()
+		var j := booked(sc, "jayden")
+		check("Jayden's in Tuesday's line (%s)" % way, not j.is_empty() and j.flags == ["fails_inspection"])
+		if way == "WALKED":
+			sc.walked.append(j)
+			sc.close_up()
+		else: serve(sc, j, way)
+		sc.start_day(11)
+		var back := booked(sc, "jayden")
+		var says := String(back.get("says", ""))
+		match way:
+			"DENIED": check("turned away, Jayden comes back with four used tires and a box for Gus", back.flags.is_empty() and says.begins_with("FOUR TIRES"))
+			"APPROVED": check("passed bald, Jayden comes back off the causeway for a brake job", back.flags.is_empty() and back.request == "BRAKE JOB" and says.contains("CAUSEWAY"))
+			"WALKED": check("left in the lot, Jayden comes back still bald, and says so", back.flags == ["fails_inspection"] and says.begins_with("I WAITED TILL SIX"))
+		check("...the same kid in the same Civil (%s)" % way, int(back.person.face) == int(j.person.face) and back.car.plate == j.car.plate)
+		done(sc)
+	# Mrs. Doiron's light: pass it and she knows Frank never did
+	DeskBook.reset()
+	var sc := desk(82)
+	sc.start_day(2)
+	sc.press()
+	var d := booked(sc, "doiron")
+	sc.waiting.push_front(d)
+	sc.next_customer()
+	stamp_now(sc, "APPROVED")
+	check("pass Mrs. Doiron's dead light and she asks if you're feeling all right", String(sc.result.line).contains("FEELING ALL RIGHT") or String(sc.result.line).contains("feeling all right"))
+	check("...and it's a citation", sc.result.citation != "")
+	sc.press()
+	sc.start_day(10)
+	check("a week later the light's still out, and a policeman's asked about her sticker", String(booked(sc, "doiron").says).contains("POLICEMAN"))
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ the filing cabinet and the save
+
+func _memory() -> void:
+	DeskBook.reset()
+	var sc := desk(91)
+	sc.start_day(12)
+	sc.press()
+	# somebody turned away for no insurance comes back; find one who will
+	var c: Dictionary = {}
+	for i in 200:
+		var w := sc.rules.walk_in(12, "insurance_expired")
+		if posmod(int(w.seed) >> 4, 10) < 6:
+			c = w
+			break
+	serve(sc, c, "DENIED")
+	var rec: Dictionary = DeskBook.files[DeskBook.files.size() - 1]
+	check("every stamp goes in the filing cabinet", rec.stamp == "DENIED" and rec.correct and rec.probs == ["insurance_expired"] and int(rec.seed) == int(c.seed))
+	# the cabinet rides along in the story's save, through JSON and back
+	var was := StoryState.active
+	StoryState.active = true
+	StoryState.flags = {}
+	DeskBook.close_book()
+	var saved = JSON.parse_string(JSON.stringify(StoryState.flags))
+	DeskBook.reset()
+	StoryState.flags = saved
+	DeskBook.open_book()
+	check("the filing cabinet survives the save", DeskBook.files.size() == 1 and int(DeskBook.files[0].seed) == int(c.seed) and DeskBook.files[0].seed is int)
+	StoryState.active = was
+	StoryState.flags = {}
+	var due := DeskRegulars.due(DeskBook.files[0])
+	sc.start_day(due)
+	var backs := sc.arrivals.filter(func(x): return int(x.c.get("script", {}).get("of", 0)) == int(rec.no))
+	check("they come back, the same person in the same car", backs.size() == 1 and int(backs[0].c.person.face) == int(c.person.face) and backs[0].c.car.vin == c.car.vin)
+	if backs.size() == 1:
+		serve(sc, backs[0].c, "APPROVED")
+		check("...and once they're served, that file's closed", DeskBook.file_no(int(rec.no)).get("back", false) and DeskRegulars.returns(due).is_empty())
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ the courier at the window
+
+func _courier() -> void:
+	DeskBook.reset()
+	var sc := desk(101)
+	sc.start_day(31)
+	sc.press()
+	var box := sc.rules.courier(31, "wrong_part")
+	while box.courier != "fundy": box = sc.rules.courier(31, "wrong_part")
+	sc.waiting.push_front(box)
+	sc.next_customer()
+	check("the courier's papers: our order and their slip on the desk", sc.docs.any(func(x): return x.id == "order") and sc.docs.any(func(x): return x.id == "slip"))
+	sc.inspecting = true
+	sc.pick(field(sc, "order", "part"))
+	sc.pick(field(sc, "slip", "part"))
+	check("the part numbers don't match, and that's a question", sc.verdict.good == false and sc.ask_list()[0] == "wrong_part")
+	sc.inspecting = false
+	sc.stamp("DENIED")
+	check("the stamp goes on the packing slip", sc.docs[sc.docs.size() - 1].id == "slip")
+	sc._resolve()
+	check("refusing the wrong part is the right call", sc.result.correct)
+	sc.press()
+	var again := sc.rules.courier(32, "clean")
+	while again.courier != "fundy": again = sc.rules.courier(32, "clean")
+	check("Fundy's driver remembers the box you sent back", String(again.says).contains("RODNEY TRIPLE-CHECKED"))
+	sc.waiting.push_front(sc.rules.courier(31, "wrong_part"))
+	sc.next_customer()
+	var cash0 := sc.cash
+	stamp_now(sc, "APPROVED")
+	check("signing for the wrong part costs a fee off the till, not a citation", sc.cash < cash0 and sc.day_log.fees > 0 and sc.result.citation == "" and sc.warnings_used == 0)
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ the Ministry's audit
+
+func _audit() -> void:
+	DeskBook.reset()
+	var sc := desk(111)
+	# a few work orders from the week before
+	sc.start_day(39)
+	sc.press()
+	var stamps: Array = []
+	for i in 4:
+		var w := sc.rules.walk_in(39, ["expired_reg", "clean", "tint", "clean"][i])
+		var s: String = ["DENIED", "APPROVED", "APPROVED", "DENIED"][i]
+		serve(sc, w, s)
+		stamps.append(s)
+	sc.close_up()
+	sc.start_day(42)
+	check("Monday of week 7: Hachey's booked for 9:30 and 2:00", sc.arrivals.filter(func(x): return x.c.kind == "audit").size() == 2)
+	sc.press()
+	var busy := sc.rules.walk_in(42)
+	sc.waiting.push_front(busy)
+	sc.next_customer()
+	while sc.clock < 91.0: sc.tick(0.5)
+	check("the Ministry doesn't wait in line", sc.waiting.size() > 0 and sc.waiting[0].kind == "audit" and sc.waiting[0].has("audit"))
+	stamp_now(sc, "DENIED")
+	sc.press()
+	check("Hachey at the window, with one of your files", sc.c.kind == "audit" and DeskBook.file_no(int(sc.c.audit.no)).get("pulled", false))
+	check("the car's long gone: no plate on a car, no calendar, the bay's empty", not sc.car_view.visible and not sc.fields().any(func(f): return String(f.get("doc", "")) == "car" or String(f.get("label", "")) == "TODAY"))
+	check("the work order carries the file's date", sc._rows("work").any(func(x): return x[2] == "today" and x[3] == CounterRules.today(39)))
+	var was := String(sc.c.audit.stamp)
+	stamp_now(sc, was)
+	check("stamp it the same way: no citation, consistent", sc.result.correct and sc.result.citation == "" and sc.day_log.audits_same == 1)
+	sc.press()
+	while sc.clock < 361.0:
+		sc.tick(0.5)
+		if sc.phase == "counter" and sc.c.kind != "audit": stamp_now(sc, "DENIED")
+		if sc.phase == "result": sc.press()
+	var a: Dictionary = sc.c if sc.phase == "counter" and sc.c.kind == "audit" else {}
+	if a.is_empty():
+		for i in 60:
+			sc.tick(0.5)
+			if sc.phase == "counter" and sc.c.kind == "audit":
+				a = sc.c
+				break
+			if sc.phase == "counter": stamp_now(sc, "DENIED")
+			if sc.phase == "result": sc.press()
+	check("the second file comes at two", not a.is_empty())
+	if not a.is_empty():
+		var other := "APPROVED" if String(a.audit.stamp) == "DENIED" else "DENIED"
+		var w0 := sc.warnings_used
+		stamp_now(sc, other)
+		check("stamp it differently: the Ministry writes it up", not sc.result.correct and String(sc.result.citation).begins_with("AUDIT") and (sc.warnings_used == w0 + 1 or sc.result.fine > 0))
+		sc.press()
+	check("Hachey keeps the tally for his report", DeskBook.audits.size() == 2 and sc.audit_verdict().contains("2 FILES PULLED"))
+	done(sc)
+	# a fresh week 7 with nothing in the cabinet: he waits, and comes back
+	DeskBook.reset()
+	sc = desk(112)
+	sc.start_day(42)
+	sc.press()
+	while sc.clock < 100.0: sc.tick(0.5)
+	check("nothing to pull: Hachey comes back in an hour", not sc.waiting.any(func(x): return x.kind == "audit") and sc.arrivals.any(func(x): return x.c.kind == "audit" and x.c.get("retry", false)))
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ the room's sounds
+
+func _sounds() -> void:
+	# every sound is made in code, short, and kept quiet
+	var ok := true
+	var note := ""
+	for s in DeskAudio.LEVEL:
+		var smp := DeskAudio.samples(s)
+		var peak := 0.0
+		for x in smp: peak = maxf(peak, absf(x))
+		var secs := float(smp.size()) / DeskAudio.RATE
+		if smp.is_empty() or peak > 0.95 or peak < 0.1 or secs > 1.0 or float(DeskAudio.LEVEL[s]) > -8.0:
+			ok = false
+			if note == "": note = "%s: peak %.2f, %.2f s, %.0f dB" % [s, peak, secs, DeskAudio.LEVEL[s]]
+		if DeskAudio.sound(s).data.size() != smp.size() * 2: ok = false
+	check("every desk sound is made in code, short and quiet", ok, note)
+	# and the desk asks for them at the right moments
+	DeskBook.reset()
+	var sc := desk(121)
+	sc.start_day(9)
+	sc.press()
+	sc.waiting.push_front(sc.rules.customer(9, "vin_mismatch"))
+	sc.next_customer()
+	check("the papers land on the desk with a shuffle", sc.heard.has("paper"))
+	sc.waiting.append(sc.rules.customer(9, "clean"))
+	sc.since = sc.clock - 200.0
+	sc.next_honk = 0.0
+	sc.tick(1.1)
+	check("the horn from the lot when you take too long", sc.heard.has("honk"))
+	check("the wall clock ticks", sc.heard.has("tick") or sc.heard.has("tock"))
+	sc.heard = []
+	sc.stamp("APPROVED")
+	check("the stamp comes down with a thunk", sc.heard.has("stamp"))
+	sc._resolve()
+	sc.press()
+	sc.heard = []
+	for i in 2:
+		sc.waiting.push_front(sc.rules.customer(9, "vin_mismatch"))
+		sc.next_customer()
+		stamp_now(sc, "APPROVED")
+		sc.press()
+	check("the till rings when the Ministry takes its hundred", sc.heard.has("till") and sc.day_log.fines > 0)
+	sc.open_book("notebook")
+	check("the notebook opens with a page", sc.heard.has("page"))
+	check("the warnings don't ring the till", sc.heard.count("till") == 1)
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ the day-end sheet and the binder
+
+func _layout() -> void:
+	# a busy day in audit week: everything on the sheet at once, every row at the same size,
+	# values lined up on the right, nothing running into anything
+	var sc := desk(131)
+	sc.start_day(42)
+	sc.day_log.merge({ "seen": 14, "correct": 9, "walked": 6, "walked_money": 1265, "earned": 1840, "dirty": 600, "fees": 75,
+		"citations": ["A", "B", "C"], "warnings": ["D", "E"], "fines": 300, "reviews": -3, "heat": 25, "trust": -15, "audits": 2, "audits_same": 1 }, true)
+	sc.cash = -12345
+	var rows := sc._day_end_rows()
+	var fits := true
+	var note := ""
+	for row in rows:
+		var lw := PixelFont.width(String(row[0]), 2)
+		var vw := PixelFont.width(String(row[1]), 2)
+		if CounterScene.LEDGER_L + lw + 12.0 > CounterScene.LEDGER_R - vw:
+			fits = false
+			if note == "": note = "%s / %s" % [row[0], row[1]]
+	check("the day-end rows all fit at the labels' size, values lined up on the right", fits, note)
+	check("every row of a busy day is on the sheet", rows.size() >= 11)
+	sc.day_log.citations = ["AUDIT: YOUR OWN WORK ORDER SAYS APPROVED. TODAY YOU SAY DENIED. THE MINISTRY WOULD LIKE YOU TO PICK ONE", "B", "C"]
+	var small := sc._small_print()
+	check("the small print wraps instead of running off the sheet, four lines at most", small.size() <= 4 and small.all(func(l): return PixelFont.width(String(l)) <= CounterScene.LEDGER_R - CounterScene.LEDGER_L))
+	check("the sheet and its small print stay above the prompts", 66 + rows.size() * CounterScene.LEDGER_PITCH + 6 + small.size() * 8 + 10 < 296)
+	done(sc)
+	# every tab of the binder fits on its page, every day of the run
+	sc = desk(132)
+	var over := ""
+	for day in CounterRules.LAST_DAY + 1:
+		if not CounterRules.is_open(day): continue
+		sc.day = day
+		for t in sc._tabs_today().size():
+			sc.tab = t
+			var blocks := sc._rule_blocks()
+			if blocks.is_empty(): continue
+			var last: Rect2 = blocks[blocks.size() - 1].r
+			if last.end.y > CounterScene.BOARD.end.y - 10 and over == "": over = "day %d %s" % [day, sc._tabs_today()[t]]
+	check("every tab of the binder fits on its page", over == "", over)
+	sc.day = CounterRules.LAST_DAY
+	var tabs := sc._tabs_today()
+	var n := tabs.size()
+	var labels_fit := true
+	for t in n: if PixelFont.width(String(CounterScene.TAB_SHORT[tabs[t]])) > sc._tab_rect(t, n).size.x: labels_fit = false
+	check("the binder's tabs (PARTS too) fit across the top", n == CounterRules.TABS.size() and sc._tab_rect(n - 1, n).end.x <= CounterScene.BOARD.end.x and labels_fit)
 	done(sc)

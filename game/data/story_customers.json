@@ -1,5 +1,5 @@
 {
-	"_about": "Scripted customers at the counter (CounterRules.scripted). 'schedule' books them by chapter and day (days count from Monday 7 October 2019 = 0). A story step can also bring its own: { \"type\": \"counter\", \"day\": 9, \"customers\": [\"dale_hatch\", { ...a spec... }] }. Keys: kind (story or familia), cast (a StoryScript.CAST face), person, car (catalogue id, paint), request, problem (a CounterRules problem id, or clean), excuse (a covered discrepancy with valid proof), papers (overrides per document), says, napkin, mask, letter ({title, lines}), ask (topic -> {line, doc, clue}), clue ({id, note}: what Leo can write in his notebook from what they say), outcomes (stamp -> {line, citation, money, dirty, heat, trust, review, correct, flags}), arrive (H:MM).",
+	"_about": "Scripted customers at the counter (CounterRules.scripted). 'schedule' books them by chapter and day (days count from Monday 7 October 2019 = 0). A story step can also bring its own: { \"type\": \"counter\", \"day\": 9, \"customers\": [\"dale_hatch\", { ...a spec... }] }. Keys: kind (story or familia), cast (a StoryScript.CAST face), person, car (catalogue id, paint), request, problem (a CounterRules problem id, or clean), excuse (a covered discrepancy with valid proof), papers (overrides per document), says, napkin, mask, letter ({title, lines}), ask (topic -> {line, doc, clue}), clue ({id, note}: what Leo can write in his notebook from what they say), outcomes (stamp -> {line, citation, money, dirty, heat, trust, review, correct, flags}), arrive (H:MM), forged (their proof is a bad one), from_away (the car came from another province), seed (instead of the id), quiet (no desk_<id>_<stamp> flag). 'regulars' (DeskRegulars) are the people who keep coming back: person, car, ask (small talk), and visits [{day, ...the same keys..., after_id, after: {last stamp -> what changes}}]. The last stamp is APPROVED, DENIED, REPORT or WRENCH (with _WRONG when it was the wrong call; the plain key covers both) or WALKED; a branch with a problem brings its own papers and lines; hello goes in front of says.",
 	"customers": {
 		"dale_hatch": {
 			"kind": "story",
@@ -70,6 +70,297 @@
 			"arrive": "16:20",
 			"says": "DOM SAYS IT'S A COSTUME. DOM SAYS HAPPY HALLOWEEN.",
 			"napkin": "TRICK OR TREAT. MOSTLY TRICK. -S"
+		}
+	},
+	"regulars": {
+		"jayden": {
+			"person": { "first": "JAYDEN", "last": "MALLET", "face": 913077, "fem": 0, "dob": [2000, 3, 14], "address": "12 MOUNTAIN RD, APT 3" },
+			"car": { "catalogue": "hondo_civil_1992", "paint": "#c8342c" },
+			"ask": { "local": { "line": "THE MOUNTAIN TIM'S. I AM THE MOUNTAIN TIM'S. SIX TO TWO, TUESDAY TO SATURDAY. DON'T ORDER THE CHILI." } },
+			"visits": [
+				{ "day": 1, "arrive": "8:50", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
+					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
+					"says": "SAFETY, PLEASE. I GOTTA BE AT THE WINDOW BY TEN. MOUNTAIN TIM'S. I'VE SEEN THINGS, MAN. A GUY ORDERED FORTY TIMBITS FOR HIS DOG. THE DOG WAS A CAT.",
+					"ask": { "fails_inspection": { "line": "THE BALD ONE? THAT'S MY LUCKY ONE. YOU DON'T TAKE A GUY'S LUCKY ONE." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Yeah. Yeah, okay.\" He looks at the tire like it let him down personally. \"My manager says the same thing about my hairnet.\"" },
+						"APPROVED": { "line": "\"Sick. Thanks, man.\" He peels out of the lot. The bald tire is louder about it than the other three." }
+					} },
+				{ "day": 11, "arrive": "9:15", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
+					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
+					"says": "SAFETY, PLEASE. I WORK THE WINDOW AT THE MOUNTAIN TIM'S. YOU'D BE AMAZED WHAT PEOPLE SAY TO A SPEAKER.",
+					"ask": { "fails_inspection": { "line": "THE BALD ONE'S MY LUCKY ONE. EVERYBODY NEEDS A LUCKY ONE." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Yeah, okay. My manager says the same thing about my hairnet.\"" },
+						"APPROVED": { "line": "\"Sick.\" He peels out. The bald tire is louder about it than the other three." }
+					},
+					"after": {
+						"WALKED": { "says": "I WAITED TILL SIX LAST WEEK. NOBODY CALLED MY NUMBER. I DIDN'T HAVE A NUMBER. SAFETY, PLEASE. AGAIN." },
+						"DENIED": { "problem": "clean", "request": "SAFETY INSPECTION",
+							"says": "FOUR TIRES. WELL. FOUR USED TIRES. NEW TO ME. AND A BOX OF TIMBITS FOR GUS. HE DIDN'T SAY THANKS, BUT HE TOOK THE BOX.",
+							"outcomes": {
+								"APPROVED": { "line": "\"STICKER!\" He takes a picture of it. Then a picture of you. Then one of Gus, who doesn't move." },
+								"DENIED": { "line": "\"But they're new. Newish. New to me.\" He drives off slowly, like the tires might hear him." }
+							} },
+						"APPROVED_WRONG": { "problem": "clean", "request": "BRAKE JOB",
+							"says": "REMEMBER THE BALD TIRE? IT LET GO ON THE CAUSEWAY. I'M FINE. THE RIM'S NOT. NOW THE BRAKES GRIND. MY BUDDY SAYS YOU'RE THE EASY STICKER. I TOLD HIM YOU'RE NOT.",
+							"outcomes": { "APPROVED": { "line": "\"Thanks, man. For real this time.\" He doesn't say what the first time was. He doesn't have to." } } }
+					} },
+				{ "day": 18, "arrive": "10:40", "request": "OIL CHANGE", "problem": "insurance_vin",
+					"says": "OIL CHANGE, PLEASE. MY MOM TOOK ME OFF HER INSURANCE. SHE SAYS I'M A GROWN MAN NOW. I'VE GOT MY OWN POLICY. LOOK.",
+					"ask": { "insurance_vin": { "line": "THE GIRL ON THE PHONE TYPED IN THE VIN. I READ IT TO HER. FROM MEMORY. I'M GREAT WITH ORDERS. NOT NUMBERS. ORDERS." } },
+					"outcomes": {
+						"DENIED": { "line": "\"I'll call her back. The insurance girl. She'll be thrilled.\"" },
+						"APPROVED": { "line": "\"Easy.\" The card's for some other car. Nobody at the counter noticed. Somebody will." }
+					},
+					"after": {
+						"APPROVED": { "hello": "THE STICKER'S STILL ON THERE. PROUDEST THING I OWN." },
+						"DENIED_WRONG": { "hello": "YOU SENT ME AWAY WITH FOUR GOOD TIRES. LINDSAY PASSED IT IN TEN MINUTES. SHE GAVE ME A SUCKER." }
+					} },
+				{ "day": 30, "arrive": "13:30", "request": "SAFETY INSPECTION", "problem": "tint",
+					"papers": { "sheet": { "tint": 15 } },
+					"says": "SAFETY, PLEASE. MY BUDDY TINTED MY WINDOWS IN HIS GARAGE. FOR FREE. I CAN'T SEE OUT AT NIGHT, BUT I LOOK UNREAL.",
+					"ask": { "tint": { "line": "IT'S FIFTEEN PERCENT. MY BUDDY SAYS FIFTEEN'S THE NUMBER. MY BUDDY ALSO SAYS THE MOON'S A HOLOGRAM." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Okay. Okay. I'll peel it.\" He sits in the car for a minute first, looking unreal." },
+						"APPROVED": { "line": "\"UNREAL.\" He can't see the curb on the way out. He finds it." }
+					},
+					"after": {
+						"DENIED": { "hello": "GOT MY INSURANCE FIXED. THE GIRL ON THE PHONE REMEMBERED ME. NOT IN A GOOD WAY." },
+						"APPROVED_WRONG": { "hello": "REMEMBER MY INSURANCE? IT WAS FOR A CIVIL IN SHEDIAC. SAME COLOUR. THE GUY IN SHEDIAC CALLED ME. WE'RE FRIENDS NOW." }
+					} },
+				{ "day": 43, "arrive": "11:20", "request": "SAFETY INSPECTION", "problem": "noise",
+					"papers": { "sheet": { "db": 104 } },
+					"says": "SAFETY, PLEASE. I PUT A NEW MUFFLER ON. WELL. A CAN. A BIG CAN. MY BUDDY CALLS IT THE FART CAN. MY MANAGER CALLS IT 'GO HOME, JAYDEN.'",
+					"ask": { "noise": { "line": "IT'S A PERFORMANCE CAN. IT PERFORMS. MOSTLY AT SIX IN THE MORNING, IN THE DRIVE-THRU." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Fair. The cat at the drive-thru hates it too.\" There's a cat at the drive-thru. You decide not to ask." },
+						"APPROVED": { "line": "He fires it up in the lot. Somewhere behind you, Hachey writes something down without looking up." }
+					},
+					"after": {
+						"DENIED": { "problem": "clean", "request": "SAFETY INSPECTION",
+							"says": "PEELED THE TINT OFF. WITH MY TEETH, MOSTLY. YOU CAN SEE OUT NOW. YOU CAN SEE IN, TOO. I DIDN'T THINK ABOUT THAT.",
+							"outcomes": {
+								"APPROVED": { "line": "\"My first clean sticker. I'm framing it.\" You point out it's on the windshield. \"I'm framing the windshield.\"" },
+								"DENIED": { "line": "\"I used my TEETH.\" He shows you. You didn't need to see." }
+							} },
+						"APPROVED_WRONG": { "problem": "tint", "request": "SAFETY INSPECTION", "papers": { "sheet": { "tint": 15 } },
+							"says": "A COP PULLED ME OVER ON MOUNTAIN RD. HE COULDN'T SEE ME. HE SAID THAT WAS THE PROBLEM. HE ASKED WHO GAVE ME THE STICKER. I SAID I'D ASK YOU.",
+							"ask": { "tint": { "line": "STILL FIFTEEN. THE COP SAID IT LIKE IT WAS A BAD NUMBER." } },
+							"outcomes": {
+								"DENIED": { "line": "\"Yeah. Yeah. I'll peel it. For the cop.\"" },
+								"APPROVED": { "line": "Hachey watches the Civil leave. He doesn't write anything down. That's worse." }
+							} }
+					} }
+			]
+		},
+		"rob": {
+			"person": { "first": "ROB", "last": "GALLANT", "face": 270614, "fem": 0, "dob": [1978, 11, 2], "address": "41 ELMWOOD DR" },
+			"car": { "make": "DODGY", "model": "GRAND CRAVIN'", "year": 2006, "len": 5.1, "wid": 1.95, "wheelbase": 3.03, "body": "minivan",
+				"side_body": "van", "class": "minivan", "cat": "", "quirk": "", "rust_look": 0.1, "paint": "#8a8e94" },
+			"ask": { "local": { "line": "THE ONE BY THE COLISEUM. I'M THERE AT FIVE-THIRTY EVERY SATURDAY. THEY START MY ORDER WHEN THEY SEE THE VAN." } },
+			"visits": [
+				{ "day": 3, "arrive": "8:30", "request": "WINTER TIRES ON", "problem": "expired_reg",
+					"says": "WINTER TIRES ON, PLEASE. CARTER'S GOT A TOURNAMENT IN SUSSEX SATURDAY. WE LEAVE AT FIVE A.M., AND THE VAN'S COMING WITH US IF IT'S THE LAST THING IT DOES.",
+					"ask": { "expired_reg": { "line": "EXPIRED? LISA DOES THE REGISTRATION. LISA'S AT HER SISTER'S IN MIRAMICHI. CAN YOU JUST... HOCKEY?" } },
+					"outcomes": {
+						"DENIED": { "line": "\"Fine. Fine. The registry opens at nine. The puck drops at eight.\" He does the math out loud all the way to the van." },
+						"APPROVED": { "line": "\"You're a good man. Carter's gonna score one for you.\" Carter is seven. Carter has never scored." }
+					} },
+				{ "day": 15, "arrive": "9:45", "request": "SAFETY INSPECTION", "problem": "expired_reg",
+					"says": "SAFETY ON THE VAN, PLEASE. THE LEAGUE WANTS EVERY CARPOOL VAN STICKERED. THE LEAGUE IS MY WIFE.",
+					"ask": { "expired_reg": { "line": "LISA DOES THE REGISTRATION. LISA'S BEEN BUSY. LISA'S BEEN BUSY SINCE MAY." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Fine. I'll go to the registry. Carter can do his homework in the van.\"" },
+						"APPROVED": { "line": "\"Sussex, here we come.\" They lose six-nothing. He tells you the score anyway, next time." }
+					},
+					"after": {
+						"DENIED": { "problem": "clean", "excuse": "expired_reg", "request": "SAFETY INSPECTION",
+							"says": "THE REGISTRY GAVE ME A TEMPORARY. THE LINEUP WAS TWO HOURS. CARTER DID HIS HOMEWORK IN THE VAN. IT WAS A COLOURING BOOK. HE STAYED IN THE LINES, THOUGH.",
+							"ask": { "expired_reg": { "line": "HERE. TEMPORARY PERMIT. LISA LAMINATED IT. LISA LAMINATES EVERYTHING.", "doc": "permit" } },
+							"outcomes": {
+								"APPROVED": { "line": "\"Sussex, here we come.\" They lose six-nothing on Saturday. He tells you the score anyway, next time." },
+								"DENIED": { "line": "\"It's a PERMIT. It's LAMINATED.\" He leaves. Lisa calls the shop at four." }
+							} },
+						"APPROVED_WRONG": { "hello": "SUSSEX WENT GREAT. WE LOST SIX-NOTHING. A COP PULLED US OVER ON THE WAY HOME FOR THE REGISTRATION. HE ASKED WHERE WE GOT THE TIRES DONE. I DIDN'T SAY. I WANTED TO." }
+					} },
+				{ "day": 23, "arrive": "14:10", "request": "OIL CHANGE", "problem": "clean",
+					"says": "OIL CHANGE, PLEASE. AND I BROUGHT TIM'S. MEDIUM DOUBLE-DOUBLE FOR GUS, BLACK FOR YOU. I ASKED AROUND.",
+					"outcomes": {
+						"APPROVED": { "line": "\"Same time next week. I mean it. There's always a tournament.\"" },
+						"DENIED": { "line": "\"For an OIL CHANGE?\" He takes the coffees back. Both of them." }
+					},
+					"after": {
+						"APPROVED": { "hello": "THE STICKER'S HOLDING. THE VAN'S HOLDING. CARTER'S HOLDING HIS STICK THE RIGHT WAY UP NOW. MOSTLY." },
+						"DENIED": { "hello": "LISA RENEWED THE REGISTRATION. FROM MIRAMICHI. ONLINE. SHE SAYS HI. SHE SAYS IT LIKE A THREAT." },
+						"DENIED_WRONG": { "hello": "YOU SENT ME AWAY WITH A GOOD PERMIT. LISA DROVE IT TO LINDSAY'S. LISA'S NOT TALKING TO YOU. I'M ALLOWED TO. BARELY." },
+						"APPROVED_WRONG": { "hello": "WE GOT PULLED OVER AGAIN. SAME COP. HE KNOWS CARTER'S NAME NOW." }
+					} },
+				{ "day": 37, "arrive": "10:20", "request": "SAFETY INSPECTION", "problem": "noise",
+					"papers": { "sheet": { "hole": true } },
+					"says": "SAFETY, PLEASE. THE VAN'S MAKING A NOISE. CARTER SAYS IT SOUNDS LIKE THE ICE MACHINE AT THE RINK. CARTER LOVES IT.",
+					"ask": { "noise": { "line": "IT'S THE MUFFLER. OR THE HOCKEY BAGS. EVERYTHING IN THAT VAN SMELLS LIKE THE HOCKEY BAGS. MAYBE IT SOUNDS LIKE THEM TOO." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Carter's gonna be devastated.\" He says it like he's the one who'll be devastated." },
+						"APPROVED": { "line": "The van leaves sounding like the ice machine with a grudge. Carter waves from the back." }
+					},
+					"after": {
+						"APPROVED": { "hello": "THE OIL CHANGE WAS GREAT. THE VAN SAYS THANKS. THE VAN SAYS IT LOUDER NOW." },
+						"DENIED_WRONG": { "hello": "YOU WOULDN'T DO MY OIL. LINDSAY DID. SHE GAVE CARTER A SUCKER. HE'S ON HER SIDE NOW." }
+					} },
+				{ "day": 45, "arrive": "13:00", "request": "SAFETY INSPECTION", "problem": "noise",
+					"papers": { "sheet": { "hole": true } },
+					"says": "SAFETY, PLEASE. THE VAN SOUNDS LIKE THE ICE MACHINE AT THE RINK. THE WHOLE RINK HEARS US COME IN.",
+					"ask": { "noise": { "line": "IT'S THE MUFFLER. LISA SAYS IT'S THE MUFFLER. LISA'S USUALLY RIGHT. DON'T TELL HER." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Fine. New muffler. Carter's gonna be devastated.\"" },
+						"APPROVED": { "line": "The van leaves like the ice machine with a grudge. Hachey looks up from his clipboard." }
+					},
+					"after": {
+						"DENIED": { "problem": "clean", "request": "SAFETY INSPECTION",
+							"says": "NEW MUFFLER. CARTER'S DEVASTATED. HE SAYS THE VAN SOUNDS LIKE A VAN NOW. HE'S SEVEN. HE'LL GET OVER IT. I WON'T.",
+							"outcomes": {
+								"APPROVED": { "line": "\"Same time next year.\" He means it. He's already booked it with Gus." },
+								"DENIED": { "line": "\"It's a NEW muffler.\" He leaves. Carter waves anyway." }
+							} },
+						"APPROVED_WRONG": { "says": "THE NOISE GOT WORSE. THE WHOLE RINK HEARD US COME IN. THE REF GAVE US A PENALTY. FOR THE VAN. SAFETY AGAIN, PLEASE." }
+					} }
+			]
+		},
+		"doiron": {
+			"person": { "first": "THERESE", "last": "DOIRON", "face": 461946, "fem": 1, "dob": [1946, 4, 9], "address": "7 CHURCH ST" },
+			"car": { "catalogue": "chevrolay_cava_lame_2002", "paint": "#3a6a3a" },
+			"ask": { "local": { "line": "THE ONE ON MAIN, DEAR. THE GIRLS THERE KNOW MY ORDER. TEA. THEY GIVE ME COFFEE. I DRINK IT. WE'VE ALL MADE OUR PEACE." } },
+			"visits": [
+				{ "day": 2, "arrive": "9:10", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
+					"papers": { "sheet": { "lights": false } },
+					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. YOUR FATHER FAILED IT EVERY YEAR SINCE 2009. IT'S TRADITION. I BRING MUFFINS EITHER WAY.",
+					"ask": { "fails_inspection": { "line": "THE LIGHT? IT GOES OUT WHEN IT'S SAD, DEAR. IT'S BEEN SAD SINCE THE SPRING." } },
+					"outcomes": {
+						"DENIED": { "line": "\"That's Frank's boy. He'd have said the same thing. Slower.\" She leaves the muffins." },
+						"APPROVED": { "line": "She looks at the sticker. She looks at you. \"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
+					} },
+				{ "day": 10, "arrive": "11:30", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
+					"papers": { "sheet": { "lights": false } },
+					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. FRANK FAILED IT EVERY YEAR. I BRING MUFFINS EITHER WAY.",
+					"ask": { "fails_inspection": { "line": "THE LIGHT? IT GOES OUT WHEN IT'S SAD, DEAR." } },
+					"outcomes": {
+						"DENIED": { "line": "\"That's Frank's boy.\" She leaves the muffins." },
+						"APPROVED": { "line": "\"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
+					},
+					"after": {
+						"DENIED": { "problem": "clean", "request": "OIL CHANGE",
+							"says": "MY NEPHEW FIXED THE LIGHT. NOW THE RADIO ONLY GETS THE FRENCH STATION. I'VE LEARNED SO MUCH. OIL CHANGE, PLEASE, DEAR.",
+							"outcomes": {
+								"APPROVED": { "line": "\"Merci, dear.\" She practises it twice on the way to the car." },
+								"DENIED": { "line": "\"For an oil change, dear?\" She isn't angry. She's worried about you. That's worse." }
+							} },
+						"APPROVED_WRONG": { "says": "THE LIGHT'S STILL OUT, DEAR. A POLICEMAN TOLD ME. HE WAS VERY NICE ABOUT IT. HE ASKED WHERE I GOT MY STICKER. CAN YOU LOOK AGAIN? PROPERLY, THIS TIME.",
+							"outcomes": {
+								"DENIED": { "line": "\"There. That's Frank's boy.\" She leaves the muffins." },
+								"APPROVED": { "line": "\"Twice, dear?\" She takes the muffins back. Just one of them." }
+							} }
+					} },
+				{ "day": 18, "arrive": "15:00", "request": "SAFETY INSPECTION", "problem": "clean", "excuse": "vin_door_mismatch",
+					"says": "SOMEBODY BACKED INTO ME AT THE CO-OP, DEAR. THE NEW DOOR CAME OFF A CAR AT THE PICK-N-PULL. IT'S A DIFFERENT GREEN. THE CAR SEEMS HAPPIER.",
+					"ask": { "vin_door_mismatch": { "line": "I HAVE THE BILL, DEAR. I HAVE EVERY BILL SINCE 1971. DO YOU WANT TO SEE THE OTHERS?", "doc": "door_inv" } },
+					"outcomes": {
+						"APPROVED": { "line": "\"Thank you, dear. The door thanks you too. It's from a Corolly. It's adjusting.\"" },
+						"DENIED": { "line": "\"I had the bill, dear. You never asked.\" She isn't angry. That's worse." }
+					},
+					"after": {
+						"APPROVED": { "hello": "THE CAR HASN'T STALLED ONCE SINCE THE OIL CHANGE, DEAR. WELL. ONCE." },
+						"DENIED_WRONG": { "hello": "YOU WOULDN'T CHANGE MY OIL, DEAR. I'M SURE YOU HAD A REASON. GUS TOLD ME THE REASON. IT WASN'T A GOOD ONE." }
+					} },
+				{ "day": 29, "arrive": "10:00", "request": "SAFETY INSPECTION", "problem": "clean", "excuse": "tint",
+					"says": "SAFETY ON THE CAVA-LAME, DEAR. MY GRANDSON TINTED MY WINDOWS. FOR MY EYES, HE SAID. I CAN'T SEE THE CAT ANYMORE. THE CAT CAN'T SEE ME. WE'RE BOTH HAPPIER.",
+					"ask": { "tint": { "line": "MY DOCTOR SIGNED THE FORM, DEAR. HE'S NINETY-ONE. HE SIGNS EVERYTHING. BUT HE SIGNED THIS ONE.", "doc": "exempt" } },
+					"outcomes": {
+						"APPROVED": { "line": "\"Lovely. Frank would have asked about the cat.\" You ask about the cat. \"She's fine, dear. Thank you.\"" },
+						"DENIED": { "line": "\"The doctor signed it, dear.\" She leaves the form on the counter, in case you want to read it later. You should have read it now." }
+					},
+					"after": {
+						"DENIED_WRONG": { "hello": "I BROUGHT THE DOOR BILL AGAIN, DEAR. AND ALL THE OTHERS. JUST IN CASE." }
+					} },
+				{ "day": 38, "arrive": "9:40", "request": "SAFETY INSPECTION", "problem": "noise",
+					"papers": { "sheet": { "hole": true } },
+					"says": "MON CHAR FAIT UN DROLE DE NOISE, LA. COMME UNE OUTARDE. UNE OUTARDE TRISTE. SAFETY, PLEASE, DEAR.",
+					"ask": { "noise": { "line": "IT HONKS, DEAR. FROM THE BACK. LIKE A GOOSE. A SAD GOOSE. GUS SAYS IT'S THE MUFFLER. GUS SAYS A LOT OF THINGS ABOUT MY CAR." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Frank's boy.\" She pats the counter twice. She leaves the muffins." },
+						"APPROVED": { "line": "The Cava-lame honks out of the lot like a goose leaving for the winter. A sad goose." }
+					},
+					"after": {
+						"APPROVED": { "hello": "THE CAT SENDS HER REGARDS, DEAR." },
+						"DENIED_WRONG": { "hello": "I HAD THE DOCTOR'S FORM, DEAR. I'VE PUT IT IN A FRAME. YOU CAN READ IT ANY TIME." }
+					} },
+				{ "day": 44, "arrive": "15:30", "request": "SAFETY INSPECTION", "problem": "noise",
+					"papers": { "sheet": { "hole": true } },
+					"says": "GOOD AFTERNOON, DEAR. SAFETY ON THE CAVA-LAME. IT HONKS NOW. FROM THE BACK.",
+					"ask": { "noise": { "line": "LIKE A GOOSE, DEAR. GUS SAYS IT'S THE MUFFLER." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Frank's boy.\" She leaves the muffins." },
+						"APPROVED": { "line": "The Cava-lame honks out of the lot. Hachey, by the coffee, watches it go." }
+					},
+					"after": {
+						"DENIED": { "problem": "clean", "request": "SAFETY INSPECTION",
+							"says": "NEW MUFFLER, DEAR. THE GOOSE IS GONE. I MISS HER A LITTLE.",
+							"outcomes": {
+								"APPROVED": { "line": "\"Frank never passed it once, you know.\" She looks at the sticker for a long time. \"He'd have liked this.\"" },
+								"DENIED": { "line": "\"But the goose is gone, dear.\" She leaves. She takes the muffins." }
+							} },
+						"APPROVED_WRONG": { "says": "THE GOOSE IS LOUDER, DEAR. THE NEIGHBOURS WROTE TO THE MINISTRY. A NICE MAN FROM THE MINISTRY CALLED. HE ASKED WHO GAVE ME THE STICKER.",
+							"outcomes": {
+								"DENIED": { "line": "\"Thank you, dear. I'll tell the nice man.\" Hachey, by the coffee, is the nice man." },
+								"APPROVED": { "line": "Hachey watches the Cava-lame honk its way out of the lot. He writes for a long time." }
+							} }
+					} }
+			]
+		},
+		"darrell": {
+			"cast": "DARRELL",
+			"person": { "first": "DARRELL", "last": "LEGER", "address": "88 CLOVERDALE RD" },
+			"ask": { "local": { "line": "I DON'T DRINK COFFEE. MEDIUM DOUBLE-DOUBLE. THE MOUNTAIN ONE." } },
+			"visits": [
+				{ "day": 32, "arrive": "11:50", "after_id": "darrell_trade", "car": { "catalogue": "toyoda_corolly_2003", "paint": "#8a8e94" },
+					"request": "SAFETY INSPECTION", "problem": "odo_rollback",
+					"says": "SAFETY ON THE COROLLY. ONE OWNER. A NUN. SHE ONLY DROVE IT TO CHURCH. SHE WENT TO CHURCH IN MONTREAL.",
+					"ask": { "odo_rollback": { "line": "THE NUN DROVE IN REVERSE A LOT. FOR PENANCE." } },
+					"outcomes": {
+						"DENIED": { "line": "\"You're getting good at this.\" He means it as an insult. He also means it." },
+						"APPROVED": { "line": "\"Pleasure.\" The Corolly's on MarketThing by supper: LOW KMS, ONE OWNER, SAFETIED AT COVINGTON AUTO." },
+						"REPORT": { "line": "Constable Tremblay takes his statement. It's mostly about the nun." }
+					},
+					"after": {
+						"DENIED": { "hello": "LINDSAY PASSED THE DAKOTUH. TOOK HER TEN MINUTES. I'M BACK BECAUSE I RESPECT YOU. ALSO SHE'S CLOSED FRIDAYS." },
+						"APPROVED_WRONG": { "hello": "HATCH'S GUYS SOLD THE DAKOTUH IN A DAY. THEY SAID TO BRING YOU MORE. SO. MORE." },
+						"REPORT": { "hello": "NO HARD FEELINGS ABOUT THE COPS. THE CRUISER HAD HEATED SEATS." }
+					} },
+				{ "day": 39, "arrive": "10:30", "car": { "catalogue": "buickk_century_ish_1996", "paint": "#b8b0a0" },
+					"request": "SAFETY INSPECTION", "problem": "tint", "forged": true, "papers": { "sheet": { "tint": 20 } },
+					"says": "SAFETY ON THE CENTURY-ISH. I TINTED IT MYSELF. FOR THE RESALE. PEOPLE LIKE PRIVACY. I LIKE PRIVACY.",
+					"ask": { "tint": { "line": "MEDICAL EXEMPTION. RIGHT HERE. MY EYES ARE VERY SENSITIVE. TO QUESTIONS.", "doc": "exempt" } },
+					"outcomes": {
+						"DENIED": { "line": "\"The doctor's real.\" He thinks about it. \"The doctor's real-ish.\"" },
+						"APPROVED": { "line": "\"Beautiful.\" He drives off, mostly from memory." }
+					},
+					"after": {
+						"DENIED": { "hello": "YOU WERE RIGHT ABOUT THE NUN. SHE WASN'T A NUN. SHE WAS MY COUSIN DENISE. SHE DOES GO TO CHURCH, THOUGH." },
+						"APPROVED_WRONG": { "hello": "THE COROLLY SOLD. TWO HUNDRED THOUSAND KAYS, AND IT SOLD AS FIFTY. EVERYBODY'S HAPPY. NOBODY KNOWS." }
+					} },
+				{ "day": 46, "arrive": "12:40", "car": { "catalogue": "fjord_escaped_2012", "paint": "#2c5a8a" },
+					"request": "OIL CHANGE", "problem": "vin_mismatch",
+					"says": "JUST AN OIL CHANGE. NOTHING TO SEE. WHO'S THE GUY IN THE RAINCOAT? IS HE WITH YOU? I'M JUST HERE FOR AN OIL CHANGE.",
+					"ask": { "vin_mismatch": { "line": "TYPO AT THE REGISTRY. THEY'RE VERY BUSY. ESPECIALLY THE GUY I KNOW AT THE REGISTRY." } },
+					"outcomes": {
+						"DENIED": { "line": "\"In front of the Ministry? Cold.\" He leaves very slowly, the way you back away from a bear." },
+						"APPROVED": { "line": "Darrell drives off. Hachey watches him go, then looks at you, then writes for a while." }
+					},
+					"after": {
+						"DENIED": { "hello": "BRENDA SAYS HI. BRENDA KEEPS ALL MY RECEIPTS NOW. SHE SAYS IT'S FOR MY OWN GOOD." },
+						"APPROVED_WRONG": { "hello": "THE CENTURY-ISH SOLD. THE BUYER CAN'T SEE OUT OF IT. HE SAYS HE'S GETTING USED TO IT." }
+					} }
+			]
 		}
 	},
 	"schedule": {

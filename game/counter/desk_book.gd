@@ -1,12 +1,15 @@
 ## Leo's books at the counter: his notebook (what he's caught people saying, and what he's
 ## worked out), the station's sticker log (every inspection sticker issued, last fall's pages
-## included), and the Ministry's tally on him.
+## included), the filing cabinet (every work order he's stamped, which is how the regulars and
+## the people he turned away remember him, and what the Ministry's auditor pulls), and the
+## Ministry's tally on him.
 ##
 ## Static, like StoryState. In the story it lives in StoryState.flags["desk_book"], so it saves
 ## and starts over with the story; free play starts a fresh book every time.
 ##
 ## Hooks for the story: DeskBook.note(id, text, day) writes in the notebook, has_note(id)
-## asks, old_log = true brings last fall's pages out of the filing cabinet.
+## asks, old_log = true brings last fall's pages out of the filing cabinet, last_file(id) says
+## what Leo stamped on a scripted customer or a regular last time.
 class_name DeskBook
 extends RefCounted
 
@@ -32,6 +35,15 @@ static var warnings := 0              # free ones, all time
 static var meetings := 0              # Ministry meetings about the licence
 static var old_log := false           # last fall's pages are on the desk
 static var flags: Array = []          # story flags the desk has raised and not yet handed over
+## Every work order stamped: [{no, day, stamp, correct, probs, kind, id, seed, of, who, car,
+## plate, request, back, pulled}]. `id` names a regular or a scripted customer ("" for a
+## walk-in), `seed` rebuilds a walk-in's papers (-1 if it can't), `of` is the file a returning
+## customer came back about, `back` says they did. WALKED is the stamp for a regular who
+## drove off at six.
+static var files: Array = []
+## Inspector Hachey's audit: [{no, day, was, now}] for every file he pulled.
+static var audits: Array = []
+const MAX_FILES := 400                # the cabinet keeps the newest
 
 ## A blank book.
 static func reset() -> void:
@@ -42,10 +54,12 @@ static func reset() -> void:
 	meetings = 0
 	old_log = false
 	flags = []
+	files = []
+	audits = []
 
 static func to_dict() -> Dictionary:
 	return { "notes": notes, "stickers": stickers, "citations": citations, "warnings": warnings,
-		"meetings": meetings, "old_log": old_log }
+		"meetings": meetings, "old_log": old_log, "files": files, "audits": audits }
 
 static func from_dict(d: Dictionary) -> void:
 	reset()
@@ -55,6 +69,15 @@ static func from_dict(d: Dictionary) -> void:
 	warnings = int(d.get("warnings", 0))
 	meetings = int(d.get("meetings", 0))
 	old_log = bool(d.get("old_log", false))
+	# the save is JSON: numbers come back as floats
+	for f in d.get("files", []):
+		var rec: Dictionary = (f as Dictionary).duplicate(true)
+		for k in ["no", "day", "seed", "of"]: rec[k] = int(rec.get(k, -1 if k == "seed" else 0))
+		files.append(rec)
+	for a in d.get("audits", []):
+		var rec: Dictionary = (a as Dictionary).duplicate(true)
+		for k in ["no", "day"]: rec[k] = int(rec.get(k, 0))
+		audits.append(rec)
 
 ## The book as the story left it (or a fresh one outside the story).
 static func open_book() -> void:
@@ -113,6 +136,44 @@ static func gap(a: int, b: int, old: bool) -> Array:
 	for n in range(mini(a, b) + 1, maxi(a, b)):
 		if not have.has(n): out.append(n)
 	return out
+
+# ------------------------------------------------------------------ the filing cabinet
+
+## File a work order once it's stamped (or once a regular's driven off: stamp WALKED).
+## `probs` is what was really wrong with it, read off the papers at the time.
+static func file(day: int, c: Dictionary, stamp: String, correct: bool, probs: Array) -> Dictionary:
+	var spec: Dictionary = c.get("script", {})
+	var id := String(c.get("regular", ""))
+	if id == "": id = String(spec.get("id", ""))
+	if id == "" and c.has("courier"): id = "courier_" + String(c.courier)
+	var who := String(c.licence.name) if c.has("licence") else "%s %s" % [c.person.first, c.person.last]
+	var rec := { "no": next_file(), "day": day, "stamp": stamp, "correct": correct, "probs": probs.duplicate(),
+		"kind": String(c.kind), "id": id, "seed": int(c.get("seed", -1)), "of": int(spec.get("of", 0)), "who": who,
+		"car": "%d %s %s" % [int(c.car.year), c.car.make, c.car.model], "plate": String(c.car.plate), "request": String(c.request) }
+	if c.has("want"): rec.want = String(c.want)
+	files.append(rec)
+	# somebody coming back about an old file: that file's done with
+	if rec.of > 0:
+		var old := file_no(rec.of)
+		if not old.is_empty(): old.back = true
+	if files.size() > MAX_FILES: files = files.slice(files.size() - MAX_FILES)
+	return rec
+
+## The next work order number.
+static func next_file() -> int:
+	return 1 if files.is_empty() else int(files[files.size() - 1].no) + 1
+
+static func file_no(no: int) -> Dictionary:
+	for f in files: if int(f.no) == no: return f
+	return {}
+
+## The last file on a regular (or a scripted customer, or a courier) from before `day`: {} if
+## Leo's never seen them.
+static func last_file(id: String, before_day := 100000) -> Dictionary:
+	for i in range(files.size() - 1, -1, -1):
+		var f: Dictionary = files[i]
+		if String(f.id) == id and int(f.day) < before_day: return f
+	return {}
 
 # ------------------------------------------------------------------ the Ministry
 
