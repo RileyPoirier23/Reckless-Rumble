@@ -1,0 +1,84 @@
+{
+	"_about": "Scripted customers at the counter (CounterRules.scripted). 'schedule' books them by chapter and day (days count from Monday 7 October 2019 = 0). A story step can also bring its own: { \"type\": \"counter\", \"day\": 9, \"customers\": [\"dale_hatch\", { ...a spec... }] }. Keys: kind (story or familia), cast (a StoryScript.CAST face), person, car (catalogue id, paint), request, problem (a CounterRules problem id, or clean), excuse (a covered discrepancy with valid proof), papers (overrides per document), says, napkin, mask, letter ({title, lines}), ask (topic -> {line, doc, clue}), clue ({id, note}: what Leo can write in his notebook from what they say), outcomes (stamp -> {line, citation, money, dirty, heat, trust, review, correct, flags}), arrive (H:MM).",
+	"customers": {
+		"dale_hatch": {
+			"kind": "story",
+			"person": { "first": "DALE", "last": "HATCH", "face": 516200, "fem": 0, "dob": [1961, 3, 2], "address": "HATCH MOTORS, SHEDIAC RD" },
+			"car": { "catalogue": "cadillak_ctz_vee_2012", "paint": "#1e1e24" },
+			"request": "SAFETY INSPECTION",
+			"problem": "clean",
+			"arrive": "10:30",
+			"says": "MY GUYS ARE SWAMPED, SO HERE I AM. SAFETY ON THIS ONE, SON. FRANKIE ALWAYS DID MY USED ONES.",
+			"letter": { "title": "HATCH MOTORS", "lines": ["FROM THE DESK OF DALE HATCH", "", "LEO -", "AN OFFER FOR COVINGTON AUTO.", "A FAIR PRICE. FOR FRANK'S KIDS.", "NO RUSH. THINK IT OVER.", "", "- D.H."] },
+			"ask": {
+				"local": { "line": "THE MOUNTAIN TIM'S. FRANKIE AND I USED TO SIT IN THAT LOT. HE TOOK IT BLACK. CHECKED HIS BRAKES EVERY SUNDAY, TOO. CAREFUL MAN.",
+					"clue": { "id": "hatch_sundays", "note": "HATCH KNOWS DAD CHECKED HIS BRAKES EVERY SUNDAY. SO DID EVERYBODY, I GUESS." } }
+			},
+			"outcomes": {
+				"APPROVED": { "line": "\"Good man. Frankie's boy.\" He tucks the card under the mug. \"Think about it. For Aries.\" You never told him her name.", "flags": ["hatch_offer_seen"] },
+				"DENIED": { "line": "He laughs like it's a joke you both told. \"Sure, son. Sure.\" There was nothing wrong with it. He knows you know." },
+				"REPORT": { "line": "Constable Tremblay looks at the papers, looks at Hatch, and buys him a coffee. Then she looks at you for a long time.", "heat": 5 },
+				"WRENCH": { "line": "\"Off the books? Son, I sell cars. Everything I do is on the books.\" He smiles. Gus puts his coffee down.", "citation": "" }
+			}
+		},
+		"darrell_trade": {
+			"kind": "story",
+			"cast": "DARRELL",
+			"person": { "first": "DARRELL", "last": "LEGER", "address": "88 CLOVERDALE RD" },
+			"car": { "catalogue": "dodgy_dakotuh_2000", "paint": "#3a5a3a" },
+			"request": "SAFETY INSPECTION",
+			"problem": "odo_rollback",
+			"arrive": "13:15",
+			"says": "SAFETY ON THE DAKOTUH. TRADING IT IN AT HATCH'S. LOW KAYS. GARAGE-KEPT. THE GARAGE IS OUTSIDE.",
+			"ask": {
+				"odo_rollback": { "line": "THE ODOMETER'S BRAND NEW. WELL. NOT NEW. IT'S FROM A DIFFERENT TRUCK. HATCH'S GUYS DO IT ALL DAY. SHH.",
+					"clue": { "id": "darrell_hatch_lot", "note": "DARRELL SAYS HATCH'S LOT WINDS BACK ODOMETERS \"ALL DAY.\" DARRELL SAYS A LOT OF THINGS." } },
+				"local": { "line": "I DON'T DRINK COFFEE. MEDIUM DOUBLE-DOUBLE. THE MOUNTAIN ONE." }
+			},
+			"outcomes": {
+				"APPROVED": { "line": "Darrell drives off honking. Three days later Hatch Motors lists it online: LOW KMS! ONE OWNER! SAFETIED AT COVINGTON AUTO." },
+				"DENIED": { "line": "\"Fair. Fair. I'll go to Lindsay's.\" He winks. \"Don't tell Hatch's guys about the kays. They think it's a low-mileage truck.\"", "flags": ["darrell_rollback_caught"] },
+				"REPORT": { "line": "Constable Tremblay writes it up as \"a paperwork thing.\" Darrell waves from the back of the cruiser. He seems happy for the ride." }
+			}
+		},
+		"familia_charjer": {
+			"kind": "familia",
+			"cast": "SAL",
+			"car": { "catalogue": "charjer", "paint": "#16161c" },
+			"request": "\"DETAILING\"",
+			"problem": "vin_mismatch",
+			"arrive": "15:40",
+			"says": "DOM SENT ME. THE CHARJER NEEDS A BATH. THE KIND WITH NUMBERS.",
+			"napkin": "BAY 3. NEW NUMBERS ON THE CHARJER BY SATURDAY. DOM SAYS THANK YOU IN ADVANCE. -S",
+			"ask": { "local": { "line": "THE MOUNTAIN ONE. DOM LIKES THE ONE BY THE CHURCH. HE SAYS THE COFFEE'S BLESSED." } }
+		},
+		"familia_durangoh": {
+			"kind": "familia",
+			"car": { "catalogue": "dodgy_durangoh_2001", "paint": "#2a2a2e" },
+			"request": "\"DETAILING\"",
+			"problem": "plate_mismatch",
+			"arrive": "11:10",
+			"says": "SAL SAYS SAME AS LAST WEEK. QUIETER, THOUGH.",
+			"napkin": "SAME AS LAST WEEK. QUIETER. -S"
+		},
+		"familia_halloween": {
+			"kind": "familia",
+			"car": { "catalogue": "chevrolay_impaler_2008", "paint": "#6a2a4a" },
+			"request": "\"DETAILING\"",
+			"problem": "vin_mismatch",
+			"mask": "GOALIE",
+			"arrive": "16:20",
+			"says": "DOM SAYS IT'S A COSTUME. DOM SAYS HAPPY HALLOWEEN.",
+			"napkin": "TRICK OR TREAT. MOSTLY TRICK. -S"
+		}
+	},
+	"schedule": {
+		"1": {
+			"9": ["dale_hatch"],
+			"10": ["familia_charjer"],
+			"16": ["darrell_trade"],
+			"17": ["familia_durangoh"],
+			"24": ["familia_halloween"]
+		}
+	}
+}

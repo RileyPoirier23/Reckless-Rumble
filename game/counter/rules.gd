@@ -116,7 +116,12 @@ const QUESTIONS := {
 	"bos_forged": "THIS BILL OF SALE DOESN'T ADD UP.", "vin_door_mismatch": "THE DOOR'S FROM A DIFFERENT CAR.",
 	"out_of_province": "THIS CAR'S FROM AWAY. IT NEEDS THE FULL INSPECTION.", "salvage_no_cert": "IT'S BRANDED SALVAGE. WHERE'S THE STRUCTURAL?",
 	"title_washed": "IT WAS SALVAGE IN THE OTHER PROVINCE. HERE IT'S CLEAN?", "mask": "CAN YOU TAKE THAT OFF?",
+	"local": "SO. WHICH TIM'S DO YOU GO TO?",
 }
+## Small talk from people who actually live here.
+const LOCAL_LINES := ["THE MOUNTAIN TIM'S. LIKE A NORMAL PERSON.", "THE ONE ON MAIN. THE DRIVE-THRU KID THERE'S SEEN THINGS.",
+	"I DON'T GO TO TIM'S. I GO TO THE GAS BAR IN SALISBURY. THEIR COFFEE TASTES LIKE THE GAS. I RESPECT THAT.",
+	"WHICHEVER ONE HAS THE SHORTEST LINE. SO NONE OF THEM.", "MOUNTAIN RD. MY SISTER-IN-LAW WORKS THE WINDOW. SHE HATES ME. FREE TIMBITS, THOUGH."]
 ## Explanations, by discrepancy: lies, and true things that don't change a thing.
 const EXCUSES := {
 	"vin_mismatch": ["THE VIN'S DIFFERENT BECAUSE I HAD THE DASH REPLACED. WITH A DIFFERENT DASH. FROM A DIFFERENT CAR. THAT'S NORMAL?",
@@ -375,7 +380,7 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 	if not plain:
 		if rule_active("oop", day) and rng.randf() < 0.15: _transfer(c, day)
 		if rule_active("salvage", day) and not want in ["salvage_no_cert", "title_washed"] and rng.randf() < 0.1:
-			c.reg.brand = "SALVAGE"
+			_brand_salvage(c)
 			c.cert = { "vin": car.vin, "by": INSPECTORS[rng.randi() % INSPECTORS.size()], "issued": date_add(t, -(3 + rng.randi() % 200)) }
 			c.docs.append("cert")
 	# what's wrong with it (only problems the rules check today, so nothing is unfair)
@@ -404,6 +409,12 @@ func _transfer(c: Dictionary, day: int) -> void:
 		"issued": date_add(today(day), -(200 + rng.randi() % 2000)) }
 	if not c.docs.has("old_reg"): c.docs.append("old_reg")
 	c.request = "FULL INSPECTION"
+
+## Branded salvage, here and (if it came from away) on the old ownership too: the brand
+## followed it honestly.
+func _brand_salvage(c: Dictionary) -> void:
+	c.reg.brand = "SALVAGE"
+	if c.has("old_reg"): c.old_reg.brand = "SALVAGE"
 
 ## The car is in somebody else's name.
 func _other_owner(c: Dictionary) -> void:
@@ -473,7 +484,7 @@ func _inject(c: Dictionary, prob: String, day: int) -> void:
 			if String(c.reg.prev) == "": _transfer(c, day)
 			c.request = ["SAFETY INSPECTION", "OIL CHANGE", "BRAKE JOB", "WINTER TIRES ON"][rng.randi() % 4]
 		"salvage_no_cert":
-			c.reg.brand = "SALVAGE"
+			_brand_salvage(c)
 			c.erase("cert")
 			c.docs.erase("cert")
 			if rng.randf() < 0.4: _proof(c, "salvage_no_cert", day, "bad")
@@ -545,7 +556,7 @@ func excuse(c: Dictionary, day: int, base := "") -> bool:
 		"expired_reg": c.reg.expires = date_add(today(day), -(1 + rng.randi() % 60))
 		"vin_door_mismatch": c.sheet.door = vin()
 		"salvage_no_cert":
-			c.reg.brand = "SALVAGE"
+			_brand_salvage(c)
 			c.erase("cert")
 			c.docs.erase("cert")
 	_proof(c, base, day, "valid")
@@ -553,7 +564,7 @@ func excuse(c: Dictionary, day: int, base := "") -> bool:
 
 ## Thursday on: one of the Familia's cars. Something's wrong with it, and there's a napkin.
 func familia(day: int) -> Dictionary:
-	var c := customer(day, "vin_mismatch" if rng.randf() < 0.5 else "plate_mismatch")
+	var c := customer(day, "vin_mismatch" if rng.randf() < 0.5 else "plate_mismatch", { "plain": true })
 	c.kind = "familia"
 	c.napkin = ["DOM SAYS MAKE IT CLEAN. FAMILY PRICE. -S", "NEW NUMBERS ON THIS ONE. NO PAPERWORK. -S", "YOU KNOW WHAT TO DO. DOM SAYS HI. -S"][rng.randi() % 3]
 	c.request = "\"DETAILING\""
@@ -563,7 +574,7 @@ func familia(day: int) -> Dictionary:
 
 ## Someone who isn't who he says he is asks for the thing you shouldn't do.
 func sting(day: int) -> Dictionary:
-	var c := customer(day, "vin_mismatch")
+	var c := customer(day, "vin_mismatch", { "plain": true })
 	c.kind = "sting"
 	c.napkin = "HEARD YOU DO NEW NUMBERS. $800 CASH. NO QUESTIONS. -A FRIEND OF A FRIEND"
 	c.request = "\"DETAILING\""
@@ -585,11 +596,13 @@ func shift(day: int, heat := 0, extra: Array = [], chapter := 1) -> Array:
 	while t < 555.0:
 		out.append({ "t": t, "c": customer(day) })
 		t += rng.randf_range(lo, hi)
-	if posmod(day, 7) == 3 or day == 4: out.append({ "t": 60.0 + rng.randf() * 360.0, "c": familia(day) })
-	if sting_day(day, heat): out.append({ "t": 120.0 + rng.randf() * 300.0, "c": sting(day) })
 	var specs: Array = []
 	for id in scheduled(chapter, day): specs.append(story_spec(id))
 	for e in extra: specs.append(story_spec(e) if e is String else e)
+	# a scripted Familia car takes the Thursday napkin's place
+	var fam_scripted := specs.any(func(s): return String((s as Dictionary).get("kind", "")) == "familia")
+	if (posmod(day, 7) == 3 or day == 4) and not fam_scripted: out.append({ "t": 60.0 + rng.randf() * 360.0, "c": familia(day) })
+	if sting_day(day, heat): out.append({ "t": 120.0 + rng.randf() * 300.0, "c": sting(day) })
 	for s in specs:
 		if (s as Dictionary).is_empty(): continue
 		out.append({ "t": arrive_of(s), "c": scripted(s, day) })
@@ -639,7 +652,18 @@ static func arrive_of(spec: Dictionary) -> float:
 func scripted(spec: Dictionary, day: int) -> Dictionary:
 	var r := CounterRules.new(hash(String(spec.get("id", "story"))))
 	r.bolo = bolo
-	var fixed := { "person": spec.get("person", {}), "car": spec.get("car", {}), "plain": true }
+	# a member of the cast wears their own face (JSON numbers come in as floats)
+	var who: Dictionary = (spec.get("person", {}) as Dictionary).duplicate()
+	var cast: Dictionary = StoryScript.CAST.get(String(spec.get("cast", "")), {})
+	if not cast.is_empty():
+		if not who.has("face"): who.face = int(cast.seed)
+		if not who.has("fem"): who.fem = int(cast.female)
+		if not who.has("dob"): who.dob = [YEAR - int(cast.age), 6, 15]
+	for k in ["face", "fem"]: if who.has(k): who[k] = int(who[k])
+	if who.has("dob"): who.dob = (who.dob as Array).map(func(x): return int(x))
+	var fcar: Dictionary = (spec.get("car", {}) as Dictionary).duplicate()
+	if fcar.has("year"): fcar.year = int(fcar.year)
+	var fixed := { "person": who, "car": fcar, "plain": true }
 	if spec.has("request"): fixed.request = spec.request
 	var prob := String(spec.get("problem", "clean"))
 	var c := r.customer(day, prob if prob != "" else "clean", fixed)
@@ -738,10 +762,236 @@ static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 	if rule_active("oop", day) and String(reg.get("prev", "")) != "" and c.request != "FULL INSPECTION": out.append("out_of_province")
 	if rule_active("salvage", day):
 		if String(reg.get("brand", "CLEAN")) == "SALVAGE" and not proof_ok(c, "salvage_no_cert", day): out.append("salvage_no_cert")
-		if c.has("old_reg") and String(c.old_reg.brand) != String(reg.get("brand", "CLEAN")): out.append("title_washed")
+		if c.has("old_reg") and String(c.old_reg.brand) == "SALVAGE" and String(reg.get("brand", "CLEAN")) != "SALVAGE": out.append("title_washed")
 	return out
 
-## What a customer says when you ASK about `topic`: {line, doc (handed over), unmask}.
+# ------------------------------------------------------------------ the desk: what Leo can put side by side
+
+## Every paper that can land on the desk.
+const DOC_TITLES := { "work": "WORK ORDER - COVINGTON AUTO", "reg": "VEHICLE REGISTRATION", "licence": "DRIVER'S LICENCE",
+	"insurance": "PROOF OF INSURANCE", "glovebox": "PINK CARD (FROM THE GLOVEBOX)", "sheet": "GUS'S SHEET (READ OFF THE CAR)",
+	"history": "SERVICE HISTORY", "old_reg": "OLD OWNERSHIP", "bos": "BILL OF SALE", "permit": "TEMPORARY PERMIT",
+	"door_inv": "BODY SHOP INVOICE", "cert": "STRUCTURAL CERTIFICATE", "napkin": "", "letter": "" }
+## What Leo can ASK about, in two or three words.
+const TOPIC_LABEL := {
+	"vin_mismatch": "THE VIN", "plate_mismatch": "THE PLATE", "fails_inspection": "WHY IT FAILS", "expired_reg": "THE REGISTRATION",
+	"no_insurance": "THE INSURANCE", "insurance_expired": "THE INSURANCE DATES", "insurance_vin": "THE INSURANCE VIN",
+	"name_mismatch": "WHOSE CAR IT IS", "stolen": "THE STOLEN LIST", "photo_mismatch": "THE PHOTO", "odo_rollback": "THE ODOMETER",
+	"bos_expired": "THE SALE DATE", "bos_forged": "THE BILL OF SALE", "vin_door_mismatch": "THE DOOR", "out_of_province": "WHERE IT'S FROM",
+	"salvage_no_cert": "THE SALVAGE BRAND", "title_washed": "THE OLD BRAND", "mask": "THE MASK", "local": "SMALL TALK",
+}
+## Which papers a mismatch points at, by the kind of fact and the paper that's wrong.
+const _TOPIC_BY_DOC := {
+	"vin": { "reg": "vin_mismatch", "insurance": "insurance_vin", "glovebox": "insurance_vin", "bos": "bos_forged",
+		"permit": "expired_reg", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch", "sheet": "vin_door_mismatch" },
+	"plate": { "reg": "plate_mismatch", "work": "plate_mismatch", "permit": "expired_reg" },
+	"name": { "bos": "bos_forged" }, "owner": { "bos": "bos_forged" },
+}
+const _DATE_TOPIC := { "reg": "expired_reg", "permit": "expired_reg", "insurance": "insurance_expired", "glovebox": "insurance_expired",
+	"bos": "bos_expired", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch" }
+
+## The rows of a paper: [label, text, fact key ("" if there's nothing to compare), value].
+## Fact keys: name, owner, plate, vin, car, job, expiry, start, sold, dated, brand, prov, odo, km,
+## measure, photo. The papers only grow rows once a rule makes them matter.
+static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
+	var raw = c.get(id, {})
+	var d: Dictionary = raw if raw is Dictionary else {}
+	match id:
+		"work": return [["NAME", c.work.name, "name", c.work.name], ["PLATE", c.work.plate, "plate", c.work.plate],
+			["CAR", c.work.car, "car", c.work.car], ["WORK", c.request, "job", c.request]]
+		"reg":
+			var rows := [["OWNER", d.owner, "owner", d.owner], ["ADDRESS", d.address, "", null], ["CAR", d.car, "car", d.car],
+				["PLATE", d.plate, "plate", d.plate], ["VIN", d.vin, "vin", d.vin], ["EXPIRES", date_str(d.expires), "expiry", d.expires]]
+			if rule_active("oop", day): rows.append(["PREV.", "NEW BRUNSWICK" if String(d.get("prev", "")) == "" else "TRANSFER FROM " + String(d.prev), "prov", String(d.get("prev", ""))])
+			if rule_active("salvage", day): rows.append(["BRAND", d.get("brand", "CLEAN"), "brand", d.get("brand", "CLEAN")])
+			return rows
+		"licence": return [["NAME", d.name, "name", d.name], ["BORN", date_str(d.dob), "", null], ["ADDR", d.address, "", null],
+			["NO.", d.number, "", null], ["EXPIRES", date_str(d.expires), "expiry", d.expires]]
+		"insurance", "glovebox": return [["INSURED", d.holder, "name", d.holder], ["COMPANY", d.insurer, "", null],
+			["POLICY", d.policy, "", null], ["VIN", d.vin, "vin", d.vin], ["FROM", date_str(d.from), "start", d.from], ["TO", date_str(d.to), "expiry", d.to]]
+		"sheet":
+			var tr: Array = d.tread
+			var pd: Array = d.pads
+			var rows := [["VIN", d.vin, "vin", d.vin]]
+			if rule_active("door", day): rows.append(["DOOR VIN", d.door, "vin", d.door])
+			rows.append_array([["ODO", "%d KM" % d.odo, "odo", d.odo],
+				["TREAD", "FL %.1f FR %.1f RL %.1f RR %.1f" % [tr[0], tr[1], tr[2], tr[3]], "measure", { "kind": "tread", "v": tr }],
+				["PADS", "FRONT %.1f  REAR %.1f" % [pd[0], pd[1]], "measure", { "kind": "pads", "v": pd }],
+				["LIGHTS", "ALL WORKING" if d.lights else "LEFT TAIL OUT", "measure", { "kind": "lights", "v": d.lights }],
+				["RUST", ("SURFACE ONLY" if d.get("surface", false) else "NONE") if not d.rust else "THROUGH THE ROCKER", "measure", { "kind": "rust", "v": d.rust }]])
+			return rows
+		"history":
+			var rows: Array = []
+			var hist: Array = c.get("history", [])
+			for i in hist.size():
+				var e: Dictionary = hist[i]
+				rows.append([date_str(e.date), "%-18s %7d KM" % [e.shop, e.km], "km", { "km": int(e.km), "date": e.date }])
+			return rows
+		"old_reg": return [["PROVINCE", d.prov, "", null], ["OWNER", d.owner, "owner", d.owner], ["VIN", d.vin, "vin", d.vin],
+			["PLATE", d.plate + " (" + String(d.prov) + ")", "", null], ["BRAND", d.brand, "brand", d.brand], ["ISSUED", date_str(d.issued), "dated", d.issued]]
+		"bos": return [["SELLER", d.seller, "owner", d.seller], ["BUYER", d.buyer, "name", d.buyer], ["VIN", d.vin, "vin", d.vin],
+			["PRICE", "$%d" % int(d.price), "", null], ["SOLD", date_str(d.sold), "sold", d.sold]]
+		"permit": return [["PLATE", d.plate, "plate", d.plate], ["VIN", d.vin, "vin", d.vin],
+			["FROM", date_str(d.from), "start", d.from], ["TO", date_str(d.to), "expiry", d.to]]
+		"door_inv": return [["SHOP", d.shop, "", null], ["CAR VIN", d.vin, "vin", d.vin], ["NEW DOOR", d.door, "vin", d.door],
+			["DATE", date_str(d.date), "dated", d.date], ["AMOUNT", "$%d" % int(d.amount), "", null]]
+		"cert": return [["VIN", d.vin, "vin", d.vin], ["SIGNED", d.by, "", null], ["ISSUED", date_str(d.issued), "dated", d.issued]]
+	return []
+
+## A door's VIN (on Gus's sheet or on the body shop's invoice), not the car's.
+static func _is_door(f: Dictionary) -> bool:
+	return f.get("key", "") == "vin" and String(f.get("row", "")) in ["DOOR VIN", "NEW DOOR"]
+
+## What a fact should say if its paper is honest: the car itself is the truth for VINs and
+## plates, the licence for the customer's name, the ownership for the owner's.
+static func _should_be(c: Dictionary, f: Dictionary) -> Variant:
+	match String(f.key):
+		"vin": return c.sheet.door if String(f.get("row", "")) == "NEW DOOR" else c.sheet.vin
+		"plate": return c.car.plate
+		"name": return c.licence.name
+		"owner": return c.reg.owner
+	return f.val
+
+## Which paper is lying in a mismatch, as an ASK topic.
+static func _culprit(c: Dictionary, a: Dictionary, b: Dictionary) -> String:
+	var k: String = a.key
+	if k == "brand": return "title_washed"
+	if _is_door(a) != _is_door(b): return "vin_door_mismatch"
+	var by: Dictionary = _TOPIC_BY_DOC.get(k, {})
+	for f in [a, b]:
+		if f.val != _should_be(c, f): return String(by.get(String(f.get("doc", "")), "name_mismatch" if k in ["name", "owner"] else ""))
+	for f in [a, b]:
+		var tp := String(by.get(String(f.get("doc", "")), ""))
+		if tp != "": return tp
+	return ""
+
+## Leo reads two facts side by side: [what he concludes, good (true, false or null), the ASK
+## topic a red verdict opens ("" if none)]. Facts are {key, val, doc, row}; the rules on the
+## wall are {key: "rule", val: rule id}.
+static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b: Dictionary) -> Array:
+	var ka: String = a.key
+	var kb: String = b.key
+	var pair := [ka, kb]
+	var t := today(day)
+	if ka == kb and ka in ["name", "owner", "plate", "vin", "car", "brand"]:
+		if a.val == b.val: return ["MATCH", true, ""]
+		return ["MISMATCH", false, _culprit(c, a, b)]
+	if pair.has("owner") and pair.has("name"):
+		if a.get("doc", "") == "bos" and b.get("doc", "") == "bos": return ["SELLER AND BUYER", null, ""]
+		return ["SAME PERSON", true, ""] if a.val == b.val else ["NOT THE OWNER", false, "name_mismatch"]
+	if ka == "km" and kb == "km":
+		var early: Dictionary = a.val if date_cmp(a.val.date, b.val.date) <= 0 else b.val
+		var late: Dictionary = b.val if early == a.val else a.val
+		if int(late.km) < int(early.km): return ["THE MILEAGE WENT DOWN", false, "odo_rollback"]
+		return ["THE MILEAGE WENT UP", true, ""]
+	if ka == kb: return ["NOTHING TO COMPARE", null, ""]
+	var other: Dictionary = b if ka == "today" or ka == "rule" else a
+	var fixed: Dictionary = a if other == b else b
+	if fixed.key == "today":
+		var d = other.val
+		var topic := String(_DATE_TOPIC.get(String(other.get("doc", "")), ""))
+		match String(other.key):
+			"expiry": return ["EXPIRED " + date_str(d), false, topic] if date_cmp(d, t) < 0 else ["STILL VALID", true, ""]
+			"start": return ["NOT IN EFFECT YET", false, topic] if date_cmp(d, t) > 0 else ["IN EFFECT", true, ""]
+			"dated": return ["DATED IN THE FUTURE", false, topic] if date_cmp(d, t) > 0 else ["DATED BEFORE TODAY", true, ""]
+			"sold": return _sold(d, t)
+	if pair.has("photo") and pair.has("person"):
+		if String(c.get("mask", "")) != "": return ["CAN'T SEE A FACE UNDER THAT MASK", null, "mask"]
+		return ["SAME PERSON", true, ""] if a.val == b.val else ["THAT'S NOT THEM", false, "photo_mismatch"]
+	if pair.has("bolo") and (pair.has("plate") or pair.has("vin")):
+		var x: Dictionary = a if ka != "bolo" else b
+		for e in bolo_list:
+			if e[x.key] == x.val: return ["ON THE STOLEN LIST", false, "stolen"]
+		return ["NOT ON THE LIST", true, ""]
+	if pair.has("odo") and pair.has("km"):
+		var km: Dictionary = a.val if ka == "km" else b.val
+		var odo: int = int(b.val if ka == "km" else a.val)
+		if int(km.km) > odo: return ["%d KM BEFORE, %d KM NOW" % [int(km.km), odo], false, "odo_rollback"]
+		return ["UNDER TODAY'S ODOMETER", true, ""]
+	if pair.has("job") and pair.has("prov"):
+		return _from_away(c)
+	if fixed.key == "rule": return _against_rule(c, day, String(fixed.val), other)
+	return ["NOTHING TO COMPARE", null, ""]
+
+static func _sold(d: Array, t: Array) -> Array:
+	var n := days_between(d, t)
+	if n < 0: return ["SOLD IN THE FUTURE", false, "bos_forged"]
+	if n > 10: return ["SOLD %d DAYS AGO: OVER 10" % n, false, "bos_expired"]
+	return ["SOLD %d DAYS AGO" % n, true, ""]
+
+static func _from_away(c: Dictionary) -> Array:
+	if String(c.reg.get("prev", "")) == "": return ["REGISTERED HERE", true, ""]
+	if c.request == "FULL INSPECTION": return ["FROM AWAY: FULL INSPECTION BOOKED", true, ""]
+	return ["FROM AWAY: NEEDS THE FULL INSPECTION", false, "out_of_province"]
+
+## A fact held up against a rule on the wall.
+static func _against_rule(c: Dictionary, day: int, rule: String, f: Dictionary) -> Array:
+	var k: String = f.key
+	match rule:
+		"inspect":
+			if k != "measure": return ["NOTHING TO COMPARE", null, ""]
+			var m: Dictionary = f.val
+			match m.kind:
+				"tread":
+					for x in m.v: if x < 1.6: return ["%.1f MM TREAD: FAILS" % x, false, "fails_inspection"]
+					return ["TREAD PASSES", true, ""]
+				"pads":
+					for x in m.v: if x < 3.0: return ["%.1f MM PADS: FAILS" % x, false, "fails_inspection"]
+					return ["PADS PASS", true, ""]
+				"lights": return ["LIGHTS WORK", true, ""] if m.v else ["A LIGHT IS OUT: FAILS", false, "fails_inspection"]
+				"rust": return ["RUSTED THROUGH: FAILS", false, "fails_inspection"] if m.v else ["NO RUST-THROUGH", true, ""]
+		"odo":
+			if k in ["odo", "km"]: return ["THE ODOMETER WENT BACKWARDS", false, "odo_rollback"] if odo_rolled(c) else ["READINGS ONLY GO UP", true, ""]
+		"bos":
+			if k == "sold": return _sold(f.val, today(day))
+		"door":
+			if _is_door(f) and f.get("doc", "") == "sheet": return ["DOOR MATCHES THE DASH", true, ""] if f.val == c.sheet.vin else ["NOT THIS CAR'S DOOR", false, "vin_door_mismatch"]
+		"oop":
+			if k in ["prov", "job"]: return _from_away(c)
+		"reg_valid":
+			if k == "expiry" and f.get("doc", "") == "reg":
+				return ["EXPIRED: NO SERVICE", false, "expired_reg"] if date_cmp(f.val, today(day)) < 0 else ["REGISTRATION VALID", true, ""]
+		"salvage":
+			if k == "brand":
+				if String(f.val) != "SALVAGE":
+					if c.has("old_reg") and String(c.old_reg.brand) == "SALVAGE": return ["CLEAN HERE. WHAT ABOUT THE OLD ONE?", null, ""]
+					return ["CLEAN TITLE", true, ""]
+				if c.has("cert") and not c.get("hidden", []).has("cert"): return ["SALVAGE: CHECK THE CERTIFICATE", null, ""]
+				return ["SALVAGE, NO STRUCTURAL CERTIFICATE", false, "salvage_no_cert"]
+		"masks":
+			if k == "person": return ["MASK ON: ASK", null, "mask"] if String(c.get("mask", "")) != "" else ["NO MASK", true, ""]
+	return ["NOTHING TO COMPARE", null, ""]
+
+## Everything on the desk and the wall as facts (no positions): the papers (with the ones
+## still in the customer's pocket when `pockets`), the calendar, the face, the plate on the
+## car, the stolen list and the rules. What the tests compare in pairs.
+static func desk_facts(c: Dictionary, day: int, pockets := true) -> Array:
+	var out: Array = []
+	var ids: Array = c.docs.duplicate()
+	if pockets:
+		for h in c.get("hidden", []): if not ids.has(h): ids.append(h)
+	for id in ids:
+		for row in doc_rows(c, id, day):
+			if row[2] != "": out.append({ "key": row[2], "val": row[3], "doc": id, "row": row[0] })
+		if id == "licence": out.append({ "key": "photo", "val": c.licence.face, "doc": id, "row": "PHOTO" })
+	out.append({ "key": "today", "val": today(day), "doc": "" })
+	out.append({ "key": "person", "val": c.face_shown, "doc": "" })
+	out.append({ "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE" })
+	if rule_active("bolo", day): out.append({ "key": "bolo", "val": 0, "doc": "" })
+	for r in rules_for(day): out.append({ "key": "rule", "val": r.id, "doc": "" })
+	return out
+
+## What Leo can ask without proving anything first: where the insurance card is, what's
+## under the mask, and small talk (which undercover people are bad at).
+static func standing_topics(c: Dictionary, day: int) -> Array:
+	var out: Array = []
+	if String(c.get("mask", "")) != "": out.append("mask")
+	var shown_glovebox: bool = c.has("glovebox") and not c.get("hidden", []).has("glovebox")
+	if rule_active("insured", day) and (c.insurance as Dictionary).is_empty() and not shown_glovebox: out.append("no_insurance")
+	out.append("local")
+	return out
+
+## What a customer says when you ASK about `topic`: {line, doc (handed over), unmask, clue}.
 static func answer(c: Dictionary, topic: String) -> Dictionary:
 	var h := absi(int(c.person.face) + hash(topic))
 	if topic == "mask": return { "line": MASK_LINES[h % MASK_LINES.size()], "unmask": true }
@@ -749,6 +999,7 @@ static func answer(c: Dictionary, topic: String) -> Dictionary:
 	match c.kind:
 		"sting": return { "line": STING_ASK[h % STING_ASK.size()] }
 		"familia": return { "line": "DOM SAYS YOU DON'T ASK. HE SAYS IT NICE, BUT HE SAYS IT." }
+	if topic == "local": return { "line": LOCAL_LINES[h % LOCAL_LINES.size()] }
 	var pool: Array = EXCUSES.get(topic, [])
 	if pool.is_empty(): return { "line": "I DON'T KNOW ANYTHING ABOUT THAT. I JUST DRIVE IT." }
 	return { "line": pool[h % pool.size()] }
@@ -757,6 +1008,13 @@ static func answer(c: Dictionary, topic: String) -> Dictionary:
 static func fine_for(c: Dictionary, warnings_used: int) -> int:
 	if c.kind == "sting": return 2000
 	return 0 if warnings_used < WARNINGS else FINE
+
+## What a stamp's citation costs on the day: {fine, warning}. A warning is logged and free.
+static func penalty(c: Dictionary, r: Dictionary, warnings_used: int) -> Dictionary:
+	if String(r.get("citation", "")) == "": return { "fine": 0, "warning": false }
+	if c.kind == "sting" or r.get("police", false): return { "fine": 2000 if c.kind == "sting" else FINE * 2, "warning": false }
+	var f := fine_for(c, warnings_used)
+	return { "fine": f, "warning": f == 0 }
 
 ## What the stamp did. Returns { money, dirty, citation, heat, trust, review, line, correct, flags }
 static func judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> Dictionary:
@@ -801,11 +1059,14 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 				r.line = "The police tow it. A cop says thanks without looking up." if hot else "The Ministry takes the file. Somebody in another province is about to have a very bad week."
 			"APPROVED":
 				r.correct = false
+				r.police = hot
 				r.heat = 25 if hot else 10
 				r.citation = "YOU WORKED ON A STOLEN CAR. IT WAS ON THE LIST ON YOUR WALL" if hot else "STICKERED A WASHED SALVAGE TITLE. THE BRAND WAS ON THE OLD OWNERSHIP"
 			"DENIED":
 				r.correct = false
-				if hot: r.citation = "STOLEN CAR SENT BACK ON THE ROAD. IT WAS ON THE LIST: REPORT IT"
+				if hot:
+					r.citation = "STOLEN CAR SENT BACK ON THE ROAD. IT WAS ON THE LIST: REPORT IT"
+					r.police = true
 				else: r.line = "\"Fine. I'll go to Lindsay's. She passes anything with a pulse.\" Somebody should've reported that title."
 			"WRENCH": r.correct = false; r.heat = 40; r.citation = "OFF-BOOKS WORK ON A STOLEN CAR" if hot else "OFF-BOOKS WORK ON A WASHED SALVAGE CAR"
 		return r
