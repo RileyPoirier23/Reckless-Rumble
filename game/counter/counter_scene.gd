@@ -59,6 +59,18 @@ var cur := Vector2(320, 200)
 var pad_cursor := false
 var car_view: CarView
 var demo := false
+var story: Dictionary = {}          # the story step, when this shift is part of the story
+var tutorial := false
+
+## Gus, standing behind you on your first day, one tip per customer.
+const TIPS := [
+	"GUS: DRAG THE PAPERS AROUND. THEN INSPECT (I OR Y) AND CLICK THE VIN ON THE OWNERSHIP, THEN THE VIN ON MY SHEET.",
+	"GUS: ...THAT'S A NAPKIN. I DIDN'T SEE A NAPKIN. WHAT HAPPENS IN BAY 3 IS YOUR BUSINESS NOW. (BAY 3 PAYS DOWN WHAT YOU OWE.)",
+	"GUS: PLATE ON THE CAR AGAINST THE PLATE ON THE OWNERSHIP. PEOPLE SWAP 'EM. PEOPLE ARE LIKE THAT.",
+	"GUS: SAFETY INSPECTIONS: TREAD, PADS, LIGHTS, RUST. INSPECT A READING AGAINST THE BULLETIN ON THE WALL.",
+	"GUS: STAMP THE WORK ORDER WHEN YOU'RE SURE. WHEN YOU'RE NOT SURE, LOOK AGAIN.",
+	"GUS: LAST ONE. THEN WE LOCK UP AND YOU GO DEAL WITH WHATEVER YOU'RE DEALING WITH.",
+]
 
 # the week's books
 var cash := CounterRules.START_CASH
@@ -73,7 +85,10 @@ func _ready() -> void:
 	car_view.position = Vector2(WINDOW.position.x + 160, 60)
 	car_view.scale = Vector2(1.5, 1.5)
 	add_child(car_view)
-	start_day(0)
+	if StoryState.active and String(StoryState.current().get("type", "")) == "counter":
+		story = StoryState.current()
+		tutorial = bool(story.get("tutorial", false))
+	start_day(int(story.get("day", 0)))
 	if OS.get_cmdline_user_args().has("--counter-demo"):
 		demo = true
 		var d: Node = load("res://tests/counter_demo.gd").new()
@@ -85,6 +100,12 @@ func _ready() -> void:
 func start_day(d: int) -> void:
 	day = d
 	line = rules.day_line(day)
+	if tutorial:
+		# the first day: a short line, and the Familia's first napkin second in it
+		line = line.slice(0, 4)
+		var fam := rules.familia(day)
+		fam.napkin = "BAY 3. NEW NUMBERS. DOM SAYS WELCOME TO THE FAMILY. -V"
+		line.insert(1, fam)
 	idx = 0
 	day_log = { "earned": 0, "dirty": 0, "fines": 0, "citations": [], "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
 	phase = "brief"
@@ -136,6 +157,9 @@ func _resolve() -> void:
 	phase = "result"
 
 func end_day() -> void:
+	if not story.is_empty():
+		_clock_out()
+		return
 	for k in ["earned", "dirty", "fines", "heat", "trust", "reviews", "correct", "seen"]: week[k] += day_log[k]
 	week.citations += day_log.citations.size()
 	if day >= 4:
@@ -143,6 +167,15 @@ func end_day() -> void:
 		phase = "week_end"
 	else:
 		start_day(day + 1)
+
+## CLOCK OUT: Leo's pay for the day (a cut of the shop's take), Bay 3 cash goes straight to
+## the Familia, and the story carries on into the evening.
+func _clock_out() -> void:
+	var wage := 60 + int(day_log.earned * 0.15)
+	StoryState.cash += wage
+	StoryState.debt = maxi(0, StoryState.debt - int(day_log.dirty))
+	StoryState.last_result = { "earned": day_log.earned, "dirty": day_log.dirty, "fines": day_log.fines, "correct": day_log.correct, "seen": day_log.seen, "wage": wage }
+	StoryState.advance(get_tree())
 
 var bills_paid: Array = []
 func _pay_bills() -> void:
@@ -452,6 +485,10 @@ func _draw() -> void:
 		"result": _draw_result()
 		"day_end": _draw_day_end()
 		"week_end": _draw_week_end()
+	if tutorial and phase in ["counter", "stamping"] and idx - 1 < TIPS.size():
+		var ls := wrap_text(TIPS[idx - 1], 74)
+		_panel(Rect2(150, 0, 320, 6 + ls.size() * 8), 0.92)
+		for k in ls.size(): PixelFont.draw(self, Vector2(156, 3 + k * 8), ls[k], Color("c8c0a8"))
 	if pad_cursor or demo: _draw_cursor()
 
 func _panel(r: Rect2, a := 0.9) -> void:
@@ -601,7 +638,12 @@ func _draw_brief() -> void:
 	PixelFont.draw_centered(self, 320, 54, "%s, %s" % [CounterRules.DAYS[day], CounterRules.date_str(t)], GOLD, 3, INK)
 	PixelFont.draw_centered(self, 320, 76, "WEEK ONE AT COVINGTON AUTO" if day == 0 else "DAY %d OF 5" % (day + 1), ASH)
 	var y := 96.0
-	for para in BRIEFS[day]:
+	var paras: Array = BRIEFS[day]
+	if tutorial:
+		paras = ["CLOCK IN: 8:00 A.M. GUS IS LEANING ON THE DOORFRAME WITH A COFFEE THAT SAYS WORLD'S OKAYEST BOSS.",
+			StoryState.fill("\"THAT'S {MANAGER}'S MUG. I SAID DON'T TOUCH THE MUG. FINE. KEEP IT. READ EVERY PAPER.\""),
+			"\"I'LL BE RIGHT BEHIND YOU. NOT HELPING. JUST BEHIND YOU.\""]
+	for para in paras:
 		for l in wrap_text(para, 62):
 			PixelFont.draw(self, Vector2(80, y), l, BONE, 2)
 			y += 13
@@ -657,7 +699,11 @@ func _draw_day_end() -> void:
 		PixelFont.draw(self, Vector2(150, y), "- " + cit, RED.lightened(0.3))
 		y += 8
 	if day == 3: PixelFont.draw_centered(self, 320, y + 6, "TOMORROW IS FRIDAY. BILLS ARE DUE.", GOLD)
-	PixelFont.draw_centered(self, 320, 304, "GO HOME" if day < 4 else "PAY THE BILLS", Color(BONE, 0.7))
+	if not story.is_empty():
+		PixelFont.draw_centered(self, 320, 286, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
+		PixelFont.draw_centered(self, 320, 304, "CLOCK OUT", Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
+	else:
+		PixelFont.draw_centered(self, 320, 304, "GO HOME" if day < 4 else "PAY THE BILLS", Color(BONE, 0.7))
 
 func _draw_week_end() -> void:
 	var r := Rect2(80, 20, 480, 320)

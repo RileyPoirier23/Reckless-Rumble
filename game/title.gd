@@ -7,11 +7,16 @@ const GOLD := Color("d9a441")
 const ASH := Color("8a8478")
 const RED := Color("e0402e")
 
-const ITEMS := [
-	["THE COUNTER", "ONE WEEK OF SHIFTS AT COVINGTON AUTO. READ THE PAPERS. STAMP THEM.", "res://counter.tscn"],
-	["THE LOT", "FREE DRIVE. TWO BLOCKS OF PORT RUMBLE, FOUR SEASONS, DAY AND NIGHT.", "res://drive.tscn"],
-	["QUIT", "", ""],
-]
+var ITEMS: Array = []
+
+func _items() -> void:
+	ITEMS = []
+	if StoryState.has_save():
+		ITEMS.append(["CONTINUE THE STORY", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
+	ITEMS.append(["NEW STORY", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE.", "story:new"])
+	ITEMS.append(["THE COUNTER", "ONE WEEK OF SHIFTS AT COVINGTON AUTO. READ THE PAPERS. STAMP THEM.", "res://counter.tscn"])
+	ITEMS.append(["THE LOT", "FREE DRIVE: PORT RUMBLE TO SALISBURY AND HAVELOCK, WITH TRAFFIC.", "res://drive.tscn"])
+	ITEMS.append(["QUIT", "", ""])
 
 var sel := 0
 var car: CarView
@@ -19,6 +24,7 @@ var t := 0.0
 
 func _ready() -> void:
 	Controls.setup()
+	_items()
 	var args := OS.get_cmdline_user_args()
 	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo"):
 		get_tree().change_scene_to_file.call_deferred("res://drive.tscn")
@@ -40,7 +46,7 @@ func _ready() -> void:
 		get_tree().quit()
 
 func _item_rect(i: int) -> Rect2:
-	return Rect2(170, 218 + i * 34, 300, 30)
+	return Rect2(150, 186 + i * 30, 340, 28)
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
@@ -61,8 +67,18 @@ func _process(dt: float) -> void:
 	queue_redraw()
 
 func _go() -> void:
-	if ITEMS[sel][2] == "": get_tree().quit()
-	else: get_tree().change_scene_to_file(ITEMS[sel][2])
+	var target: String = ITEMS[sel][2]
+	match target:
+		"": get_tree().quit()
+		"story:continue":
+			StoryState.load_game()
+			StoryState.go(get_tree())
+		"story:new":
+			StoryState.new_game()
+			StoryState.go(get_tree())
+		_:
+			StoryState.active = false
+			get_tree().change_scene_to_file(target)
 
 func _draw() -> void:
 	draw_rect(Rect2(0, 0, 640, 360), Color("15131a"))

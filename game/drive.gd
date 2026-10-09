@@ -36,6 +36,8 @@ var _blink_was := false
 var dest := { "name": "", "p": Vector2.ZERO }
 var save: Dictionary
 var garage: GarageScreen
+var mission: StoryMissions.MissionRunner
+var blur_rect: ColorRect
 var _save_t := 30.0
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
@@ -109,19 +111,46 @@ func _ready() -> void:
 	rain_fx = _weather(Color(0.7, 0.78, 0.9, 0.55), Vector2(-30, 260), 300, 0.0)
 	audio = EngineAudio.new()
 	add_child(audio)
+	# double vision, for the nights Leo shouldn't be driving
+	blur_rect = ColorRect.new()
+	blur_rect.size = Vector2(640, 360)
+	blur_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = """shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_nearest;
+uniform float amount = 0.0;
+uniform vec2 offset = vec2(0.0);
+void fragment() {
+	vec4 a = texture(screen_tex, SCREEN_UV);
+	vec4 b = texture(screen_tex, SCREEN_UV + offset);
+	vec4 c = texture(screen_tex, SCREEN_UV - offset * 0.6);
+	COLOR = vec4(mix(a.rgb, (b.rgb + c.rgb) * 0.5, amount * 0.5), 1.0);
+}"""
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	blur_rect.material = mat
+	blur_rect.visible = false
+	get_node("HudLayer").add_child(blur_rect)
+	get_node("HudLayer").move_child(blur_rect, 0)
 	garage = GarageScreen.new()
 	garage.size = Vector2(640, 360)
 	garage.visible = false
 	garage.picked.connect(_on_garage_pick)
 	garage.repaired.connect(_on_garage_repair)
 	get_node("HudLayer").add_child(garage)
-	_spawn_car(int(save.get("current", 0)), START, -PI / 2.0)
+	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
+		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
+	else:
+		_spawn_car(int(save.get("current", 0)), START, -PI / 2.0)
 	traffic = Traffic.new()
 	add_child(traffic)
 	traffic.setup(world, sky, ysort, car)
-	world.warm(START, Vector2(40, 25))
-	hud.post("COLD START. LET IT WARM UP BEFORE YOU WRING IT OUT.", 6.0)
-	hud.post("TAB OR D-UP: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE.", 8.0)
+	world.warm(car.sim.pos, Vector2(40, 25))
+	if mission:
+		hud.show_help = false        # the story has its own words up top; F1/START still shows the controls
+	else:
+		hud.post("COLD START. LET IT WARM UP BEFORE YOU WRING IT OUT.", 6.0)
+		hud.post("TAB OR D-UP: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE.", 8.0)
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -170,9 +199,59 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	cam.global_position = car.global_position
 	if dest.name != "": gps.set_route(world.map.route(at, dest.p), dest.name)
 
+## A story mission: its car, its time and weather, and the runner that checks the objectives.
+func _start_mission(m: Dictionary) -> void:
+	_spawn_story_car(String(m.car), m.start, float(m.heading))
+	sky.set_season(String(m.season))
+	sky.time_h = float(m.time)
+	sky.pick_weather(String(m.weather))
+	sky.forced = true
+	_season_seen = sky.season
+	var w: Dictionary = WorldSky.WEATHER[String(m.weather)]
+	sky.cloud = w.cloud; sky.fog = w.fog; sky.rain = w.rain; sky.snow = w.snow
+	car.impaired = float(m.get("impaired", 0.0))
+	if m.get("gasket", false): car.sim.head_gasket = true
+	mission = StoryMissions.MissionRunner.new()
+	add_child(mission)
+	mission.setup(self, m)
+	world.warm(m.start, Vector2(40, 25))
+
+## Story cars aren't from your garage: they're whatever the story puts you in.
+func _spawn_story_car(id: String, at: Vector2, heading: float) -> void:
+	if car: car.queue_free()
+	car = null
+	car_i = -1
+	var spec: Dictionary = SaveGame.load_spec(id)
+	car = PlayerCar.new()
+	ysort.add_child(car)
+	car.setup(spec, world, skids, hud, at, heading)
+	_hook_car(spec, at, heading)
+
+func _swap_story_car(id: String) -> void:
+	var at := car.sim.pos + car.sim.right() * 3.0
+	var h := car.sim.heading
+	var imp := car.impaired
+	_spawn_story_car(id, at, h)
+	car.impaired = imp
+	_teleport(at, h)
+
+func _hook_car(spec: Dictionary, at: Vector2, heading: float) -> void:
+	hud.sim = car.sim
+	hud.player = car
+	if traffic: traffic.player = car
+	dash.sim = car.sim
+	dash.style = String(spec.get("dash", "analog90"))
+	gps.sim = car.sim
+	gps.style = String(spec.get("gps", "tomtum"))
+	map_screen.sim = car.sim
+	audio.sim = car.sim
+	car.sim.assist = CarSim.Assist.STREET
+	cam_rot = heading + PI / 2.0
+	cam.global_position = car.global_position
+
 ## Write the car you're driving back into the save (its paint and its dents).
 func _store_car() -> void:
-	if car == null or car_i >= (save.garage as Array).size(): return
+	if car == null or car_i < 0 or car_i >= (save.garage as Array).size(): return
 	save.garage[car_i].damage = car.damage.duplicate()
 	save.garage[car_i].paint = "#" + car.paint.to_html(false)
 	save.garage[car_i].odo_km = float(save.garage[car_i].get("odo_km", 0.0)) + car.sim.odometer_m / 1000.0
@@ -195,6 +274,7 @@ func _on_garage_repair(i: int) -> void:
 	SaveGame.write(save)
 
 func _exit_tree() -> void:
+	if StoryState.active: return
 	_store_car()
 	SaveGame.write(save)
 
@@ -252,6 +332,15 @@ func _process(dt: float) -> void:
 	if car.sim.vx < -2.0: target = cam_rot      # reversing: don't spin the world around
 	cam_rot = lerp_angle(cam_rot, target, 1.0 - exp(-3.2 * dt))
 	cam.rotation = cam_rot
+	if car.impaired > 0.0:
+		# the world won't hold still
+		var tt := Time.get_ticks_msec() / 1000.0
+		cam.rotation += sin(tt * 0.7) * 0.07 * car.impaired
+		blur_rect.visible = true
+		blur_rect.material.set_shader_parameter("amount", car.impaired * (0.7 + 0.3 * sin(tt * 1.3)))
+		blur_rect.material.set_shader_parameter("offset", Vector2(sin(tt * 0.9), cos(tt * 0.6)) * 0.012 * car.impaired)
+	else:
+		blur_rect.visible = false
 	var up := Vector2(0, -1).rotated(cam_rot)
 	CarView.screen_up = up
 	var spd := car.sim.speed()
@@ -263,7 +352,7 @@ func _process(dt: float) -> void:
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
 	_save_t -= dt
-	if _save_t <= 0.0:
+	if _save_t <= 0.0 and not StoryState.active:
 		_save_t = 30.0
 		_store_car()
 		SaveGame.write(save)
@@ -348,7 +437,7 @@ func _teleport(at: Vector2, heading: float) -> void:
 func _inputs() -> void:
 	if garage.visible: return
 	# the garage: pull up to the bay doors and stop
-	if GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:
+	if not StoryState.active and GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:
 		hud.post("F / Y: THE GARAGE", 0.15)
 		if Input.is_action_just_pressed("use"):
 			_store_car()
@@ -365,7 +454,9 @@ func _inputs() -> void:
 	if Input.is_action_just_pressed("reset"):
 		car.respawn()
 		world.warm(car.sim.pos, Vector2(40, 25))
-	if Input.is_action_just_pressed("menu_back"): get_tree().change_scene_to_file("res://title.tscn")
+	if Input.is_action_just_pressed("menu_back"):
+		StoryState.active = false
+		get_tree().change_scene_to_file("res://title.tscn")
 	audio.horn = Input.is_action_pressed("horn")
 	if not car.sim.auto_gearbox:
 		if Input.is_action_just_pressed("shift_up"): car.sim.shift(car.sim.gear + 1)

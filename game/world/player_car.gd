@@ -112,6 +112,9 @@ func respawn() -> void:
 	for k in damage: damage[k] = 0.0
 	hud.post("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
 
+var impaired := 0.0               # 0 sober .. 1 hammered: lag, sway, overcorrection
+var _st_lag := 0.0
+var _drunk_t := 0.0
 var high_beams := false
 var beam := 0.0                   # 0 = low, 1 = high (fades between)
 var lights_on := false
@@ -128,6 +131,12 @@ func _inputs(dt: float) -> Array:
 	var br := Controls.trigger("brake")
 	var st := Controls.steer_axis()
 	var hb := Input.get_action_strength("handbrake")
+	if impaired > 0.0:
+		# drunk: the wheel answers late, the car drifts, and you overcorrect
+		_drunk_t += dt
+		_st_lag += (st - _st_lag) * (1.0 - exp(-dt / (0.06 + 0.45 * impaired)))
+		st = _st_lag * (1.0 + 0.35 * impaired) + sin(_drunk_t * 0.9) * 0.16 * impaired + sin(_drunk_t * 2.3 + 1.0) * 0.06 * impaired
+		th = clampf(th * (1.0 + 0.4 * impaired * sin(_drunk_t * 1.7)), 0.0, 1.0)
 	if sim.assist != CarSim.Assist.SIM:
 		var v := sim.speed()
 		# traction control: back off the gas while the rears spin up

@@ -5,6 +5,7 @@ extends Control
 var sim: CarSim
 var sky: WorldSky
 var player: PlayerCar
+var objective := ""
 var place := ""
 var night := false
 var show_help := true
@@ -69,6 +70,12 @@ func _draw() -> void:
 	PixelFont.draw(self, Vector2(442, 9), "%s  %s" % [sky.clock_str(), season_label], BONE, 2)
 	PixelFont.draw(self, Vector2(442, 24), "%s  %d°C" % [sky.label(), int(sky.temperature())], GOLD if sky.weather in ["storm", "blizzard", "freezing", "fog"] else BONE)
 	PixelFont.draw(self, Vector2(442, 33), "%s - ROAD: %s" % [place, surface.to_upper()], GOLD if surface in ["ice", "snow", "leaves", "mud", "water"] else ASH)
+	# ---- the story objective
+	if objective != "":
+		var ls := wrap_lines(objective, 50)
+		var h := 10 + ls.size() * 8
+		_panel(Rect2(222, 38, 210, h))
+		for k in ls.size(): PixelFont.draw(self, Vector2(228, 43 + k * 8), ls[k], GOLD)
 	# ---- the tell-tales: blinkers and high beams
 	if player:
 		var on := CarView.blink_on()
@@ -81,7 +88,7 @@ func _draw() -> void:
 			draw_circle(Vector2(320, 30), 6, Color("3a7aff"))
 			for k in 4: draw_line(Vector2(312, 25 + k * 3), Vector2(306, 25 + k * 3), Color("3a7aff"), 1.0)
 	# ---- warnings
-	var my := 44.0
+	var my := 44.0 if objective == "" else 56.0 + wrap_lines(objective, 50).size() * 8.0
 	for m in msgs:
 		var a: float = clampf(m[1], 0.0, 1.0)
 		var w := PixelFont.width(m[0], 2) + 16
@@ -109,3 +116,15 @@ func _bar(p: Vector2, label: String, frac: float, col: Color, value: String) -> 
 	draw_rect(Rect2(p.x + 28, p.y, 40, 5), Color(1, 1, 1, 0.12))
 	draw_rect(Rect2(p.x + 28, p.y, 40 * clampf(frac, 0, 1), 5), col)
 	PixelFont.draw(self, Vector2(p.x + 72, p.y), value, BONE)
+
+static func wrap_lines(text: String, n: int) -> Array[String]:
+	var out: Array[String] = []
+	var cur := ""
+	for word in text.split(" "):
+		if cur == "": cur = word
+		elif cur.length() + 1 + word.length() <= n: cur += " " + word
+		else:
+			out.append(cur)
+			cur = word
+	if cur != "": out.append(cur)
+	return out
