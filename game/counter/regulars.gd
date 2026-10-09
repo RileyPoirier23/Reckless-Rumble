@@ -33,6 +33,8 @@ const FIXED := {
 	"salvage_no_cert": ["GOT THE STRUCTURAL. THE GUY IN SALISBURY SIGNED IT. AT A DESK, THIS TIME."],
 	"tint": ["PEELED THE TINT. TOOK ALL NIGHT. YOU CAN SEE MY FACE NOW. YOU'RE WELCOME."],
 	"noise": ["NEW MUFFLER. THE NEIGHBOURS BROUGHT ME A PIE. I DIDN'T KNOW THEY KNEW MY NAME."],
+	"no_winter_tires": ["WINTERS ARE ON. GOT 'EM OUT OF MY BROTHER-IN-LAW'S SHED WITH A CROWBAR. HE'S STILL IN FLORIDA. HE'LL FIND OUT."],
+	"studs_out_of_season": ["STUDS ARE OFF. THE DRIVEWAY'S NEVER BEEN SO QUIET."],
 }
 ## Back with the same problem, hoping for a different clerk.
 const AGAIN := ["ME AGAIN. IS THE OTHER GUY HERE? THE NICE ONE?", "BACK AGAIN. I FIGURED YOU'D BE IN A BETTER MOOD TODAY.",
@@ -70,7 +72,8 @@ static func outcome(id: String, day: int) -> String:
 	return s if s == "WALKED" or bool(f.correct) else s + "_WRONG"
 
 ## Regular `id`'s visit `k`: who they are, the visit, and the branch for what happened last time.
-static func spec(id: String, k: int) -> Dictionary:
+## `known` is that last time, if it's known already (a file being rebuilt): "?" looks it up.
+static func spec(id: String, k: int, known := "?") -> Dictionary:
 	var reg: Dictionary = regulars().get(id, {})
 	var v: Dictionary = (reg.get("visits", []) as Array)[k]
 	var out := { "id": id, "regular": id, "seed": id, "kind": "regular", "visit": k }
@@ -80,7 +83,7 @@ static func spec(id: String, k: int) -> Dictionary:
 		if not key in ["after", "after_id", "day"]: out[key] = _dup(v[key])
 	# a trade-in is a different car every time, with its own plate and VIN
 	if v.has("car"): out.seed = "%s_%d" % [id, k]
-	var last := outcome(String(v.get("after_id", id)), int(v.day))
+	var last := outcome(String(v.get("after_id", id)), int(v.day)) if known == "?" else known
 	out.last = last
 	var after: Dictionary = v.get("after", {})
 	for key in [last, last.trim_suffix("_WRONG")]:
@@ -135,6 +138,8 @@ static func back_spec(rec: Dictionary) -> Dictionary:
 	var spec := { "id": "back_%d" % int(rec.no), "of": int(rec.no), "kind": "regular", "quiet": true,
 		"person": (orig.person as Dictionary).duplicate(true), "car": car, "request": String(orig.request),
 		"arrive": 30.0 + float(h % 420), "papers": { "licence": { "number": String(orig.licence.number) } } }
+	# a cab's still a cab
+	if (orig.reg as Dictionary).has("use"): spec.papers.reg = { "use": String(orig.reg.use) }
 	if p == "":
 		# turned away for nothing: back for something else, and not happy about it
 		if h % 10 >= 5: return {}

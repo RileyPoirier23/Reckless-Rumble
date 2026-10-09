@@ -8,12 +8,14 @@
 ## be caught by a player who looks, and an exception only holds when its proof does.
 ##
 ## Days count from Monday 7 October 2019 (day 0). Weekends, Thanksgiving and Remembrance Day
-## are closed. The rules arrive on the days in RULES: Year 1, weeks 1 to 7 (bible section 3.8),
-## ending with the Ministry's audit week. From week 5 the courier brings the shop's parts to the
-## window (bible section 3.2): a box, a packing slip, and our own order to read it against.
+## are closed. The rules arrive on the days in RULES: Year 1, weeks 1 to 8 (bible section 3.8):
+## the Ministry's audit in week 7, and winter in week 8. From week 5 the courier brings the
+## shop's parts to the window (bible section 3.2): a box, a packing slip, and our own order to
+## read it against. From week 6 the police list has stolen part serials on it as well as cars.
 ##
-## Walk-ins are made from seeds of their own, so a work order can be pulled out of the file and
-## rebuilt exactly (the audit, and the people who come back: see regulars.gd).
+## Walk-ins and the courier's boxes are made from seeds of their own, so a file can be pulled
+## out of the cabinet and rebuilt exactly (the audit, and the people who come back: see
+## regulars.gd). A regular's visit rebuilds from who they are and what Leo stamped last time.
 class_name CounterRules
 extends RefCounted
 
@@ -24,8 +26,8 @@ const MONTHS := ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", 
 const VIN_CHARS := "ABCDEFGHJKLMNPRSTUVWXYZ0123456789"
 ## Days the shop is shut besides the weekends.
 const CLOSED := { 7: "THANKSGIVING", 35: "REMEMBRANCE DAY" }
-const LAST_DAY := 46                    # Friday 22 November: the end of week seven, and of the audit
-const WEEKS := 7
+const LAST_DAY := 53                    # Friday 29 November: the end of week eight, the first week of winter
+const WEEKS := 8
 
 # ------------------------------------------------------------------ the shift
 const SHIFT_LEN := 600.0                # minutes on the clock, 8:00 to 18:00
@@ -56,7 +58,10 @@ const RULES := [
 	{ "day": 28, "id": "tint", "tab": "INSPECTION", "text": "WINDOW TINT: FRONT SIDE WINDOWS MUST PASS 70% OF LIGHT. A MINISTRY MEDICAL EXEMPTION COVERS IT: THIS VIN, THIS DRIVER, NOT EXPIRED." },
 	{ "day": 30, "id": "courier", "tab": "PARTS", "text": "GUS: SIGN FOR A BOX ONLY IF THE PACKING SLIP MATCHES OUR ORDER: PART NO. AND SHIP TO. A SUPPLIER'S SUPERSESSION NOTICE COVERS A NEW PART NO. FROM THE STATES, CUSTOMS MUST DECLARE WHAT WE PAID." },
 	{ "day": 36, "id": "noise", "tab": "INSPECTION", "text": "EXHAUST: NO HOLES. 95 DB MAX AT 3,000 RPM." },
+	{ "day": 38, "id": "hot", "tab": "POLICE", "text": "POLICE: STOLEN PART SERIALS ARE ON THE LIST. GUS READS THE SERIAL OFF THE PART, NOT THE INVOICE. ON THE LIST, ON A CAR OR IN A BOX: REPORT IT." },
 	{ "day": 42, "id": "audit", "tab": "MINISTRY", "text": "AUDIT WEEK: THE INSPECTOR PULLS TWO OF YOUR WORK ORDERS A DAY. STAMP EACH ONE AGAIN. DISAGREEING WITH YOUR OWN STAMP IS A CITATION." },
+	{ "day": 49, "id": "winter", "tab": "SEASONAL", "text": "WINTER TIRES REQUIRED ON TAXIS, RIDESHARES AND COMMERCIAL VEHICLES, DEC 1 TO APR 30. FROM NOV 25, NO STICKER FOR ONE WITHOUT THEM." },
+	{ "day": 51, "id": "studs", "tab": "SEASONAL", "text": "STUDDED TIRES: OCT 15 TO APR 30 ONLY." },
 ]
 ## Lines on the Ministry tab that aren't checks you make, but checks made on you.
 const MINISTRY_LINES := ["TWO MINISTRY WARNINGS A SHIFT. FROM THE THIRD MISTAKE, $100 A CITATION.",
@@ -72,10 +77,12 @@ const PROBLEM_RULE := {
 	"odo_rollback": "odo", "bos_expired": "bos", "bos_forged": "bos", "vin_door_mismatch": "door",
 	"out_of_province": "oop", "salvage_no_cert": "salvage", "title_washed": "salvage",
 	"tint": "tint", "noise": "noise", "wrong_part": "courier", "customs_value": "courier", "ship_to": "courier",
+	"hot_part": "hot", "no_winter_tires": "winter", "studs_out_of_season": "studs",
 }
 ## Problems the right answer to is REPORT, not DENY.
-const REPORT_PROBLEMS := ["stolen", "title_washed"]
-## Problems that come in a courier's box, not a customer's car.
+const REPORT_PROBLEMS := ["stolen", "title_washed", "hot_part"]
+## Problems that come in a courier's box, not a customer's car. (A stolen part comes either way:
+## customer(day, "hot_part") is a car, courier(day, "hot_part") a box.)
 const COURIER_PROBLEMS := ["wrong_part", "customs_value", "ship_to"]
 ## The exceptions: a discrepancy -> [the document that can explain it, the rule that makes it count].
 const PROOFS := {
@@ -85,6 +92,23 @@ const PROOFS := {
 }
 const TINT_MIN := 70                    # % of light through the front side windows
 const NOISE_MAX := 95                   # dB at 3,000 rpm
+
+# ------------------------------------------------------------------ hot parts (week 6) and winter (week 8)
+
+## What gets stolen off cars for its parts: [on the invoice, on Gus's sheet, on the police list].
+const HOT_PARTS := [["CATALYTIC CONVERTER", "CAT CONVERTER", "CAT"], ["AIRBAG MODULE, DRIVER", "AIRBAG MODULE", "AIRBAG"],
+	["ALLOY RIMS (SET OF 4)", "ALLOY RIMS", "RIMS"], ["STEREO HEAD UNIT", "STEREO", "STEREO"], ["TRANSMISSION, USED", "TRANSMISSION", "TRANS"]]
+## How many part serials the police list carries.
+const HOT_LISTED := 4
+## Where somebody got the part on their car.
+const PART_SELLERS := ["MARKETTHING (PRIVATE SALE)", "SALISBURY SALVAGE", "DIEPPE AUTO RECYCLERS", "THE FLEA MARKET ON MAIN", "FUNDY PARTS SUPPLY"]
+## What the ownership says the car's for (PRIVATE, or one of these) once winter tires care. These
+## need winter tires on from NOV 25 (at the stations) or DEC 1 (on the road) to APR 30.
+const WINTER_USES := ["TAXI", "RIDESHARE", "COMMERCIAL"]
+const WINTER_SEASON := [[11, 25], [4, 30]]
+const STUD_SEASON := [[10, 15], [4, 30]]
+## Gus's word for the tires on the car.
+const TIRE_TEXT := { "ALL-SEASON": "ALL-SEASONS", "SUMMER": "SUMMERS", "WINTER": "WINTERS", "STUDDED": "STUDDED WINTERS" }
 
 # ------------------------------------------------------------------ the courier (week 5 on)
 
@@ -104,6 +128,10 @@ const ORDER_PARTS := [
 	["IGNITION COILS (SET OF 4)", 118, "CHECK ENGINE LIGHT"], ["OIL FILTERS (CASE OF 12)", 54, "OIL CHANGE"],
 	["TIRE VALVE STEMS (BAG OF 50)", 31, "WINTER TIRES ON"], ["WHEEL BEARING, FRONT", 79, "SAFETY INSPECTION"],
 ]
+## From week 6 Gus orders some parts used, off Fundy's used shelf: those come with a serial.
+## [part, what we pay, the job], in the order of HOT_PARTS (a cat, an airbag, rims).
+const USED_PARTS := [["CATALYTIC CONVERTER, USED", 210, "CHECK ENGINE LIGHT"], ["AIRBAG MODULE, USED", 165, "SAFETY INSPECTION"],
+	["ALLOY RIMS, USED (SET OF 4)", 240, "WINTER TIRES ON"]]
 ## Boxes that came to the wrong Covington.
 const WRONG_SHIPTO := ["COVINGTON DENTAL", "COVINGTON AUTO BODY", "LINDSAY'S LUBE & INSPECT", "COVINGTON HOME HARDWARE"]
 const FAMILIA_SHIPTO := "COVINGTON - BAY 3 - SAL"
@@ -119,8 +147,8 @@ const HACHEY_CAR := { "catalogue": "fjord_crown_victorious_2005", "paint": "#8a8
 ## When he pulls a file: 9:30 and 2:00.
 const AUDIT_TIMES := [90.0, 360.0]
 ## A file is re-judged from its papers alone: no face at the window, no car in the bay, no
-## stolen list from that week.
-const UNAUDITABLE := ["stolen", "photo_mismatch"]
+## stolen list (cars or parts) from that week.
+const UNAUDITABLE := ["stolen", "photo_mismatch", "hot_part"]
 
 const FIRST := ["MARC", "JOEL", "DANIELLE", "KAYLA", "BRANDON", "NATALIE", "LUC", "SHAWN", "CHANTAL", "TYLER", "MELANIE", "JASON", "AMBER", "RENE", "KRISTA", "DEREK", "SYLVIE", "COREY", "JESSICA", "PAUL", "MONIQUE", "TRAVIS", "ASHLEY", "GILLES", "BRITTANY", "DYLAN", "NICOLE", "ROGER", "TAMMY", "KEVIN"]
 const WOMEN := ["DANIELLE", "KAYLA", "NATALIE", "CHANTAL", "MELANIE", "AMBER", "KRISTA", "SYLVIE", "JESSICA", "MONIQUE", "ASHLEY", "BRITTANY", "NICOLE", "TAMMY"]
@@ -172,6 +200,8 @@ const QUESTIONS := {
 	"local": "SO. WHICH TIM'S DO YOU GO TO?",
 	"tint": "THOSE WINDOWS ARE TOO DARK.", "noise": "YOUR EXHAUST FAILS.", "wrong_part": "THAT'S NOT THE PART WE ORDERED.",
 	"customs_value": "CUSTOMS SAYS WE PAID SOMETHING ELSE.", "ship_to": "THIS BOX ISN'T ADDRESSED TO US.",
+	"hot_part": "THAT SERIAL'S ON THE POLICE LIST.", "no_winter_tires": "IT'S A WORKING CAR. IT NEEDS WINTERS ON FOR A STICKER.",
+	"studs_out_of_season": "IT'S NOT STUD SEASON.",
 }
 ## Small talk from people who actually live here.
 const LOCAL_LINES := ["THE MOUNTAIN TIM'S. LIKE A NORMAL PERSON.", "THE ONE ON MAIN. THE DRIVE-THRU KID THERE'S SEEN THINGS.",
@@ -224,6 +254,16 @@ const EXCUSES := {
 		"LOWER'S BETTER, RIGHT? LESS TAX? I'M ON YOUR SIDE HERE."],
 	"ship_to": ["IT SAYS COVINGTON. YOU'RE COVINGTON. CLOSE ENOUGH FOR THE VAN.", "THE SCANNER SAYS THIS STOP. I DON'T ARGUE WITH THE SCANNER. IT HAS A TEMPER.",
 		"THERE'S A LOT OF COVINGTONS. YOU'RE THE ONE WITH THE PARKING."],
+	"hot_part": ["I GOT IT OFF A GUY ON MARKETTHING. WE MET IN THE CO-OP LOT AT MIDNIGHT. VERY PROFESSIONAL. HE HAD A HEADLAMP.",
+		"THE SERIAL'S A COINCIDENCE. THERE'S ONLY SO MANY NUMBERS.", "IT FELL OFF A TRUCK. LIKE, ACTUALLY FELL. I WAS BEHIND THE TRUCK.",
+		"THE INVOICE SAYS WHAT IT SAYS. READ THE INVOICE. WHY ARE YOU READING THE PART?"],
+	"hot_part_box": ["I JUST DRIVE THE VAN. RODNEY BUYS THE USED STUFF. WHO RODNEY BUYS IT FROM, I DON'T KNOW. I'M STARTING TO WANT TO KNOW.",
+		"USED PARTS COME OFF USED CARS. WHERE THE USED CARS COME FROM, I DON'T ASK. IT'S A RULE. RODNEY'S RULE."],
+	"no_winter_tires": ["THE WINTERS ARE IN MY BROTHER-IN-LAW'S SHED. HE'S IN FLORIDA. THE SHED'S LOCKED.",
+		"THEY'RE ALL-SEASONS. IT SAYS ALL SEASONS. WINTER'S A SEASON. READ THE TIRE.", "I ONLY DO THE AIRPORT RUN. THE AIRPORT'S PLOWED.",
+		"IT'S NOT DECEMBER YET. I'LL PUT 'EM ON NOVEMBER THIRTY-FIRST."],
+	"studs_out_of_season": ["I LEAVE 'EM ON ALL YEAR. SAVES A TRIP.", "IT COULD SNOW. IT'S NEW BRUNSWICK. IT SNOWED IN JUNE ONCE. I WAS THERE.",
+		"THE STUDS ARE FOR GRIP. I GRIP YEAR-ROUND."],
 }
 ## What people say as they hand over a proof. Same words whether it's real or not.
 const PROOF_LINES := {
@@ -248,12 +288,15 @@ const COURIER_AGAIN := {
 	"DENIED": "THE RIGHT ONE THIS TIME. RODNEY TRIPLE-CHECKED. RODNEY'S NEVER CHECKED ANYTHING ONCE.",
 	"DENIED_WRONG": "YOU SENT BACK A GOOD BOX LAST TIME. RODNEY TOOK IT PERSONALLY. RODNEY TAKES EVERYTHING PERSONALLY.",
 	"APPROVED_WRONG": "HOW'D THAT LAST PART FIT? RODNEY WANTS TO KNOW. RODNEY KNOWS.",
+	"REPORT": "THE COPS WENT THROUGH RODNEY'S WHOLE USED SHELF. RODNEY'S ON A BREAK. A LONG ONE. THIS ONE'S NEW. I CHECKED.",
 }
 ## Inspector Hachey: what he says when he puts a file on the desk, and when you ASK him things.
 const HACHEY_SAYS := ["GOOD MORNING. DON'T MIND ME. I'M JUST GOING TO STAND HERE AND BE THE MINISTRY.",
 	"ONE OF YOURS. I'VE COVERED THE STAMP WITH MY THUMB. STAMP IT AGAIN, PLEASE. TAKE YOUR TIME. I'M TIMING IT.",
 	"A FILE FROM YOUR CABINET. YOU'VE SEEN IT BEFORE. HAVE ANOTHER LOOK.",
 	"I PICKED THIS ONE AT RANDOM. THE MINISTRY'S RANDOM IS VERY CAREFUL."]
+## ...and when the file he pulls is a box: the Ministry doesn't care what's in the parts room, only that you agree with yourself.
+const HACHEY_BOX := "ONE OF YOUR BOXES. THE MINISTRY DOESN'T CARE WHAT'S IN YOUR PARTS ROOM. THE MINISTRY CARES IF YOU SIGN THE SAME WAY TWICE."
 const HACHEY_LOCAL := "THE ONE ON MAIN. I TAKE IT BLACK. I WRITE DOWN HOW LONG THE LINE IS."
 const HACHEY_ASK := "I'M NOT THE CUSTOMER, MR. COVINGTON. I'M THE MINISTRY. THE FILE IS THE CUSTOMER."
 const MASK_LINES := ["IT'S A COSTUME. IT'S HALLOWEEN, BUD.", "OH. RIGHT. FORGOT I HAD IT ON. IT'S VERY COMFORTABLE.", "...FINE. BUT YOU'RE NO FUN."]
@@ -307,6 +350,18 @@ static func next_open(day: int) -> int:
 	var d := day + 1
 	while not is_open(d): d += 1
 	return d
+
+## Is a date inside a season that runs [month, day] to [month, day] (across New Year's)?
+static func in_season(d: Array, season: Array) -> bool:
+	var md: int = int(d[1]) * 100 + int(d[2])
+	var from: int = int(season[0][0]) * 100 + int(season[0][1])
+	var to: int = int(season[1][0]) * 100 + int(season[1][1])
+	if from > to: return md >= from or md <= to
+	return md >= from and md <= to
+
+## "NOV 27" for a verdict.
+static func month_day(d: Array) -> String:
+	return "%s %d" % [MONTHS[d[1] - 1], d[2]]
 
 ## The shift clock as the wall shows it: minutes since 8:00 -> "10:42 A.M."
 static func clock_str(minutes: float) -> String:
@@ -431,12 +486,41 @@ func other_name(n: String) -> String:
 	while n.ends_with(" " + String(o.last)): o = person()
 	return "%s %s" % [o.first, o.last]
 
-## The stolen list for the week (seeded so the wall and the cars agree).
+## A part's serial number: two letters and six digits.
+func serial() -> String:
+	var L := "ABCDEFGHJKLMNPRSTUVWXYZ"
+	return "%s%s-%06d" % [L[rng.randi() % L.length()], L[rng.randi() % L.length()], rng.randi() % 1000000]
+
+## The serial one digit off: what an invoice says when somebody's been at it with a pen.
+func serial_tweak(sn: String) -> String:
+	var i := 3 + rng.randi() % 6
+	var d := int(sn[i])
+	return sn.substr(0, i) + str((d + 1 + rng.randi() % 9) % 10) + sn.substr(i + 1)
+
+## The stolen list for the week (seeded so the wall and the cars agree): cars by plate and VIN,
+## and the parts the police are after, by serial (they only count from week 6). The serials
+## come from their own generator, so the cars on the list don't change when the parts join it.
 func make_bolo(n := 6) -> void:
 	bolo = []
 	for i in n:
 		var m := model()
 		bolo.append({ "plate": plate(), "vin": vin(), "car": "%s %s" % [m.make, m.model] })
+	var h := CounterRules.new(hash(String(bolo[0].vin) if n > 0 else "hot"))
+	for i in HOT_LISTED:
+		# the first two are the kind Fundy's used shelf sells too
+		var k := h.rng.randi() % (USED_PARTS.size() if i < 2 else HOT_PARTS.size())
+		bolo.append({ "serial": h.serial(), "part": HOT_PARTS[k][2], "kind": k })
+
+## The cars on a stolen list, and the parts.
+static func bolo_cars(list: Array) -> Array:
+	return list.filter(func(b): return (b as Dictionary).has("plate"))
+
+static func bolo_parts(list: Array) -> Array:
+	return list.filter(func(b): return (b as Dictionary).has("serial"))
+
+## Is this serial on the list?
+static func listed(sn: String, list: Array) -> bool:
+	return sn != "" and list.any(func(b): return String((b as Dictionary).get("serial", "")) == sn)
 
 ## A customer for `day`. `want` forces a problem (for tests and scripts; "clean" forces none);
 ## otherwise it's rolled. `fixed` pins parts of them down: person, car (a partial dict, or
@@ -487,10 +571,14 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 			_brand_salvage(c)
 			c.cert = { "vin": car.vin, "by": INSPECTORS[rng.randi() % INSPECTORS.size()], "issued": date_add(t, -(3 + rng.randi() % 200)) }
 			c.docs.append("cert")
+		# a part put on somewhere else, invoice and all (and nothing wrong with it)
+		if rule_active("hot", day) and rng.randf() < 0.14: _new_part(c, day)
+	# what the ownership says it's for, and the tires Gus finds on it, once winter tires matter
+	if rule_active("winter", day): _winterize(c, plain)
 	# what's wrong with it (only problems the rules check today, so nothing is unfair)
 	var options: Array = []
 	for pr in PROBLEM_RULE:
-		if rule_active(PROBLEM_RULE[pr], day) and not COURIER_PROBLEMS.has(pr): options.append(pr)
+		if possible(pr, day) and not COURIER_PROBLEMS.has(pr): options.append(pr)
 	var prob := "" if want == "clean" else want
 	if want == "" and rng.randf() < 0.45 and not options.is_empty():
 		prob = options[rng.randi() % options.size()]
@@ -498,7 +586,59 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 	elif want == "" and rng.randf() < 0.18: excuse(c, day)
 	if not plain and rule_active("masks", day) and rng.randf() < 0.35: c.mask = MASKS[rng.randi() % MASKS.size()]
 	_ensure_history(c, day)
+	_settle(c, day)
 	return c
+
+## Can this problem turn up today? Its rule is on the wall, and (for the seasonal ones) it's
+## the season for it: in late November studs are legal, so nobody's out of stud season.
+static func possible(prob: String, day: int) -> bool:
+	if not rule_active(String(PROBLEM_RULE.get(prob, "")), day): return false
+	if prob == "studs_out_of_season": return not in_season(today(day), STUD_SEASON)
+	if prob == "no_winter_tires": return in_season(today(day), WINTER_SEASON)
+	return true
+
+## Winter: what the ownership says the car's for, and the tires on it. Somebody in for their
+## winters is on the other ones.
+func _winterize(c: Dictionary, plain: bool) -> void:
+	var body := String(c.car.get("body", "sedan"))
+	var u := rng.randf()
+	var use := "PRIVATE"
+	if not plain:
+		if body in ["pickup", "van", "boxtruck"]: use = "COMMERCIAL" if u < 0.35 else "PRIVATE"
+		elif u < 0.08: use = "TAXI"
+		elif u < 0.16: use = "RIDESHARE"
+	c.reg.use = use
+	var t := rng.randf()
+	if c.request == "WINTER TIRES ON": c.sheet.tires = "SUMMER" if t < 0.2 else "ALL-SEASON"
+	else: c.sheet.tires = "WINTER" if t < 0.45 else ("STUDDED" if t < 0.6 else ("ALL-SEASON" if t < 0.93 else "SUMMER"))
+
+## A working car up for its sticker in the winter season without winter tires on.
+static func winter_short(c: Dictionary, day: int) -> bool:
+	if not rule_active("winter", day) or not c.has("reg") or not WINTER_USES.has(String(c.reg.get("use", "PRIVATE"))): return false
+	return in_season(today(day), WINTER_SEASON) and not String(c.sheet.get("tires", "WINTER")) in ["WINTER", "STUDDED"]
+
+## Studs on the car, out of stud season.
+static func studs_out(c: Dictionary, day: int) -> bool:
+	return rule_active("studs", day) and String(c.get("sheet", {}).get("tires", "")) == "STUDDED" and not in_season(today(day), STUD_SEASON)
+
+## Anybody up for a sticker has their tires sorted, unless that's the problem they came with.
+## (Run after anything that might have turned the job into an inspection.)
+static func _settle(c: Dictionary, day: int) -> void:
+	if not c.has("sheet") or not c.sheet.has("tires") or not INSPECTIONS.has(c.request): return
+	var flags: Array = c.get("flags", [])
+	if winter_short(c, day) and not flags.has("no_winter_tires"): c.sheet.tires = "WINTER"
+	if studs_out(c, day) and not flags.has("studs_out_of_season"): c.sheet.tires = "WINTER"
+
+## A part put on somewhere else, and the invoice that came with it. Gus reads the serial off
+## the part itself, onto his sheet.
+func _new_part(c: Dictionary, day: int) -> void:
+	var hp: Array = HOT_PARTS[rng.randi() % HOT_PARTS.size()]
+	var sn := serial()
+	c.sheet.part = hp[1]
+	c.sheet.serial = sn
+	c.invoice = { "seller": PART_SELLERS[rng.randi() % PART_SELLERS.size()], "part": hp[0], "serial": sn,
+		"date": date_add(today(day), -(2 + rng.randi() % 90)), "paid": 60 + rng.randi() % 40 * 25 }
+	if not c.docs.has("invoice"): c.docs.append("invoice")
 
 ## The inspection this car needs: the full one if it's new here from out of province.
 static func inspection_job(c: Dictionary) -> String:
@@ -545,7 +685,7 @@ func _ensure_history(c: Dictionary, day: int) -> void:
 
 func _inject(c: Dictionary, prob: String, day: int) -> void:
 	var t := today(day)
-	if prob == "stolen" and bolo.is_empty(): make_bolo()
+	if (prob == "stolen" and bolo.is_empty()) or (prob == "hot_part" and bolo_parts(bolo).is_empty()): make_bolo()
 	match prob:
 		"vin_mismatch": c.reg.vin = vin_tweak(c.car.vin)
 		"plate_mismatch": c.reg.plate = plate_tweak(c.car.plate)
@@ -570,7 +710,8 @@ func _inject(c: Dictionary, prob: String, day: int) -> void:
 			_proof(c, "name_mismatch", day, prob)
 		"stolen":
 			# the plate on the car is on the stolen list (and the papers were made to match)
-			var b: Dictionary = bolo[rng.randi() % bolo.size()]
+			var cars := bolo_cars(bolo)
+			var b: Dictionary = cars[rng.randi() % cars.size()]
 			c.car.plate = b.plate
 			c.reg.plate = b.plate
 			c.work.plate = b.plate
@@ -606,6 +747,29 @@ func _inject(c: Dictionary, prob: String, day: int) -> void:
 			# too loud, or a hole (a hole can be quiet enough and still fail)
 			if rng.randf() < 0.5: c.sheet.db = NOISE_MAX + 1 + rng.randi() % 16
 			else: c.sheet.hole = true
+		"hot_part":
+			# a part off somebody else's car: its serial's on the list. The invoice says so too,
+			# or (somebody's been at it with a pen) one digit different
+			var parts := bolo_parts(bolo)
+			var b: Dictionary = parts[rng.randi() % parts.size()]
+			_new_part(c, day)
+			var hp: Array = HOT_PARTS[int(b.kind)]
+			c.sheet.part = hp[1]
+			c.sheet.serial = b.serial
+			c.invoice.part = hp[0]
+			c.invoice.serial = b.serial
+			if rng.randf() < 0.4:
+				var fake := serial_tweak(String(b.serial))
+				while listed(fake, bolo): fake = serial_tweak(String(b.serial))
+				c.invoice.serial = fake
+		"no_winter_tires":
+			c.request = inspection_job(c)
+			var body := String(c.car.get("body", "sedan"))
+			c.reg.use = "COMMERCIAL" if body in ["pickup", "van", "boxtruck"] else ["TAXI", "RIDESHARE"][rng.randi() % 2]
+			c.sheet.tires = "SUMMER" if rng.randf() < 0.2 else "ALL-SEASON"
+		"studs_out_of_season":
+			c.request = inspection_job(c)
+			c.sheet.tires = "STUDDED"
 	c.flags.append(prob)
 
 ## Film on the front windows: 5% to 65% of the light gets through.
@@ -699,7 +863,9 @@ func excuse(c: Dictionary, day: int, base := "") -> bool:
 			c.sheet.tint = _dark()
 		"wrong_part": c.slip.no = part_tweak(String(c.order.no))
 	_proof(c, base, day, "valid")
-	if c.has("sheet"): _ensure_history(c, day)
+	if c.has("sheet"):
+		_ensure_history(c, day)
+		_settle(c, day)
 	return true
 
 ## Thursday on: one of the Familia's cars. Something's wrong with it, and there's a napkin.
@@ -727,12 +893,24 @@ func sting(day: int) -> Dictionary:
 ## forces a problem ("clean" for none). `fam`: the Familia's box, addressed to Bay 3.
 func courier(day: int, want := "", fam := false) -> Dictionary:
 	var t := today(day)
-	var states := want == "customs_value" or (want != "ship_to" and not fam and rng.randf() < 0.35)
+	var states := want == "customs_value" or (want != "ship_to" and want != "hot_part" and not fam and rng.randf() < 0.35)
 	var who: Dictionary = COURIERS["parcel" if states else "fundy"]
 	var p := person()
 	p.merge((who.person as Dictionary).duplicate(true), true)
 	var m := model(String(who.car))
 	var part: Array = ORDER_PARTS[rng.randi() % ORDER_PARTS.size()]
+	# from week 6 some of it comes off Fundy's used shelf, with a serial on it (a stolen one, if
+	# that's what's wanted: off the list, in a kind the shelf sells)
+	var used := -1
+	var hot: Dictionary = {}
+	if want == "hot_part":
+		if bolo_parts(bolo).is_empty(): make_bolo()
+		var ps := bolo_parts(bolo).filter(func(b): return int(b.kind) < USED_PARTS.size())
+		hot = ps[rng.randi() % ps.size()]
+		used = int(hot.kind)
+	elif not states and not fam and rule_active("hot", day) and rng.randf() < 0.3:
+		used = rng.randi() % USED_PARTS.size()
+	if used >= 0: part = USED_PARTS[used]
 	var no := part_no(states)
 	var paid := roundi(float(part[1]) * (0.72 if states else 0.92)) + rng.randi() % 12
 	var c := {
@@ -750,11 +928,14 @@ func courier(day: int, want := "", fam := false) -> Dictionary:
 	if states:
 		c.customs = { "from": "ROCKBOTTOMAUTO.COM, OHIO", "contents": part[0], "value": paid }
 		c.docs.append("customs")
+	if used >= 0: c.slip.serial = serial()
 	var prob := "" if want == "clean" else want
 	if fam: prob = "ship_to"
 	elif want == "" and rng.randf() < 0.4:
 		var opts: Array = ["wrong_part", "wrong_part", "ship_to"]
 		if states: opts.append("customs_value")
+		# (whether it rolls doesn't depend on what's on the list, so a box rebuilds the same without it)
+		if used >= 0: opts.append("hot_part")
 		prob = opts[rng.randi() % opts.size()]
 	match prob:
 		"wrong_part":
@@ -764,6 +945,19 @@ func courier(day: int, want := "", fam := false) -> Dictionary:
 			# declared low to skip the duty (or high, by a tired clerk in Ohio)
 			c.customs.value = maxi(15, floori(paid / (2.0 + rng.randi() % 3))) if rng.randf() < 0.75 else paid * 2 + rng.randi() % 40
 		"ship_to": c.slip.shipto = FAMILIA_SHIPTO if fam else WRONG_SHIPTO[rng.randi() % WRONG_SHIPTO.size()]
+		"hot_part":
+			# the serial off the box is one the police are after (if none of that kind is listed,
+			# the box is one of the kind that is)
+			if hot.is_empty():
+				if bolo_parts(bolo).is_empty(): make_bolo()
+				var ps := bolo_parts(bolo).filter(func(b): return int(b.kind) == used)
+				if ps.is_empty(): ps = bolo_parts(bolo).filter(func(b): return int(b.kind) < USED_PARTS.size())
+				hot = ps[rng.randi() % ps.size()]
+				var u: Array = USED_PARTS[int(hot.kind)]
+				c.order.part = u[0]
+				c.order.job = u[2]
+				c.slip.part = u[0]
+			c.slip.serial = String(hot.serial)
 	if prob != "": c.flags.append(prob)
 	elif want == "" and rng.randf() < 0.15: excuse(c, day, "wrong_part")
 	var lines: Array = COURIER_SAYS[c.courier]
@@ -806,7 +1000,7 @@ func shift(day: int, heat := 0, extra: Array = [], chapter := 1) -> Array:
 		var box := rule_active("noise", day) and rng.randf() < 0.5
 		out.append({ "t": 60.0 + rng.randf() * 360.0, "c": courier(day, "", true) if box else familia(day) })
 	if sting_day(day, heat): out.append({ "t": 120.0 + rng.randf() * 300.0, "c": sting(day) })
-	if rule_active("courier", day) and rng.randf() < 0.8: out.append({ "t": 50.0 + rng.randf() * 340.0, "c": courier(day) })
+	if rule_active("courier", day) and rng.randf() < 0.8: out.append({ "t": 50.0 + rng.randf() * 340.0, "c": box(day) })
 	for s in specs:
 		if (s as Dictionary).is_empty(): continue
 		out.append({ "t": arrive_of(s), "c": scripted(s, day) })
@@ -824,13 +1018,38 @@ func walk_in(day: int, want := "") -> Dictionary:
 	if want != "": c.want = want
 	return c
 
-## A walk-in's papers as they were on the day, from the file: {} if they weren't a walk-in.
-## (A stolen car's plate came off that week's list, so those don't rebuild; nobody asks.)
+## The courier with a box, made from a seed of its own like a walk-in, so its file rebuilds.
+func box(day: int, want := "") -> Dictionary:
+	var s := rng.randi()
+	var r := CounterRules.new(s)
+	r.bolo = bolo
+	var c := r.courier(day, want)
+	c.seed = s
+	if want != "": c.want = want
+	return c
+
+## A file's papers as they were on the day: a walk-in or a box from its seed, a regular's visit
+## from who they are and what Leo had stamped on them before, somebody back about an old file
+## from that file. {} if it doesn't rebuild (scripted customers, the Familia, the sting). A
+## stolen car's plate, or a stolen part's serial, came off that week's list, so those don't
+## rebuild the same; nobody asks.
 static func rebuild(rec: Dictionary) -> Dictionary:
+	var day := int(rec.get("day", 0))
+	var kind := String(rec.get("kind", ""))
+	var id := String(rec.get("id", ""))
+	if kind == "regular" and id != "" and rec.has("visit"):
+		return CounterRules.new().scripted(DeskRegulars.spec(id, int(rec.visit), String(rec.get("last", ""))), day)
+	if kind == "regular" and int(rec.get("of", 0)) > 0 and int(rec.get("seed", -1)) < 0:
+		var orig := DeskBook.file_no(int(rec.of))
+		if orig.is_empty(): return {}
+		var o: Dictionary = orig.duplicate(true)
+		o.erase("back")
+		var spec := DeskRegulars.back_spec(o)
+		return {} if spec.is_empty() else CounterRules.new().scripted(spec, day)
 	var s := int(rec.get("seed", -1))
 	if s < 0: return {}
 	var want := String(rec.get("want", ""))
-	var c := CounterRules.new(s).customer(int(rec.day), want)
+	var c := CounterRules.new(s).courier(day, want) if kind == "courier" else CounterRules.new(s).customer(day, want)
 	c.seed = s
 	if want != "": c.want = want
 	return c
@@ -839,13 +1058,16 @@ static func rebuild(rec: Dictionary) -> Dictionary:
 static func audit_times(day: int) -> Array:
 	return AUDIT_TIMES.duplicate() if rule_active("audit", day) else []
 
-## Can Hachey pull this work order? A walk-in you approved or denied, judged from papers
-## alone, not pulled before, not from the future.
+## Can Hachey pull this file? A walk-in, a regular's visit, somebody back about an old file or
+## a courier's box: approved (signed for) or denied (sent back), judged from papers alone, not
+## pulled before, not from the future, and one that rebuilds.
 static func auditable(rec: Dictionary, day: int) -> bool:
-	if String(rec.get("kind", "")) != "regular" or int(rec.get("seed", -1)) < 0 or rec.get("pulled", false): return false
+	if not String(rec.get("kind", "")) in ["regular", "courier"] or rec.get("pulled", false): return false
 	if not String(rec.get("stamp", "")) in ["APPROVED", "DENIED"] or int(rec.day) > day: return false
 	for p in rec.get("probs", []): if UNAUDITABLE.has(String(p)): return false
-	return true
+	if int(rec.get("seed", -1)) >= 0: return true
+	if rec.has("visit") and String(rec.get("id", "")) != "": return true
+	return int(rec.get("of", 0)) > 0 and not DeskBook.file_no(int(rec.of)).is_empty()
 
 ## The file he pulls from the cabinet: an older one if there is one (today's if that's all
 ## there is). {} if there's nothing to pull.
@@ -864,9 +1086,17 @@ static func audit_customer(rec: Dictionary) -> Dictionary:
 	c.hidden = []
 	c.mask = ""
 	c.kind = "audit"
+	# the Ministry's at the window now: the customer's own lines and story left with them
+	c.erase("script")
+	c.regular = ""
+	c.ask = {}
+	c.clue = {}
+	c.napkin = ""
 	c.audit = { "no": int(rec.no), "day": int(rec.day), "stamp": String(rec.stamp), "correct": bool(rec.correct), "who": String(rec.get("who", "")) }
 	c.window = HACHEY.duplicate(true)
-	c.says = "WORK ORDER %04d. %s. %s" % [int(rec.no), date_str(today(int(rec.day))), HACHEY_SAYS[int(rec.no) % HACHEY_SAYS.size()]]
+	var box := c.has("slip")
+	c.says = "%s %04d. %s. %s" % ["PACKING SLIP" if box else "WORK ORDER", int(rec.no), date_str(today(int(rec.day))),
+		HACHEY_BOX if box else HACHEY_SAYS[int(rec.no) % HACHEY_SAYS.size()]]
 	c.erase("seed")
 	return c
 
@@ -947,8 +1177,9 @@ func scripted(spec: Dictionary, day: int) -> Dictionary:
 	# a proof that won't hold up, for a problem whose proof keeps its name when it's bad (a bad
 	# bill of sale is bos_forged, and a bad pink card is expired insurance: ask for those instead)
 	if spec.get("forged", false) and PROOFS.has(prob) and not prob in ["name_mismatch", "no_insurance"]: r._proof(c, prob, day, "bad")
-	for k in ["reg", "licence", "insurance", "sheet", "work"]:
-		if spec.has("papers") and (spec.papers as Dictionary).has(k): (c[k] as Dictionary).merge(spec.papers[k], true)
+	for k in ["reg", "licence", "insurance", "sheet", "work", "invoice"]:
+		if spec.has("papers") and (spec.papers as Dictionary).has(k) and c.has(k): (c[k] as Dictionary).merge(spec.papers[k], true)
+	_settle(c, day)
 	c.kind = String(spec.get("kind", "story"))
 	c.script = spec
 	c.regular = String(spec.get("regular", ""))
@@ -1008,9 +1239,9 @@ static func odo_rolled(c: Dictionary) -> bool:
 
 ## Every problem a careful player could prove today, read only from what's on the desk:
 ## the documents (and the ones they'd get by asking), the car in the window, the rules,
-## the stolen list on the wall, the person's face.
+## the stolen list on the wall (cars, and from week 6 part serials), the person's face.
 static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
-	if c.has("slip"): return _box_problems(c, day)
+	if c.has("slip"): return _box_problems(c, day, bolo_list)
 	var out: Array = []
 	var t := today(day)
 	var reg: Dictionary = c.reg
@@ -1039,7 +1270,8 @@ static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 		if b != "": out.append(b)
 	if rule_active("bolo", day):
 		for b in bolo_list:
-			if b.plate == c.car.plate or b.vin == dash: out.append("stolen")
+			if b.get("plate", "") == c.car.plate or b.get("vin", "") == dash: out.append("stolen")
+	if rule_active("hot", day) and listed(String(sheet.get("serial", "")), bolo_list): out.append("hot_part")
 	if rule_active("photo", day) and c.face_shown != c.licence.face: out.append("photo_mismatch")
 	if rule_active("odo", day) and odo_rolled(c): out.append("odo_rollback")
 	if rule_active("oop", day) and String(reg.get("prev", "")) != "" and c.request != "FULL INSPECTION": out.append("out_of_province")
@@ -1050,10 +1282,14 @@ static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 		out.append("tint")
 	if rule_active("noise", day) and INSPECTIONS.has(c.request) and (bool(sheet.get("hole", false)) or int(sheet.get("db", 0)) > NOISE_MAX):
 		out.append("noise")
+	if INSPECTIONS.has(c.request):
+		if winter_short(c, day): out.append("no_winter_tires")
+		if studs_out(c, day): out.append("studs_out_of_season")
 	return out
 
-## A courier's box against our order: who it's for, the part number, what customs says we paid.
-static func _box_problems(c: Dictionary, day: int) -> Array:
+## A courier's box against our order: who it's for, the part number, what customs says we
+## paid, and (a used part) whether its serial's on the stolen list.
+static func _box_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 	var out: Array = []
 	if not rule_active("courier", day): return out
 	var o: Dictionary = c.order
@@ -1061,6 +1297,7 @@ static func _box_problems(c: Dictionary, day: int) -> Array:
 	if s.shipto != o.shipto: out.append("ship_to")
 	if s.no != o.no and not proof_ok(c, "wrong_part", day): out.append("wrong_part")
 	if c.has("customs") and int(c.customs.value) != int(o.paid): out.append("customs_value")
+	if rule_active("hot", day) and listed(String(s.get("serial", "")), bolo_list): out.append("hot_part")
 	return out
 
 # ------------------------------------------------------------------ the desk: what Leo can put side by side
@@ -1071,7 +1308,7 @@ const DOC_TITLES := { "work": "WORK ORDER - COVINGTON AUTO", "reg": "VEHICLE REG
 	"history": "SERVICE HISTORY", "old_reg": "OLD OWNERSHIP", "bos": "BILL OF SALE", "permit": "TEMPORARY PERMIT",
 	"door_inv": "BODY SHOP INVOICE", "cert": "STRUCTURAL CERTIFICATE", "napkin": "", "letter": "",
 	"exempt": "TINT EXEMPTION - MINISTRY", "order": "OUR ORDER - PARTSWEB 98", "slip": "PACKING SLIP",
-	"customs": "CUSTOMS DECLARATION", "notice": "SUPERSESSION NOTICE" }
+	"customs": "CUSTOMS DECLARATION", "notice": "SUPERSESSION NOTICE", "invoice": "PARTS INVOICE" }
 ## What Leo can ASK about, in two or three words.
 const TOPIC_LABEL := {
 	"vin_mismatch": "THE VIN", "plate_mismatch": "THE PLATE", "fails_inspection": "WHY IT FAILS", "expired_reg": "THE REGISTRATION",
@@ -1080,6 +1317,7 @@ const TOPIC_LABEL := {
 	"bos_expired": "THE SALE DATE", "bos_forged": "THE BILL OF SALE", "vin_door_mismatch": "THE DOOR", "out_of_province": "WHERE IT'S FROM",
 	"salvage_no_cert": "THE SALVAGE BRAND", "title_washed": "THE OLD BRAND", "mask": "THE MASK", "local": "SMALL TALK",
 	"tint": "THE TINT", "noise": "THE EXHAUST", "wrong_part": "THE PART NUMBER", "customs_value": "THE DECLARED VALUE", "ship_to": "WHO IT'S FOR",
+	"hot_part": "THE SERIAL NUMBER", "no_winter_tires": "THE TIRES", "studs_out_of_season": "THE STUDS",
 }
 ## Which papers a mismatch points at, by the kind of fact and the paper that's wrong.
 const _TOPIC_BY_DOC := {
@@ -1090,13 +1328,14 @@ const _TOPIC_BY_DOC := {
 	"part": { "order": "wrong_part", "slip": "wrong_part", "notice": "wrong_part" },
 	"paid": { "order": "customs_value", "customs": "customs_value" },
 	"shipto": { "order": "ship_to", "slip": "ship_to" },
+	"serial": { "invoice": "hot_part", "sheet": "hot_part", "slip": "hot_part" },
 }
 const _DATE_TOPIC := { "reg": "expired_reg", "permit": "expired_reg", "insurance": "insurance_expired", "glovebox": "insurance_expired",
 	"bos": "bos_expired", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch", "exempt": "tint", "notice": "wrong_part" }
 
 ## The rows of a paper: [label, text, fact key ("" if there's nothing to compare), value].
 ## Fact keys: name, owner, plate, vin, car, job, expiry, start, sold, dated, brand, prov, odo, km,
-## measure, photo. The papers only grow rows once a rule makes them matter.
+## measure, photo, serial, use. The papers only grow rows once a rule makes them matter.
 static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 	var raw = c.get(id, {})
 	var d: Dictionary = raw if raw is Dictionary else {}
@@ -1112,6 +1351,7 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 				["PLATE", d.plate, "plate", d.plate], ["VIN", d.vin, "vin", d.vin], ["EXPIRES", date_str(d.expires), "expiry", d.expires]]
 			if rule_active("oop", day): rows.append(["PREV.", "NEW BRUNSWICK" if String(d.get("prev", "")) == "" else "TRANSFER FROM " + String(d.prev), "prov", String(d.get("prev", ""))])
 			if rule_active("salvage", day): rows.append(["BRAND", d.get("brand", "CLEAN"), "brand", d.get("brand", "CLEAN")])
+			if rule_active("winter", day): rows.append(["USE", d.get("use", "PRIVATE"), "use", d.get("use", "PRIVATE")])
 			return rows
 		"licence": return [["NAME", d.name, "name", d.name], ["BORN", date_str(d.dob), "", null], ["ADDR", d.address, "", null],
 			["NO.", d.number, "", null], ["EXPIRES", date_str(d.expires), "expiry", d.expires]]
@@ -1135,6 +1375,11 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 				var db := int(d.get("db", 85))
 				var hole: bool = d.get("hole", false)
 				rows.append(["EXHAUST", "%d DB AT 3000, %s" % [db, "A HOLE" if hole else "NO HOLES"], "measure", { "kind": "noise", "v": { "db": db, "hole": hole } }])
+			# a part that went on somewhere else: its serial, off the part
+			if rule_active("hot", day) and d.has("serial"): rows.append(["PART", "%s %s" % [d.part, d.serial], "serial", d.serial])
+			if rule_active("winter", day):
+				var tires := String(d.get("tires", "WINTER"))
+				rows.append(["TIRES", TIRE_TEXT.get(tires, tires), "measure", { "kind": "tires", "v": tires }])
 			return rows
 		"history":
 			var rows: Array = []
@@ -1156,10 +1401,16 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 			["EXPIRES", date_str(d.expires), "expiry", d.expires]]
 		"order": return [["FROM", d.supplier, "", null], ["PART NO.", d.no, "part", d.no], ["PART", d.part, "", null],
 			["FOR", "%s - %s" % [String(d.job).replace(" LIGHT", ""), d["for"]], "", null], ["PAID", "$%d" % int(d.paid), "paid", int(d.paid)], ["SHIP TO", d.shipto, "shipto", d.shipto]]
-		"slip": return [["SHIP TO", d.shipto, "shipto", d.shipto], ["PART NO.", d.no, "part", d.no], ["PART", d.part, "", null],
-			["QTY", str(int(d.qty)), "", null], ["SHIPPED", date_str(d.shipped), "", null]]
+		"slip":
+			var rows := [["SHIP TO", d.shipto, "shipto", d.shipto], ["PART NO.", d.no, "part", d.no], ["PART", d.part, "", null],
+				["QTY", str(int(d.qty)), "", null], ["SHIPPED", date_str(d.shipped), "", null]]
+			if d.has("serial"): rows.append(["SERIAL", d.serial, "serial", d.serial])
+			if c.has("audit"): rows.append(["FILED", date_str(today(int(c.audit.day))), "today", today(int(c.audit.day))])
+			return rows
 		"customs": return [["FROM", d.from, "", null], ["CONTENTS", d.contents, "", null], ["DECLARED", "$%d" % int(d.value), "paid", int(d.value)]]
 		"notice": return [["WAS NO.", d.was, "part", d.was], ["NOW NO.", d.now, "part", d.now], ["DATED", date_str(d.dated), "dated", d.dated]]
+		"invoice": return [["SOLD BY", d.seller, "", null], ["PART", d.part, "", null], ["SERIAL", d.serial, "serial", d.serial],
+			["DATE", date_str(d.date), "", null], ["PAID", "$%d" % int(d.paid), "", null]]
 	return []
 
 ## A door's VIN (on Gus's sheet or on the body shop's invoice), not the car's.
@@ -1174,6 +1425,7 @@ static func _should_be(c: Dictionary, f: Dictionary) -> Variant:
 		"plate": return c.car.plate
 		"name": return c.licence.name
 		"owner": return c.reg.owner
+		"serial": return c.sheet.get("serial", f.val) if c.has("sheet") else f.val
 	return f.val
 
 ## Which paper is lying in a mismatch, as an ASK topic.
@@ -1197,7 +1449,7 @@ static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b:
 	var kb: String = b.key
 	var pair := [ka, kb]
 	var t := today(day)
-	if ka == kb and ka in ["name", "owner", "plate", "vin", "car", "brand", "part", "paid", "shipto"]:
+	if ka == kb and ka in ["name", "owner", "plate", "vin", "car", "brand", "part", "paid", "shipto", "serial"]:
 		if a.val == b.val: return ["MATCH", true, ""]
 		return ["MISMATCH", false, _culprit(c, a, b)]
 	if pair.has("owner") and pair.has("name"):
@@ -1221,14 +1473,18 @@ static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b:
 			"start": return ["NOT IN EFFECT YET", false, topic] if date_cmp(d, t) > 0 else ["IN EFFECT", true, ""]
 			"dated": return ["DATED IN THE FUTURE", false, topic] if date_cmp(d, t) > 0 else ["DATED BEFORE TODAY", true, ""]
 			"sold": return _sold(d, t)
+			"measure":
+				# the tires against the calendar: is it stud season?
+				if String((d as Dictionary).get("kind", "")) == "tires" and rule_active("studs", day): return _stud_verdict(c, day)
 	if pair.has("photo") and pair.has("person"):
 		if c.has("audit"): return ["THAT'S HACHEY. THE CUSTOMER'S LONG GONE", null, ""]
 		if String(c.get("mask", "")) != "": return ["CAN'T SEE A FACE UNDER THAT MASK", null, "mask"]
 		return ["SAME PERSON", true, ""] if a.val == b.val else ["THAT'S NOT THEM", false, "photo_mismatch"]
-	if pair.has("bolo") and (pair.has("plate") or pair.has("vin")):
+	if pair.has("bolo") and (pair.has("plate") or pair.has("vin") or pair.has("serial")):
 		var x: Dictionary = a if ka != "bolo" else b
+		if x.key == "serial": return _hot_verdict(day, bolo_list, String(x.val))
 		for e in bolo_list:
-			if e[x.key] == x.val: return ["ON THE STOLEN LIST", false, "stolen"]
+			if e.get(x.key, "") == x.val: return ["ON THE STOLEN LIST", false, "stolen"]
 		return ["NOT ON THE LIST", true, ""]
 	if pair.has("odo") and pair.has("km"):
 		var km: Dictionary = a.val if ka == "km" else b.val
@@ -1237,8 +1493,32 @@ static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b:
 		return ["UNDER TODAY'S ODOMETER", true, ""]
 	if pair.has("job") and pair.has("prov"):
 		return _from_away(c)
-	if fixed.key == "rule": return _against_rule(c, day, String(fixed.val), other)
+	if fixed.key == "rule": return _against_rule(c, day, bolo_list, String(fixed.val), other)
 	return ["NOTHING TO COMPARE", null, ""]
+
+## A part's serial against the stolen list.
+static func _hot_verdict(day: int, bolo_list: Array, sn: String) -> Array:
+	if not rule_active("hot", day): return ["NO PARTS ON THE LIST YET", null, ""]
+	return ["SERIAL ON THE STOLEN LIST", false, "hot_part"] if listed(sn, bolo_list) else ["SERIAL NOT ON THE LIST", true, ""]
+
+## What the ownership says the car's for, and its tires, against the winter rule.
+static func _winter_verdict(c: Dictionary, day: int) -> Array:
+	var use := String(c.reg.get("use", "PRIVATE"))
+	var tires := String(c.sheet.get("tires", "WINTER"))
+	var on := "%s ON %s" % [use, TIRE_TEXT.get(tires, tires)]
+	if not WINTER_USES.has(use): return ["PRIVATE: ITS TIRES, ITS BUSINESS", true, ""]
+	if not in_season(today(day), WINTER_SEASON): return ["%s, OUT OF WINTER" % use, true, ""]
+	if tires in ["WINTER", "STUDDED"]: return [on, true, ""]
+	if not INSPECTIONS.has(c.request): return [on + ". NOT A STICKER JOB", null, ""]
+	return [on + ": NO STICKER", false, "no_winter_tires"]
+
+## Studs against the calendar.
+static func _stud_verdict(c: Dictionary, day: int) -> Array:
+	var t := today(day)
+	if String(c.sheet.get("tires", "")) != "STUDDED": return ["NO STUDS", true, ""]
+	if in_season(t, STUD_SEASON): return ["STUDS ON %s: IN SEASON" % month_day(t), true, ""]
+	if not INSPECTIONS.has(c.request): return ["STUDS ON %s. NOT A STICKER JOB" % month_day(t), null, ""]
+	return ["STUDS ON %s: OUT OF SEASON" % month_day(t), false, "studs_out_of_season"]
 
 static func _sold(d: Array, t: Array) -> Array:
 	var n := days_between(d, t)
@@ -1252,7 +1532,7 @@ static func _from_away(c: Dictionary) -> Array:
 	return ["FROM AWAY: NEEDS THE FULL INSPECTION", false, "out_of_province"]
 
 ## A fact held up against a rule on the wall.
-static func _against_rule(c: Dictionary, day: int, rule: String, f: Dictionary) -> Array:
+static func _against_rule(c: Dictionary, day: int, bolo_list: Array, rule: String, f: Dictionary) -> Array:
 	var k: String = f.key
 	match rule:
 		"inspect":
@@ -1298,6 +1578,12 @@ static func _against_rule(c: Dictionary, day: int, rule: String, f: Dictionary) 
 				return ["%d DB AT 3000: OVER 95" % int(m.db), false, "noise"] if int(m.db) > NOISE_MAX else ["%d DB, NO HOLES: PASSES" % int(m.db), true, ""]
 		"courier":
 			if k == "shipto": return ["ADDRESSED TO US", true, ""] if String(f.val) == SHOP else ["NOT ADDRESSED TO US", false, "ship_to"]
+		"hot":
+			if k == "serial": return _hot_verdict(day, bolo_list, String(f.val))
+		"winter":
+			if k == "use" or (k == "measure" and String(f.val.kind) == "tires"): return _winter_verdict(c, day)
+		"studs":
+			if k == "measure" and String(f.val.kind) == "tires": return _stud_verdict(c, day)
 	return ["NOTHING TO COMPARE", null, ""]
 
 ## Everything on the desk and the wall as facts (no positions): the papers (with the ones
@@ -1341,7 +1627,8 @@ static func answer(c: Dictionary, topic: String) -> Dictionary:
 		"familia": return { "line": "DOM SAYS YOU DON'T ASK. HE SAYS IT NICE, BUT HE SAYS IT." }
 		"audit": return { "line": HACHEY_LOCAL if topic == "local" else HACHEY_ASK }
 	if topic == "local": return { "line": LOCAL_LINES[h % LOCAL_LINES.size()] }
-	var pool: Array = EXCUSES.get(topic, [])
+	# the courier has his own excuses for a box
+	var pool: Array = EXCUSES.get(topic + "_box", EXCUSES.get(topic, [])) if c.has("slip") else EXCUSES.get(topic, [])
 	if pool.is_empty(): return { "line": "I DON'T KNOW ANYTHING ABOUT THAT. I JUST DRIVE IT." }
 	return { "line": pool[h % pool.size()] }
 
@@ -1394,24 +1681,33 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 				_: r.line = "He leaves."
 			return r
 	var bad := not probs.is_empty()
-	if probs.has("stolen") or probs.has("title_washed"):
-		var hot := probs.has("stolen")
+	if probs.has("stolen") or probs.has("title_washed") or probs.has("hot_part"):
+		# a stolen car, a stolen part on a car (both the police's), or a washed title (the Ministry's)
+		var hot := probs.has("stolen") or probs.has("hot_part")
+		var part := not probs.has("stolen") and probs.has("hot_part")
 		match stamp:
 			"REPORT":
 				r.heat = -5
 				r.line = "The police tow it. A cop says thanks without looking up." if hot else "The Ministry takes the file. Somebody in another province is about to have a very bad week."
+				if part: r.line = "Constable Tremblay takes a statement and the serial. The part's evidence now. So, for a while, is the car."
 			"APPROVED":
 				r.correct = false
 				r.police = hot
 				r.heat = 25 if hot else 10
 				r.citation = "YOU WORKED ON A STOLEN CAR. IT WAS ON THE LIST ON YOUR WALL" if hot else "STICKERED A WASHED SALVAGE TITLE. THE BRAND WAS ON THE OLD OWNERSHIP"
+				if part: r.citation = "PUT A STOLEN PART BACK ON THE ROAD. ITS SERIAL WAS ON THE LIST ON YOUR WALL"
 			"DENIED":
 				r.correct = false
 				if hot:
 					r.citation = "STOLEN CAR SENT BACK ON THE ROAD. IT WAS ON THE LIST: REPORT IT"
+					if part: r.citation = "SENT A STOLEN PART BACK ON THE ROAD. ITS SERIAL WAS ON THE LIST: REPORT IT"
 					r.police = true
 				else: r.line = "\"Fine. I'll go to Lindsay's. She passes anything with a pulse.\" Somebody should've reported that title."
-			"WRENCH": r.correct = false; r.heat = 40; r.citation = "OFF-BOOKS WORK ON A STOLEN CAR" if hot else "OFF-BOOKS WORK ON A WASHED SALVAGE CAR"
+			"WRENCH":
+				r.correct = false
+				r.heat = 40
+				r.citation = "OFF-BOOKS WORK ON A STOLEN CAR" if hot else "OFF-BOOKS WORK ON A WASHED SALVAGE CAR"
+				if part: r.citation = "OFF-BOOKS WORK ON A CAR WITH A STOLEN PART ON IT"
 		return r
 	match stamp:
 		"APPROVED":
@@ -1448,6 +1744,29 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 ## care what's in your parts room.
 static func _judge_box(c: Dictionary, stamp: String, probs: Array, r: Dictionary) -> Dictionary:
 	var o: Dictionary = c.order
+	# ...but the police care what's in it: a stolen part is theirs, never a free warning
+	if probs.has("hot_part"):
+		match stamp:
+			"REPORT":
+				r.heat = -5
+				r.line = "Constable Tremblay takes the box, and the driver's statement. It's mostly about Rodney."
+			"APPROVED":
+				r.correct = false
+				r.police = true
+				r.heat = 15
+				r.citation = "SIGNED FOR A STOLEN PART. ITS SERIAL WAS ON THE LIST ON YOUR WALL"
+				r.line = "Gus carries it to the bay. A week later a cruiser parks across the street, and somebody asks Gus where he gets his used parts."
+			"DENIED":
+				r.correct = false
+				r.police = true
+				r.citation = "SENT A STOLEN PART BACK OUT IN THE VAN. ITS SERIAL WAS ON THE LIST: REPORT IT"
+				r.line = "The box goes back in the van. The next shop on the route signs for it."
+			"WRENCH":
+				r.correct = false
+				r.heat = 30
+				r.citation = "A STOLEN PART, OFF THE BOOKS, IN BAY 3"
+				r.line = "The courier looks at Bay 3. Then at the box. Then at you. \"I didn't see that. I don't see anything. I'm a van.\""
+		return r
 	match stamp:
 		"APPROVED":
 			if probs.is_empty():
@@ -1482,16 +1801,22 @@ static func _judge_box(c: Dictionary, stamp: String, probs: Array, r: Dictionary
 
 ## Audit week: Hachey covers your stamp with his thumb and you stamp the file again. The
 ## Ministry wants a station that agrees with itself.
+##
+## The same wrong stamp twice is consistent, and the bible only cites disagreeing: no new
+## citation (the first one, if there was one, stands), but it goes in his report.
 static func _judge_audit(c: Dictionary, stamp: String, r: Dictionary) -> Dictionary:
 	var was := String(c.audit.stamp)
-	var word := { "APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
+	var box := c.has("slip")
+	var word := { "APPROVED": "SIGNED FOR" if box else "APPROVED", "DENIED": "REFUSED" if box else "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
 	if stamp == was:
 		var after := "He ticks a box." if c.audit.correct else "He writes something else down too, and doesn't say what."
 		r.line = "He lifts his thumb: %s. \"Consistent.\" %s" % [word.get(was, was), after]
+		r.wrong_twice = not c.audit.correct
 		return r
 	r.correct = false
-	r.citation = "AUDIT: YOUR OWN WORK ORDER SAYS %s. TODAY YOU SAY %s. THE MINISTRY WOULD LIKE YOU TO PICK ONE" % [word.get(was, was), word.get(stamp, stamp)]
+	r.citation = "AUDIT: YOUR OWN %s SAYS %s. TODAY YOU SAY %s. THE MINISTRY WOULD LIKE YOU TO PICK ONE" % ["PACKING SLIP" if box else "WORK ORDER", word.get(was, was), word.get(stamp, stamp)]
 	r.line = "He lifts his thumb. Your own stamp says %s. He looks at it for a long time." % word.get(was, was)
+	if not c.audit.correct: r.line = "He lifts his thumb. Your own stamp says %s. \"So it was wrong then, or it's wrong now.\" He writes down both." % word.get(was, was)
 	if stamp == "WRENCH":
 		r.heat = 10
 		r.line = "You just offered the Ministry Bay 3. Hachey writes that down in full."
@@ -1516,6 +1841,8 @@ static func _citation_for(p: String) -> String:
 		"salvage_no_cert": return "STICKERED A SALVAGE CAR WITHOUT A STRUCTURAL CERTIFICATE"
 		"tint": return "PASSED FRONT WINDOWS THAT DON'T LET 70% OF THE LIGHT THROUGH"
 		"noise": return "PASSED AN EXHAUST WITH A HOLE IN IT, OR OVER 95 DB"
+		"no_winter_tires": return "STICKERED A TAXI, RIDESHARE OR COMMERCIAL VEHICLE WITHOUT WINTER TIRES"
+		"studs_out_of_season": return "STICKERED A CAR ON STUDS OUT OF SEASON"
 	return "PAPERWORK PROBLEM"
 
 static func _denied_line(p: String) -> String:
@@ -1534,4 +1861,6 @@ static func _denied_line(p: String) -> String:
 		"salvage_no_cert": return "\"My brother-in-law's going to be very hurt.\""
 		"tint": return "\"I'll peel it. With my teeth, probably.\""
 		"noise": return "\"It's not loud. You're quiet.\" The car argues the point all the way out of the lot."
+		"no_winter_tires": return "\"I'll put 'em on November thirty-first.\" There isn't one."
+		"studs_out_of_season": return "\"They're my lucky studs.\" They're out of season. So's the luck."
 	return "They leave, muttering."

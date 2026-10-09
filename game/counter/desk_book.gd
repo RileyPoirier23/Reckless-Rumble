@@ -36,12 +36,14 @@ static var meetings := 0              # Ministry meetings about the licence
 static var old_log := false           # last fall's pages are on the desk
 static var flags: Array = []          # story flags the desk has raised and not yet handed over
 ## Every work order stamped: [{no, day, stamp, correct, probs, kind, id, seed, of, who, car,
-## plate, request, back, pulled}]. `id` names a regular or a scripted customer ("" for a
-## walk-in), `seed` rebuilds a walk-in's papers (-1 if it can't), `of` is the file a returning
-## customer came back about, `back` says they did. WALKED is the stamp for a regular who
-## drove off at six.
+## plate, request, back, pulled, visit, last}]. `id` names a regular, a scripted customer or a
+## courier ("" for a walk-in), `seed` rebuilds a walk-in's or a box's papers (-1 if it can't),
+## `visit` and `last` rebuild a regular's (which visit, and what Leo had stamped on them before
+## it), `of` is the file a returning customer came back about, `back` says they did. WALKED is
+## the stamp for a regular who drove off at six.
 static var files: Array = []
-## Inspector Hachey's audit: [{no, day, was, now}] for every file he pulled.
+## Inspector Hachey's audit: [{no, day, was, now, right}] for every file he pulled (`right`:
+## the first stamp was the right call).
 static var audits: Array = []
 const MAX_FILES := 400                # the cabinet keeps the newest
 
@@ -73,6 +75,7 @@ static func from_dict(d: Dictionary) -> void:
 	for f in d.get("files", []):
 		var rec: Dictionary = (f as Dictionary).duplicate(true)
 		for k in ["no", "day", "seed", "of"]: rec[k] = int(rec.get(k, -1 if k == "seed" else 0))
+		if rec.has("visit"): rec.visit = int(rec.visit)
 		files.append(rec)
 	for a in d.get("audits", []):
 		var rec: Dictionary = (a as Dictionary).duplicate(true)
@@ -151,6 +154,9 @@ static func file(day: int, c: Dictionary, stamp: String, correct: bool, probs: A
 		"kind": String(c.kind), "id": id, "seed": int(c.get("seed", -1)), "of": int(spec.get("of", 0)), "who": who,
 		"car": "%d %s %s" % [int(c.car.year), c.car.make, c.car.model], "plate": String(c.car.plate), "request": String(c.request) }
 	if c.has("want"): rec.want = String(c.want)
+	if spec.has("visit"):
+		rec.visit = int(spec.visit)
+		rec.last = String(spec.get("last", ""))
 	files.append(rec)
 	# somebody coming back about an old file: that file's done with
 	if rec.of > 0:
