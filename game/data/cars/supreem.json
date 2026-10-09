@@ -1,0 +1,90 @@
+{
+  "id": "supreem",
+  "make": "Toyoda",
+  "model": "Supreem",
+  "year": 1986,
+  "body": "hatch",
+  "dash": "digital80",
+  "gps": "phone",
+  "blurb": "Straight-six, rear-wheel drive, a digital dash that looked like the future in 1986. The future is held on with zip ties.",
+  "drivetrain": "RWD",
+  "mass": 1390,
+  "wheelbase": 2.615,
+  "cg_front": 1.28,
+  "cg_height": 0.5,
+  "track": 1.45,
+  "length": 4.62,
+  "width": 1.69,
+  "cda": 0.7,
+  "steer_lock": 0.55,
+  "engine": {
+    "name": "2.8 L inline-6",
+    "idle_rpm": 800,
+    "redline_rpm": 6200,
+    "limiter_rpm": 6500,
+    "inertia": 0.24,
+    "clutch_torque": 380,
+    "torque_curve": [
+      [
+        800,
+        150
+      ],
+      [
+        1500,
+        190
+      ],
+      [
+        2500,
+        215
+      ],
+      [
+        3500,
+        232
+      ],
+      [
+        4400,
+        240
+      ],
+      [
+        5200,
+        230
+      ],
+      [
+        6000,
+        205
+      ],
+      [
+        6500,
+        185
+      ],
+      [
+        7200,
+        150
+      ]
+    ]
+  },
+  "gearbox": {
+    "gears": [
+      3.29,
+      1.89,
+      1.28,
+      1.0,
+      0.78
+    ],
+    "reverse": 3.48,
+    "final": 4.1,
+    "efficiency": 0.86,
+    "shift_time": 0.28
+  },
+  "brakes": {
+    "max_torque": 4300,
+    "bias": 0.66
+  },
+  "tires": {
+    "radius": 0.3,
+    "tread_mm": 7.5,
+    "driven_inertia": 2.5,
+    "size": "205/60R14"
+  },
+  "paint": "#d8d4c8"
+}

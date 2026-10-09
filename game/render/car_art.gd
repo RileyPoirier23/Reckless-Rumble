@@ -31,7 +31,12 @@ const TAIL := Color("7a1414")
 const TAIL_LIT := Color("ff3b2e")
 const REV_LIT := Color("f4f4f0")
 
+var body := "coupe"      # coupe, hatch, sedan, tow
+const AMBER := Color("ffa020")
+const STEEL := Color("6a6e74")
+
 func _init(spec: Dictionary, paint: Color, damage := 0.0, seed := 1) -> void:
+	body = String(spec.get("body", "coupe"))
 	length_px = int(round(float(spec.length) * PX))
 	width_px = int(round(float(spec.width) * PX))
 	if width_px % 2 == 1: width_px += 1
@@ -69,8 +74,16 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 	var wf := wheelbase_px / 2.0 / K       # front axle at +wf, rear at -wf
 	var shade := 0.58 + 0.42 * float(z) / float(SLICES - 1)
 	var zz := int(float(z) * 12.0 / float(SLICES))   # which layer of the 12-layer recipe
-	var body := paint * shade
-	body.a = 1.0
+	var bodyc := paint * shade
+	bodyc.a = 1.0
+	# where the cabin sits along the car, by body style
+	var cab_f := 0.30
+	var cab_b := -0.50
+	match body:
+		"hatch": cab_f = 0.24; cab_b = -0.84
+		"sedan": cab_f = 0.32; cab_b = -0.52
+		"tow": cab_f = 0.42; cab_b = 0.04
+	var truck := body == "tow"
 	for y in size.y:
 		for x in size.x:
 			var p := _uv(x, y) / K
@@ -84,14 +97,14 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 					if rear_wheel: c = TIRE if zz == 0 or absf(u + wf) > 1.0 else RIM * 0.7
 				2, 3:
 					if _rounded(u, v, hl, hw, 3.0):
-						c = body
+						c = bodyc
 						var arch := (absf(u - wf) <= 3.4 or absf(u + wf) <= 3.4) and absf(v) >= hw - 1.6
 						if arch: c = TIRE if absf(absf(u) - wf) > 1.2 else RIM * (0.6 + 0.15 * zz)
-						if u > hl - 1.4 or u < -hl + 1.4: c = TRIM.lerp(body, 0.25)        # bumpers
-						if absf(v) > hw - 0.8 and absf(absf(u) - wf) > 3.4 and zz == 2: c = TRIM.lerp(body, 0.5)   # skirt line
+						if u > hl - 1.4 or u < -hl + 1.4: c = TRIM.lerp(bodyc, 0.25)        # bumpers
+						if absf(v) > hw - 0.8 and absf(absf(u) - wf) > 3.4 and zz == 2: c = TRIM.lerp(bodyc, 0.5)   # skirt line
 				4, 5:
 					if _rounded(u, v, hl, hw, 3.0):
-						c = body
+						c = bodyc
 						if u > hl - 1.6 and absf(v) < 2.2: c = TRIM                       # grille
 						if u > hl - 1.8 and absf(v) >= 2.6 and absf(v) <= hw - 0.6:     # headlights
 							c = HEAD * 0.85
@@ -101,11 +114,15 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 							brake.set_pixel(x, y, TAIL_LIT)
 							if absf(v) < 3.6: rev.set_pixel(x, y, REV_LIT)
 						if u < -hl + 1.2 and absf(v) < 1.6: c = Color("d8d4c0") * 0.8   # plate
-						if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = body * 0.82   # arch lip
+						if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = bodyc * 0.82   # arch lip
 				6:
 					if _rounded(u, v, hl - 0.6, hw - 0.6, 3.0):
-						c = body
-						if u > 6.0 and absf(v) < 0.6: c = body * 1.12           # hood crease
+						c = bodyc
+						if u > 6.0 and absf(v) < 0.6: c = bodyc * 1.12           # hood crease
+						if truck and u < hl * 0.02:
+							c = STEEL * 0.75 if (int(absf(u) * 2.0) % 3 != 0) else STEEL * 0.55   # the wrecker deck
+							c.a = 1.0
+							if absf(v) > hw - 1.2: c = bodyc * 0.8
 				7, 8, 9:
 					var k := float(zz - 7)
 					var front := hl * 0.30 - k * 1.3
@@ -113,16 +130,16 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 					if u <= front and u >= back and absf(v) <= hw - 0.8 - k * 0.7:
 						c = GLASS
 						if zz == 9 and u > front - 1.5: c = GLASS_HI                       # windshield glint
-						if absf(u - (back + front) * 0.42) < 0.6: c = body * 0.95        # B-pillar
-						if u > front - 0.8 or u < back + 0.8: c = body * 0.9             # A and C pillars
+						if absf(u - (back + front) * 0.42) < 0.6: c = bodyc * 0.95        # B-pillar
+						if u > front - 0.8 or u < back + 0.8: c = bodyc * 0.9             # A and C pillars
 					elif _rounded(u, v, hl - 1.0 - k * 2.0, hw - 1.0, 3.0) and zz == 7 and (u > front or u < back):
-						c = body                                                          # hood and trunk top
+						c = bodyc                                                          # hood and trunk top
 				10, 11:
 					var front2 := hl * 0.30 - 4.2
 					var back2 := -hl * 0.50 + 3.4
 					if u <= front2 and u >= back2 and absf(v) <= hw - 3.0 + (1 if zz == 10 else 0):
-						c = body * (1.08 if zz == 11 else 1.0)
-						if zz == 11 and v < -hw + 4.5: c = body * 1.25                     # roof highlight
+						c = bodyc * (1.08 if zz == 11 else 1.0)
+						if zz == 11 and v < -hw + 4.5: c = bodyc * 1.25                     # roof highlight
 			if c.a > 0.0 and damage > 0.0 and c != TIRE and c != GLASS:
 				# dents and scrapes: more of them toward the corners
 				var corner := clampf((absf(u) - hl * 0.4) / (hl * 0.6), 0.0, 1.0)
