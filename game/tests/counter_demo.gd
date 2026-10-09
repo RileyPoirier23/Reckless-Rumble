@@ -2,7 +2,8 @@
 ## The line in the lot, ASK and a proof, the binder, Hatch and the notebook, the sticker log's
 ## gap, a Halloween mask, a warning, and the end of the day. Then Desk 2.1: a regular coming
 ## back, tint and a medical exemption, the courier's box, Hachey's audit, a busy day's tally,
-## and the end of the run.
+## and the end of the run. Then Desk 2.2: a stolen part on a car and in a box, winter week's
+## taxi and studs, Hachey pulling a box, and the new end of the run.
 extends Node
 
 var scene: CounterScene
@@ -123,6 +124,7 @@ func _run() -> void:
 	scene.close_up()
 	await _shot("11_day_end")
 	await _desk21()
+	await _desk22()
 	print("COUNTER DEMO DONE")
 	get_tree().quit()
 
@@ -230,3 +232,117 @@ func _desk21() -> void:
 	for d in [30, 36, 42]:
 		scene.start_day(d)
 		await _shot("20_brief_%d" % d)
+
+## A fact on the desk by its kind of measure (tires, tint...).
+func _measure(kind: String) -> Dictionary:
+	for f in scene.fields():
+		if f.key == "measure" and String(f.val.kind) == kind: return f
+	return {}
+
+func _rule(id: String) -> Dictionary:
+	for f in scene.fields():
+		if f.key == "rule" and f.val == id: return f
+	return {}
+
+func _desk22() -> void:
+	DeskBook.reset()
+	# Thursday of week 6: the parts list goes up, and a car with a stolen cat (and an invoice that says otherwise)
+	scene.start_day(38)
+	await _shot("21_brief_38")
+	scene.press()
+	scene.clock = 140.0
+	scene.tick(0.01)
+	var c := scene.rules.customer(38, "hot_part")
+	while String(c.invoice.serial) == String(c.sheet.serial): c = scene.rules.customer(38, "hot_part")
+	_serve(c)
+	scene.tab = scene._tabs_today().find("POLICE")
+	scene.inspecting = true
+	scene.pick(_field("sheet", "serial"))
+	scene.pick(_field("", "bolo"))
+	scene.cur = Vector2(60, 250)
+	await _shot("22_hot_part")
+	scene.verdict = {}
+	scene.pick(_field("invoice", "serial"))
+	scene.pick(_field("sheet", "serial"))
+	await _shot("23_invoice_vs_part")
+	scene.inspecting = false
+	scene.verdict = {}
+	scene.stamp("REPORT")
+	await get_tree().create_timer(0.1).timeout
+	await _shot("24_reported")
+	scene.press()
+	# a stolen part in Fundy's box
+	_serve(scene.rules.courier(38, "hot_part"))
+	scene.inspecting = true
+	scene.pick(_field("slip", "serial"))
+	scene.pick(_field("", "bolo"))
+	await _shot("25_hot_box")
+	scene.inspecting = false
+	scene.verdict = {}
+	scene.stamp("APPROVED")
+	await get_tree().create_timer(0.1).timeout
+	await _shot("26_hot_box_signed")
+	scene.press()
+	# week 8: winter tires on working cars
+	scene.start_day(49)
+	await _shot("27_brief_49")
+	scene.press()
+	scene.clock = 110.0
+	scene.tick(0.01)
+	var taxi := scene.rules.customer(49, "no_winter_tires")
+	_serve(taxi)
+	scene.tab = scene._tabs_today().find("SEASONAL")
+	scene.inspecting = true
+	scene.pick(_measure("tires"))
+	scene.pick(_rule("winter"))
+	await _shot("28_taxi_tires")
+	scene.inspecting = false
+	scene.verdict = {}
+	# Wednesday: studs, and the calendar
+	scene.start_day(51)
+	await _shot("29_brief_51")
+	scene.press()
+	scene.clock = 165.0
+	scene.tick(0.01)
+	_serve(_booked("doiron"))
+	scene.tab = scene._tabs_today().find("SEASONAL")
+	scene.inspecting = true
+	scene.pick(_measure("tires"))
+	scene.pick(_rule("studs"))
+	await _shot("30_studs_in_season")
+	scene.inspecting = false
+	scene.verdict = {}
+	# Hachey pulls a box from week 5, signed for; Leo refuses it this time
+	DeskBook.reset()
+	scene.start_day(31)
+	scene.press()
+	_serve(scene.rules.box(31, "wrong_part"))
+	scene.stamp("APPROVED")
+	await get_tree().create_timer(0.05).timeout
+	scene.press()
+	scene.start_day(42)
+	scene.press()
+	while scene.phase != "counter" or scene.c.kind != "audit":
+		if scene.phase == "counter":
+			scene.stamp("DENIED")
+			scene._resolve()
+		if scene.phase == "result": scene.press()
+		scene.tick(0.1)
+	scene.inspecting = true
+	scene.pick(_field("order", "part"))
+	scene.pick(_field("slip", "part"))
+	await _shot("31_audit_box")
+	scene.inspecting = false
+	scene.verdict = {}
+	scene.stamp("APPROVED")
+	await get_tree().create_timer(0.1).timeout
+	await _shot("32_audit_box_same")
+	scene.press()
+	scene.clock = CounterRules.SHIFT_LEN - 1.0
+	scene.arrivals = []
+	scene.tick(0.1)
+	scene.close_up()
+	await _shot("33_day_end_prompt")
+	scene.day = CounterRules.LAST_DAY
+	scene.phase = "month_end"
+	await _shot("34_run_over")

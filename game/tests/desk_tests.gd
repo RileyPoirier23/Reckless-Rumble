@@ -1,5 +1,6 @@
 ## Headless tests for the desk itself (the scene, not just the rules): the shift clock and the
-## line, warnings, ASK, the notebook and the sticker log, the binder, the controls.
+## line, warnings, ASK, the notebook and the sticker log, the binder, the controls, and Desk
+## 2.2's stolen parts, winter week and wider audit.
 ## godot --headless --path game -s tests/desk_tests.gd
 extends SceneTree
 
@@ -48,6 +49,9 @@ func _init() -> void:
 	_audit()
 	_sounds()
 	_layout()
+	_hot_desk()
+	_winter_desk()
+	_audit_more()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
 
@@ -601,3 +605,132 @@ func _layout() -> void:
 	for t in n: if PixelFont.width(String(CounterScene.TAB_SHORT[tabs[t]])) > sc._tab_rect(t, n).size.x: labels_fit = false
 	check("the binder's tabs (PARTS too) fit across the top", n == CounterRules.TABS.size() and sc._tab_rect(n - 1, n).end.x <= CounterScene.BOARD.end.x and labels_fit)
 	done(sc)
+
+# ------------------------------------------------------------------ Desk 2.2: stolen parts at the desk
+
+func _hot_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(141)
+	sc.start_day(38)
+	sc.press()
+	var c := sc.rules.customer(38, "hot_part")
+	while String(c.invoice.serial) == String(c.sheet.serial): c = sc.rules.customer(38, "hot_part")
+	sc.waiting.push_front(c)
+	sc.next_customer()
+	check("a new part comes with its invoice on the desk", sc.docs.any(func(d): return d.id == "invoice"))
+	sc.inspecting = true
+	sc.pick(field(sc, "invoice", "serial"))
+	sc.pick(field(sc, "", "bolo"))
+	check("the invoice's serial against the stolen list: not on it", sc.verdict.good == true)
+	sc.pick(field(sc, "sheet", "serial"))
+	sc.pick(field(sc, "", "bolo"))
+	check("the serial Gus read off the part: on the list, and that's a question", sc.verdict.good == false and sc.ask_list()[0] == "hot_part")
+	sc.ask_next()
+	check("ASK about the serial: a story", CounterRules.EXCUSES["hot_part"].has(String(sc._bubble().text)))
+	sc.inspecting = false
+	var w0 := sc.warnings_used
+	stamp_now(sc, "REPORT")
+	check("REPORT a stolen part: the right call", sc.result.correct and sc.result.citation == "" and sc.warnings_used == w0)
+	sc.press()
+	sc.waiting.push_front(sc.rules.courier(38, "hot_part"))
+	sc.next_customer()
+	stamp_now(sc, "APPROVED")
+	check("sign for a stolen part: the police fine, never a free warning", not sc.result.correct and sc.result.fine == CounterRules.FINE * 2 and sc.warnings_used == w0)
+	sc.press()
+	# the wall: six cars and four serials still fit on the sheet
+	var lines := 12.0 + CounterRules.bolo_cars(sc.rules.bolo).size() * 7.0 + 9.0 + ceilf(CounterRules.bolo_parts(sc.rules.bolo).size() / 2.0) * 7.0 - 2.0
+	check("the stolen list fits its cars and its part serials", lines <= sc._bolo_rect().size.y, "%.0f of %.0f" % [lines, sc._bolo_rect().size.y])
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.2: winter week at the desk
+
+func _winter_desk() -> void:
+	# the week picker reaches week 8
+	var sc := desk(151)
+	sc.fresh = true
+	sc.start_day(0)
+	sc._tab_step(-1)
+	check("free play: the week picker wraps round to week 8", sc.day == 49 and CounterRules.week_of(sc.day) == 8)
+	done(sc)
+	# Rob's team van: put its winters on Tuesday and it's fine on Friday; send him away and it isn't
+	for way in ["APPROVED", "DENIED"]:
+		DeskBook.reset()
+		sc = desk(152)
+		sc.start_day(50)
+		sc.press()
+		var rob := booked(sc, "rob")
+		check("Rob's team van is in Tuesday's line for its winters, on all-seasons (%s)" % way, rob.request == "WINTER TIRES ON" and rob.sheet.tires == "ALL-SEASON" and rob.reg.use == "COMMERCIAL" and rob.flags.is_empty())
+		serve(sc, rob, way)
+		sc.start_day(53)
+		var fri := booked(sc, "rob")
+		if way == "APPROVED": check("winters on Tuesday: Friday's sticker is clean", fri.flags.is_empty() and fri.sheet.tires == "WINTER")
+		else: check("sent away Tuesday: Friday he's back on all-seasons for a sticker", fri.flags == ["no_winter_tires"] and String(fri.says).begins_with("YOU WOULDN'T PUT MY WINTERS ON"))
+		done(sc)
+	# Mrs. Doiron's studs in November: the calendar says they're fine
+	DeskBook.reset()
+	sc = desk(153)
+	sc.start_day(51)
+	sc.press()
+	var d := booked(sc, "doiron")
+	sc.waiting.push_front(d)
+	sc.next_customer()
+	sc.inspecting = true
+	sc.tab = sc._tabs_today().find("SEASONAL")
+	var tires: Dictionary = {}
+	for f in sc.fields(): if f.key == "measure" and String(f.val.kind) == "tires": tires = f
+	sc.pick(tires)
+	for f in sc.fields(): if f.key == "rule" and f.val == "studs": sc.pick(f)
+	check("studs against the stud rule on Nov 27: in season", sc.verdict.good == true and String(sc.verdict.text).contains("IN SEASON"))
+	sc.inspecting = false
+	stamp_now(sc, "DENIED")
+	check("failing Mrs. Doiron for her studs in November is the wrong call", not sc.result.correct and String(sc.result.line).contains("November"))
+	sc.press()
+	# Gus's sheet grows to eleven lines, and still sits above the tray
+	var full := sc.rules.customer(53, "hot_part")
+	full.request = "SAFETY INSPECTION"
+	sc.day = 53
+	sc.waiting.push_front(full)
+	sc.next_customer()
+	var sheet: Dictionary = sc.docs[sc._doc_index("sheet")]
+	check("Gus's sheet, every line on it, sits on the desk above the tray", sc._rows("sheet").size() >= 11 and float(sheet.pos.y) + sc._doc_size("sheet").y <= CounterScene.DESK.end.y)
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.2: Hachey pulls a box and a regular
+
+func _audit_more() -> void:
+	DeskBook.reset()
+	var sc := desk(161)
+	# last week: a box Leo signed for, and Jayden's tint passed (wrongly)
+	sc.start_day(31)
+	sc.press()
+	var bx := sc.rules.box(31, "clean")
+	serve(sc, bx, "APPROVED")
+	sc.start_day(30)
+	sc.press()
+	var j := booked(sc, "jayden")
+	serve(sc, j, "APPROVED")
+	check("both went in the cabinet, rebuildable", DeskBook.files.size() == 2 and DeskBook.files.all(func(f): return CounterRules.auditable(f, 42)))
+	sc.start_day(42)
+	sc.press()
+	var pulled: Array = []
+	for i in 2000:
+		sc.tick(0.5)
+		if sc.phase == "counter":
+			if sc.c.kind == "audit":
+				pulled.append(sc.c)
+				# stamp it the same way it was stamped
+				stamp_now(sc, String(sc.c.audit.stamp))
+			else: stamp_now(sc, "DENIED")
+		if sc.phase == "result": sc.press()
+		if pulled.size() == 2 or sc.phase == "day_end": break
+	check("Hachey pulls both: a packing slip and a regular's work order", pulled.size() == 2 and pulled.any(func(x): return x.has("slip")) and pulled.any(func(x): return x.has("licence")))
+	var box: Dictionary = {}
+	for x in pulled: if x.has("slip"): box = x
+	check("the box's file opens at the slip, his thumb on the signature", not box.is_empty() and String(box.says).begins_with("PACKING SLIP"))
+	check("the same wrong stamp twice: no citation, and it's on the day-end sheet", sc.day_log.audits_wrong == 1 and sc.day_log.citations.is_empty()
+		and sc._day_end_rows().any(func(r): return String(r[0]) == "FILES PULLED" and String(r[1]).contains("1 WRONG TWICE")))
+	check("Hachey's report says so", sc.audit_verdict().contains("WRONG BOTH TIMES") and DeskBook.flags.has("desk_audit_wrong_twice"))
+	done(sc)
+	DeskBook.reset()
