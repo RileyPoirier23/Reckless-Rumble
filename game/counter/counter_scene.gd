@@ -1081,6 +1081,11 @@ func _draw_window() -> void:
 		draw_rect(Rect2(pr.position + Vector2(3, 16), Vector2(pr.size.x - 6, 1)), Color("2a4a8a"))
 		draw_line(pr.position + Vector2(56, 10), Vector2(car_view.position.x - float(c.car.len) * 9.0, car_view.position.y), Color(1, 1, 1, 0.25), 1.0)
 		PixelFont.draw(self, WINDOW.position + Vector2(96, 100), "%d %s %s" % [int(c.car.year), c.car.make, c.car.model], BONE)
+		# what the catalogue knows about this one, the first thing anybody notices in the bay
+		var quirk := String(c.car.get("quirk", ""))
+		if quirk != "":
+			if quirk.length() > 76: quirk = quirk.substr(0, 73) + "..."
+			PixelFont.draw_centered(self, WINDOW.get_center().x, 36, quirk, Color("3a3a40"))
 	draw_rect(WINDOW, Color("2a2a30"), false, 3.0)
 
 ## The lot through the bay door's windows: the line, nose to tail, first in line nearest the door.
