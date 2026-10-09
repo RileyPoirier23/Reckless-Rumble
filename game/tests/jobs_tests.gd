@@ -119,6 +119,29 @@ func _init() -> void:
 		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
+	# HOPP-IN
+	var rr2 := RandomNumberGenerator.new()
+	rr2.seed = 2
+	var late_ok := true
+	var day_ok := true
+	for i in 200:
+		var k1 := Rides.pick_type(1.0, rr2)
+		if not k1 in ["party", "quiet"]: late_ok = false
+		var k2 := Rides.pick_type(10.0, rr2)
+		if k2 == "party": day_ok = false
+	check("rides: bar crowd at 1 a.m., never at 10", late_ok and day_ok)
+	check("rides: the fare goes by distance", Rides.fare(2000.0) > Rides.fare(500.0) + 10 and Rides.fare(0.0) >= 3, "%d vs %d" % [Rides.fare(2000.0), Rides.fare(500.0)])
+	check("rides: smooth and on time is five stars", Rides.stars("nervous", 0.0, 0.0, 0, 0.0, false) == 5 and Rides.stars("hurry", 0.0, 0.0, 0, -30.0, false) == 5)
+	check("rides: memere doesn't like being thrown about", Rides.stars("nervous", 2.5, 0.0, 0, 0.0, false) <= 2)
+	check("rides: hit something and it shows", Rides.stars("quiet", 0.0, 0.0, 2, 0.0, false) <= 2)
+	check("rides: late for the shift costs stars, speeding doesn't", Rides.stars("hurry", 0.0, 2000.0, 0, 60.0, false) <= 3 and Rides.stars("hurry", 0.0, 2000.0, 0, -30.0, false) == 5)
+	check("rides: sick in the back is one star", Rides.stars("party", 0.0, 0.0, 0, 0.0, true) == 1)
+	check("rides: five stars tips a fifth", Rides.tip(20, 5) == 4 and Rides.tip(20, 3) == 0)
+	var rs := {}
+	var gone := false
+	for star_n in [5, 2, 1, 2]:
+		gone = Rides.record(rs, star_n, 3) or gone
+	check("rides: a run of bad ones and you're off for the day", gone and Rides.deactivated(rs, 3) and not Rides.deactivated(rs, 4), str(rs))
 	# street rep and pink slips
 	var gated := true
 	for d in 8:

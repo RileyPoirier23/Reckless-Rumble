@@ -33,7 +33,8 @@ func _ready() -> void:
 	await _police_impound()
 	await _wildlife()
 	if not OS.get_cmdline_user_args().has("--police-only"): await _pinks()
-	var want := 7 if not OS.get_cmdline_user_args().has("--police-only") else 4
+	await _ride()
+	var want := 8 if not OS.get_cmdline_user_args().has("--police-only") else 5
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -323,4 +324,31 @@ func _pinks() -> void:
 	check("pinks: lose and your car's gone, and you're home in another", (main.save.garage as Array).size() == n0 - 1 and main.car != null and main.car_i >= 0 and main.car.sim.pos.distance_to(main.START) < 5.0, "%d -> %d cars, lost the %s" % [n0, (main.save.garage as Array).size(), lose_id])
 	main.save.street = { "races": 0, "wins": 0, "rep": 0 }
 	main.police.clear()
+	done += 1
+
+## A HOPP-IN ride, start to finish: a request comes in, you pick them up, you drop them off.
+func _ride() -> void:
+	var j: JobRunner = main.jobs
+	main.save.erase("rides")
+	main.sky.time_h = 14.0
+	main._teleport(Vector2(5570, 1566), -PI / 2.0)
+	j.start("ride")
+	var t := 0.0
+	while t < 12.0 and j.stage != "pickup":
+		await _wait(0.5)
+		t += 0.5
+	check("rides: a request comes in", j.stage == "pickup" and not j.rider.is_empty(), j.stage)
+	if j.stage != "pickup":
+		j.finish(false)
+		return
+	main._teleport(j.rider.from, 0.0)
+	await _wait(0.6)
+	check("rides: they get in", j.stage == "ride", j.stage)
+	var cash0 := int(main.save.cash)
+	var fare := int(j.rider.fare)
+	main._teleport(j.rider.to, 0.0)
+	await _wait(0.6)
+	check("rides: dropped off, paid the fare and a tip", j.runs == 1 and int(main.save.cash) >= cash0 + fare, "$%d -> $%d (fare $%d)" % [cash0, int(main.save.cash), fare])
+	check("rides: it goes on your rating", int(main.save.get("rides", {}).get("count", 0)) == 1)
+	j.finish(true)
 	done += 1

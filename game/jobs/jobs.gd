@@ -11,6 +11,9 @@ const KINDS := {
 	"pizza": { "title": "PIZZA DELIRIUM", "open": [17.0, 23.0],
 		"blurb": "Thirty minutes or it's free. Corner hard and the pizza ends up on the lid.",
 		"pay": "$6 A RUN + TIPS" },
+	"ride": { "title": "HOPP-IN RIDES", "open": [0.0, 24.0],
+		"blurb": "Strangers in your back seat. Drive smooth, get stars. Or one.",
+		"pay": "$3.50 + $1.25/KM + TIPS" },
 	"tow": { "title": "TOW CALL", "open": [0.0, 24.0],
 		"blurb": "Somebody's in the ditch. Toby's wrecker, the boom, a slow drive back.",
 		"pay": "$90 + $2.50/KM, MORE AT NIGHT AND IN WEATHER" },
@@ -24,7 +27,7 @@ const KINDS := {
 		"blurb": "No job. No GPS voice. Just the road and the radio you don't have yet.",
 		"pay": "NOTHING. THAT'S THE POINT." },
 }
-const ORDER := ["pizza", "tow", "drag", "street", "cruise"]
+const ORDER := ["pizza", "ride", "tow", "drag", "street", "cruise"]
 
 ## Tonight's street race: Marco runs a different route each night, unless you haven't the rep for
 ## it, in which case you get the best one you're allowed into.

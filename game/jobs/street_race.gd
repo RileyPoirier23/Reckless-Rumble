@@ -41,7 +41,7 @@ const PINKS_REP := 6
 ## (a quick one from its class).
 const RIVALS := [
 	{ "name": "MIKE 'TWO-STEP' HACHE", "class": "hot_hatch", "skill": 0.86, "line": "\"Pinks. Don't cry when I take it. My mom's watching.\"" },
-	{ "name": "DANIELLE 'DEE' DOUCET", "class": "sports", "skill": 0.92, "line": "\"I don't race for money. I race for the parking spot at the Tim's.\"" },
+	{ "name": "DANIELLE 'DEE' DOUCET", "class": "sports", "skill": 0.92, "line": "\"I don't race for money. I race for the parking spot at the Tim Burtons.\"" },
 	{ "name": "SABRINA COMEAU", "class": "jdm", "skill": 0.88, "line": "\"I built this in my dad's shed. You can visit it.\"" },
 	{ "name": "RICKY 'THE RIVET' ROBICHAUD", "class": "muscle", "skill": 0.9, "line": "\"Four hundred cubic inches. You've got four hundred excuses.\"" },
 	{ "name": "THE KING OF MAIN STREET", "class": "exotic", "skill": 0.95, "line": "Nobody knows his name. Everybody knows the car." },
@@ -329,7 +329,7 @@ func _end() -> void:
 		else: drive.hud.post("%s TAKES YOUR KEYS. MARCO: \"THAT'S PINKS, BUD.\"" % String(rival.name), 7.0)
 	elif won > 0: drive.hud.post("YOU WIN. MARCO COUNTS OUT $%d LIKE IT HURTS HIM." % won, 6.0)
 	elif finish_t.has(-1): drive.hud.post("P%d. MARCO: \"THERE'S ALWAYS NEXT FRIDAY.\"" % place(), 5.0)
-	else: drive.hud.post("DNF. EVERYBODY ELSE IS ALREADY AT THE TIM'S.", 5.0)
+	else: drive.hud.post("DNF. EVERYBODY ELSE IS ALREADY AT TIM BURTONS.", 5.0)
 	for a in racers: a.speed_cap = 11.0
 
 ## Everybody goes home.

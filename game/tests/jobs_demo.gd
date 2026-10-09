@@ -27,7 +27,7 @@ func _run() -> void:
 	main.sky.forced = true
 	main.sky.time_h = 18.0
 	await _wait(1.0)
-	main.job_board.open(main.sky, main.save, "")
+	main.job_board.open(main.sky, main.save, "", Market.places(main.world.map))
 	await _wait(0.5)
 	await _shot("1_board")
 	main.job_board.visible = false
@@ -80,4 +80,19 @@ func _run() -> void:
 	Input.action_release("throttle")
 	await _wait(1.0)
 	await _shot("8_slip")
+	main.jobs.finish(false)
+	# HOPP-IN: the phone, then someone in the back
+	main.sky.time_h = 13.0
+	main.job_board.open(main.sky, main.save, "", Market.places(main.world.map))
+	main.job_board.sel = 1
+	await _wait(0.4)
+	await _shot("9_board_rides")
+	main.job_board.visible = false
+	main.jobs.start("ride")
+	main.jobs._new_rider()
+	main.jobs.rider.kind = "nervous"
+	main.jobs.rider.name = "MEMERE THERIAULT"
+	main._teleport(main.jobs.rider.from, 0.0)
+	await _wait(1.0)
+	await _shot("10_ride")
 	get_tree().quit()

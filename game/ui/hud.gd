@@ -94,10 +94,13 @@ func _draw() -> void:
 	var my := 44.0 if objective == "" else 56.0 + wrap_lines(objective, 50).size() * 8.0
 	for m in msgs:
 		var a: float = clampf(m[1], 0.0, 1.0)
-		var w := PixelFont.width(m[0], 2) + 16
-		draw_rect(Rect2(320 - w / 2.0, my, w, 16), Color(0.5, 0.06, 0.04, 0.85 * a))
-		PixelFont.draw_centered(self, 320, my + 4, m[0], Color(1, 1, 1, a), 2)
-		my += 20
+		# long ones wrap onto more lines rather than running off the sides
+		for ln in wrap_lines(String(m[0]), 46):
+			var w := PixelFont.width(ln, 2) + 16
+			draw_rect(Rect2(320 - w / 2.0, my, w, 16), Color(0.5, 0.06, 0.04, 0.85 * a))
+			PixelFont.draw_centered(self, 320, my + 4, ln, Color(1, 1, 1, a), 2)
+			my += 18
+		my += 2
 	if sim.engine_blown:
 		PixelFont.draw_centered(self, 320, 128, "ENGINE BLOWN. R TO TOW IT HOME.", RED, 2, INK)
 	# ---- controls

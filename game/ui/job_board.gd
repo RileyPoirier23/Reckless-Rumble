@@ -86,7 +86,9 @@ func _draw() -> void:
 		return
 	PixelFont.draw_centered(self, r.get_center().x, r.position.y + 24, "GIGS", GOLD, 2)
 	var y := r.position.y + 42
-	for i in Jobs.ORDER.size():
+	var rows := 5
+	var top := clampi(sel - 2, 0, maxi(0, Jobs.ORDER.size() - rows))
+	for i in range(top, mini(Jobs.ORDER.size(), top + rows)):
 		var k: String = Jobs.ORDER[i]
 		var job: Dictionary = Jobs.KINDS[k]
 		var open := Jobs.open_now(k, sky.time_h)
@@ -98,7 +100,7 @@ func _draw() -> void:
 		var status := "ON IT" if k == current else ("OPEN" if open else "OPENS %s" % Jobs.opens_at(k))
 		var scol := GOLD if k == current else (GREEN if open else ASH)
 		PixelFont.draw(self, box.position + Vector2(box.size.x - 5 - PixelFont.width(status), 4), status, scol)
-		PixelFont.draw(self, box.position + Vector2(5, 14), Jobs.street_line(save, sky.day) if k == "street" else String(job.pay), GOLD if open else ASH)
+		PixelFont.draw(self, box.position + Vector2(5, 14), Jobs.street_line(save, sky.day) if k == "street" else (String(job.pay) + ("  RATING %.1f" % Rides.average(save) if k == "ride" else "")), GOLD if open else ASH)
 		var lines := Hud.wrap_lines(String(job.blurb), 38)
 		for li in mini(lines.size(), 2): PixelFont.draw(self, box.position + Vector2(5, 24 + li * 8), lines[li], ASH)
 		y += h

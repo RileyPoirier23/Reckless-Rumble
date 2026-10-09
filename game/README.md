@@ -56,6 +56,12 @@ The other drivers follow the lanes (right-hand traffic) and keep a safe gap to w
 
 Cars spawn out of sight around you, and there are more downtown and at rush hour, fewer at 3 a.m. They signal before turns, show brake lights and use headlights at night.
 
+## HOPP-IN rides
+
+A gig on the phone, any time of day. A request comes in from a house nearby; pick them up, take them where they're going (a landmark or another address), and they pay $3.50 plus $1.25 a km. Then they rate you, and five stars tips a fifth:
+- **Memere going to bingo** hates being thrown about; **someone late for a shift** only cares that you're quick; **the chatty ones** tell you about their snowblower; **the bar crowd** after ten gets sick in the back if you corner like you, and that's one star and a $50 cleaning fee; **the quiet ones** keep their headphones in and only mind if you hit something.
+- Speeding costs stars with everybody but the ones who are late. A run of bad ratings and HOPP-IN takes you off for the rest of the day. Your average shows on the phone.
+
 ## Gas
 
 Your car burns fuel by the work the engine does: about 45 minutes of steady highway driving on a tank, a lot less flat out. The FUEL light comes on under a seventh of a tank, and the dash gauges show what's left. Fill up at the pumps at the Gas Bars, the Ultramarge in Dieppe or the Big Stop (they're on the GPS): regular at $1.62 a litre, premium at $1.89, or twenty bucks' worth. Premium keeps a hot tune from knocking (it goes by how much of what's in the tank is premium). Run dry and the car coughs and stops; Toby brings a jerry can for $60. Each car's fuel is saved with it, and nobody else's car ever runs out.

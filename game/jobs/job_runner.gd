@@ -41,6 +41,10 @@ var race: StreetRace
 var race_route := {}
 var race_start := Vector2.ZERO
 var race_rival := {}
+# rides
+var rider := {}
+var _ride_wait := 0.0
+var _talk_t := 0.0
 
 func setup(the_drive: Node) -> void:
 	drive = the_drive
@@ -99,6 +103,16 @@ func start(k: String) -> void:
 				drive.hud.post("STREET RACE: %s. MEET MARCO AT THE START. $%d BUY-IN." % [race_route.name, int(race_route.buy_in)], 5.0)
 			race_start = StreetRace.build_path(map(), race_route)[0]
 			drive._on_dest("MARCO", race_start)
+		"ride":
+			if Rides.deactivated(drive.save, drive.sky.day):
+				drive.hud.post("HOPP-IN: YOUR ACCOUNT IS ON A COOLING-OFF PERIOD. TRY AGAIN TOMORROW.", 5.0)
+				kind = ""
+				return
+			stage = "wait"
+			runs = 0
+			_ride_wait = 3.0
+			drive.clear_route()
+			drive.hud.post("HOPP-IN: YOU'RE ONLINE. RATING %.1f. WAITING FOR A REQUEST." % Rides.average(drive.save), 4.0)
 		"cruise":
 			stage = "cruise"
 			_cruise_m = 0.0
@@ -128,6 +142,7 @@ func finish(done := true) -> void:
 	match k:
 		"pizza": drive.hud.post("SHIFT OVER. %d RUNS, $%d IN YOUR POCKET. YOU SMELL LIKE OREGANO." % [runs, earned], 6.0)
 		"tow": if not done: drive.hud.post("YOU LEAVE IT IN THE DITCH. SOMEBODY ELSE'S PROBLEM NOW.", 4.0)
+		"ride": drive.hud.post("HOPP-IN: OFFLINE. %d RIDE%s, $%d. RATING %.1f." % [runs, "" if runs == 1 else "S", earned, Rides.average(drive.save)], 6.0)
 		"street": if done: drive.hud.post("RACE NIGHT: %s." % ("$%d UP" % earned if earned > 0 else "$%d DOWN" % -earned), 5.0)
 		"cruise": drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
 	if k == "tow" and String(car().spec.get("id", "")) == "tow": drive.job_restore_car()
@@ -154,6 +169,7 @@ func _process(dt: float) -> void:
 		"tow": _tow(dt)
 		"drag": _drag(dt)
 		"street": _street(dt)
+		"ride": _ride(dt)
 		"cruise":
 			_cruise_m += car().sim.speed() * dt
 	_objective()
@@ -175,6 +191,13 @@ func _objective() -> void:
 			if stage == "drive": o = "DRAG NIGHT: AIRSTRIP 7. STOP AT THE START LINE ON RUNWAY 7."
 		"street":
 			if race == null: o = "STREET RACE: %s. %s STOP AT THE START AND SIGN IN WITH MARCO." % [race_route.name, race_route.blurb]
+		"ride":
+			if stage == "pickup": o = "HOPP-IN: PICK UP %s AT %s. STOP OUT FRONT." % [rider.name, rider.from_label]
+			elif stage == "ride":
+				o = "HOPP-IN: TAKE %s TO %s. $%d." % [rider.name, rider.to_label, int(rider.fare)]
+				if Rides.TYPES[rider.kind].has("wants_speed"):
+					var left := Rides.expected_s(float(rider.route_m)) - float(rider.t)
+					o += "  %s" % ("%d:%02d" % [int(left) / 60, int(left) % 60] if left >= 0.0 else "LATE %ds" % int(-left))
 		"cruise": o = ""
 	drive.hud.objective = o
 
@@ -328,6 +351,98 @@ func _on_strip_closed(won: int) -> void:
 		strip = null
 	finish(true)
 
+# ------------------------------------------------------------------ rides
+
+func _new_rider() -> void:
+	var c := car()
+	var from_list := Jobs.addresses(map(), rng, c.sim.pos, 1, 150.0, 900.0)
+	if from_list.is_empty():
+		_ride_wait = 8.0
+		return
+	var from: Dictionary = from_list[0]
+	var to := {}
+	if rng.randf() < 0.5:
+		var picks: Array = []
+		for l in map().landmarks:
+			if bool(l.dest) and (l.p as Vector2).distance_to(from.p) > 400.0 and (l.p as Vector2).distance_to(from.p) < 2600.0: picks.append(l)
+		if not picks.is_empty():
+			var l: Dictionary = picks[rng.randi() % picks.size()]
+			to = { "p": Jobs.road_point(map(), l.p), "label": String(l.name) }
+	if to.is_empty():
+		var tl := Jobs.addresses(map(), rng, from.p, 1, 400.0, 1800.0)
+		if tl.is_empty():
+			_ride_wait = 8.0
+			return
+		to = { "p": tl[0].p, "label": String(tl[0].label) }
+	var k := Rides.pick_type(drive.sky.time_h, rng)
+	var t: Dictionary = Rides.TYPES[k]
+	var route_m := _route_len(from.p, to.p)
+	rider = { "kind": k, "name": String((t.names as Array)[rng.randi() % (t.names as Array).size()]), "from": from.p, "from_label": String(from.label),
+		"to": to.p, "to_label": String(to.label), "route_m": route_m, "fare": Rides.fare(route_m),
+		"t": 0.0, "rough": 0.0, "over": 0.0, "hits": 0, "sick": false }
+	stage = "pickup"
+	drive._on_dest(String(from.label), from.p)
+	drive.hud.post("HOPP-IN: %s AT %s. $%d TO %s." % [rider.name, rider.from_label, int(rider.fare), rider.to_label], 5.0)
+
+func _ride(dt: float) -> void:
+	var c := car()
+	match stage:
+		"wait":
+			_ride_wait -= dt
+			if _ride_wait <= 0.0: _new_rider()
+		"pickup":
+			if c.sim.pos.distance_to(rider.from) < 14.0 and c.sim.speed() < 2.0:
+				stage = "ride"
+				_dmg_seen = _damage_sum()
+				_talk_t = rng.randf_range(15.0, 25.0)
+				var t: Dictionary = Rides.TYPES[rider.kind]
+				drive.hud.post("%s GETS IN. %s" % [rider.name, String((t.hi as Array)[rng.randi() % (t.hi as Array).size()])], 6.0)
+				drive._on_dest(String(rider.to_label), rider.to)
+		"ride":
+			var t: Dictionary = Rides.TYPES[rider.kind]
+			rider.t = float(rider.t) + dt
+			# how hard you're throwing them about, past what they'll put up with
+			var g := Vector2(c.sim.ax, c.sim.ay).length() / 9.81
+			rider.rough = float(rider.rough) + maxf(0.0, g - float(t.tol)) * dt
+			var road: Dictionary = map().road_at(c.sim.pos).get("road", {})
+			if not road.is_empty():
+				rider.over = float(rider.over) + maxf(0.0, c.sim.speed() * 3.6 - Police.limit_kmh(String(road.cls)) - 10.0) * dt
+			var dmg := _damage_sum()
+			if dmg > _dmg_seen + 0.02:
+				rider.hits = int(rider.hits) + 1
+				drive.hud.post("\"HEY!\"", 2.0)
+			_dmg_seen = dmg
+			if t.has("sick") and not bool(rider.sick) and float(rider.rough) > 1.2:
+				rider.sick = true
+				drive.hud.post("OH NO. OH NO NO NO. (THE BACK SEAT.)", 4.0)
+			_talk_t -= dt
+			if _talk_t <= 0.0:
+				_talk_t = rng.randf_range(18.0, 30.0)
+				drive.hud.post(String((t.talk as Array)[rng.randi() % (t.talk as Array).size()]), 5.0)
+			if c.sim.pos.distance_to(rider.to) < 14.0 and c.sim.speed() < 2.0: _drop_off()
+
+func _drop_off() -> void:
+	var late := float(rider.t) - Rides.expected_s(float(rider.route_m))
+	var star := Rides.stars(String(rider.kind), float(rider.rough), float(rider.over), int(rider.hits), late, bool(rider.sick))
+	var fare_d := int(rider.fare)
+	var tip_d := Rides.tip(fare_d, star)
+	pay(fare_d + tip_d)
+	if bool(rider.sick):
+		pay(-Rides.CLEANING)
+	runs += 1
+	var off := Rides.record(drive.save, star, drive.sky.day)
+	var stars_txt := ""
+	for i in 5: stars_txt += "*" if i < star else "-"
+	drive.hud.post("%s: %s  $%d%s%s" % [rider.name, stars_txt, fare_d, " + $%d TIP" % tip_d if tip_d > 0 else "", "  - $%d CLEANING" % Rides.CLEANING if bool(rider.sick) else ""], 6.0)
+	SaveGame.write(drive.save)
+	if off:
+		drive.hud.post("HOPP-IN: \"WE'VE NOTICED SOME CONCERNING FEEDBACK.\" YOU'RE OFF FOR THE DAY.", 6.0)
+		finish(false)
+		return
+	stage = "wait"
+	_ride_wait = rng.randf_range(6.0, 14.0)
+	drive.clear_route()
+
 # ------------------------------------------------------------------ street race
 
 func _street(_dt: float) -> void:
@@ -395,6 +510,9 @@ func _draw() -> void:
 		"street":
 			if race == null: p = race_start
 			r = 20.0
+		"ride":
+			if stage == "pickup": p = rider.from
+			elif stage == "ride": p = rider.to
 	if p == Vector2.INF: return
 	var pulse := 0.5 + 0.5 * sin(t * 4.0)
 	draw_arc(p * CarArt.PX, r * CarArt.PX, 0.0, TAU, 48, Color(1.0, 0.75, 0.2, 0.35 + 0.3 * pulse), 4.0)
