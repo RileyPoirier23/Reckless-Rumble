@@ -38,6 +38,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/run_tests.gd | tee test.log
           grep -q "^0 failed" test.log
+      - name: Map, sky and car tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/world_tests.gd | tee world.log
+          grep -q "^0 failed" world.log
       - name: Counter tests
         working-directory: game
         run: |

@@ -6,7 +6,7 @@ const PX := CarArt.PX
 
 var sim: CarSim
 var view: CarView
-var city: City
+var city: World
 var skids: Skids
 var hud: Hud
 var spec: Dictionary
@@ -22,7 +22,7 @@ var throttle_in := 0.0
 var start_pos := Vector2.ZERO
 var start_heading := 0.0
 
-func setup(car_spec: Dictionary, the_city: City, the_skids: Skids, the_hud: Hud, at_m: Vector2, heading: float) -> void:
+func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud, at_m: Vector2, heading: float) -> void:
 	spec = car_spec
 	city = the_city
 	skids = the_skids

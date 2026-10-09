@@ -47,7 +47,8 @@ func _process(dt: float) -> void:
 		return
 	for tog in steps[i][3]:
 		match tog:
-			"night": main._set_night(not main.night)
-			"season": main._apply_season(City.ORDER[(City.ORDER.find(main.city.season) + 1) % 4])
+			"night": main.sky.time_h = 22.5 if main.sky.daylight() > 0.5 else 12.0
+			"season": main._apply_season(["summer", "fall", "winter", "spring"][(["summer", "fall", "winter", "spring"].find(main.sky.season) + 1) % 4])
+			"weather": main.sky.next_weather()
 	for act in steps[i][1]: Input.action_press(act)
 	left = steps[i][0]

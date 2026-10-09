@@ -13,7 +13,10 @@ static func setup() -> void:
 		"shift_down": [KEY_Q, JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_X],
 		"gearbox": [KEY_G, JOY_BUTTON_Y],
 		"reset": [KEY_R, JOY_BUTTON_BACK],
-		"night": [KEY_N, JOY_BUTTON_DPAD_UP],
+		"night": [KEY_N, JOY_BUTTON_RIGHT_STICK],
+		"map": [KEY_TAB, JOY_BUTTON_DPAD_UP],
+		"next_car": [KEY_C, JOY_BUTTON_LEFT_STICK],
+		"weather": [KEY_L],
 		"season": [KEY_M, JOY_BUTTON_DPAD_RIGHT],
 		"tires": [KEY_T, JOY_BUTTON_DPAD_DOWN],
 		"assist": [KEY_P, JOY_BUTTON_DPAD_LEFT],
@@ -33,7 +36,7 @@ static func setup() -> void:
 				j.axis = b[0]
 				j.axis_value = b[1]
 				ev = j
-			elif action in ["handbrake", "shift_up", "shift_down", "gearbox", "reset", "night", "season", "tires", "assist", "help", "inspect", "click", "ui_back_pad"] and b < 100:
+			elif b < 32:     # joypad buttons are 0..20; every key code is 32 or more
 				var jb := InputEventJoypadButton.new()
 				jb.button_index = b
 				ev = jb

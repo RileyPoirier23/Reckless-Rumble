@@ -57,7 +57,7 @@ var brake_c := [30.0, 30.0]           # front, rear
 var tires: Array = []                 # FL, FR, RL, RR: { tread, temp, flat, lockup }
 
 # ---- the road under the car (set by the world every step)
-var surface := "dry"                  # dry, wet, snow, ice, gravel, leaves
+var surface := "dry"                  # dry, wet, snow, ice, gravel, leaves, grass, mud, water
 var compound := "summer"              # summer, winter
 
 # ---- outputs for the renderer / HUD / tests
@@ -67,10 +67,10 @@ var front_locked := false
 var messages: Array[String] = []
 var odometer_m := 0.0
 
-const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.36, "ice": 0.12, "gravel": 0.62, "leaves": 0.6 }
+const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.36, "ice": 0.12, "gravel": 0.62, "leaves": 0.6, "grass": 0.5, "mud": 0.36, "water": 0.25 }
 const COMPOUND := {
-	"summer": { "dry": 1.05, "wet": 0.95, "snow": 0.55, "ice": 0.55, "gravel": 0.9, "leaves": 0.95, "cold_below": 7.0, "opt": 85.0 },
-	"winter": { "dry": 0.88, "wet": 0.97, "snow": 1.3, "ice": 1.55, "gravel": 1.0, "leaves": 1.0, "cold_below": -30.0, "opt": 45.0 },
+	"summer": { "dry": 1.05, "wet": 0.95, "snow": 0.55, "ice": 0.55, "gravel": 0.9, "leaves": 0.95, "grass": 0.95, "mud": 0.85, "water": 1.0, "cold_below": 7.0, "opt": 85.0 },
+	"winter": { "dry": 0.88, "wet": 0.97, "snow": 1.3, "ice": 1.55, "gravel": 1.0, "leaves": 1.0, "grass": 1.0, "mud": 1.1, "water": 1.0, "cold_below": -30.0, "opt": 45.0 },
 }
 
 func _init(car_spec: Dictionary) -> void:
@@ -371,7 +371,8 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		_hurt_engine((over * over * 0.5 + over * 0.05) * h)
 	# --- aero and rolling
 	var drag := 0.5 * 1.2 * float(spec.cda) * vx * absf(vx)
-	var roll := 0.013 * m * G * clampf(vx * 4.0, -1.0, 1.0)
+	var roll_k: float = { "grass": 0.09, "mud": 0.18, "water": 0.6, "snow": 0.03, "gravel": 0.022 }.get(surface, 0.013)
+	var roll := roll_k * m * G * clampf(vx * 4.0, -1.0, 1.0)
 	# --- integrate the body
 	var fx := fx_r + fx_f * cos(steer) - fy_f * sin(steer) - drag - roll
 	var fy := fy_r + fy_f * cos(steer) + fx_f * sin(steer)

@@ -1,0 +1,92 @@
+{
+  "id": "charjer",
+  "make": "Dodgy",
+  "model": "Charjer R/T",
+  "year": 2015,
+  "body": "sedan",
+  "dash": "tft",
+  "gps": "builtin",
+  "blurb": "A 5.7 HEMI-ish V8, rear-wheel drive and 1,950 kg of opinions. Built for straight lines and police auctions.",
+  "drivetrain": "RWD",
+  "mass": 1950,
+  "wheelbase": 3.05,
+  "cg_front": 1.45,
+  "cg_height": 0.54,
+  "track": 1.6,
+  "length": 5.04,
+  "width": 1.9,
+  "cda": 0.75,
+  "steer_lock": 0.55,
+  "rear_grip": 1.04,
+  "engine": {
+    "name": "5.7 L V8",
+    "idle_rpm": 700,
+    "redline_rpm": 5800,
+    "limiter_rpm": 6100,
+    "inertia": 0.32,
+    "clutch_torque": 700,
+    "torque_curve": [
+      [
+        700,
+        330
+      ],
+      [
+        1500,
+        420
+      ],
+      [
+        2500,
+        500
+      ],
+      [
+        3500,
+        540
+      ],
+      [
+        4200,
+        535
+      ],
+      [
+        5000,
+        505
+      ],
+      [
+        5800,
+        455
+      ],
+      [
+        6100,
+        430
+      ],
+      [
+        7000,
+        360
+      ]
+    ]
+  },
+  "gearbox": {
+    "gears": [
+      3.59,
+      2.19,
+      1.41,
+      1.0,
+      0.83,
+      0.67
+    ],
+    "reverse": 3.16,
+    "final": 3.07,
+    "efficiency": 0.88,
+    "shift_time": 0.18
+  },
+  "brakes": {
+    "max_torque": 7400,
+    "bias": 0.62
+  },
+  "tires": {
+    "radius": 0.35,
+    "tread_mm": 8.5,
+    "driven_inertia": 3.2,
+    "size": "245/45R20"
+  },
+  "paint": "#1e1e24"
+}
