@@ -464,7 +464,7 @@ static func _ink(p: Pix, body_img: Pix, w := 1) -> void:
 
 ## One wheel: tyre with a sidewall and tread highlight, a brake disc and caliper behind the
 ## rim, then the rim itself, lit from the upper left.
-static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false, mods := {}) -> void:
+static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false, mods := {}, spin := 0.0) -> void:
 	var ry := r * (0.82 if flat else 1.0)
 	var oy := int(r - ry)
 	p.ellipse(cx, cy + oy, r, ry, Color("141216"))
@@ -486,7 +486,7 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			var n: int = { "fivespoke": 5, "tenspoke": 10, "multispoke": 14, "turbofan": 12 }[rim]
 			var wdt := maxi(1, int(rr / 4.0)) if rim == "fivespoke" else maxi(1, int(rr / 8.0))
 			for k in n:
-				var a := TAU * float(k) / float(n) - PI / 2.0
+				var a := TAU * float(k) / float(n) - PI / 2.0 + spin
 				var c := hi if cos(a + 0.8) > 0.3 else (lo if cos(a + 0.8) < -0.3 else rc)
 				for t in range(int(rr * 0.25), int(rr) + 1):
 					for w2 in range(-wdt / 2, wdt - wdt / 2):
@@ -508,14 +508,14 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			p.disc(cx - 1, cy - 1, rr * 0.75, hi)
 			p.disc(cx, cy, rr * 0.6, rc.darkened(0.1))
 			for k in 5:
-				var a := TAU * float(k) / 5.0
+				var a := TAU * float(k) / 5.0 + spin
 				p.disc(cx + int(cos(a) * rr * 0.4), cy + int(sin(a) * rr * 0.4), maxf(1.0, rr * 0.08), Color("2a2a30"))
 		"steel":
 			p.disc(cx, cy, rr, Color("d8d8dc"))
 			p.disc(cx + 1, cy + 1, rr * 0.7, Color("b8b8bc"))
 			p.ring(cx, cy, rr * 0.6, Color("8a8a90"))
 			for k in 8:
-				var a := TAU * float(k) / 8.0
+				var a := TAU * float(k) / 8.0 + spin
 				p.disc(cx + int(cos(a) * rr * 0.42), cy + int(sin(a) * rr * 0.42), maxf(0.6, rr * 0.06), Color("5a5a60"))
 		_:
 			p.disc(cx, cy, rr, Color("c8ccd4"))

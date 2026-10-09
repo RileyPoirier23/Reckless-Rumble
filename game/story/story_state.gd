@@ -72,8 +72,8 @@ static func go(tree: SceneTree) -> void:
 	match String(s.type):
 		"scene", "card": tree.change_scene_to_file("res://story/story.tscn")
 		"avatar": tree.change_scene_to_file("res://story/avatar.tscn")
-		"counter": tree.change_scene_to_file("res://counter.tscn")
-		"drive": tree.change_scene_to_file("res://drive.tscn")
+		"counter": LoadingScreen.go(tree, "res://counter.tscn", "COVINGTON AUTO: CLOCKING IN")
+		"drive": LoadingScreen.go(tree, "res://drive.tscn", String(StoryMissions.MISSIONS.get(String(s.get("mission", "")), {}).get("title", "THE ROAD")))
 		_:
 			active = false
 			tree.change_scene_to_file("res://title.tscn")

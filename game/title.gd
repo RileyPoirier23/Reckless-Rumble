@@ -78,7 +78,7 @@ func _go() -> void:
 			StoryState.go(get_tree())
 		_:
 			StoryState.active = false
-			get_tree().change_scene_to_file(target)
+			LoadingScreen.go(get_tree(), target, "THE LOT" if target.contains("drive") else ("THE COUNTER" if target.contains("counter") else ""))
 
 func _draw() -> void:
 	draw_rect(Rect2(0, 0, 640, 360), Color("15131a"))
