@@ -16,7 +16,9 @@ static func default_data() -> Dictionary:
 		cars.append({ "id": id, "paint": spec.get("paint", "#c8342c"), "damage": { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }, "odo_km": 0.0 })
 	return ensure({ "version": VERSION, "garage": cars, "current": 0 })
 
+## A car's driving spec: the hand-made JSON in data/cars, or else the catalogue's.
 static func load_spec(id: String) -> Dictionary:
+	if not FileAccess.file_exists("res://data/cars/%s.json" % id): return CarCatalog.spec(id)
 	var txt := FileAccess.get_file_as_string("res://data/cars/%s.json" % id)
 	var spec = JSON.parse_string(txt)
 	return spec if spec is Dictionary else {}

@@ -275,9 +275,9 @@ func _die(cause: String, sub: String, kmh: float, other: Object) -> void:
 	}
 	if other is TrafficCar:
 		var tc := other as TrafficCar
-		var name := String(tc.spec.get("name", ""))
-		var ob := String(tc.spec.get("body", "sedan"))
-		info.other_body = "van" if "CARAVAN" in name else ("pickup" if ob == "tow" else ob)
+		var ob := String(tc.spec.get("side_body", tc.spec.get("body", "sedan")))
+		info.other_body = "pickup" if ob == "tow" else ob
+		info.other_name = String(tc.spec.get("name", ""))
 		info.other_paint = tc.paint
 	Input.start_joy_vibration(0, 1.0, 1.0, 1.0)
 	fatal.emit(info)

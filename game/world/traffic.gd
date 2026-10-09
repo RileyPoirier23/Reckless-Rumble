@@ -29,8 +29,8 @@ const BODIES := [
 	{ "name": "CHEVROLAY CAVA-LAME", "body": "coupe", "length": 4.6, "width": 1.7, "wheelbase": 2.64 },
 	{ "name": "FJORD F-ONE-FIDDY", "body": "tow", "length": 5.6, "width": 2.0, "wheelbase": 3.6 },
 	{ "name": "SUBAROO IMPREZZA", "body": "hatch", "length": 4.4, "width": 1.74, "wheelbase": 2.6 },
-	{ "name": "VOLKSWAGON GOLF", "body": "hatch", "length": 4.2, "width": 1.78, "wheelbase": 2.58 },
-	{ "name": "DODGY GRAND CARAVAN", "body": "hatch", "length": 5.1, "width": 1.95, "wheelbase": 3.08 },
+	{ "name": "VOLKSWAGON GULF", "body": "hatch", "length": 4.2, "width": 1.78, "wheelbase": 2.58 },
+	{ "name": "DODGY GRAND CRAVIN'", "body": "hatch", "length": 5.1, "width": 1.95, "wheelbase": 3.08 },
 	{ "name": "KIAH SOLE", "body": "hatch", "length": 4.1, "width": 1.8, "wheelbase": 2.57 },
 	{ "name": "FJORD CROWN VICTORIOUS", "body": "sedan", "length": 5.4, "width": 1.98, "wheelbase": 2.9 },
 	{ "name": "NISSUN SILVIO", "body": "coupe", "length": 4.52, "width": 1.69, "wheelbase": 2.47 },
@@ -213,8 +213,16 @@ func _spawn(cam_m: Vector2) -> void:
 		var car := TrafficCar.new()
 		car.traffic = self
 		car.rng.seed = rng.randi()
-		var body: Dictionary = BODIES[car.rng.randi() % BODIES.size()]
-		car.setup(body, Color(PAINTS[car.rng.randi() % PAINTS.size()]), a, b, s, lane)
+		# a car off the catalogue, picked for the part of town: rust and pickups out in the
+		# country, compacts and luxury downtown
+		var z := map.zone_at(p)
+		var style := String(z.get("style", ""))
+		if String(z.get("id", "")) == "" or style == "": style = "rural"
+		var body: Dictionary = CarCatalog.random_traffic(car.rng, style)
+		if body.is_empty():
+			body = BODIES[car.rng.randi() % BODIES.size()]
+			body.paint = PAINTS[car.rng.randi() % PAINTS.size()]
+		car.setup(body, Color(String(body.paint)), a, b, s, lane)
 		car.v = minf(car.desired_speed(road) * 0.8, 12.0)
 		ysort.add_child(car)
 		cars.append(car)

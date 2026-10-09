@@ -63,6 +63,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/physics_tests.gd | tee physics.log
           grep -q "^0 failed" physics.log
+      - name: Catalog tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/catalog_tests.gd | tee catalog.log
+          grep -q "^0 failed" catalog.log
       - name: Story tests
         working-directory: game
         run: |

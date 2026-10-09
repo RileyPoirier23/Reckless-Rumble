@@ -6,6 +6,9 @@ extends AnimatableBody2D
 
 const PX := CarArt.PX
 const A_MAX := 1.8          # comfortable acceleration (m/s²)
+const CLASS_ACCEL := { "exotic": 2.6, "sports": 2.3, "muscle": 2.3, "hot_hatch": 2.2, "pony": 2.1, "rally": 2.2,
+	"kei": 1.3, "van": 1.4, "work_truck": 1.3, "hd_pickup": 1.4, "minivan": 1.6, "economy": 1.6, "classic": 1.5 }
+var a_max := A_MAX
 const B_COMF := 2.6         # comfortable braking
 const T_GAP := 1.4          # time gap it keeps (s)
 const S0 := 2.2             # minimum gap when stopped (m)
@@ -63,6 +66,11 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	var d := traffic.map.g_pos[b] - traffic.map.g_pos[a]
 	heading = d.angle()
 	temper = 0.88 + rng.randf() * 0.25
+	# what the car is changes how it's driven: a kei truck crawls off the line, a sports car doesn't
+	var cls := String(body.get("class", ""))
+	a_max = float(CLASS_ACCEL.get(cls, A_MAX))
+	if cls in ["sports", "exotic", "muscle", "hot_hatch", "pony", "rally"]: temper += 0.06
+	elif cls in ["classic", "kei", "work_truck", "hd_pickup", "van"]: temper -= 0.06
 	sync_to_physics = false
 	shape = CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
@@ -183,10 +191,10 @@ func drive(dt: float) -> void:
 			entered = b
 	# --- the Intelligent Driver Model
 	var dv := v - v_lead
-	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(A_MAX * B_COMF)))
+	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(a_max * B_COMF)))
 	var free := 1.0 - pow(v / maxf(v0, 0.5), 4.0)
 	var inter := (s_star / maxf(gap, 0.1)) ** 2 if gap < 200.0 else 0.0
-	acc = clampf(A_MAX * (free - inter), -9.0, A_MAX)
+	acc = clampf(a_max * (free - inter), -9.0, a_max)
 	v = maxf(0.0, v + acc * dt)
 	wait_t = wait_t + dt if v < 1.5 else 0.0
 	pos += Vector2(cos(heading), sin(heading)) * v * dt
