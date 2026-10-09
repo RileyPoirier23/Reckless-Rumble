@@ -29,6 +29,10 @@ const ODDS := {
 }
 
 var season := "summer"
+var day := 0                   # days since the start
+const SEASON_DAYS := 4         # a season lasts four game days (about an hour and a half)
+const SEASON_ORDER := ["summer", "fall", "winter", "spring"]
+var _season_day := 0
 var time_h := 8.0              # 0..24
 var rate := 1.0 / 60.0         # game hours per real second
 var weather := "clear"
@@ -142,7 +146,16 @@ func clock_str() -> String:
 
 func step(dt: float) -> void:
 	var dh := dt * rate
-	time_h = fmod(time_h + dh, 24.0)
+	time_h += dh
+	if time_h >= 24.0:
+		time_h -= 24.0
+		day += 1
+		_season_day += 1
+		if _season_day >= SEASON_DAYS:
+			# the season turns overnight; the roads keep what's on them and the weather follows
+			_season_day = 0
+			season = SEASON_ORDER[(SEASON_ORDER.find(season) + 1) % 4]
+			pick_weather()
 	weather_left -= dh
 	if weather_left <= 0.0 and not forced: pick_weather()
 	var w: Dictionary = WEATHER[weather]

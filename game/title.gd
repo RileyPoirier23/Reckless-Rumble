@@ -20,7 +20,7 @@ var t := 0.0
 func _ready() -> void:
 	Controls.setup()
 	var args := OS.get_cmdline_user_args()
-	if args.has("--demo") or args.has("--world-demo"):
+	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo"):
 		get_tree().change_scene_to_file.call_deferred("res://drive.tscn")
 		return
 	if args.has("--counter-demo"):

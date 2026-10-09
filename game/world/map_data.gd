@@ -659,7 +659,7 @@ func _street_lights() -> void:
 				for sj in r2.pts.size() - 1:
 					var x = seg_intersect(r1.pts[si], r1.pts[si + 1], r2.pts[sj], r2.pts[sj + 1])
 					if x != null and zone_at(x).id != "":
-						lights.append({ "p": x + Vector2(r1.w / 2.0 + 1.0, r2.w / 2.0 + 1.0), "type": "signal", "seed": i * 31 + j,
+						lights.append({ "p": x + Vector2(r1.w / 2.0 + 1.0, r2.w / 2.0 + 1.0), "type": "signal", "seed": i * 31 + j, "j": x,
 							"dir": (r1.pts[si + 1] - r1.pts[si]).normalized() })
 
 # ------------------------------------------------------------------ the GPS graph

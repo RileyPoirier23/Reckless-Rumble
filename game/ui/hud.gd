@@ -4,6 +4,7 @@ extends Control
 
 var sim: CarSim
 var sky: WorldSky
+var player: PlayerCar
 var place := ""
 var night := false
 var show_help := true
@@ -68,6 +69,17 @@ func _draw() -> void:
 	PixelFont.draw(self, Vector2(442, 9), "%s  %s" % [sky.clock_str(), season_label], BONE, 2)
 	PixelFont.draw(self, Vector2(442, 24), "%s  %d°C" % [sky.label(), int(sky.temperature())], GOLD if sky.weather in ["storm", "blizzard", "freezing", "fog"] else BONE)
 	PixelFont.draw(self, Vector2(442, 33), "%s - ROAD: %s" % [place, surface.to_upper()], GOLD if surface in ["ice", "snow", "leaves", "mud", "water"] else ASH)
+	# ---- the tell-tales: blinkers and high beams
+	if player:
+		var on := CarView.blink_on()
+		var green := Color("4aff6a")
+		if player.view.blink_left and on:
+			draw_colored_polygon(PackedVector2Array([Vector2(296, 30), Vector2(306, 23), Vector2(306, 37)]), green)
+		if player.view.blink_right and on:
+			draw_colored_polygon(PackedVector2Array([Vector2(344, 30), Vector2(334, 23), Vector2(334, 37)]), green)
+		if player.beam > 0.5 and player.view.headlights:
+			draw_circle(Vector2(320, 30), 6, Color("3a7aff"))
+			for k in 4: draw_line(Vector2(312, 25 + k * 3), Vector2(306, 25 + k * 3), Color("3a7aff"), 1.0)
 	# ---- warnings
 	var my := 44.0
 	for m in msgs:
@@ -83,10 +95,10 @@ func _draw() -> void:
 		_panel(Rect2(196, 150, 248, 72))
 		var lines := [
 			"DRIVE W/S RT/LT   STEER A/D STICK   HANDBRAKE SPACE/B",
-			"SHIFT E/Q RB/LB   AUTO/MANUAL G/Y   TOW HOME R/BACK",
-			"MAP + GPS ROUTE  TAB/D-UP   NEXT CAR  C/L3",
-			"TIME +3H N/R3   SEASON M/D-RIGHT   WEATHER L",
-			"TIRES T/D-DOWN   ASSISTS P/D-LEFT",
+			"SHIFT E/Q RB/LB   AUTO/MANUAL G   TOW HOME R",
+			"BLINKERS Z/C D-LEFT/RIGHT  HAZARDS V/D-DOWN",
+			"HIGH BEAMS B/D-UP (HOLD TO FLASH)  HORN H/X",
+			"MAP TAB/BACK   USE (GARAGE) F/Y",
 			"HIDE THIS F1/START   MENU ESC",
 		]
 		for i in lines.size():

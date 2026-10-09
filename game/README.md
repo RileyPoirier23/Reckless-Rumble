@@ -45,6 +45,31 @@ The world streams in 64 m chunks around the camera, so it's all one drive with n
   - **Traffic and towers:** traffic signals that cycle, railway crossing flashers, and red tower beacons.
   - **Windows** light up after dark.
 
+## Traffic
+
+The other drivers follow the lanes (right-hand traffic) and keep a safe gap to whatever is ahead of them, including you. They use the Intelligent Driver Model, which brakes harder the faster a gap closes. Through junctions they drive a curved path from their lane in to the right lane out. The rules:
+- **Traffic signals:** where two big roads cross in town. The main road gets the long green, and the light you see is the light they obey.
+- **Two-way stops:** the smaller street stops and waits for a gap in the main road.
+- **All-way stops:** downtown and in the village centres. First to stop goes first.
+- **Lanes and turns:** left turns wait for oncoming traffic, and on multi-lane roads right turns come from the right lane only.
+- **Don't block the box:** nobody enters an intersection without room on the other side.
+
+Cars spawn out of sight around you, and there are more downtown and at rush hour, fewer at 3 a.m. They signal before turns, show brake lights and use headlights at night.
+
+## Crashes
+
+Damage is tracked per side (front, back, left, right):
+- **Dents** crumple the side you hit.
+- **Scrapes** along a wall take the paint down to primer.
+- **A hard hit** takes the bumper right off, and it skids down the road with a shower of glass.
+- **Lamps** break on the corner that hit, so a headlight or tail light goes out.
+
+Hit a traffic car and the impact is shared by mass. It slides and spins, then puts its hazards on and either gets back in its lane or waits for the tow truck.
+
+## The garage
+
+Pull up to Covington Auto's bay doors and stop: the garage opens. Pick which car to take out, or have Gus fix one up. Your cars, their paint and their damage are saved (`user://driveboss_save.json`).
+
 ## Cars, dashes and GPS
 
 Each car has its own instrument cluster and its own GPS, with day and night looks:
@@ -54,9 +79,9 @@ Each car has its own instrument cluster and its own GPS, with day and night look
 | 1991 Nissun Silvio (Leo's) | 90s analog needles, orange backlight at night | A cheap suction-cup TomTum |
 | 1986 Toyoda Supreem | 80s digital VFD bar graphs | Leo's cracked phone (loses signal in the country) |
 | 2015 Dodgy Charjer R/T | Modern screen with rings | Built-in dash screen, dark and red, tilted |
-| 2008 F-One-Fiddy wrecker (Toby's) | Big chrome truck gauges, tow lights | A rugged orange trucker unit, north-up |
+| 2008 Fjord F-One-Fiddy wrecker (Toby's) | Big chrome truck gauges, tow lights | A rugged orange trucker unit, north-up |
 
-Open the map (Tab or D-pad up), pick a place, and the GPS routes you there with turn arrows and the distance left.
+Open the map (Tab or Back on the controller), pick a place, and the GPS routes you there with turn arrows and the distance left.
 
 ## The counter
 
@@ -83,23 +108,26 @@ Drag the papers around with the mouse, or with the left stick and A on a control
 
 ## Controls (the lot)
 
+The camera sits behind the car and turns with it, so up is always ahead. Time, weather and seasons run on their own (a day is 24 minutes, a season about 4 days), and you change cars in the garage.
+
 | | Keyboard | Controller |
 |---|---|---|
 | Gas / brake | W / S (or arrows) | RT / LT |
 | Steer | A / D | Left stick |
 | Handbrake | Space | B |
-| Shift up / down (manual) | E / Q | RB / LB (or A / X) |
-| Automatic / manual | G | Y |
-| Tow it home (reset) | R | Back |
-| Map and GPS route | Tab | D-pad up |
-| Next car | C | L3 |
-| Three hours later | N | R3 |
-| Next weather | L | |
-| Next season | M | D-pad right |
-| Summer / winter tires | T | D-pad down |
-| Sim / Street / Arcade assists | P | D-pad left |
+| Shift up / down (manual) | E / Q | RB / LB |
+| Automatic / manual | G | |
+| Blinkers | Z / C | D-pad left / right |
+| Hazards | V | D-pad down |
+| High beams (tap) / flash (hold) | B | D-pad up |
+| Horn | H | X |
+| Garage (at Covington Auto's bay doors) | F | Y |
+| Map and GPS route | Tab / M | Back |
+| Tow it home | R | |
 | Hide the controls | F1 | Start |
 | Back to the menu | Esc | |
+
+On the controller the stick has a response curve (small movements, small corrections), and the default STREET assists add traction control and a little stability control. Blinkers cancel themselves after the turn.
 
 **Burnout:** hold the gas and the brake together while stopped. The front brakes hold the car and the rear tires spin.
 
@@ -123,6 +151,7 @@ Drag the papers around with the mouse, or with the left stick and A on a control
 godot --headless --path game -s tests/run_tests.gd
 godot --headless --path game -s tests/counter_tests.gd
 godot --headless --path game -s tests/world_tests.gd
+godot --headless --path game -- --traffic-test
 ```
 
 The map, sky and car tests check that:
@@ -166,4 +195,7 @@ The driving tests (16 checks) run headless on every push:
 | `world/sky.gd` | The clock, the sun, the weather and what it leaves on the road |
 | `world/light_pool.gd` | Hands real lights to the nearest of the map's 1,200 light sources, with each kind's behaviour |
 | `ui/dash.gd`, `ui/gps.gd`, `ui/map_screen.gd` | The per-car dashes and GPS units, and the big map |
+| `world/traffic.gd`, `world/traffic_car.gd` | Traffic: spawning, lanes, the rules at junctions, and each driver |
+| `world/debris.gd` | Bumpers, glass and hubcaps that come off in a crash |
+| `ui/garage_screen.gd`, `save_game.gd` | The garage and the save file |
 | `controls.gd` | Every input action, for keyboard and controller |
