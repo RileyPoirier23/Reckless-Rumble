@@ -1,18 +1,34 @@
-## The counter at Covington Auto: one week of shifts, Papers, Please style.
+## The counter at Covington Auto, Papers, Please style: a shift on the clock, a line in the lot.
 ##
-## Everything is drawn by code in _draw(). Documents lie on the desk and can be dragged.
-## INSPECT mode: click one thing, then another, and Leo compares them (a VIN against a VIN,
-## an expiry date against the calendar, a licence photo against the face at the counter,
-## a plate against the stolen list). Then stamp the work order.
-## Mouse, or a controller (left stick moves a cursor, A clicks and drags, Y inspects, B cancels).
+## The shift runs 8:00 to 18:00 on the wall clock (ten real minutes). Customers queue in the lot
+## (you see them through the bay door), and whoever's next leans on the horn if you take more
+## than an hour and a half with one. At six the lot empties and the money drives off with it.
+##
+## Everything is drawn by code in _draw(). Papers lie on the desk and can be dragged.
+## INSPECT: pick one fact, then another, and Leo compares them (a VIN against a VIN, a date
+## against the calendar, a photo against the face, a plate against the stolen list, a reading
+## or a paper against a rule in the binder). A red verdict puts a question on the ASK list: the
+## customer explains, lies, or pulls the paper out of a pocket that makes it fine (if that paper
+## checks out too). Then stamp the work order. Two Ministry warnings a shift, then citations.
+## Pick what somebody said, then Leo's notebook, and he writes it down. The sticker log keeps
+## every sticker the station has issued.
+##
+## Mouse; keyboard alone (arrows move a cursor, Space clicks and drags); or a controller (left
+## stick moves the cursor, D-pad left/right jumps to the next thing, A clicks and drags, Y
+## inspects, X asks, B cancels, LB/RB turn the binder's tabs, D-pad up/down the books).
 class_name CounterScene
 extends Node2D
 
 const BOOTH := Rect2(0, 0, 150, 360)
 const WINDOW := Rect2(150, 0, 320, 112)
+const LOT := Rect2(150, 0, 320, 32)
 const DESK := Rect2(150, 112, 320, 196)
 const TRAY := Rect2(150, 308, 320, 52)
 const WALL := Rect2(470, 0, 170, 360)
+const BOARD := Rect2(474, 50, 162, 182)          # the bulletin, or the binder
+const BOOK := Rect2(156, 116, 308, 188)           # a book open on the desk
+const NOTEBOOK_ICON := Rect2(476, 318, 77, 38)
+const LOG_ICON := Rect2(557, 318, 77, 38)
 
 const INK := Color("0b090d")
 const BONE := Color("f3ead2")
@@ -25,28 +41,68 @@ const PAPER_INK := Color("2a2420")
 const PAPER_DIM := Color("7a7064")
 
 const BUTTONS := [
-	{ "id": "INSPECT", "label": "INSPECT", "sub": "I / Y", "col": Color("c8b070") },
-	{ "id": "APPROVED", "label": "APPROVE", "sub": "1", "col": Color("4a8a3a") },
-	{ "id": "DENIED", "label": "DENY", "sub": "2", "col": Color("a8342a") },
-	{ "id": "REPORT", "label": "REPORT", "sub": "3", "col": Color("3a5a8a") },
-	{ "id": "WRENCH", "label": "BAY 3", "sub": "4 OFF BOOKS", "col": Color("3a3438") },
+	{ "id": "INSPECT", "label": "INSPECT", "key": "inspect", "col": Color("c8b070") },
+	{ "id": "APPROVED", "label": "APPROVE", "key": "desk_approve", "col": Color("4a8a3a") },
+	{ "id": "DENIED", "label": "DENY", "key": "desk_deny", "col": Color("a8342a") },
+	{ "id": "REPORT", "label": "REPORT", "key": "desk_report", "col": Color("3a5a8a") },
+	{ "id": "WRENCH", "label": "BAY 3", "key": "desk_wrench", "col": Color("3a3438") },
 ]
 
-const BRIEFS := [
-	["GUS LEANS ON THE DOORFRAME.", "\"FRONT COUNTER'S YOURS, KID. YOUR DAD RAN IT TWENTY YEARS. READ EVERY PAPER. EVERY ONE.\"", "\"IF THE PAPERS DON'T MATCH THE CAR, IT DOESN'T GET A STICKER. I READ THE VIN OFF THE DASH MYSELF.\""],
-	["A FAX FROM THE MINISTRY CURLS OUT OF THE MACHINE.", "\"EXPIRED REGISTRATIONS ARE NOW YOUR PROBLEM.\"", "GUS: \"CHECK THE DATE AGAINST THE CALENDAR. THE CALENDAR DOESN'T LIE.\""],
-	["ANOTHER FAX. GUS DOESN'T EVEN LOOK UP.", "\"NO INSURANCE, NO SERVICE. AND THE LICENCE HAS TO BE THE OWNER'S.\"", "GUS: \"YOUR DAD USED TO SAY THE PAPERWORK IS THE JOB. THE WRENCHING IS THE FUN PART.\""],
-	["CONSTABLE TREMBLAY DROPS OFF A STOLEN LIST AND A DOUBLE-DOUBLE.", "\"PIN THAT UP. ONE OF THOSE ROLLS IN, YOU CALL ME. YOU DON'T TOUCH IT.\"", "THEN MIA TORTELLINI CALLS. \"THE FAMILY'S SENDING CARS. YOU STILL OWE US A CAR, LEO. BAY 3. NO PAPERS.\""],
-	["LAST FAX OF THE WEEK.", "\"PEOPLE ARE LENDING EACH OTHER LICENCES. CHECK THE PHOTO.\"", "GUS: \"RENT'S DUE TONIGHT. AND I HEARD THERE'S A NEW GUY ASKING AROUND ABOUT 'NEW NUMBERS'. BE SMART.\""],
+## The desk's own buttons, on top of the game's (Controls): keyboard and controller.
+const ACTIONS := {
+	"desk_click": [KEY_SPACE, KEY_ENTER, JOY_BUTTON_A],
+	"desk_ask": [KEY_A, JOY_BUTTON_X],
+	"desk_cancel": [KEY_BACKSPACE, JOY_BUTTON_B],
+	"desk_notebook": [KEY_N, JOY_BUTTON_DPAD_UP],
+	"desk_log": [KEY_L, JOY_BUTTON_DPAD_DOWN],
+	"desk_tab_prev": [KEY_Q, JOY_BUTTON_LEFT_SHOULDER],
+	"desk_tab_next": [KEY_E, JOY_BUTTON_RIGHT_SHOULDER],
+	"desk_snap_prev": [KEY_PAGEUP, JOY_BUTTON_DPAD_LEFT],
+	"desk_snap_next": [KEY_TAB, JOY_BUTTON_DPAD_RIGHT],
+	"desk_approve": [KEY_1], "desk_deny": [KEY_2], "desk_report": [KEY_3], "desk_wrench": [KEY_4],
+}
+
+## Gus, the first morning. Fix 3: Frank ran the shop; the counter was somebody else's.
+const BRIEFS := {
+	0: ["GUS LEANS ON THE DOORFRAME.", "\"FRONT COUNTER'S YOURS, KID. YOUR DAD RAN THIS SHOP TWENTY YEARS. THE COUNTER WAS SOMEBODY ELSE'S. NOW IT'S YOURS.\"", "\"IF THE PAPERS DON'T MATCH THE CAR, IT DOESN'T GET A STICKER. I READ THE VIN OFF THE DASH MYSELF. READ EVERY PAPER. EVERY ONE.\""],
+	1: ["A FAX FROM THE MINISTRY CURLS OUT OF THE MACHINE.", "\"EXPIRED REGISTRATIONS ARE NOW YOUR PROBLEM.\"", "GUS: \"CHECK THE DATE AGAINST THE CALENDAR. THE CALENDAR DOESN'T LIE.\""],
+	2: ["ANOTHER FAX. GUS DOESN'T EVEN LOOK UP.", "\"NO INSURANCE, NO SERVICE. AND THE LICENCE HAS TO BE THE OWNER'S.\"", "GUS: \"YOUR DAD USED TO SAY THE PAPERWORK IS THE JOB. THE WRENCHING IS THE FUN PART.\""],
+	3: ["CONSTABLE TREMBLAY DROPS OFF A STOLEN LIST AND A DOUBLE-DOUBLE.", "\"PIN THAT UP. ONE OF THOSE ROLLS IN, YOU CALL ME. YOU DON'T TOUCH IT.\"", "THEN MIA TORTELLINI CALLS. \"THE FAMILY'S SENDING CARS. YOU STILL OWE US A CAR, LEO. BAY 3. NO PAPERS.\""],
+	4: ["LAST FAX OF THE WEEK.", "\"PEOPLE ARE LENDING EACH OTHER LICENCES. CHECK THE PHOTO.\"", "GUS: \"RENT'S DUE TONIGHT. AND I HEARD THERE'S A NEW GUY ASKING AROUND ABOUT 'NEW NUMBERS'. BE SMART.\""],
+	8: ["YESTERDAY WAS THANKSGIVING. GUS, LEO, ARIES AND MIKEY ATE A STORE-BOUGHT TURKEY IN THE OFFICE. NOBODY SAID HIS NAME. THERE WAS A PLATE NOBODY USED.", "A FAX: \"SERVICE HISTORY. ODOMETERS GO UP.\"", "GUS: \"AND THE BULLETIN'S FULL. GOT YOU A BINDER. TABS AND EVERYTHING. DON'T SAY I NEVER GAVE YOU NOTHING.\""],
+	9: ["GUS HANGS UP THE PHONE LIKE IT OWES HIM MONEY.", "\"HATCH MOTORS. SAYS HE'S BRINGING A CAR OVER. HIMSELF.\" HE SAYS IT LIKE A WEATHER REPORT. THEN HE GOES AND STANDS IN BAY 2 FOR A WHILE."],
+	10: ["A FAX: \"A NEW OWNER HAS 10 DAYS TO REGISTER. A DATED BILL OF SALE COVERS THE NAME.\"", "GUS: \"SO WHEN THE NAMES DON'T MATCH, ASK. IF THEY'VE GOT A BILL OF SALE, READ IT LIKE IT OWES YOU MONEY.\""],
+	11: ["FRIDAY.", "GUS: \"BILLS TONIGHT. TRY NOT TO GET FINED INTO THE GROUND BEFORE NOON.\""],
+	14: ["A FAX: \"THE VIN ON THE DOOR JAMB MUST MATCH THE DASH.\"", "GUS: \"I PUT THE DOOR ON MY SHEET NOW. A NEW DOOR'S FINE IF A BODY SHOP BILLED FOR IT. A NEW DOOR WITH NO BILL IS SOMEBODY ELSE'S DOOR.\""],
+	15: ["A FAX: \"A TEMPORARY PERMIT COVERS AN EXPIRED REGISTRATION. SAME VIN, DATES THAT COVER TODAY.\"", "GUS: \"SO NOW WHEN THEY SAY THERE'S A PAPER IN THE CAR, SOMETIMES THERE IS. HELL OF A WORLD.\""],
+	16: ["GUS: \"DARRELL'S COMING BY WITH A TRADE-IN. YOU MET DARRELL.\"", "HE LETS THAT SIT. \"COUNT HIS KAYS. COUNT 'EM TWICE.\""],
+	17: ["A FAX: \"OUT-OF-PROVINCE CARS ON A NEW REGISTRATION NEED A FULL INSPECTION.\"", "GUS: \"FULL ONE'S A HUNDRED AND FORTY. PEOPLE FROM AWAY BOOK THE SAFETY AND CALL IT EVEN. IT'S NOT EVEN.\""],
+	18: ["FRIDAY. GUS'S PHONE SAYS FIRST FROST BY THE WEEKEND.", "GUS: \"MY PHONE SAYS A LOT OF THINGS. GET THE WINTER TIRE PEOPLE IN AND OUT.\""],
+	21: ["A FAX: \"SALVAGE BRAND: NO STICKER WITHOUT A STRUCTURAL CERTIFICATE.\"", "GUS: \"AND IF IT WAS SALVAGE IN NOVA SCOTIA AND IT'S CLEAN HERE, THAT'S NOT A MIRACLE. THAT'S A WASHED TITLE. YOU REPORT THAT.\""],
+	24: ["HALLOWEEN. A MEMO FROM THE MINISTRY: \"MASKS COME OFF AT THE COUNTER.\"", "GUS IS WEARING A HOCKEY HELMET. NOBODY ASKS HIM WHY. ASK THE CUSTOMERS, THOUGH."],
+	25: ["FRIDAY, NOVEMBER 1. THE MINISTRY TALLIES THE MONTH TONIGHT.", "GUS: \"SMILE. THEY CAN'T SEE YOU, BUT SMILE.\""],
+}
+## For mornings nobody wrote anything down.
+const MORNINGS := ["GUS READS THE CANADIAN TIRED FLYER LIKE IT'S SCRIPTURE.", "THE COFFEE MAKER MAKES A NOISE LIKE IT'S DYING. IT'S BEEN DYING SINCE 1997.",
+	"SOMEBODY'S ALREADY IN THE LOT AT 7:40, ENGINE RUNNING. THERE'S ALWAYS SOMEBODY.", "GUS: \"SAME RULES AS YESTERDAY. SAME PEOPLE, TOO, PROBABLY.\""]
+## Gus, standing behind you on your first day, one tip per customer.
+const TIPS := [
+	"GUS: DRAG THE PAPERS AROUND. THEN INSPECT ({inspect}) AND PICK THE VIN ON THE OWNERSHIP, THEN THE VIN ON MY SHEET.",
+	"GUS: ...THAT'S A NAPKIN. I DIDN'T SEE A NAPKIN. WHAT HAPPENS IN BAY 3 IS YOUR BUSINESS NOW. (BAY 3 PAYS DOWN WHAT YOU OWE.)",
+	"GUS: FIND SOMETHING WRONG AND YOU CAN ASK ({desk_ask}) ABOUT IT. MOST OF 'EM LIE. SOME OF 'EM HAVE A PAPER.",
+	"GUS: THE CLOCK'S RUNNING. MINISTRY GIVES YOU TWO WARNINGS A DAY. AFTER THAT IT'S A HUNDRED BUCKS A MISTAKE.",
+	"GUS: LAST ONE. THEN WE LOCK UP AND YOU GO DEAL WITH WHATEVER YOU'RE DEALING WITH.",
 ]
+const TAB_SHORT := { "INSPECTION": "INSP.", "DOCUMENTS": "DOCS", "POLICE": "POLICE", "MINISTRY": "MIN.", "SEASONAL": "SEAS." }
+const TAB_COL := { "INSPECTION": Color("c8a030"), "DOCUMENTS": Color("6a9a5a"), "POLICE": Color("4a6aa8"), "MINISTRY": Color("a84a3a"), "SEASONAL": Color("8a5aa0") }
+## First open day of each week of free play.
+const WEEK_DAYS := [0, 8, 14, 21]
 
 var rules: CounterRules
 var day := 0
-var line: Array = []
-var idx := 0
-var c: Dictionary = {}               # the customer at the counter
-var phase := "brief"                  # brief, counter, stamping, result, day_end, week_end
-var docs: Array = []                  # [{id, pos}] back to front
+var c: Dictionary = {}               # the customer at the window
+var phase := "brief"                  # brief, idle, counter, stamping, result, day_end, week_end, month_end, revoked
+var docs: Array = []                  # [{id, pos, fresh}] back to front
 var drag := -1
 var drag_off := Vector2.ZERO
 var inspecting := false
@@ -59,35 +115,75 @@ var cur := Vector2(320, 200)
 var pad_cursor := false
 var car_view: CarView
 var demo := false
-var story: Dictionary = {}          # the story step, when this shift is part of the story
+var story: Dictionary = {}            # the story step, when this shift is part of the story
 var tutorial := false
+var chapter := 1
 
-## Gus, standing behind you on your first day, one tip per customer.
-const TIPS := [
-	"GUS: DRAG THE PAPERS AROUND. THEN INSPECT (I OR Y) AND CLICK THE VIN ON THE OWNERSHIP, THEN THE VIN ON MY SHEET.",
-	"GUS: ...THAT'S A NAPKIN. I DIDN'T SEE A NAPKIN. WHAT HAPPENS IN BAY 3 IS YOUR BUSINESS NOW. (BAY 3 PAYS DOWN WHAT YOU OWE.)",
-	"GUS: PLATE ON THE CAR AGAINST THE PLATE ON THE OWNERSHIP. PEOPLE SWAP 'EM. PEOPLE ARE LIKE THAT.",
-	"GUS: SAFETY INSPECTIONS: TREAD, PADS, LIGHTS, RUST. INSPECT A READING AGAINST THE BULLETIN ON THE WALL.",
-	"GUS: STAMP THE WORK ORDER WHEN YOU'RE SURE. WHEN YOU'RE NOT SURE, LOOK AGAIN.",
-	"GUS: LAST ONE. THEN WE LOCK UP AND YOU GO DEAL WITH WHATEVER YOU'RE DEALING WITH.",
-]
+# the shift
+var clock := 0.0                      # minutes since 8:00
+var arrivals: Array = []              # [{t, c}] still on their way
+var waiting: Array = []               # in the lot, first in line first
+var walked: Array = []                # who drove off at closing
+var served := 0
+var since := 0.0                      # when the customer at the window stepped up
+var next_honk := 0.0
+var honk_t := 0.0
+var warnings_used := 0
+var _qid := 0
+var _qtex := {}                       # queue car pictures by customer
 
-# the week's books
+# ASK
+var topics: Array = []                # what Leo has proven wrong with this one, newest first
+var asked: Array = []
+var said: Dictionary = {}             # the last exchange: {q, a, clue}
+
+# the binder and the books
+var tab := 0
+var book := ""                        # "", "notebook" or "log": open on the desk
+var log_old := false                  # the log is open at last fall's pages
+var week_pick := 0                    # free play: which week to start in
+var fresh := true                     # nothing played yet this session
+
+# the books of the shop
 var cash := CounterRules.START_CASH
 var day_log := {}
-var week := { "earned": 0, "dirty": 0, "fines": 0, "citations": 0, "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
+var week := {}
+var bills_paid: Array = []
+var month := { "seen": 0, "correct": 0, "citations": 0, "earned": 0 }
+
+## Register the desk's buttons (safe to call more than once).
+static func setup_actions() -> void:
+	Controls.setup()
+	for action in ACTIONS:
+		if InputMap.has_action(action): continue
+		InputMap.add_action(action, 0.5)
+		for b in ACTIONS[action]:
+			var ev: InputEvent
+			if b < 32:     # joypad buttons are 0..20; every key code is 32 or more
+				var jb := InputEventJoypadButton.new()
+				jb.button_index = b
+				ev = jb
+			else:
+				var k := InputEventKey.new()
+				k.physical_keycode = b
+				ev = k
+			InputMap.action_add_event(action, ev)
 
 func _ready() -> void:
-	Controls.setup()
+	setup_actions()
 	rules = CounterRules.new(506 + int(Time.get_unix_time_from_system()) % 100000)
 	rules.make_bolo()
 	car_view = CarView.new()
-	car_view.position = Vector2(WINDOW.position.x + 160, 60)
+	car_view.position = Vector2(WINDOW.position.x + 160, 72)
 	car_view.scale = Vector2(1.5, 1.5)
 	add_child(car_view)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "counter":
 		story = StoryState.current()
 		tutorial = bool(story.get("tutorial", false))
+		chapter = int(story.get("chapter", 1))
+	DeskBook.open_book()
+	if story.has("old_log"): DeskBook.old_log = bool(story.old_log)
+	_new_week()
 	start_day(int(story.get("day", 0)))
 	if OS.get_cmdline_user_args().has("--counter-demo"):
 		demo = true
@@ -97,40 +193,109 @@ func _ready() -> void:
 
 # ------------------------------------------------------------------ the day
 
+func _new_week() -> void:
+	week = { "earned": 0, "dirty": 0, "fines": 0, "citations": 0, "warnings": 0, "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
+
 func start_day(d: int) -> void:
 	day = d
-	line = rules.day_line(day)
-	if tutorial:
-		# the first day: a short line, and the Familia's first napkin second in it
-		line = line.slice(0, 4)
-		var fam := rules.familia(day)
-		fam.napkin = "BAY 3. NEW NUMBERS. DOM SAYS WELCOME TO THE FAMILY. -V"
-		line.insert(1, fam)
-	idx = 0
-	day_log = { "earned": 0, "dirty": 0, "fines": 0, "citations": [], "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
+	var extra: Array = story.get("customers", [])
+	arrivals = rules.shift(day, heat(), extra, chapter)
+	if tutorial: arrivals = _tutorial_line(arrivals)
+	waiting = []
+	walked = []
+	served = 0
+	clock = 0.0
+	warnings_used = 0
+	c = {}
+	book = ""
+	inspecting = false
+	verdict = {}
+	tab = _newest_tab()
+	day_log = { "earned": 0, "dirty": 0, "fines": 0, "citations": [], "warnings": [], "heat": 0, "trust": 0, "reviews": 0,
+		"correct": 0, "seen": 0, "walked": 0, "walked_money": 0, "stickers": [] }
+	# last fall's sticker log comes out of the filing cabinet (in free play, a week early)
+	if day >= 29 or (story.is_empty() and day >= 22): DeskBook.old_log = true
 	phase = "brief"
-	car_view.visible = false
+	if car_view != null: car_view.visible = false
+
+## The first morning: a short line, all there at 8, with the Familia's first napkin second in it.
+func _tutorial_line(sh: Array) -> Array:
+	var regs := sh.filter(func(x): return x.c.kind == "regular").slice(0, 4)
+	var fam := rules.familia(day)
+	fam.napkin = "BAY 3. NEW NUMBERS. DOM SAYS WELCOME TO THE FAMILY. -S"
+	regs.insert(1, { "t": 0.0, "c": fam })
+	for i in regs.size(): regs[i].t = [2.0, 9.0, 18.0, 30.0, 44.0][i]
+	return regs
+
+func heat() -> int:
+	return int(week.get("heat", 0)) + int(day_log.get("heat", 0))
+
+## The stolen list counts once it's on the wall.
+func bolo_now() -> Array:
+	return rules.bolo if CounterRules.rule_active("bolo", day) else []
+
+## The shift clock: arrivals join the line, the next one honks, six o'clock empties the lot.
+func tick(dt: float) -> void:
+	if not phase in ["idle", "counter", "stamping", "result"]: return
+	var rate := CounterRules.SHIFT_LEN / CounterRules.REAL_SECONDS
+	if tutorial: rate *= 0.5
+	if phase == "idle":
+		# nobody at the window: the afternoon drags by fast (and if nobody else is coming, faster)
+		rate *= 12.0 if not arrivals.is_empty() else 60.0
+	clock = minf(CounterRules.SHIFT_LEN, clock + dt * rate)
+	while not arrivals.is_empty() and float(arrivals[0].t) <= clock:
+		var cc: Dictionary = arrivals.pop_front().c
+		cc.qid = _qid
+		cc.arrived = clock
+		_qid += 1
+		waiting.append(cc)
+	if clock >= CounterRules.SHIFT_LEN:
+		arrivals = []
+		if not waiting.is_empty():
+			walked.append_array(waiting)
+			waiting = []
+	if phase == "idle":
+		if not waiting.is_empty(): next_customer()
+		elif clock >= CounterRules.SHIFT_LEN: close_up()
+	if phase in ["counter", "stamping"] and not waiting.is_empty() and clock - since > CounterRules.HONK_AFTER and clock >= next_honk:
+		honk_t = 1.4
+		next_honk = clock + 25.0
+	honk_t = maxf(0.0, honk_t - dt)
 
 func next_customer() -> void:
-	if idx >= line.size():
-		phase = "day_end"
+	if waiting.is_empty():
+		phase = "idle"
+		c = {}
 		car_view.visible = false
 		return
-	c = line[idx]
-	idx += 1
+	c = waiting.pop_front()
+	since = clock
+	next_honk = clock + CounterRules.HONK_AFTER
 	phase = "counter"
 	stamped = ""
 	inspecting = false
 	pick_a = {}
 	verdict = {}
-	var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.len) * 0.6 }
+	topics = []
+	asked = []
+	said = {}
+	book = ""
+	var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
 	car_view.art = CarArt.new(spec, Color(c.car.paint), 0.15 if c.sheet.rust else 0.0, c.person.face)
 	car_view.heading = 0.0
 	car_view.visible = true
-	docs = [{ "id": "work", "pos": Vector2(156, 118) }, { "id": "reg", "pos": Vector2(304, 122) }, { "id": "licence", "pos": Vector2(160, 186) }]
-	if not c.insurance.is_empty(): docs.append({ "id": "insurance", "pos": Vector2(306, 196) })
-	docs.append({ "id": "sheet", "pos": Vector2(226, 232) })
-	if c.napkin != "": docs.append({ "id": "napkin", "pos": Vector2(374, 232) })
+	docs = []
+	var order := ["work", "reg", "licence", "insurance", "glovebox", "history", "old_reg", "cert", "bos", "permit", "door_inv", "sheet", "letter"]
+	for id in order:
+		if c.docs.has(id) and not c.hidden.has(id): docs.append({ "id": id, "pos": _home(id, docs.size()), "fresh": 0.0 })
+	if c.napkin != "": docs.append({ "id": "napkin", "pos": _home("napkin", docs.size()), "fresh": 0.0 })
+
+## Where each paper lands when it's handed over.
+func _home(id: String, n: int) -> Vector2:
+	var spots := { "work": Vector2(156, 116), "reg": Vector2(306, 118), "licence": Vector2(158, 186), "insurance": Vector2(306, 194),
+		"glovebox": Vector2(306, 194), "sheet": Vector2(226, 222), "napkin": Vector2(380, 240), "history": Vector2(196, 150),
+		"old_reg": Vector2(290, 148), "cert": Vector2(176, 236), "letter": Vector2(346, 150) }
+	return spots.get(id, Vector2(212 + n * 6, 136 + n * 4))
 
 func stamp(s: String) -> void:
 	if phase != "counter": return
@@ -138,23 +303,52 @@ func stamp(s: String) -> void:
 	stamp_t = 0.0 if demo else 0.8
 	phase = "stamping"
 	inspecting = false
-	_raise(_doc_index("work"))
+	book = ""
+	var i := _doc_index("work")
+	if i >= 0: _raise(i)
 
 func _resolve() -> void:
-	result = CounterRules.judge(c, stamped, day, rules.bolo if day >= 3 else [])
-	result.fine = 0
+	result = CounterRules.judge(c, stamped, day, bolo_now())
+	var pen := CounterRules.penalty(c, result, warnings_used)
+	result.fine = int(pen.fine)
+	result.warning = bool(pen.warning)
 	if result.citation != "":
-		result.fine = 2000 if c.kind == "sting" else CounterRules.FINE
-		day_log.citations.append(result.citation)
-	result.cut = result.money
-	for k in ["heat", "trust", "dirty"]: day_log[k] += result[k]
-	day_log.earned += result.money
+		if result.warning:
+			warnings_used += 1
+			DeskBook.warnings += 1
+			day_log.warnings.append(result.citation)
+		else:
+			DeskBook.citations += 1
+			day_log.citations.append(result.citation)
+	result.sticker = 0
+	if stamped == "APPROVED" and CounterRules.INSPECTIONS.has(c.request):
+		result.sticker = DeskBook.issue(day, c)
+		day_log.stickers.append(result.sticker)
+	for f in result.get("flags", []): DeskBook.raise(String(f))
+	for k in ["heat", "trust", "dirty"]: day_log[k] += int(result[k])
+	day_log.earned += int(result.money)
 	day_log.fines += result.fine
-	day_log.reviews += result.review
+	day_log.reviews += int(result.review)
 	day_log.seen += 1
 	if result.correct: day_log.correct += 1
-	cash += result.money + result.dirty - result.fine
+	cash += int(result.money) + int(result.dirty) - result.fine
+	served += 1
 	phase = "result"
+
+## Six o'clock: whoever's still in the lot drives off with their money.
+func close_up() -> void:
+	walked.append_array(waiting)
+	waiting = []
+	arrivals = []
+	clock = CounterRules.SHIFT_LEN
+	day_log.walked = walked.size()
+	day_log.walked_money = 0
+	for w in walked: day_log.walked_money += int(CounterRules.PAY.get(w.request, 80))
+	c = {}
+	book = ""
+	inspecting = false
+	car_view.visible = false
+	phase = "day_end"
 
 func end_day() -> void:
 	if not story.is_empty():
@@ -162,22 +356,28 @@ func end_day() -> void:
 		return
 	for k in ["earned", "dirty", "fines", "heat", "trust", "reviews", "correct", "seen"]: week[k] += day_log[k]
 	week.citations += day_log.citations.size()
-	if day >= 4:
+	week.warnings += day_log.warnings.size()
+	for k in ["seen", "correct", "earned"]: month[k] += day_log[k]
+	month.citations += day_log.citations.size()
+	if posmod(day, 7) == 4 or day >= CounterRules.LAST_DAY:
 		_pay_bills()
+		if week.citations >= 4: DeskBook.meetings += 1
 		phase = "week_end"
 	else:
-		start_day(day + 1)
+		start_day(CounterRules.next_open(day))
 
 ## CLOCK OUT: Leo's pay for the day (a cut of the shop's take), Bay 3 cash goes straight to
-## the Familia, and the story carries on into the evening.
+## the Familia, the desk's flags go to the story, and the story carries on into the evening.
 func _clock_out() -> void:
 	var wage := 60 + int(day_log.earned * 0.15)
 	StoryState.cash += wage
 	StoryState.debt = maxi(0, StoryState.debt - int(day_log.dirty))
-	StoryState.last_result = { "earned": day_log.earned, "dirty": day_log.dirty, "fines": day_log.fines, "correct": day_log.correct, "seen": day_log.seen, "wage": wage }
+	StoryState.last_result = { "earned": day_log.earned, "dirty": day_log.dirty, "fines": day_log.fines, "correct": day_log.correct,
+		"seen": day_log.seen, "wage": wage, "walked": day_log.walked, "warnings": day_log.warnings.size(), "citations": day_log.citations.size() }
+	if DeskBook.revoked(): DeskBook.raise("desk_licence_revoked")
+	DeskBook.close_book()
 	StoryState.advance(get_tree())
 
-var bills_paid: Array = []
 func _pay_bills() -> void:
 	bills_paid = []
 	for b in CounterRules.BILLS:
@@ -185,13 +385,87 @@ func _pay_bills() -> void:
 		if paid: cash -= int(b[1])
 		bills_paid.append([b[0], b[1], paid])
 
-# ------------------------------------------------------------------ input
+## After Friday's bills: the next week, the end of the month, or the end of the licence.
+func _after_week() -> void:
+	if DeskBook.revoked():
+		phase = "revoked"
+	elif day >= CounterRules.LAST_DAY:
+		phase = "month_end"
+	else:
+		_new_week()
+		start_day(CounterRules.next_open(day))
 
-## The little label under each stamp: the hotkey on a keyboard, the button on a pad.
-func _sub(b: Dictionary) -> String:
-	if not Hints.pad: return String(b.sub)
-	if b.id == "INSPECT": return Hints.key("inspect")
-	return ("OFF BOOKS  " if b.id == "WRENCH" else "") + "POINT + " + Hints.key("click")
+func _quit() -> void:
+	get_tree().change_scene_to_file("res://title.tscn")
+
+# ------------------------------------------------------------------ ASK
+
+## The questions Leo can put to the customer: what he's proven wrong (newest first), then
+## the ones he can always ask.
+func ask_list() -> Array:
+	if c.is_empty() or phase != "counter": return []
+	var out: Array = topics.duplicate()
+	for t in CounterRules.standing_topics(c, day):
+		if not out.has(t): out.append(t)
+	return out
+
+## ASK with the button: the newest question not asked yet.
+func ask_next() -> void:
+	var l := ask_list()
+	for t in l:
+		if not asked.has(t):
+			ask(t)
+			return
+	if not l.is_empty(): ask(l[0])
+
+func ask(topic: String) -> void:
+	if phase != "counter": return
+	var ans := CounterRules.answer(c, topic)
+	said = { "q": String(CounterRules.QUESTIONS.get(topic, "...")), "a": String(ans.get("line", "...")), "clue": ans.get("clue", {}) }
+	if not asked.has(topic): asked.append(topic)
+	var doc := String(ans.get("doc", ""))
+	if doc != "" and c.get("hidden", []).has(doc): _hand_over(doc)
+	if ans.get("unmask", false): c.mask = ""
+
+## A paper comes out of a pocket and lands on top of the pile.
+func _hand_over(doc: String) -> void:
+	c.hidden.erase(doc)
+	if not c.docs.has(doc): c.docs.append(doc)
+	docs.append({ "id": doc, "pos": Vector2(232, 128), "fresh": 1.6 })
+
+# ------------------------------------------------------------------ the binder and the books
+
+func _tabs_today() -> Array:
+	var out: Array = []
+	for t in CounterRules.TABS:
+		if t == "MINISTRY" or CounterRules.rules_for(day).any(func(r): return r.tab == t): out.append(t)
+	return out
+
+## The tab with today's newest rule on it, so the binder opens where the news is.
+func _newest_tab() -> int:
+	var tabs := _tabs_today()
+	var best := 0
+	for r in CounterRules.rules_for(day):
+		if tabs.has(r.tab): best = tabs.find(r.tab)
+	return best
+
+func _tab_step(dir: int) -> void:
+	if book == "log" and DeskBook.old_log:
+		log_old = not log_old
+		return
+	if phase == "brief" and story.is_empty() and fresh:
+		week_pick = posmod(CounterRules.week_of(day) - 1 + dir, WEEK_DAYS.size())
+		start_day(WEEK_DAYS[week_pick])
+		return
+	if CounterRules.binder(day): tab = posmod(tab + dir, _tabs_today().size())
+
+func open_book(which: String) -> void:
+	if not phase in ["idle", "counter"]: return
+	book = "" if book == which else which
+	pick_a = {} if not inspecting else pick_a
+	drag = -1
+
+# ------------------------------------------------------------------ input
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
@@ -204,66 +478,161 @@ func _input(e: InputEvent) -> void:
 		else: drag = -1
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT and e.pressed:
 		_toggle_inspect()
-	elif e is InputEventJoypadButton and e.button_index == JOY_BUTTON_B and e.pressed:
-		_cancel()
-	elif e is InputEventKey and e.pressed and not e.echo:
-		match e.physical_keycode:
-			KEY_1: stamp("APPROVED")
-			KEY_2: stamp("DENIED")
-			KEY_3: stamp("REPORT")
-			KEY_4: stamp("WRENCH")
-			KEY_SPACE, KEY_ENTER: if phase != "counter": press()
 
 func _process(dt: float) -> void:
-	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
-	if stick.length() > 0.2:
-		pad_cursor = true
-		cur = (cur + stick * stick.length() * 260.0 * dt).clamp(Vector2.ZERO, Vector2(639, 359))
-		if drag >= 0: _drag_to(cur)
-	if Input.is_action_just_pressed("click"): press()
-	if Input.is_action_just_released("click"): drag = -1
+	_move_cursor(dt)
+	if Input.is_action_just_pressed("desk_click"): press()
+	if Input.is_action_just_released("desk_click"): drag = -1
 	if Input.is_action_just_pressed("inspect"): _toggle_inspect()
+	if Input.is_action_just_pressed("desk_ask"): ask_next()
+	if Input.is_action_just_pressed("desk_cancel"): _cancel()
+	if Input.is_action_just_pressed("desk_notebook"): open_book("notebook")
+	if Input.is_action_just_pressed("desk_log"): open_book("log")
+	if Input.is_action_just_pressed("desk_tab_prev"): _tab_step(-1)
+	if Input.is_action_just_pressed("desk_tab_next"): _tab_step(1)
+	if Input.is_action_just_pressed("desk_snap_next"): snap(1)
+	if Input.is_action_just_pressed("desk_snap_prev"): snap(-1)
+	for b in BUTTONS:
+		if b.id != "INSPECT" and Input.is_action_just_pressed(b.key): stamp(b.id)
 	if Input.is_action_just_pressed("menu_back") or Input.is_action_just_pressed("ui_back_pad"):
-		if inspecting: _cancel()
-		else: get_tree().change_scene_to_file("res://title.tscn")
+		if inspecting or book != "": _cancel()
+		else: _quit()
+	tick(dt)
 	if phase == "stamping":
 		stamp_t -= dt
 		if stamp_t <= 0.0: _resolve()
 	if not verdict.is_empty():
 		verdict.t -= dt
 		if verdict.t <= 0.0: verdict = {}
+	for d in docs: d.fresh = maxf(0.0, float(d.fresh) - dt)
 	queue_redraw()
+
+## The left stick, or the arrow keys, push the cursor around (and whatever it's dragging).
+func _move_cursor(dt: float) -> void:
+	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
+	var keys := Vector2(float(Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_LEFT)),
+		float(Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_UP)))
+	var move := Vector2.ZERO
+	if stick.length() > 0.2: move = stick * stick.length() * 260.0
+	elif keys != Vector2.ZERO: move = keys.normalized() * 170.0
+	if move == Vector2.ZERO: return
+	pad_cursor = true
+	cur = (cur + move * dt).clamp(Vector2.ZERO, Vector2(639, 359))
+	if drag >= 0: _drag_to(cur)
 
 func press() -> void:
 	match phase:
-		"brief": next_customer()
-		"result": next_customer()
-		"day_end": end_day()
-		"week_end": get_tree().change_scene_to_file("res://title.tscn")
-		"counter":
-			for i in BUTTONS.size():
-				if _button_rect(i).has_point(cur):
-					if BUTTONS[i].id == "INSPECT": _toggle_inspect()
-					else: stamp(BUTTONS[i].id)
-					return
-			if inspecting:
-				var f := field_at(cur)
-				if not f.is_empty(): pick(f)
+		"brief":
+			fresh = false
+			phase = "idle"
+			return
+		"result":
+			if clock >= CounterRules.SHIFT_LEN: close_up()
+			else: next_customer()
+			return
+		"day_end":
+			end_day()
+			return
+		"week_end":
+			_after_week()
+			return
+		"month_end", "revoked":
+			_quit()
+			return
+		"stamping":
+			return
+	# idle or at the counter
+	if book != "":
+		if book == "log" and _log_tab_rect().has_point(cur):
+			_tab_step(1)
+			return
+		if not BOOK.has_point(cur) and not _shelf_hit() and not inspecting:
+			book = ""
+			return
+	for i in BUTTONS.size():
+		if _button_rect(i).has_point(cur):
+			if BUTTONS[i].id == "INSPECT": _toggle_inspect()
+			else: stamp(BUTTONS[i].id)
+			return
+	for row in _ask_rows():
+		if row.r.has_point(cur):
+			ask(row.topic)
+			return
+	if CounterRules.binder(day):
+		var tabs := _tabs_today()
+		for i in tabs.size():
+			if _tab_rect(i, tabs.size()).has_point(cur):
+				tab = i
 				return
-			var d := _doc_at(cur)
-			if d >= 0:
-				d = _raise(d)
-				drag = d
-				drag_off = cur - docs[d].pos
+	if inspecting:
+		var f := field_at(cur)
+		if not f.is_empty(): pick(f)
+		return
+	if NOTEBOOK_ICON.has_point(cur):
+		open_book("notebook")
+		return
+	if LOG_ICON.has_point(cur):
+		open_book("log")
+		return
+	if book != "" or phase != "counter": return
+	var d := _doc_at(cur)
+	if d >= 0:
+		d = _raise(d)
+		drag = d
+		drag_off = cur - docs[d].pos
+
+func _shelf_hit() -> bool:
+	return NOTEBOOK_ICON.has_point(cur) or LOG_ICON.has_point(cur)
 
 func _toggle_inspect() -> void:
-	if phase != "counter": return
+	if not phase in ["counter", "idle"]: return
 	inspecting = not inspecting
 	pick_a = {}
 
 func _cancel() -> void:
 	if inspecting and not pick_a.is_empty(): pick_a = {}
-	else: inspecting = false
+	elif inspecting: inspecting = false
+	elif book != "": book = ""
+
+## Jump the cursor to the next (or previous) thing worth pointing at, in reading order.
+func snap(dir: int) -> void:
+	var pts := targets()
+	if pts.is_empty(): return
+	pts.sort_custom(func(a, b): return _order_key(a) < _order_key(b))
+	var k := _order_key(cur)
+	var to: Vector2 = pts[0] if dir > 0 else pts[pts.size() - 1]
+	if dir > 0:
+		for p in pts:
+			if _order_key(p) > k + 0.5:
+				to = p
+				break
+	else:
+		for i in range(pts.size() - 1, -1, -1):
+			if _order_key(pts[i]) < k - 0.5:
+				to = pts[i]
+				break
+	cur = to
+	pad_cursor = true
+
+func _order_key(p: Vector2) -> float:
+	return floorf(p.y / 10.0) * 1000.0 + p.x
+
+## Everything the cursor can usefully land on right now.
+func targets() -> Array:
+	var out: Array = []
+	if inspecting:
+		for f in fields(): out.append((f.r as Rect2).get_center().round())
+		return out
+	if phase == "counter" and book == "":
+		for d in docs: out.append((d.pos as Vector2) + Vector2(24, 4))
+	for i in BUTTONS.size(): out.append(_button_rect(i).get_center())
+	for row in _ask_rows(): out.append((row.r as Rect2).get_center())
+	if CounterRules.binder(day):
+		var n := _tabs_today().size()
+		for i in n: out.append(_tab_rect(i, n).get_center())
+	out.append(NOTEBOOK_ICON.get_center())
+	out.append(LOG_ICON.get_center())
+	return out
 
 func _drag_to(p: Vector2) -> void:
 	var size := _doc_size(docs[drag].id)
@@ -293,31 +662,32 @@ func _button_rect(i: int) -> Rect2:
 
 # ------------------------------------------------------------------ fields and comparing
 
-## Every clickable fact on screen: {r, key, val, label}. Documents in front win.
+## Every fact on screen you can pick: {r, key, val, doc, row, label}. Papers in front win.
 func fields() -> Array:
 	var out: Array = []
-	if phase != "counter": return out
-	for i in range(docs.size() - 1, -1, -1):
-		out.append_array(_doc_fields(docs[i]))
-	out.append({ "r": _face_rect(), "key": "person", "val": c.face_shown, "label": "THE PERSON AT THE COUNTER" })
-	out.append({ "r": _plate_rect(), "key": "plate", "val": c.car.plate, "label": "THE PLATE ON THE CAR" })
-	out.append({ "r": Rect2(476, 6, 72, 40), "key": "today", "val": CounterRules.today(day), "label": "TODAY" })
-	var by := 52.0
-	for r in CounterRules.rules_for(day):
-		var lines := wrap_text(r.text, 38)
-		if r.id == "inspect":
-			out.append({ "r": Rect2(476, by + 10, 158, lines.size() * 7), "key": "rule_inspect", "val": 0, "label": "THE INSPECTION RULE" })
-		by += lines.size() * 7 + 3
-	if day >= 3:
-		out.append({ "r": _bolo_rect(), "key": "bolo", "val": rules.bolo, "label": "THE STOLEN LIST" })
+	if not phase in ["counter", "idle"]: return out
+	if book != "": out.append_array(_book_fields())
+	elif phase == "counter":
+		for i in range(docs.size() - 1, -1, -1): out.append_array(_doc_fields(docs[i]))
+	if phase == "counter":
+		var bub := _bubble()
+		out.append({ "r": bub.r, "key": "says", "val": { "text": bub.text, "clue": bub.clue }, "doc": "", "label": "WHAT THEY SAID" })
+		out.append({ "r": _face_rect(), "key": "person", "val": c.face_shown, "doc": "", "label": "THE PERSON AT THE COUNTER" })
+		out.append({ "r": _plate_rect(), "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE", "label": "THE PLATE ON THE CAR" })
+	out.append({ "r": Rect2(474, 4, 54, 42), "key": "today", "val": CounterRules.today(day), "doc": "", "label": "TODAY" })
+	for blk in _rule_blocks():
+		if blk.has("rule"): out.append({ "r": blk.r, "key": "rule", "val": blk.rule.id, "doc": "", "label": "THE RULE: " + String(blk.lines[0]) })
+	if CounterRules.rule_active("bolo", day):
+		out.append({ "r": _bolo_rect(), "key": "bolo", "val": 0, "doc": "", "label": "THE STOLEN LIST" })
+	out.append({ "r": NOTEBOOK_ICON, "key": "notebook", "val": 0, "doc": "", "label": "LEO'S NOTEBOOK" })
 	return out
 
 func field_at(p: Vector2) -> Dictionary:
-	# the top document under the cursor hides the ones under it
-	var top := _doc_at(p)
+	# the top paper under the cursor hides the ones under it
+	var top := _doc_at(p) if book == "" else -1
 	for f in fields():
 		if f.r.has_point(p):
-			if f.has("doc") and top >= 0 and f.doc != docs[top].id: continue
+			if f.get("doc", "") in docs.map(func(d): return d.id) and top >= 0 and f.doc != docs[top].id: continue
 			return f
 	return {}
 
@@ -330,140 +700,214 @@ func pick(f: Dictionary) -> void:
 		return
 	var v := compare(pick_a, f)
 	verdict = { "a": pick_a, "b": f, "text": v[0], "good": v[1], "t": 4.0 }
+	if v[1] == false and String(v[2]) != "":
+		topics.erase(v[2])
+		topics.push_front(v[2])
 	pick_a = {}
 
-## Leo reads two things side by side. Returns [what he concludes, good? (true/false/null)]
+## Leo reads two things side by side: [what he concludes, good (true/false/null), ASK topic].
+## The papers, the wall and the window go to the rules; what people say goes in the notebook;
+## the sticker log is checked for gaps.
 func compare(a: Dictionary, b: Dictionary) -> Array:
-	var ka: String = a.key
-	var kb: String = b.key
-	var pair := [ka, kb]
-	if ka == kb and ka in ["name", "plate", "vin", "car"]:
-		return ["MATCH", true] if a.val == b.val else ["MISMATCH", false]
-	if ka == kb: return ["NOTHING TO COMPARE", null]
-	if pair.has("today") and (pair.has("expiry") or pair.has("start")):
-		var d: Array = a.val if ka != "today" else b.val
-		var k: String = ka if ka != "today" else kb
-		var t := CounterRules.today(day)
-		if k == "expiry":
-			return ["EXPIRED " + CounterRules.date_str(d), false] if CounterRules.date_cmp(d, t) < 0 else ["STILL VALID", true]
-		return ["NOT IN EFFECT YET", false] if CounterRules.date_cmp(d, t) > 0 else ["IN EFFECT", true]
-	if pair.has("photo") and pair.has("person"):
-		return ["SAME PERSON", true] if a.val == b.val else ["THAT'S NOT THEM", false]
-	if pair.has("bolo") and (pair.has("plate") or pair.has("vin")):
-		var x: Dictionary = a if ka != "bolo" else b
-		for e in rules.bolo:
-			if e[x.key] == x.val: return ["ON THE STOLEN LIST", false]
-		return ["NOT ON THE LIST", true]
-	if pair.has("rule_inspect") and pair.has("measure"):
-		var m: Dictionary = a.val if ka == "measure" else b.val
-		match m.kind:
-			"tread":
-				for t in m.v: if t < 1.6: return ["%.1f MM TREAD: FAILS" % t, false]
-				return ["TREAD PASSES", true]
-			"pads":
-				for t in m.v: if t < 3.0: return ["%.1f MM PADS: FAILS" % t, false]
-				return ["PADS PASS", true]
-			"lights": return ["LIGHTS WORK", true] if m.v else ["A LIGHT IS OUT: FAILS", false]
-			"rust": return ["RUSTED THROUGH: FAILS", false] if m.v else ["NO RUST-THROUGH", true]
-	return ["NOTHING TO COMPARE", null]
+	var pair := [a.key, b.key]
+	if pair.has("says"):
+		var s: Dictionary = a if a.key == "says" else b
+		var o: Dictionary = b if a.key == "says" else a
+		if o.key in ["notebook", "note"]: return _jot(s.val)
+		return ["NOTHING TO COMPARE", null, ""]
+	if a.key == "sticker" and b.key == "sticker": return _sticker_gap(int(a.val), int(b.val))
+	return CounterRules.compare(c, day, bolo_now(), a, b)
+
+## Something somebody said, against the notebook: write it down, or catch them out.
+func _jot(v: Dictionary) -> Array:
+	var clue: Dictionary = v.get("clue", {})
+	if clue.is_empty(): return ["NOTHING WORTH WRITING DOWN", null, ""]
+	var id := String(clue.get("id", ""))
+	if clue.has("catch") and DeskBook.has_note(String(clue.catch)):
+		DeskBook.raise("desk_caught_" + id)
+		return ["THAT'S NOT WHAT THE BOOK SAYS", false, ""]
+	if DeskBook.note(id, String(clue.get("note", v.get("text", ""))), day): return ["WRITTEN IN THE NOTEBOOK", true, ""]
+	return ["ALREADY IN THE NOTEBOOK", null, ""]
+
+## Two stickers from the log: anything missing between them?
+func _sticker_gap(a: int, b: int) -> Array:
+	var missing := DeskBook.gap(a, b, log_old)
+	if missing.is_empty(): return ["IN ORDER", true, ""]
+	if log_old and missing.has(448):
+		DeskBook.note("sticker_gap", DeskBook.GAP_NOTE, day)
+		DeskBook.raise("desk_sticker_gap")
+	return ["%04d IS MISSING" % int(missing[0]) if missing.size() == 1 else "%d STICKERS MISSING" % missing.size(), false, ""]
 
 # ------------------------------------------------------------------ documents
 
 const DOC_W := 160.0
-
-func _doc_rows(id: String) -> Array:
-	match id:
-		"work": return [["NAME", c.work.name, "name", c.work.name], ["PLATE", c.work.plate, "plate", c.work.plate],
-			["CAR", c.work.car, "car", c.work.car], ["WORK", c.request, "", null]]
-		"reg": return [["OWNER", c.reg.owner, "name", c.reg.owner], ["ADDRESS", c.reg.address, "", null],
-			["CAR", c.reg.car, "car", c.reg.car], ["PLATE", c.reg.plate, "plate", c.reg.plate],
-			["VIN", c.reg.vin, "vin", c.reg.vin], ["EXPIRES", CounterRules.date_str(c.reg.expires), "expiry", c.reg.expires]]
-		"licence": return [["NAME", c.licence.name, "name", c.licence.name], ["BORN", CounterRules.date_str(c.licence.dob), "", null],
-			["ADDR", c.licence.address, "", null], ["NO.", c.licence.number, "", null],
-			["EXPIRES", CounterRules.date_str(c.licence.expires), "expiry", c.licence.expires]]
-		"insurance": return [["INSURED", c.insurance.holder, "name", c.insurance.holder], ["COMPANY", c.insurance.insurer, "", null],
-			["POLICY", c.insurance.policy, "", null], ["VIN", c.insurance.vin, "vin", c.insurance.vin],
-			["FROM", CounterRules.date_str(c.insurance.from), "start", c.insurance.from], ["TO", CounterRules.date_str(c.insurance.to), "expiry", c.insurance.to]]
-		"sheet":
-			var s: Dictionary = c.sheet
-			var tr: Array = s.tread
-			var pd: Array = s.pads
-			return [["VIN", s.vin, "vin", s.vin], ["ODO", "%d KM" % s.odo, "", null],
-				["TREAD", "FL %.1f FR %.1f RL %.1f RR %.1f" % [tr[0], tr[1], tr[2], tr[3]], "measure", { "kind": "tread", "v": tr }],
-				["PADS", "FRONT %.1f  REAR %.1f" % [pd[0], pd[1]], "measure", { "kind": "pads", "v": pd }],
-				["LIGHTS", "ALL WORKING" if s.lights else "LEFT TAIL OUT", "measure", { "kind": "lights", "v": s.lights }],
-				["RUST", "SURFACE ONLY" if not s.rust else "THROUGH THE ROCKER", "measure", { "kind": "rust", "v": s.rust }]]
-	return []
-
-const TITLES := { "work": "WORK ORDER - COVINGTON AUTO", "reg": "VEHICLE REGISTRATION", "licence": "DRIVER'S LICENCE",
-	"insurance": "PROOF OF INSURANCE", "sheet": "GUS'S SHEET (READ OFF THE CAR)", "napkin": "" }
 const PAPER := { "work": Color("efe2b0"), "reg": Color("cfe0c4"), "licence": Color("c6d6e8"), "insurance": Color("ecd2cc"),
-	"sheet": Color("e8e6de"), "napkin": Color("f4f2ec") }
+	"glovebox": Color("f2c6d6"), "sheet": Color("e8e6de"), "napkin": Color("f4f2ec"), "history": Color("dcd4f0"),
+	"old_reg": Color("e8dcb8"), "bos": Color("f0ecd8"), "permit": Color("f4e08a"), "door_inv": Color("d8e8e8"),
+	"cert": Color("e4ecd0"), "letter": Color("f6f0e2") }
+
+func _rows(id: String) -> Array:
+	return CounterRules.doc_rows(c, id, day)
 
 func _doc_size(id: String) -> Vector2:
 	match id:
 		"licence": return Vector2(DOC_W, 58)
 		"napkin": return Vector2(92, 18 + wrap_text(c.napkin, 20).size() * 8)
 		"work": return Vector2(DOC_W, 14 + 4 * 9 + 18)
-	return Vector2(DOC_W, 14 + _doc_rows(id).size() * 9 + 4)
+		"letter": return Vector2(118, 16 + (c.letter.get("lines", []) as Array).size() * 8)
+		"history": return Vector2(DOC_W + 12, 14 + _rows(id).size() * 9 + 4)
+	return Vector2(DOC_W, 14 + _rows(id).size() * 9 + 4)
 
 func _row_x(id: String) -> float:
 	return 40.0 if id == "licence" else 4.0
 
+func _title(id: String) -> String:
+	var t := String(CounterRules.DOC_TITLES.get(id, ""))
+	if id == "old_reg": t += " - " + String(c.old_reg.prov)
+	return t
+
 func _doc_fields(d: Dictionary) -> Array:
 	var out: Array = []
-	var rows := _doc_rows(d.id)
+	var rows := _rows(d.id)
 	var x0 := _row_x(d.id)
+	var size := _doc_size(d.id)
 	for i in rows.size():
 		if rows[i][2] == "": continue
-		out.append({ "r": Rect2(d.pos + Vector2(x0, 12 + i * 9), Vector2(DOC_W - x0 - 4, 8)), "key": rows[i][2], "val": rows[i][3],
-			"label": "%s ON THE %s" % [rows[i][0], TITLES[d.id].split(" - ")[0]], "doc": d.id })
+		out.append({ "r": Rect2(d.pos + Vector2(x0, 12 + i * 9), Vector2(size.x - x0 - 4, 8)), "key": rows[i][2], "val": rows[i][3],
+			"label": "%s ON THE %s" % [rows[i][0], _title(d.id).split(" - ")[0]], "doc": d.id, "row": rows[i][0] })
 	if d.id == "licence":
-		out.append({ "r": Rect2(d.pos + Vector2(4, 13), Vector2(32, 32)), "key": "photo", "val": c.licence.face, "label": "THE LICENCE PHOTO", "doc": d.id })
+		out.append({ "r": Rect2(d.pos + Vector2(4, 13), Vector2(32, 32)), "key": "photo", "val": c.licence.face, "label": "THE LICENCE PHOTO", "doc": d.id, "row": "PHOTO" })
 	return out
 
 func _draw_doc(d: Dictionary) -> void:
 	var size := _doc_size(d.id)
 	var r := Rect2(d.pos, size)
 	draw_rect(Rect2(r.position + Vector2(2, 2), r.size), Color(0, 0, 0, 0.35))
-	var paper: Color = PAPER[d.id]
+	var paper: Color = PAPER.get(d.id, Color("eeeeee"))
 	draw_rect(r, paper)
 	draw_rect(r, paper.darkened(0.35), false, 1.0)
-	if d.id == "napkin":
-		for i in 6: draw_rect(Rect2(r.position + Vector2(4 + i * 15, 3), Vector2(8, 1)), paper.darkened(0.08))
-		var ls := wrap_text(c.napkin, 20)
-		for i in ls.size(): PixelFont.draw(self, r.position + Vector2(6, 9 + i * 8), ls[i], Color("2a3a7a"))
-		return
+	if float(d.get("fresh", 0.0)) > 0.0: draw_rect(r.grow(2), Color(GOLD, minf(1.0, float(d.fresh))), false, 2.0)
+	match String(d.id):
+		"napkin":
+			for i in 6: draw_rect(Rect2(r.position + Vector2(4 + i * 15, 3), Vector2(8, 1)), paper.darkened(0.08))
+			var ls := wrap_text(c.napkin, 20)
+			for i in ls.size(): PixelFont.draw(self, r.position + Vector2(6, 9 + i * 8), ls[i], Color("2a3a7a"))
+			return
+		"letter":
+			draw_rect(Rect2(r.position, Vector2(size.x, 11)), Color("1e2a3a"))
+			PixelFont.draw_centered(self, r.get_center().x, r.position.y + 3, String(c.letter.get("title", "")), GOLD)
+			var lines: Array = c.letter.get("lines", [])
+			for i in lines.size(): PixelFont.draw(self, r.position + Vector2(6, 15 + i * 8), String(lines[i]), PAPER_INK)
+			return
 	draw_rect(Rect2(r.position, Vector2(size.x, 10)), paper.darkened(0.18))
-	PixelFont.draw(self, r.position + Vector2(4, 3), TITLES[d.id], PAPER_INK)
-	var rows := _doc_rows(d.id)
+	PixelFont.draw(self, r.position + Vector2(4, 3), _title(d.id), PAPER_INK)
+	var rows := _rows(d.id)
 	var x0 := _row_x(d.id)
+	var lw := 48.0 if d.id == "history" else 32.0
 	for i in rows.size():
 		var p: Vector2 = r.position + Vector2(x0, 14 + i * 9)
 		PixelFont.draw(self, p, rows[i][0], PAPER_DIM)
-		PixelFont.draw(self, p + Vector2(32, 0), str(rows[i][1]), PAPER_INK)
-	if d.id == "licence":
-		draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 34)), paper.darkened(0.3))
-		draw_texture(_face_tex(c.licence.face, true), r.position + Vector2(4, 13))
-	if d.id == "work":
-		var box := Rect2(r.position + Vector2(size.x - 70, size.y - 17), Vector2(66, 14))
-		draw_rect(box, paper.darkened(0.12))
-		if stamped == "": PixelFont.draw_centered(self, box.get_center().x, box.position.y + 5, "STAMP HERE", PAPER_DIM)
-		else:
-			var col: Color = Color("2f7a2a") if stamped == "APPROVED" else (Color("a8282a") if stamped == "DENIED" else (Color("2a4a8a") if stamped == "REPORT" else Color("3a3438")))
-			draw_rect(box.grow(1), col, false, 2.0)
-			PixelFont.draw_centered(self, box.get_center().x, box.position.y + 3, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3"}[stamped], col, 2)
+		PixelFont.draw(self, p + Vector2(lw, 0), str(rows[i][1]), RED.darkened(0.3) if rows[i][2] == "brand" and rows[i][3] == "SALVAGE" else PAPER_INK)
+	match String(d.id):
+		"licence":
+			draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 34)), paper.darkened(0.3))
+			draw_texture(_face_tex(c.licence.face, true), r.position + Vector2(4, 13))
+		"permit", "cert", "door_inv", "bos", "glovebox":
+			# a stamp or a seal: real ones and fakes look the same from here
+			draw_circle(r.position + Vector2(size.x - 14, size.y - 12), 7.0, Color(paper.darkened(0.35), 0.5), false, 1.0)
+		"work":
+			var box := Rect2(r.position + Vector2(size.x - 70, size.y - 17), Vector2(66, 14))
+			draw_rect(box, paper.darkened(0.12))
+			if stamped == "": PixelFont.draw_centered(self, box.get_center().x, box.position.y + 5, "STAMP HERE", PAPER_DIM)
+			else:
+				var col: Color = Color("2f7a2a") if stamped == "APPROVED" else (Color("a8282a") if stamped == "DENIED" else (Color("2a4a8a") if stamped == "REPORT" else Color("3a3438")))
+				draw_rect(box.grow(1), col, false, 2.0)
+				PixelFont.draw_centered(self, box.get_center().x, box.position.y + 3, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3"}[stamped], col, 2)
+
+# ------------------------------------------------------------------ the books
+
+func _book_rows() -> Array:
+	var out: Array = []
+	if book == "notebook":
+		for n in DeskBook.notes:
+			var d := CounterRules.today(int(n.day))
+			out.append({ "key": "note", "val": n.id, "head": "%s %d" % [CounterRules.MONTHS[d[1] - 1], d[2]], "lines": wrap_text(String(n.text), 62) })
+	else:
+		for r in DeskBook.log_rows(log_old):
+			out.append({ "key": "sticker", "val": int(r.no), "head": "%04d" % int(r.no),
+				"lines": ["%s   %-8s %s" % [CounterRules.date_str(r.date), r.plate, r.car]] })
+	return out
+
+## Where each book row sits: [{r, row}], the newest pages last (and only as many as fit).
+func _book_layout() -> Array:
+	var out: Array = []
+	var y := BOOK.position.y + 26
+	var rows := _book_rows()
+	var lh := 8.0
+	var fit: Array = []
+	var total := 0.0
+	for i in range(rows.size() - 1, -1, -1):
+		var h: float = (rows[i].lines as Array).size() * lh + (0.0 if book == "notebook" else 3.0)
+		if total + h > BOOK.size.y - 40: break
+		total += h
+		fit.push_front(rows[i])
+	for row in fit:
+		var h: float = (row.lines as Array).size() * lh + (0.0 if book == "notebook" else 3.0)
+		out.append({ "r": Rect2(BOOK.position.x + 8, y, BOOK.size.x - 16, h - 2), "row": row })
+		y += h
+	return out
+
+func _book_fields() -> Array:
+	var out: Array = []
+	for e in _book_layout():
+		var row: Dictionary = e.row
+		var label := ("THE NOTE FROM " if book == "notebook" else "STICKER ") + String(row.head)
+		out.append({ "r": e.r, "key": row.key, "val": row.val, "doc": book, "label": label })
+	return out
+
+func _log_tab_rect() -> Rect2:
+	return Rect2(BOOK.end.x - 108, BOOK.position.y + 4, 100, 11)
+
+func _draw_book() -> void:
+	draw_rect(Rect2(BOOK.position + Vector2(3, 3), BOOK.size), Color(0, 0, 0, 0.45))
+	var nb := book == "notebook"
+	var paper := Color("efe8d0") if nb else Color("e4e2d8")
+	draw_rect(BOOK, paper)
+	draw_rect(BOOK, paper.darkened(0.4), false, 1.0)
+	if nb:
+		for i in 19: draw_rect(Rect2(BOOK.position.x + 2, BOOK.position.y + 33 + i * 8, BOOK.size.x - 4, 1), Color("b8c8d8"))
+		draw_rect(Rect2(BOOK.position.x + 40, BOOK.position.y, 1, BOOK.size.y), Color("d89090"))
+		for i in 10: draw_circle(Vector2(BOOK.position.x + 6, BOOK.position.y + 14 + i * 18), 2.0, Color("2a2420"))
+		PixelFont.draw(self, BOOK.position + Vector2(46, 8), "LEO'S NOTEBOOK", Color("2a3a7a"), 2)
+	else:
+		draw_rect(Rect2(BOOK.position, Vector2(BOOK.size.x, 18)), Color("3a4a3a"))
+		PixelFont.draw(self, BOOK.position + Vector2(6, 6), "INSPECTION STICKERS - STATION 0117", BONE)
+		var tab_r := _log_tab_rect()
+		if DeskBook.old_log:
+			draw_rect(tab_r, Color("e4e2d8") if log_old else Color("5a6a5a"))
+			PixelFont.draw_centered(self, tab_r.get_center().x, tab_r.position.y + 3, "LAST FALL (2018)" if log_old else "THIS FALL (2019)", PAPER_INK if log_old else BONE)
+	var lay := _book_layout()
+	if lay.is_empty():
+		var empty := "NOTHING YET. GUS SAYS WRITE DOWN ANYTHING THAT DOESN'T SIT RIGHT. (INSPECT WHAT SOMEBODY SAYS, THEN THIS NOTEBOOK.)" if nb else "NO STICKERS ISSUED YET. APPROVE AN INSPECTION AND IT GOES IN HERE."
+		var ls := wrap_text(empty, 56)
+		for i in ls.size(): PixelFont.draw(self, BOOK.position + Vector2(46, 26 + i * 8), ls[i], PAPER_DIM)
+	for e in lay:
+		var row: Dictionary = e.row
+		var r: Rect2 = e.r
+		PixelFont.draw(self, r.position + Vector2(6 if nb else 0, 0), String(row.head), Color("a8282a") if nb else PAPER_INK)
+		var lines: Array = row.lines
+		for i in lines.size(): PixelFont.draw(self, r.position + Vector2(38 if nb else 26, i * 8), String(lines[i]), Color("2a3a7a") if nb else PAPER_INK)
+	var foot := Hints.fmt("{desk_cancel}: CLOSE  {desk_tab_next}: OTHER PAGES") if not nb and DeskBook.old_log else Hints.fmt("{desk_cancel}: CLOSE")
+	PixelFont.draw(self, Vector2(BOOK.position.x + 36, BOOK.end.y - 10), foot, PAPER_DIM)
 
 # ------------------------------------------------------------------ drawing
 
-const _WOMEN := ["DANIELLE", "KAYLA", "NATALIE", "CHANTAL", "MELANIE", "AMBER", "KRISTA", "SYLVIE", "JESSICA", "MONIQUE", "ASHLEY", "BRITTANY", "NICOLE", "TAMMY"]
-
 ## The customer's face (or the licence photo): a CAGE BOSS-style portrait that matches the
-## name's gender and the age on the date of birth.
-func _face_tex(seed: int, small := false) -> ImageTexture:
-	var fem := 1 if str(c.person.first) in _WOMEN else 0
+## person's sex and the age on the date of birth.
+func _face_tex(face_seed: int, small := false) -> ImageTexture:
+	var fem := int(c.person.get("fem", 0))
 	var age := CounterRules.YEAR - int(c.person.dob[0])
-	return Face.small_texture(seed, fem, age) if small else Face.texture(seed, fem, age)
+	return Face.small_texture(face_seed, fem, age) if small else Face.texture(face_seed, fem, age)
 
 func _face_rect() -> Rect2:
 	return Rect2(11, 10, 128, 128)   # the 64px portrait at 2x, above the counter top (y 142)
@@ -484,22 +928,68 @@ func _draw() -> void:
 	for i in 12: draw_line(Vector2(DESK.position.x, DESK.position.y + 8 + i * 16), Vector2(DESK.end.x, DESK.position.y + 10 + i * 16), Color("4e382a"), 1.0)
 	if phase in ["counter", "stamping", "result"]:
 		for d in docs: _draw_doc(d)
+	if phase == "idle" and book == "":
+		PixelFont.draw_centered(self, DESK.get_center().x, DESK.get_center().y - 4, "NOBODY AT THE WINDOW.", Color(BONE, 0.5), 2)
+		PixelFont.draw_centered(self, DESK.get_center().x, DESK.get_center().y + 14, "GUS IS READING THE FLYER AGAIN.", Color(BONE, 0.4))
+	if book != "": _draw_book()
 	_draw_tray()
-	if phase in ["counter", "stamping"]: _draw_inspect()
+	if phase in ["counter", "stamping", "idle"]: _draw_inspect()
 	match phase:
 		"brief": _draw_brief()
 		"result": _draw_result()
 		"day_end": _draw_day_end()
 		"week_end": _draw_week_end()
-	if tutorial and phase in ["counter", "stamping"] and idx - 1 < TIPS.size():
-		var ls := wrap_text(TIPS[idx - 1], 74)
-		_panel(Rect2(150, 0, 320, 6 + ls.size() * 8), 0.92)
-		for k in ls.size(): PixelFont.draw(self, Vector2(156, 3 + k * 8), ls[k], Color("c8c0a8"))
+		"month_end": _draw_month_end()
+		"revoked": _draw_revoked()
+	if tutorial and phase in ["counter", "stamping"] and served < TIPS.size():
+		var ls := wrap_text(Hints.fmt(TIPS[served]), 74)
+		_panel(Rect2(150, 32, 320, 6 + ls.size() * 8), 0.92)
+		for k in ls.size(): PixelFont.draw(self, Vector2(156, 35 + k * 8), ls[k], Color("c8c0a8"))
 	if pad_cursor or demo: _draw_cursor()
 
 func _panel(r: Rect2, a := 0.9) -> void:
 	draw_rect(r, Color(0.04, 0.035, 0.05, a))
 	draw_rect(r, Color(1, 1, 1, 0.12), false, 1.0)
+
+## What the customer's saying right now: their opener, or the answer to the last question.
+## {r, lines: [[text, colour]], text, clue}
+func _bubble() -> Dictionary:
+	var lines: Array = []
+	var text := ""
+	var clue: Dictionary = {}
+	if said.is_empty():
+		text = _speech()
+		clue = c.get("clue", {})
+	else:
+		for l in wrap_text("LEO: " + String(said.q), 33): lines.append([l, Color("8a6a20")])
+		text = String(said.a)
+		clue = said.get("clue", {})
+	for l in wrap_text(text, 33): lines.append([l, INK])
+	return { "r": Rect2(6, 156, 138, 8 + lines.size() * 8), "lines": lines, "text": text, "clue": clue }
+
+func _speech() -> String:
+	var s := String(c.get("says", ""))
+	if s == "":
+		match c.kind:
+			"familia": s = "DOM SENT ME. HE SAYS YOU'D UNDERSTAND THE NAPKIN."
+			"sting": s = "HEY MAN. A BUDDY SAID YOU CAN HELP ME OUT. I GOT CASH."
+			_:
+				var asks := { "SAFETY INSPECTION": "HI. I NEED A SAFETY INSPECTION.", "FULL INSPECTION": "HI. THE REGISTRY SAYS I NEED THE FULL INSPECTION.",
+					"OIL CHANGE": "JUST AN OIL CHANGE, PLEASE.", "BRAKE JOB": "MY BRAKES ARE GRINDING. CAN YOU DO A BRAKE JOB?",
+					"WINTER TIRES ON": "HI. I NEED MY WINTER TIRES PUT ON.", "CHECK ENGINE LIGHT": "MY CHECK ENGINE LIGHT IS ON. AGAIN." }
+				s = String(asks.get(c.request, "HI."))
+	if since - float(c.get("arrived", since)) > 120.0: s = "FINALLY. " + s
+	return s
+
+## The questions under the speech bubble: [{r, topic}].
+func _ask_rows() -> Array:
+	var out: Array = []
+	if phase != "counter" or c.is_empty(): return out
+	var y: float = _bubble().r.end.y + 18
+	for t in ask_list().slice(0, 6):
+		out.append({ "r": Rect2(6, y, 138, 10), "topic": t })
+		y += 11
+	return out
 
 func _draw_booth() -> void:
 	draw_rect(BOOTH, Color("2a2a32"))
@@ -507,43 +997,81 @@ func _draw_booth() -> void:
 	for i in 7: draw_rect(Rect2(0, i * 22, 150, 1), Color("34343c"))
 	if phase in ["counter", "stamping", "result"]:
 		draw_texture_rect(_face_tex(c.face_shown), _face_rect(), false)
+		if String(c.get("mask", "")) != "": _draw_mask(String(c.mask))
 		# the counter top and the glass
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
 		draw_rect(Rect2(8, 8, 134, 134), Color(0.7, 0.85, 1.0, 0.06))
 		draw_line(Vector2(20, 14), Vector2(48, 42), Color(1, 1, 1, 0.12), 2.0)
-		var said := _speech()
-		var ls := wrap_text(said, 33)
-		var bh: int = 10 + ls.size() * 8
-		draw_rect(Rect2(6, 158, 138, bh), BONE)
-		draw_colored_polygon(PackedVector2Array([Vector2(60, 158), Vector2(76, 158), Vector2(70, 150)]), BONE)
-		for i in ls.size(): PixelFont.draw(self, Vector2(11, 163 + i * 8), ls[i], INK)
-		PixelFont.draw(self, Vector2(8, 340), "CUSTOMER %d OF %d" % [idx, line.size()], ASH)
+		var bub := _bubble()
+		var br: Rect2 = bub.r
+		draw_rect(br, BONE)
+		draw_colored_polygon(PackedVector2Array([Vector2(60, br.position.y), Vector2(76, br.position.y), Vector2(70, br.position.y - 8)]), BONE)
+		var lines: Array = bub.lines
+		for i in lines.size(): PixelFont.draw(self, br.position + Vector2(5, 5 + i * 8), String(lines[i][0]), lines[i][1])
+		if not (bub.clue as Dictionary).is_empty(): draw_rect(br.grow(1), Color(GOLD, 0.5 + 0.3 * sin(Time.get_ticks_msec() / 300.0)), false, 1.0)
+		var rows := _ask_rows()
+		if not rows.is_empty():
+			PixelFont.draw(self, Vector2(6, rows[0].r.position.y - 10), Hints.fmt("{desk_ask}: ASK"), GOLD)
+			for row in rows:
+				var r: Rect2 = row.r
+				var done: bool = asked.has(row.topic)
+				var hot: bool = r.has_point(cur) and phase == "counter"
+				var proven: bool = topics.has(row.topic)
+				draw_rect(r, Color("4a3a2a") if hot else Color("33302e"))
+				draw_rect(Rect2(r.position, Vector2(2, r.size.y)), RED if proven else ASH)
+				PixelFont.draw(self, r.position + Vector2(6, 2), String(CounterRules.TOPIC_LABEL.get(row.topic, row.topic)), Color(BONE, 0.45) if done else BONE)
+				if done: PixelFont.draw(self, r.position + Vector2(r.size.x - 22, 2), "ASKED", Color(ASH, 0.8))
+	elif phase == "idle":
+		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
+		PixelFont.draw_centered(self, 75, 64, "NEXT!", ASH, 2)
+		PixelFont.draw_centered(self, 75, 84, "(NOBODY)", Color(ASH, 0.6))
 	else:
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
 		PixelFont.draw_centered(self, 75, 70, "CLOSED", ASH, 2)
-	PixelFont.draw(self, Vector2(8, 350), Hints.fmt("{menu_back}: MENU"), Color(ASH, 0.6))
+	if phase in ["idle", "counter", "stamping", "result"]:
+		PixelFont.draw(self, Vector2(6, 330), "SERVED %d   IN THE LOT %d" % [served, waiting.size()], ASH)
+	PixelFont.draw(self, Vector2(6, 342), Hints.fmt("{inspect}: INSPECT  {desk_snap_next}: NEXT THING") if Hints.pad else Hints.fmt("{desk_notebook}: NOTEBOOK  {desk_log}: LOG"), Color(ASH, 0.7))
+	PixelFont.draw(self, Vector2(6, 351), Hints.fmt("{menu_back}: MENU"), Color(ASH, 0.6))
 
-func _speech() -> String:
-	match c.kind:
-		"familia": return "DOM SENT ME. HE SAYS YOU'D UNDERSTAND THE NAPKIN."
-		"sting": return "HEY MAN. A BUDDY SAID YOU CAN HELP ME OUT. I GOT CASH."
-	var asks := { "SAFETY INSPECTION": "HI. I NEED A SAFETY INSPECTION.", "OIL CHANGE": "JUST AN OIL CHANGE, PLEASE.",
-		"BRAKE JOB": "MY BRAKES ARE GRINDING. CAN YOU DO A BRAKE JOB?", "WINTER TIRES ON": "HI. I NEED MY WINTER TIRES PUT ON.",
-		"CHECK ENGINE LIGHT": "MY CHECK ENGINE LIGHT IS ON. AGAIN." }
-	var s: String = asks.get(c.request, "HI.")
-	if c.insurance.is_empty() and day >= 2: s += " INSURANCE? UH, IT'S IN MY OTHER CAR."
-	return s
+## Halloween: whatever's over their face, drawn over the portrait at the portrait's 2x.
+func _draw_mask(kind: String) -> void:
+	var o := _face_rect().position
+	var px := func(x: int, y: int, w: int, h: int, col: Color) -> void:
+		draw_rect(Rect2(o + Vector2(x * 2, y * 2), Vector2(w * 2, h * 2)), col)
+	match kind:
+		"GOALIE":
+			for y in range(9, 52):
+				var hw := int(15.0 * sqrt(maxf(0.0, 1.0 - pow((y - 29.0) / 22.0, 2.0))))
+				px.call(32 - hw, y, hw * 2, 1, Color("ece8dc") if y > 12 else Color("d8d2c4"))
+			px.call(22, 24, 8, 4, INK)
+			px.call(35, 24, 8, 4, INK)
+			for i in 4: px.call(25 + i * 4, 40, 2, 3, INK)
+			px.call(31, 12, 2, 10, Color("b8302a"))
+		"PUMPKIN":
+			for y in range(10, 54):
+				var hw := int(20.0 * sqrt(maxf(0.0, 1.0 - pow((y - 32.0) / 22.0, 2.0))))
+				px.call(32 - hw, y, hw * 2, 1, Color("e07a1e") if posmod(floori(y / 3.0), 2) == 0 else Color("d06a14"))
+			px.call(30, 6, 4, 5, Color("3a5a2a"))
+			for i in 4: px.call(22 + i, 26 - i, 8 - i * 2, 1, INK)
+			for i in 4: px.call(36 + i, 26 - i, 8 - i * 2, 1, INK)
+			px.call(22, 38, 20, 3, INK)
+			px.call(26, 41, 4, 2, INK)
+			px.call(34, 41, 4, 2, INK)
+		_:
+			px.call(10, 8, 44, 56, Color("eeeeea"))
+			px.call(12, 6, 40, 2, Color("eeeeea"))
+			px.call(22, 24, 6, 8, INK)
+			px.call(36, 24, 6, 8, INK)
+			px.call(29, 40, 6, 6, INK)
 
 func _draw_window() -> void:
 	draw_rect(WINDOW, Color("6a6c70"))
 	# the bay: concrete, a drain, the lift posts, the window frame
-	draw_rect(Rect2(WINDOW.position + Vector2(0, 20), Vector2(WINDOW.size.x, 92)), Color("8a8a86"))
-	for i in 8: draw_rect(Rect2(WINDOW.position.x + i * 40 + 6, 22, 1, 88), Color("7e7e7a"))
-	draw_rect(Rect2(WINDOW.position.x + 60, 26, 6, 66), Color("c8a030"))
-	draw_rect(Rect2(WINDOW.position.x + 236, 26, 6, 66), Color("c8a030"))
-	draw_rect(Rect2(WINDOW.position, Vector2(WINDOW.size.x, 18)), Color("3a3a40"))
-	PixelFont.draw(self, WINDOW.position + Vector2(6, 6), "BAY 1", ASH)
-	PixelFont.draw(self, WINDOW.position + Vector2(250, 6), "COVINGTON AUTO", GOLD)
+	draw_rect(Rect2(WINDOW.position + Vector2(0, 32), Vector2(WINDOW.size.x, 80)), Color("8a8a86"))
+	for i in 8: draw_rect(Rect2(WINDOW.position.x + i * 40 + 6, 34, 1, 76), Color("7e7e7a"))
+	draw_rect(Rect2(WINDOW.position.x + 60, 38, 6, 56), Color("c8a030"))
+	draw_rect(Rect2(WINDOW.position.x + 236, 38, 6, 56), Color("c8a030"))
+	_draw_lot()
 	if phase in ["counter", "stamping", "result"]:
 		var pr := _plate_rect()
 		draw_rect(pr, Color("e8e4d4"))
@@ -552,37 +1080,76 @@ func _draw_window() -> void:
 		PixelFont.draw_centered(self, pr.get_center().x, pr.position.y + 9, c.car.plate, INK, 1)
 		draw_rect(Rect2(pr.position + Vector2(3, 16), Vector2(pr.size.x - 6, 1)), Color("2a4a8a"))
 		draw_line(pr.position + Vector2(56, 10), Vector2(car_view.position.x - float(c.car.len) * 9.0, car_view.position.y), Color(1, 1, 1, 0.25), 1.0)
-		PixelFont.draw(self, WINDOW.position + Vector2(96, 98), "%s %s" % [c.car.make, c.car.model], BONE)
+		PixelFont.draw(self, WINDOW.position + Vector2(96, 100), "%d %s %s" % [int(c.car.year), c.car.make, c.car.model], BONE)
+		# what the catalogue knows about this one, the first thing anybody notices in the bay
+		var quirk := String(c.car.get("quirk", ""))
+		if quirk != "":
+			if quirk.length() > 76: quirk = quirk.substr(0, 73) + "..."
+			PixelFont.draw_centered(self, WINDOW.get_center().x, 36, quirk, Color("3a3a40"))
 	draw_rect(WINDOW, Color("2a2a30"), false, 3.0)
+
+## The lot through the bay door's windows: the line, nose to tail, first in line nearest the door.
+func _draw_lot() -> void:
+	draw_rect(LOT, Color("2e3036"))
+	var glass := Rect2(LOT.position + Vector2(4, 3), Vector2(LOT.size.x - 8, LOT.size.y - 5))
+	draw_rect(glass, Color("6c7a88"))
+	draw_rect(Rect2(glass.position.x, glass.end.y - 6, glass.size.x, 6), Color("4a4c50"))
+	for i in range(1, 5): draw_rect(Rect2(glass.position.x + i * glass.size.x / 5.0, glass.position.y, 2, glass.size.y), Color("2e3036"))
+	var x := glass.end.x - 6.0
+	var shown := 0
+	for i in waiting.size():
+		var w: Dictionary = waiting[i]
+		var tex := _queue_tex(w)
+		var bob := -1.0 if i == 0 and honk_t > 0.0 and int(honk_t * 12.0) % 2 == 0 else 0.0
+		x -= float(w.get("_qlen", 30))
+		if x < glass.position.x + 30:
+			PixelFont.draw(self, Vector2(glass.position.x + 4, glass.position.y + 3), "+%d" % (waiting.size() - shown), BONE)
+			break
+		draw_texture(tex, Vector2(x - 22, glass.end.y - 3 - (tex.get_height() - 8) + bob))
+		shown += 1
+		x -= 5.0
+	if honk_t > 0.0 and not waiting.is_empty():
+		var hx := glass.end.x - 40
+		draw_rect(Rect2(hx, glass.position.y + 1, 30, 9), RED)
+		PixelFont.draw(self, Vector2(hx + 3, glass.position.y + 3), "HONK!", BONE)
+	if waiting.is_empty() and phase in ["idle", "counter", "result", "stamping"]:
+		PixelFont.draw(self, Vector2(glass.position.x + 6, glass.position.y + 4), "THE LOT: EMPTY" if arrivals.is_empty() or clock >= CounterRules.SHIFT_LEN else "THE LOT", Color(BONE, 0.6))
+	draw_rect(LOT, Color("2a2a30"), false, 2.0)
+
+## A small side view of a waiting car, cached per customer.
+func _queue_tex(w: Dictionary) -> ImageTexture:
+	var id: int = int(w.get("qid", 0))
+	if _qtex.has(id): return _qtex[id]
+	var qlen := clampi(int(float(w.car.len) * 8.0), 30, 46)
+	w._qlen = qlen
+	var img := PixCars.image(qlen, PixCars.body_of({ "body": w.car.get("side_body", "sedan") }), Color(w.car.paint))
+	var t := ImageTexture.create_from_image(img)
+	_qtex[id] = t
+	return t
 
 func _draw_wall() -> void:
 	draw_rect(WALL, Color("4a4038"))
 	# calendar
-	draw_rect(Rect2(476, 6, 72, 40), Color("f0ece0"))
-	draw_rect(Rect2(476, 6, 72, 10), RED)
 	var t := CounterRules.today(day)
-	PixelFont.draw_centered(self, 512, 9, CounterRules.DAYS[day], BONE)
-	PixelFont.draw_centered(self, 512, 20, "%s %d" % [CounterRules.MONTHS[t[1] - 1], t[0]], INK)
-	PixelFont.draw_centered(self, 512, 29, str(t[2]), INK, 2)
-	# cash and how people feel about you
-	_panel(Rect2(554, 6, 80, 40), 0.6)
-	PixelFont.draw(self, Vector2(558, 10), "CASH", ASH)
-	PixelFont.draw(self, Vector2(580, 10), "$%d" % cash, GREEN if cash >= 0 else RED)
-	PixelFont.draw(self, Vector2(558, 20), "HEAT", ASH)
-	PixelFont.draw(self, Vector2(580, 20), str(week.heat + day_log.heat), RED if week.heat + day_log.heat > 30 else BONE)
-	PixelFont.draw(self, Vector2(558, 30), "FAMILIA", ASH)
-	PixelFont.draw(self, Vector2(590, 30), "%+d" % (week.trust + day_log.trust), BONE)
-	# the Ministry bulletin
-	draw_rect(Rect2(474, 50, 162, 182), Color("e8e4d8"))
-	PixelFont.draw(self, Vector2(478, 53), "MINISTRY BULLETIN - INSPECTION STATIONS", PAPER_INK)
-	var by := 62.0
-	for r in CounterRules.rules_for(day):
-		var ls := wrap_text(r.text, 38)
-		var col := RED.darkened(0.2) if r.day == day else PAPER_INK
-		for i in ls.size(): PixelFont.draw(self, Vector2(478, by + i * 7), ls[i], col)
-		by += ls.size() * 7 + 3
+	draw_rect(Rect2(474, 4, 54, 42), Color("f0ece0"))
+	draw_rect(Rect2(474, 4, 54, 10), RED)
+	PixelFont.draw_centered(self, 501, 7, CounterRules.day_name(day), BONE)
+	PixelFont.draw_centered(self, 501, 17, "%s %d" % [CounterRules.MONTHS[t[1] - 1], t[0]], INK)
+	PixelFont.draw_centered(self, 501, 26, str(t[2]), INK, 2)
+	_draw_clock(Vector2(553, 22))
+	# cash, heat, the Familia and the Ministry's patience
+	_panel(Rect2(578, 4, 58, 42), 0.6)
+	PixelFont.draw(self, Vector2(581, 7), "$%d" % cash, GREEN if cash >= 0 else RED)
+	PixelFont.draw(self, Vector2(581, 16), "HEAT %d" % heat(), RED if heat() > 30 else BONE)
+	PixelFont.draw(self, Vector2(581, 25), "FAM %+d" % (int(week.get("trust", 0)) + int(day_log.get("trust", 0))), BONE)
+	PixelFont.draw(self, Vector2(581, 35), "WARN", ASH)
+	for i in CounterRules.WARNINGS:
+		var r := Rect2(602 + i * 8, 35, 6, 6)
+		draw_rect(r, RED if i < warnings_used else Color("2a2622"))
+		draw_rect(r, ASH, false, 1.0)
+	_draw_board()
 	# the stolen list
-	if day >= 3:
+	if CounterRules.rule_active("bolo", day):
 		var br := _bolo_rect()
 		draw_rect(br, Color("f2f0e8"))
 		draw_rect(Rect2(br.position, Vector2(br.size.x, 9)), BLUE)
@@ -593,10 +1160,91 @@ func _draw_wall() -> void:
 			PixelFont.draw(self, br.position + Vector2(36, 12 + i * 10), b.car, PAPER_DIM)
 		draw_circle(br.position + Vector2(br.size.x / 2, 1), 2, RED)
 	else:
-		PixelFont.draw(self, Vector2(478, 250), "(A CORKBOARD. EMPTY FOR NOW.)", ASH)
-	# help
-	var help := ["DRAG PAPERS AROUND THE DESK.", "INSPECT: CLICK TWO THINGS", "TO COMPARE THEM.", "THEN STAMP THE WORK ORDER."]
-	for i in help.size(): PixelFont.draw(self, Vector2(478, 320 + i * 8), help[i], Color(BONE, 0.55))
+		PixelFont.draw(self, Vector2(478, 260), "(A CORKBOARD. EMPTY FOR NOW.)", ASH)
+	_draw_shelf()
+
+## The wall clock: 8 to 6, and the minutes ticking.
+func _draw_clock(o: Vector2) -> void:
+	var late := clock >= CounterRules.SHIFT_LEN - 60.0
+	draw_circle(o, 18.0, Color("2a2622"))
+	draw_circle(o, 16.0, Color("f0ece0"))
+	for i in 12:
+		var a := TAU * i / 12.0
+		var tick_len := 3.0 if i % 3 == 0 else 1.5
+		draw_line(o + Vector2(sin(a), -cos(a)) * 15.0, o + Vector2(sin(a), -cos(a)) * (15.0 - tick_len), INK, 1.0)
+	var mins := 480.0 + clock
+	var ha := TAU * fmod(mins / 60.0, 12.0) / 12.0
+	var ma := TAU * fmod(mins, 60.0) / 60.0
+	draw_line(o, o + Vector2(sin(ha), -cos(ha)) * 8.0, INK, 2.0)
+	draw_line(o, o + Vector2(sin(ma), -cos(ma)) * 12.0, RED if late else INK, 1.0)
+	draw_circle(o, 1.5, RED)
+	PixelFont.draw_centered(self, o.x, o.y + 20, CounterRules.clock_str(clock), RED if late else BONE)
+
+## The rules on the wall: one bulletin, or the binder open at a tab. [{r, rule?, lines, new}]
+func _rule_blocks() -> Array:
+	var out: Array = []
+	var by := BOARD.position.y + 12.0
+	var list: Array = CounterRules.rules_for(day)
+	var extra: Array = []
+	if CounterRules.binder(day):
+		by += 12.0
+		var tabs := _tabs_today()
+		var tab_name: String = tabs[clampi(tab, 0, tabs.size() - 1)]
+		list = list.filter(func(r): return r.tab == tab_name)
+		if tab_name == "MINISTRY": extra = CounterRules.MINISTRY_LINES
+	for r in list:
+		var ls := wrap_text(r.text, 38)
+		out.append({ "r": Rect2(BOARD.position.x + 3, by, BOARD.size.x - 6, ls.size() * 7), "rule": r, "lines": ls, "today": r.day == day })
+		by += ls.size() * 7 + 3
+	for t in extra:
+		var ls := wrap_text(t, 38)
+		out.append({ "r": Rect2(BOARD.position.x + 3, by, BOARD.size.x - 6, ls.size() * 7), "lines": ls, "today": false })
+		by += ls.size() * 7 + 3
+	return out
+
+func _tab_rect(i: int, n: int) -> Rect2:
+	var w := floorf((BOARD.size.x - 4) / n)
+	return Rect2(BOARD.position.x + 2 + i * w, BOARD.position.y + 11, w - 2, 10)
+
+func _draw_board() -> void:
+	var binder := CounterRules.binder(day)
+	if binder:
+		draw_rect(Rect2(BOARD.position - Vector2(2, 2), BOARD.size + Vector2(4, 4)), Color("1e2a3a"))
+		for i in 3: draw_rect(Rect2(BOARD.position.x + 30 + i * 50, BOARD.position.y - 3, 8, 4), Color("b8b8b8"))
+	draw_rect(BOARD, Color("e8e4d8"))
+	PixelFont.draw(self, BOARD.position + Vector2(4, 3), "MINISTRY BINDER - INSPECTION STATIONS" if binder else "MINISTRY BULLETIN - INSPECTION STATIONS", PAPER_INK)
+	if binder:
+		var tabs := _tabs_today()
+		for i in tabs.size():
+			var r := _tab_rect(i, tabs.size())
+			var col: Color = TAB_COL.get(tabs[i], ASH)
+			var on: bool = i == clampi(tab, 0, tabs.size() - 1)
+			draw_rect(r, col if on else col.darkened(0.45))
+			PixelFont.draw_centered(self, r.get_center().x, r.position.y + 3, TAB_SHORT.get(tabs[i], tabs[i]), BONE)
+			if CounterRules.rules_for(day).any(func(x): return x.tab == tabs[i] and x.day == day):
+				draw_rect(Rect2(r.end.x - 4, r.position.y - 2, 4, 4), RED)
+	for blk in _rule_blocks():
+		var col := RED.darkened(0.2) if blk.today else PAPER_INK
+		if not blk.has("rule"): col = PAPER_DIM
+		var ls: Array = blk.lines
+		for i in ls.size(): PixelFont.draw(self, blk.r.position + Vector2(1, i * 7), String(ls[i]), col)
+	if binder: PixelFont.draw(self, Vector2(BOARD.position.x + 4, BOARD.end.y - 9), Hints.fmt("{desk_tab_prev}/{desk_tab_next}: TURN THE TABS"), PAPER_DIM)
+
+## The shelf under the corkboard: Leo's notebook and the sticker log.
+func _draw_shelf() -> void:
+	draw_rect(Rect2(472, 356, 166, 3), Color("6a5a48"))
+	for spec in [[NOTEBOOK_ICON, "NOTEBOOK", "desk_notebook", Color("2a3a6a"), DeskBook.notes.size()], [LOG_ICON, "STICKER LOG", "desk_log", Color("3a4a3a"), DeskBook.stickers.size()]]:
+		var r: Rect2 = spec[0]
+		var hot: bool = r.has_point(cur) and phase in ["idle", "counter"]
+		var open: bool = (book == "notebook" and spec[2] == "desk_notebook") or (book == "log" and spec[2] == "desk_log")
+		var col: Color = spec[3]
+		draw_rect(Rect2(r.position + Vector2(4, 2), Vector2(30, r.size.y - 4)), col.lightened(0.2) if hot or open else col)
+		draw_rect(Rect2(r.position + Vector2(4, 2), Vector2(4, r.size.y - 4)), col.darkened(0.4))
+		draw_rect(Rect2(r.position + Vector2(12, 10), Vector2(18, 6)), Color(BONE, 0.85))
+		PixelFont.draw(self, r.position + Vector2(38, 6), String(spec[1]).split(" ")[0], BONE)
+		if String(spec[1]).contains(" "): PixelFont.draw(self, r.position + Vector2(38, 14), String(spec[1]).split(" ")[1], BONE)
+		PixelFont.draw(self, r.position + Vector2(38, 24), Hints.fmt("{%s}" % spec[2]), GOLD)
+		if int(spec[4]) > 0: PixelFont.draw(self, r.position + Vector2(14, 22), str(spec[4]), BONE)
 
 func _draw_tray() -> void:
 	draw_rect(TRAY, Color("2a2420"))
@@ -606,10 +1254,13 @@ func _draw_tray() -> void:
 		var on: bool = phase == "counter" and r.has_point(cur)
 		var col: Color = b.col
 		if b.id == "INSPECT" and inspecting: col = GOLD
+		if phase != "counter" and not (b.id == "INSPECT" and phase == "idle"): col = col.darkened(0.35)
 		draw_rect(r, col.lightened(0.15) if on else col)
 		draw_rect(Rect2(r.position + Vector2(0, r.size.y - 4), Vector2(r.size.x, 4)), col.darkened(0.4))
 		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 10, b.label, BONE, 2, INK)
-		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 26, _sub(b), Color(BONE, 0.7))
+		var sub := Hints.fmt("{%s}" % b.key) if b.id == "INSPECT" or not Hints.pad else Hints.fmt("POINT + {desk_click}")
+		if b.id == "WRENCH": sub = "OFF BOOKS" if Hints.pad else sub + " OFF BOOKS"
+		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 26, sub, Color(BONE, 0.7))
 
 func _draw_inspect() -> void:
 	if inspecting:
@@ -619,10 +1270,11 @@ func _draw_inspect() -> void:
 		if not pick_a.is_empty():
 			draw_rect(pick_a.r.grow(2), GOLD, false, 2.0)
 			draw_line(pick_a.r.get_center(), cur, Color(GOLD, 0.6), 1.0)
-		var tip := "INSPECT: PICK SOMETHING" if pick_a.is_empty() else "COMPARE %s WITH...?" % pick_a.label
+		var tip := Hints.fmt("INSPECT: PICK SOMETHING  {desk_cancel}: STOP") if pick_a.is_empty() else "COMPARE %s WITH...?" % pick_a.label
+		if tip.length() > 74: tip = tip.substr(0, 71) + "...?"
 		var w := PixelFont.width(tip) + 10
-		_panel(Rect2(310 - w / 2.0, 114, w, 11))
-		PixelFont.draw_centered(self, 310, 117, tip, GOLD)
+		_panel(Rect2(310 - w / 2.0, 113, w, 11))
+		PixelFont.draw_centered(self, 310, 116, tip, GOLD)
 	if not verdict.is_empty():
 		var col: Color = GREEN if verdict.good == true else (RED if verdict.good == false else ASH)
 		var a: Dictionary = verdict.a
@@ -636,48 +1288,64 @@ func _draw_inspect() -> void:
 		draw_rect(Rect2(mid.x - w / 2.0, mid.y - 8, w, 16), Color(col.darkened(0.55), 0.95))
 		draw_rect(Rect2(mid.x - w / 2.0, mid.y - 8, w, 16), col, false, 1.0)
 		PixelFont.draw_centered(self, mid.x, mid.y - 4, verdict.text, BONE, 2)
+		if verdict.good == false and not topics.is_empty() and phase == "counter":
+			var hint := Hints.fmt("{desk_ask}: ASK ABOUT IT")
+			var hw := PixelFont.width(hint) + 8
+			_panel(Rect2(mid.x - hw / 2.0, mid.y + 8, hw, 11), 0.95)
+			PixelFont.draw_centered(self, mid.x, mid.y + 11, hint, GOLD)
+
+func _brief_paras() -> Array:
+	if tutorial:
+		# fix 2: the old manager's name stays off the screen in Years 1 and 2
+		return ["CLOCK IN: 8:00 A.M. GUS IS LEANING ON THE DOORFRAME WITH A COFFEE THAT SAYS WORLD'S OKAYEST BOSS.",
+			"\"THAT'S THE OLD MANAGER'S MUG. I SAID DON'T TOUCH THE MUG. FINE. KEEP IT. READ EVERY PAPER.\"",
+			"\"I'LL BE RIGHT BEHIND YOU. NOT HELPING. JUST BEHIND YOU.\""]
+	var paras: Array = BRIEFS.get(day, [MORNINGS[day % MORNINGS.size()]]).duplicate()
+	if DeskBook.old_log and (day == 29 or (story.is_empty() and day == 22)):
+		paras.append("GUS DROPS A BINDER ON THE DESK. \"LAST FALL'S STICKER LOG. MINISTRY WANTS 'EM ALL TOGETHER.\" HE DOESN'T LOOK AT IT. HE DOESN'T LOOK AT IT VERY HARD.")
+	return paras
 
 func _draw_brief() -> void:
-	var r := Rect2(60, 40, 520, 280)
+	var r := Rect2(50, 30, 540, 300)
 	_panel(r, 0.95)
 	var t := CounterRules.today(day)
-	PixelFont.draw_centered(self, 320, 54, "%s, %s" % [CounterRules.DAYS[day], CounterRules.date_str(t)], GOLD, 3, INK)
-	PixelFont.draw_centered(self, 320, 76, "WEEK ONE AT COVINGTON AUTO" if day == 0 else "DAY %d OF 5" % (day + 1), ASH)
-	var y := 96.0
-	var paras: Array = BRIEFS[day]
-	if tutorial:
-		paras = ["CLOCK IN: 8:00 A.M. GUS IS LEANING ON THE DOORFRAME WITH A COFFEE THAT SAYS WORLD'S OKAYEST BOSS.",
-			StoryState.fill("\"THAT'S {MANAGER}'S MUG. I SAID DON'T TOUCH THE MUG. FINE. KEEP IT. READ EVERY PAPER.\""),
-			"\"I'LL BE RIGHT BEHIND YOU. NOT HELPING. JUST BEHIND YOU.\""]
-	for para in paras:
-		for l in wrap_text(para, 62):
-			PixelFont.draw(self, Vector2(80, y), l, BONE, 2)
+	PixelFont.draw_centered(self, 320, 44, "%s, %s" % [CounterRules.day_name(day), CounterRules.date_str(t)], GOLD, 3, INK)
+	PixelFont.draw_centered(self, 320, 66, "WEEK %d AT COVINGTON AUTO.  THE WINDOW OPENS AT 8. CLOCK-OUT IS AT 6." % CounterRules.week_of(day), ASH)
+	var y := 84.0
+	for para in _brief_paras():
+		for l in wrap_text(para, 64):
+			PixelFont.draw(self, Vector2(70, y), l, BONE, 2)
 			y += 13
-		y += 6
+		y += 5
 	var news := CounterRules.RULES.filter(func(x): return x.day == day)
 	if not news.is_empty():
-		PixelFont.draw(self, Vector2(80, y + 4), "NEW ON THE BULLETIN:", RED)
-		y += 14
+		PixelFont.draw(self, Vector2(70, y + 2), "NEW IN THE BINDER:" if CounterRules.binder(day) else "NEW ON THE BULLETIN:", RED)
+		y += 12
 		for n in news:
-			for l in wrap_text(n.text, 100):
-				PixelFont.draw(self, Vector2(80, y), l, BONE)
+			for l in wrap_text(n.text, 110):
+				PixelFont.draw(self, Vector2(70, y), l, BONE)
 				y += 8
-	PixelFont.draw_centered(self, 320, 304, Hints.fmt("{ui_accept}: OPEN THE COUNTER") if Hints.pad else "CLICK, SPACE OR ENTER TO OPEN THE COUNTER", Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
+	if story.is_empty() and fresh:
+		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF 4 >  {desk_tab_next}" % CounterRules.week_of(day)), GOLD)
+	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:
-	var r := Rect2(164, 128, 292, 168)
+	var r := Rect2(164, 126, 292, 174)
 	_panel(r, 0.94)
 	var good: bool = result.correct
-	PixelFont.draw_centered(self, 310, 138, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED TO POLICE", "WRENCH": "BAY 3, NO PAPERS"}[stamped], GOLD, 2)
-	var y := 158.0
+	PixelFont.draw_centered(self, 310, 134, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED TO POLICE", "WRENCH": "BAY 3, NO PAPERS"}[stamped], GOLD, 2)
+	var y := 152.0
 	for l in wrap_text(result.line, 66):
 		PixelFont.draw(self, Vector2(174, y), l, BONE)
 		y += 8
-	y += 6
+	y += 4
 	if result.money > 0: PixelFont.draw(self, Vector2(174, y), "+$%d FOR THE SHOP" % result.money, GREEN, 2); y += 14
 	if result.dirty > 0: PixelFont.draw(self, Vector2(174, y), "+$%d CASH. NO RECEIPT." % result.dirty, GOLD, 2); y += 14
+	if int(result.sticker) > 0: PixelFont.draw(self, Vector2(174, y), "STICKER %04d ON THE WINDSHIELD. IN THE LOG." % int(result.sticker), BONE); y += 10
 	if result.citation != "":
-		PixelFont.draw(self, Vector2(174, y), "MINISTRY CITATION  -$%d" % result.fine, RED, 2); y += 14
+		if result.warning: PixelFont.draw(self, Vector2(174, y), "MINISTRY WARNING %d OF %d. NO FINE. THIS TIME." % [warnings_used, CounterRules.WARNINGS], GOLD)
+		else: PixelFont.draw(self, Vector2(174, y), "MINISTRY CITATION  -$%d" % result.fine, RED, 2)
+		y += 10 if result.warning else 14
 		for l in wrap_text(result.citation, 66):
 			PixelFont.draw(self, Vector2(174, y), l, RED.lightened(0.3))
 			y += 8
@@ -685,31 +1353,35 @@ func _draw_result() -> void:
 	if result.trust != 0: PixelFont.draw(self, Vector2(174, y + 2), "FAMILIA %+d" % result.trust, ASH); y += 10
 	if c.kind == "regular" and not good and result.citation == "":
 		PixelFont.draw(self, Vector2(174, y + 2), "THERE WAS NOTHING WRONG WITH THAT ONE.", ASH)
-	PixelFont.draw_centered(self, 310, 284, "NEXT" if idx < line.size() else "CLOSE UP FOR THE DAY", Color(BONE, 0.7))
+	var last := clock >= CounterRules.SHIFT_LEN
+	PixelFont.draw_centered(self, 310, 288, Hints.fmt("{desk_click}: CLOSE UP FOR THE DAY") if last else (Hints.fmt("{desk_click}: NEXT!") if not waiting.is_empty() else Hints.fmt("{desk_click}: BACK TO THE WINDOW")), Color(BONE, 0.7))
 
 func _draw_day_end() -> void:
-	var r := Rect2(120, 40, 400, 280)
+	var r := Rect2(110, 30, 420, 300)
 	_panel(r, 0.96)
-	PixelFont.draw_centered(self, 320, 54, "%s IS DONE" % CounterRules.DAYS[day], GOLD, 3, INK)
-	var y := 84.0
+	PixelFont.draw_centered(self, 320, 42, "6:00 P.M. %s IS DONE" % CounterRules.day_name(day), GOLD, 3, INK)
+	var y := 70.0
 	var rows := [["CUSTOMERS", "%d (%d RIGHT CALLS)" % [day_log.seen, day_log.correct], BONE],
+		["DROVE OFF AT SIX", "%d  (-$%d THE SHOP NEVER SAW)" % [day_log.walked, day_log.walked_money], ASH if day_log.walked == 0 else GOLD],
 		["SHOP MONEY", "+$%d" % day_log.earned, GREEN], ["CASH, NO RECEIPTS", "+$%d" % day_log.dirty, GOLD],
+		["WARNINGS", "%d OF %d" % [day_log.warnings.size(), CounterRules.WARNINGS], BONE],
 		["CITATIONS", "%d  (-$%d)" % [day_log.citations.size(), day_log.fines], RED if day_log.fines > 0 else BONE],
-		["REVIEWS", "%+d STARS" % day_log.reviews, BONE], ["HEAT", "%+d" % day_log.heat, BONE], ["FAMILIA", "%+d" % day_log.trust, BONE],
+		["REVIEWS", "%+d STARS" % day_log.reviews, BONE], ["HEAT / FAMILIA", "%+d / %+d" % [day_log.heat, day_log.trust], BONE],
 		["CASH ON HAND", "$%d" % cash, GREEN if cash >= 0 else RED]]
 	for row in rows:
-		PixelFont.draw(self, Vector2(150, y), row[0], ASH, 2)
-		PixelFont.draw(self, Vector2(330, y), row[1], row[2], 2)
+		PixelFont.draw(self, Vector2(136, y), row[0], ASH, 2)
+		PixelFont.draw(self, Vector2(318, y), row[1], row[2], 2 if String(row[1]).length() < 14 else 1)
 		y += 16
-	for cit in day_log.citations.slice(0, 3):
-		PixelFont.draw(self, Vector2(150, y), "- " + cit, RED.lightened(0.3))
+	for cit in (day_log.citations + day_log.warnings).slice(0, 3):
+		PixelFont.draw(self, Vector2(136, y), "- " + String(cit), RED.lightened(0.3))
 		y += 8
-	if day == 3: PixelFont.draw_centered(self, 320, y + 6, "TOMORROW IS FRIDAY. BILLS ARE DUE.", GOLD)
+	PixelFont.draw(self, Vector2(136, y + 4), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
 	if not story.is_empty():
-		PixelFont.draw_centered(self, 320, 286, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
-		PixelFont.draw_centered(self, 320, 304, "CLOCK OUT", Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
+		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
+		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
 	else:
-		PixelFont.draw_centered(self, 320, 304, "GO HOME" if day < 4 else "PAY THE BILLS", Color(BONE, 0.7))
+		var friday := posmod(day, 7) == 4 or day >= CounterRules.LAST_DAY
+		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: PAY THE BILLS") if friday else Hints.fmt("{desk_click}: GO HOME"), Color(BONE, 0.7))
 
 func _draw_week_end() -> void:
 	var r := Rect2(80, 20, 480, 320)
@@ -737,16 +1409,47 @@ func _draw_week_end() -> void:
 	if week.heat >= 50: lines.append("A CAR PARKS ACROSS THE STREET ALL WEEKEND. NOBODY GETS OUT.")
 	if week.trust >= 15: lines.append("DOM SENDS A TRAY OF LASAGNA. NOBODY KNOWS HOW HE GOT INTO THE GARAGE.")
 	elif week.trust <= -30: lines.append("SOMEBODY LETS THE AIR OUT OF ALL FOUR OF YOUR TIRES. NEATLY.")
-	if week.citations >= 4: lines.append("THE MINISTRY WANTS A MEETING ABOUT YOUR INSPECTION LICENCE.")
+	if week.citations >= 4: lines.append("THE MINISTRY WANTS A MEETING ABOUT YOUR INSPECTION LICENCE. (MEETING %d OF %d.)" % [DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE])
 	if week.reviews >= 8: lines.append("COVINGTON AUTO HITS 4.6 STARS. SOMEONE WRITES \"JUST LIKE WHEN FRANK RAN IT.\"")
 	for para in lines:
 		for l in wrap_text(para, 76):
 			PixelFont.draw(self, Vector2(100, y), l, BONE)
 			y += 8
 		y += 5
-	PixelFont.draw_centered(self, 320, 300, "%d CUSTOMERS. %d RIGHT CALLS. %d CITATIONS." % [week.seen, week.correct, week.citations], ASH)
-	PixelFont.draw_centered(self, 320, 312, "END OF WEEK ONE. THE FULL GAME HAS EIGHT YEARS OF THESE.", ASH)
-	PixelFont.draw_centered(self, 320, 326, "BACK TO THE MENU", Color(BONE, 0.7))
+	PixelFont.draw_centered(self, 320, 300, "%d CUSTOMERS. %d RIGHT CALLS. %d WARNINGS. %d CITATIONS." % [week.seen, week.correct, week.warnings, week.citations], ASH)
+	var nxt := "THE LICENCE" if DeskBook.revoked() else ("THE END OF THE MONTH" if day >= CounterRules.LAST_DAY else "NEXT WEEK")
+	PixelFont.draw_centered(self, 320, 318, Hints.fmt("{desk_click}: " + nxt), Color(BONE, 0.7))
+
+func _draw_month_end() -> void:
+	_panel(Rect2(80, 40, 480, 280), 0.97)
+	PixelFont.draw_centered(self, 320, 54, "NOVEMBER.", GOLD, 3, INK)
+	var y := 90.0
+	var ls := ["A MONTH AT THE COUNTER. %d CUSTOMERS, %d RIGHT CALLS, $%d FOR THE SHOP." % [month.seen, month.correct, month.earned],
+		"%d STICKERS ON %d WINDSHIELDS. %d CITATIONS ON YOUR LICENCE." % [DeskBook.stickers.size(), DeskBook.stickers.size(), DeskBook.citations],
+		"GUS LOCKS UP. \"NOT BAD, KID.\" HE THINKS ABOUT IT. \"NOT GOOD EITHER. BUT NOT BAD.\"",
+		"THE FULL GAME HAS EIGHT YEARS OF THESE."]
+	for para in ls:
+		for l in wrap_text(para, 64):
+			PixelFont.draw(self, Vector2(100, y), l, BONE, 2)
+			y += 13
+		y += 6
+	PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_click}: BACK TO THE MENU"), Color(BONE, 0.7))
+
+## The short fail ending: the Daily Clutch's front page.
+func _draw_revoked() -> void:
+	var r := Rect2(120, 24, 400, 312)
+	draw_rect(r, Color("e8e2d0"))
+	draw_rect(r, INK, false, 2.0)
+	PixelFont.draw_centered(self, 320, 34, "THE DAILY CLUTCH", INK, 3)
+	draw_rect(Rect2(130, 58, 380, 2), INK)
+	PixelFont.draw_centered(self, 320, 66, "PORT RUMBLE  -  %s" % CounterRules.date_str(CounterRules.today(day)), PAPER_DIM)
+	PixelFont.draw_centered(self, 320, 86, "COVINGTON AUTO LOSES", INK, 2)
+	PixelFont.draw_centered(self, 320, 102, "ITS INSPECTION LICENCE", INK, 2)
+	var y := 126.0
+	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS IN A MONTH. \"WE GAVE THE YOUNG MAN EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % DeskBook.citations, 70):
+		PixelFont.draw(self, Vector2(140, y), l, PAPER_INK)
+		y += 9
+	PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: BACK TO THE MENU"), PAPER_DIM)
 
 func _draw_cursor() -> void:
 	var p := cur.round()

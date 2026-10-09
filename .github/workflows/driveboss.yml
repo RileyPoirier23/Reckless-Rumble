@@ -53,6 +53,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/counter_tests.gd | tee counter.log
           grep -q "^0 failed" counter.log
+      - name: Desk tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/desk_tests.gd | tee desk.log
+          grep -q "^0 failed" desk.log
       - name: Parts tests
         working-directory: game
         run: |

@@ -2,7 +2,7 @@
 
 Two slices of the game, picked from the title screen:
 
-- **The counter:** one week of shifts at Covington Auto, Papers, Please style.
+- **The counter:** the first month of shifts at Covington Auto, Papers, Please style.
 - **The lot:** free drive from Covington Auto out to Salisbury and Havelock. Four cars (a 1991 Nissun Silvio: 2.0 turbo, rear-wheel drive), two blocks of Port Rumble around Covington Auto, four seasons, day and night. Everything you see is drawn by code; nothing is an image file.
 
 These are steps 1 and 2 of the build order in [the concept](../DRIVEBOSS_CONCEPT.md): find out if the driving and the counter are fun before anything else gets built on them.
@@ -85,26 +85,27 @@ Open the map (Tab or Back on the controller), pick a place, and the GPS routes y
 
 ## The counter
 
-Monday to Friday, October 7 to 11, 2019. Each customer brings papers:
+October 7 to November 1, 2019: four weeks of shifts (closed weekends and Thanksgiving Monday). On the first brief, LB/RB (Q/E) picks the week to start in. Each customer brings papers:
 - a work order;
 - a registration;
 - a driver's licence;
 - proof of insurance;
-- Gus's sheet, read off the actual car.
+- Gus's sheet, read off the actual car (the door-jamb VIN joins it in week three);
+- and, as the rules arrive, a service history, last province's ownership, a structural certificate.
 
-The Ministry bulletin on the wall adds a rule every day. Thursday brings a stolen list from the police, and the Familia start sending cars with napkins. On Friday someone asks for "new numbers" who isn't who he says he is.
+**The shift.** The wall clock runs 8:00 to 6:00 in ten real minutes. Customers line up in the lot (you can see them through the bay door). Spend more than an hour and a half with one and the next one leans on the horn. At six, whoever's still waiting drives off, and the day-end screen shows the money that went with them.
 
-- **Inspect** (I, Y or right-click), then click two things to compare them:
-  - a VIN against a VIN, or a name against a name;
-  - an expiry date against the calendar;
-  - the licence photo against the face at the counter;
-  - the plate on the car against the stolen list;
-  - a tread or brake-pad reading against the bulletin.
+**The rules grow.** Week one adds a rule a day, a stolen list on Thursday, the Familia's napkins and, on Friday, somebody asking for "new numbers" who isn't who he says he is. From week two the bulletin is a binder with tabs (Inspection, Documents, Police, Ministry, Seasonal): odometers only go up, a dated bill of sale covers a name mismatch, door-jamb VINs, temporary permits, out-of-province cars need the full inspection, salvage brands need a structural certificate (and a brand that vanished between provinces gets reported), and on Halloween the masks come off.
+
+- **Inspect** (I, Y or right-click), then pick two things to compare them: a VIN against a VIN, a name against a name, a date against the calendar, the licence photo against the face, a plate against the stolen list, a reading or a paper against a rule in the binder, a service reading against the odometer.
+- **ASK** (A or X, or click the question). A red verdict puts a question under the customer's speech bubble. Most answers are lies. Some customers pull a paper out of a pocket (a bill of sale, a permit, the pink card from the glovebox, a body shop invoice, a structural certificate) that makes the discrepancy fine, if that paper checks out too. Small talk is always on the list; people from here know which Tim's they go to.
 - **Stamp the work order:** APPROVE (1), DENY (2), REPORT to the police (3), or BAY 3 (4) for off-the-books work.
-- **Mistakes:** each one is a $100 Ministry citation.
+- **Mistakes:** the first two a shift are Ministry warnings. After that each one is a $100 citation (police matters cost more and are never warnings). Twelve citations, or a third Ministry meeting, and the station loses its licence.
+- **Leo's notebook** (N or D-pad up): inspect what somebody said, then the notebook, and Leo writes it down. **The sticker log** (L or D-pad down) lists every sticker you've issued; in the last week, last fall's pages turn up, and they're worth reading closely.
+- **Scripted customers** come from `data/story_customers.json`: Dale Hatch the Wednesday after Thanksgiving, Darrell's trade-in a week later, the Familia's cars on Thursdays. A story step can bring its own (`"customers": [...]` on a counter step); stamps set story flags (`desk_<id>_<stamp>` plus the outcome's own), and so do notes (`desk_note_<id>`).
 - **Friday night:** rent, Gus's pay, Aries's hockey and the Familia's cut all come due.
 
-Drag the papers around with the mouse, or with the left stick and A on a controller. B cancels; Esc or Back returns to the menu.
+Drag the papers around with the mouse; with the arrow keys and Space; or with the left stick and A on a controller (D-pad left/right jumps the cursor to the next thing). B or Backspace cancels; Esc or Back returns to the menu.
 
 ## Controls (the lot)
 
@@ -150,6 +151,7 @@ On the controller the stick has a response curve (small movements, small correct
 ```sh
 godot --headless --path game -s tests/run_tests.gd
 godot --headless --path game -s tests/counter_tests.gd
+godot --headless --path game -s tests/desk_tests.gd
 godot --headless --path game -s tests/world_tests.gd
 godot --headless --path game -- --traffic-test
 ```
@@ -162,11 +164,14 @@ The map, sky and car tests check that:
 - rain, sun, snow and freezing rain change the road;
 - all four cars draw and drive sensibly.
 
-The counter tests (18 checks) prove that:
+The counter tests (`counter_tests.gd`, four weeks of rules) prove that:
 - every problem the game puts in the papers can be found again from the papers alone;
-- every problem can be proven with the inspect tool;
-- a clean customer never shows red;
-- the stamps pay and fine the way they should.
+- every problem type can be proven from the desk with the inspect tool, under its own ASK question;
+- a clean customer never shows red, and a covered one only shows the red its proof explains;
+- an exception holds only while its proof checks out (spoil the proof and the problem's back);
+- warnings, fines, the binder, the shift's arrivals and the scripted customers behave.
+
+The desk tests (`desk_tests.gd`) run the counter scene itself: the shift clock ends the day at six, a line builds and honks, whoever's left drives off, ASK hands over proofs and takes off masks, the notebook and the sticker log (and its gap) work, every desk action has a key and a pad button, and every prompt comes from `Hints`.
 
 The driving tests (16 checks) run headless on every push:
 - 0–100 km/h and top speed;
@@ -186,8 +191,10 @@ The driving tests (16 checks) run headless on every push:
 | `ui/hud.gd` | The dashboard |
 | `render/engine_audio.gd` | The engine and tire sounds, made live from the sim |
 | `data/cars/silvio.json` | The car itself: weight, torque curve, gears, brakes, tires |
-| `counter/rules.gd` | The counter's rules: customers, papers, problems, the bulletin, stamps and pay. No drawing |
-| `counter/counter_scene.gd` | The counter: desk, documents, inspect, stamps, the day and the week |
+| `counter/rules.gd` | The counter's rules: customers, papers, problems, comparisons, ASK answers and proofs, the binder, the shift's arrivals, stamps, warnings and pay. No drawing |
+| `counter/counter_scene.gd` | The counter: the shift clock, the line in the lot, desk, documents, inspect, ASK, stamps, the binder, the books, the day and the week |
+| `counter/desk_book.gd` | Leo's notebook, the sticker log and the Ministry's tally; rides along in the story save |
+| `data/story_customers.json` | Scripted customers (Dale Hatch, Darrell, the Familia's cars) and the days they come in |
 | `counter/face.gd` | Faces drawn pixel by pixel from a seed, for customers and licence photos |
 | `title.gd`, `drive.gd` | The title screen and the free-drive scene |
 | `world/map_data.gd` | The map as data: roads, river, rail, zones, buildings, lights, landmarks, GPS routing |
