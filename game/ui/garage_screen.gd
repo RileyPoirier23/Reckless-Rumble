@@ -352,7 +352,7 @@ func _preview_box() -> void:
 		var d: Dictionary = _car().damage
 		if float(d.get("front", 0.0)) > 0.3: dmg.front = float(d.front) * 0.6
 		if float(d.get("rear", 0.0)) > 0.3: dmg.rear = float(d.rear) * 0.6
-		preview = ImageTexture.create_from_image(PixCars.image(len, PixCars.body_of(spec), Color(paint), looks, dmg))
+		preview = ImageTexture.create_from_image(PixCars.showroom(spec, len, Color(paint), looks, dmg))
 	var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
 	draw_texture(preview, pos)
 	var name := "%s %s '%s" % [String(spec.make).to_upper(), String(spec.model).to_upper(), str(int(spec.get("year", 0)) % 100).pad_zeros(2)]

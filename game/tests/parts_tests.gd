@@ -43,5 +43,22 @@ func _init() -> void:
 	save.garage[0].parts = { "aero": "aero_gt", "brakes": "brk_brenbo", "suspension": "susp_coilover" }
 	var lk := SaveGame.car_looks(save.garage[0])
 	check("parts show on the car (wing, calipers, drop)", lk.get("spoiler", "") == "gt" and lk.has("caliper") and float(lk.get("drop", 0.0)) > 0.5, str(lk))
+	# side-view art: authored showroom sprites take over from the painter for stock cars
+	var silvio := SaveGame.load_spec("silvio")
+	check("art ids follow the sprite naming", PixCars.art_id(silvio) == "nissun_silvio_1991", PixCars.art_id(silvio))
+	var dir := OS.get_user_data_dir().path_join("showroom_test")
+	DirAccess.make_dir_recursive_absolute(dir.path_join("masks"))
+	var pair: Array = load("res://tools/export_showroom.gd").render(silvio)
+	var spr: Image = pair[0]
+	var msk: Image = pair[1]
+	check("exported showroom is 256x96 with the car on y=78", spr.get_size() == Vector2i(256, 96) and spr.get_used_rect().end.y >= 76 and spr.get_used_rect().end.y <= 82, str(spr.get_used_rect()))
+	spr.save_png(dir.path_join("nissun_silvio_1991.png"))
+	msk.save_png(dir.path_join("masks/nissun_silvio_1991_paint.png"))
+	PixCars.showroom_dir = dir + "/"
+	var red := PixCars.showroom(silvio, 200, Color("a8232d"), { "year": 1991 })
+	var blue := PixCars.showroom(silvio, 200, Color("1e4a8a"), { "year": 1991 })
+	check("stock cars use the authored sprite, repainted by its mask", red.get_width() == 256 and red.get_data() != blue.get_data())
+	check("modded cars go back to the painter", PixCars.showroom(silvio, 200, Color.RED, { "spoiler": "gt" }).get_width() == 244)
+	PixCars.showroom_dir = "res://art/vehicles/showroom/"
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
