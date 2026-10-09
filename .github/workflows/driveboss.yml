@@ -1,0 +1,60 @@
+name: DriveBoss build
+
+# Runs the driving-sim tests, then exports Windows, Linux and macOS builds of the prototype
+# (Actions tab -> the run -> Artifacts).
+on:
+  workflow_dispatch:
+  push:
+    paths: ['game/**', '.github/workflows/driveboss.yml']
+
+concurrency:
+  group: driveboss-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: '4.5'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Godot and export templates
+        run: |
+          mkdir -p "$HOME/godot" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          cd "$HOME/godot"
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip && mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          curl -sSL -o tpl.tpz "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q -j tpl.tpz 'templates/version.txt' 'templates/linux_release.x86_64' 'templates/windows_release_x86_64.exe' 'templates/macos.zip' -d "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          rm tpl.tpz
+          echo "GODOT=$HOME/godot/godot" >> "$GITHUB_ENV"
+      - name: Import
+        working-directory: game
+        run: timeout 300 "$GODOT" --headless --path . --import || true
+      - name: Driving sim tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/run_tests.gd | tee test.log
+          grep -q "^0 failed" test.log
+      - name: Export
+        working-directory: game
+        run: |
+          mkdir -p build/windows build/linux build/macos
+          "$GODOT" --headless --path . --export-release "Windows" build/windows/DriveBoss.exe
+          "$GODOT" --headless --path . --export-release "Linux" build/linux/driveboss.x86_64
+          "$GODOT" --headless --path . --export-release "macOS" build/macos/DriveBoss.zip
+          ls -la build/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: driveboss-windows
+          path: game/build/windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: driveboss-linux
+          path: game/build/linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: driveboss-macos
+          path: game/build/macos
