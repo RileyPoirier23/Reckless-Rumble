@@ -380,7 +380,7 @@ func _doc_fields(d: Dictionary) -> Array:
 		out.append({ "r": Rect2(d.pos + Vector2(x0, 12 + i * 9), Vector2(DOC_W - x0 - 4, 8)), "key": rows[i][2], "val": rows[i][3],
 			"label": "%s ON THE %s" % [rows[i][0], TITLES[d.id].split(" - ")[0]], "doc": d.id })
 	if d.id == "licence":
-		out.append({ "r": Rect2(d.pos + Vector2(4, 13), Vector2(32, 40)), "key": "photo", "val": c.licence.face, "label": "THE LICENCE PHOTO", "doc": d.id })
+		out.append({ "r": Rect2(d.pos + Vector2(4, 13), Vector2(32, 32)), "key": "photo", "val": c.licence.face, "label": "THE LICENCE PHOTO", "doc": d.id })
 	return out
 
 func _draw_doc(d: Dictionary) -> void:
@@ -404,8 +404,8 @@ func _draw_doc(d: Dictionary) -> void:
 		PixelFont.draw(self, p, rows[i][0], PAPER_DIM)
 		PixelFont.draw(self, p + Vector2(32, 0), str(rows[i][1]), PAPER_INK)
 	if d.id == "licence":
-		draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 42)), paper.darkened(0.3))
-		draw_texture(Face.texture(c.licence.face), r.position + Vector2(4, 13))
+		draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 34)), paper.darkened(0.3))
+		draw_texture(_face_tex(c.licence.face, true), r.position + Vector2(4, 13))
 	if d.id == "work":
 		var box := Rect2(r.position + Vector2(size.x - 70, size.y - 17), Vector2(66, 14))
 		draw_rect(box, paper.darkened(0.12))
@@ -417,8 +417,17 @@ func _draw_doc(d: Dictionary) -> void:
 
 # ------------------------------------------------------------------ drawing
 
+const _WOMEN := ["DANIELLE", "KAYLA", "NATALIE", "CHANTAL", "MELANIE", "AMBER", "KRISTA", "SYLVIE", "JESSICA", "MONIQUE", "ASHLEY", "BRITTANY", "NICOLE", "TAMMY"]
+
+## The customer's face (or the licence photo): a CAGE BOSS-style portrait that matches the
+## name's gender and the age on the date of birth.
+func _face_tex(seed: int, small := false) -> ImageTexture:
+	var fem := 1 if str(c.person.first) in _WOMEN else 0
+	var age := CounterRules.YEAR - int(c.person.dob[0])
+	return Face.small_texture(seed, fem, age) if small else Face.texture(seed, fem, age)
+
 func _face_rect() -> Rect2:
-	return Rect2(27, 22, 96, 120)
+	return Rect2(11, 10, 128, 128)   # the 64px portrait at 2x, above the counter top (y 142)
 
 func _plate_rect() -> Rect2:
 	return Rect2(WINDOW.position.x + 18, 84, 56, 20)
@@ -454,7 +463,7 @@ func _draw_booth() -> void:
 	draw_rect(Rect2(0, 0, 150, 150), Color("3a3a44"))
 	for i in 7: draw_rect(Rect2(0, i * 22, 150, 1), Color("34343c"))
 	if phase in ["counter", "stamping", "result"]:
-		draw_texture_rect(Face.texture(c.face_shown), _face_rect(), false)
+		draw_texture_rect(_face_tex(c.face_shown), _face_rect(), false)
 		# the counter top and the glass
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
 		draw_rect(Rect2(8, 8, 134, 134), Color(0.7, 0.85, 1.0, 0.06))
