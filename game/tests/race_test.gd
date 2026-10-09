@@ -7,6 +7,7 @@ extends Node
 
 var main: Node
 var fails := 0
+var done := 0                  # sections that ran to the end (a script error mid-way stops one short)
 var _t0 := 0.0
 
 func check(name: String, ok: bool, detail := "") -> void:
@@ -30,6 +31,9 @@ func _ready() -> void:
 	await _police_ticket()
 	await _police_lose()
 	await _police_impound()
+	await _wildlife()
+	var want := 6 if not OS.get_cmdline_user_args().has("--police-only") else 4
+	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
 	get_tree().quit()
@@ -106,6 +110,7 @@ func _race_ai() -> void:
 	await _wait(8.0)
 	check("street race: the night ends and the field goes home", not main.jobs.active() and main.jobs.race == null)
 	check("street race: it goes in the save", int(main.save.get("street", {}).get("races", 0)) >= 1)
+	done += 1
 
 ## The Main Street Mile, where you hit every checkpoint first.
 func _race_win() -> void:
@@ -132,6 +137,7 @@ func _race_win() -> void:
 	var purse := StreetRace.purse(150, 4)
 	check("street race: the winner gets the pot less Marco's tenth", int(main.save.cash) == cash0 + purse, "$%d -> $%d (+%d)" % [cash0, int(main.save.cash), purse])
 	main.police.clear()
+	done += 1
 
 func _cruiser_behind(dist: float) -> AiCar:
 	var map: MapData = main.world.map
@@ -170,6 +176,7 @@ func _police_ticket() -> void:
 	await _wait(3.5)
 	main.hold_car = false
 	p.clear()
+	done += 1
 
 ## A chase you get out of: far enough away, long enough, they lose you.
 func _police_lose() -> void:
@@ -188,6 +195,7 @@ func _police_lose() -> void:
 	check("police: get far enough away and they lose you", not p.chasing(), "%.1f s" % t)
 	check("police: losing them keeps the heat", p.heat() > 20.0, "%.0f" % p.heat())
 	p.clear()
+	done += 1
 
 ## When the heat's up, the car goes to the impound lot.
 func _police_impound() -> void:
@@ -207,3 +215,66 @@ func _police_impound() -> void:
 	check("police: the heat drops after", p.heat() <= 10.0, "%.0f" % p.heat())
 	main.hold_car = false
 	p.clear()
+	done += 1
+
+## A moose in the road at highway speed is the end of you; a deer at town speed is a bent bumper;
+## the horn moves a deer along.
+func _wildlife() -> void:
+	var w: Wildlife = main.wildlife
+	w.enabled = true
+	main.sky.time_h = 19.0
+	var map: MapData = main.world.map
+	var rd: Dictionary = map.nearest_road(Vector2(4490, 1369), 30.0)       # Lutes Mountain Rd, out in the country
+	check("the wildlife test has a country road", not rd.is_empty())
+	if rd.is_empty(): return
+	var dir: Vector2 = rd.dir
+	var died: Array = []
+	var catch_it := func(info: Dictionary): died.append(info)
+	var c: PlayerCar = main.car
+	c.fatal.disconnect(main._on_fatal)
+	c.fatal.connect(catch_it)
+	c.can_die = true
+	# the moose
+	main._teleport(rd.point - dir * 70.0, dir.angle())
+	await _wait(0.3)
+	var moose := w.spawn_at("moose", rd.point, dir.angle() + PI / 2.0)
+	moose.state = "stand"
+	c.sim.vx = 22.5
+	var t := 0.0
+	while t < 6.0 and died.is_empty():
+		c.sim.vx = maxf(c.sim.vx, 22.0)
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+	check("a moose in the road at 80 is the end of you", not died.is_empty() and String(died[0].cause) == "moose", str(died[0].cause) if not died.is_empty() else "drove on")
+	c.dead = false
+	for k in c.damage: c.damage[k] = 0.0
+	w.clear()
+	# the deer
+	died.clear()
+	main._teleport(rd.point - dir * 40.0, dir.angle())
+	await _wait(0.3)
+	var deer := w.spawn_at("deer", rd.point, dir.angle() + PI / 2.0)
+	deer.state = "stand"
+	t = 0.0
+	while t < 5.0 and deer.state == "stand":
+		c.sim.vx = maxf(c.sim.vx, 14.0)
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+	await _wait(0.3)
+	check("a deer at 50 bends the car, not you", died.is_empty() and float(c.damage.front) > 0.0 and deer.state == "hurt", "damage %.2f, deer %s" % [float(c.damage.front), deer.state])
+	w.clear()
+	# the horn
+	main._teleport(rd.point - dir * 60.0, dir.angle())
+	main.hold_car = true
+	await _wait(0.3)
+	var shy := w.spawn_at("deer", rd.point + Vector2(-dir.y, dir.x) * 9.0, dir.angle() - PI / 2.0)
+	Input.action_press("horn")
+	await _wait(0.6)
+	Input.action_release("horn")
+	check("the horn sends a deer back into the trees", shy.state in ["flee", "gone"], shy.state)
+	main.hold_car = false
+	w.clear()
+	c.fatal.disconnect(catch_it)
+	c.fatal.connect(main._on_fatal)
+	w.enabled = false
+	done += 1

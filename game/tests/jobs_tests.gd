@@ -119,6 +119,14 @@ func _init() -> void:
 		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
+	# moose and deer
+	check("no moose downtown", Wildlife.odds(19.0, "fall", "street", "downtown") == 0.0 and Wildlife.odds(19.0, "fall", "arterial", "") == 0.0)
+	check("dusk on a country road is when they're out", Wildlife.odds(19.0, "summer", "rural", "rural") > Wildlife.odds(13.0, "summer", "rural", "rural") * 5.0)
+	check("the fall rut brings more out", Wildlife.odds(19.0, "fall", "highway", "") > Wildlife.odds(19.0, "summer", "highway", ""))
+	var moose_n := 0
+	for i in 1000:
+		if Wildlife.pick_kind("fall", float(i) / 1000.0) == "moose": moose_n += 1
+	check("deer are commoner than moose, even in the fall", moose_n > 200 and moose_n < 500, "%d in 1000" % moose_n)
 	# police
 	check("speed limits round like the signs", Police.limit_kmh("street") == 50.0 and Police.limit_kmh("arterial") == 60.0 and Police.limit_kmh("highway") == 100.0 and Police.limit_kmh("rural") == 80.0)
 	check("a little over is a small ticket", Police.fine(25.0, ["speeding"]) == 180, "%d" % Police.fine(25.0, ["speeding"]))

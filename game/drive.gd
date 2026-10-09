@@ -46,6 +46,7 @@ var job_board: JobBoard
 var market: MarketRunner
 var police: Police
 var fuel: FuelStop
+var wildlife: Wildlife
 var hold_car := false          # a scene (or a test) has the car stopped
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
@@ -170,9 +171,14 @@ void fragment() {
 	fuel = FuelStop.new()
 	add_child(fuel)
 	fuel.setup(self)
+	wildlife = Wildlife.new()
+	add_child(wildlife)
+	wildlife.setup(self)
 	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
 	for arg in OS.get_cmdline_user_args():
-		if arg.ends_with("-test") or arg.ends_with("-demo"): police.enabled = false
+		if arg.ends_with("-test") or arg.ends_with("-demo"):
+			police.enabled = false
+			wildlife.enabled = false
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
 	else:
@@ -207,6 +213,10 @@ void fragment() {
 		var md: Node = load("res://tests/market_demo.gd").new()
 		md.main = self
 		add_child(md)
+	elif OS.get_cmdline_user_args().has("--wild-demo"):
+		var wd2: Node = load("res://tests/wild_demo.gd").new()
+		wd2.main = self
+		add_child(wd2)
 	elif OS.get_cmdline_user_args().has("--fuel-demo"):
 		var fd: Node = load("res://tests/fuel_demo.gd").new()
 		fd.main = self
@@ -365,6 +375,7 @@ func _after_death() -> void:
 		jobs.finish(false)
 		hud.post("THE JOB'S OFF. NOBODY TIPS A WRECK.", 4.0)
 	police.clear()
+	wildlife.clear()
 	car.dead = false
 	car.respawn()
 	_teleport(car.start_pos, car.start_heading)
@@ -667,6 +678,7 @@ func _teleport(at: Vector2, heading: float) -> void:
 	cam_rot = heading + PI / 2.0
 	car.position = at * PX
 	cam.global_position = car.global_position
+	cam.reset_smoothing()
 	world.warm(at, Vector2(40, 25))
 
 func _inputs() -> void:

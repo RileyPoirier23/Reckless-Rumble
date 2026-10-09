@@ -17,7 +17,7 @@ const ASH := Color("8a8478")
 const RED := Color("e0402e")
 
 const WHAT := { "tree": "A TREE", "building": "A BUILDING", "rail": "THE GUARDRAIL", "water": "THE PETITCODIAC",
-	"edge": "THE EDGE OF THE MAP", "traffic": "ANOTHER CAR" }
+	"edge": "THE EDGE OF THE MAP", "traffic": "ANOTHER CAR", "moose": "A MOOSE", "deer": "A DEER" }
 
 var info: Dictionary
 var caption := ""

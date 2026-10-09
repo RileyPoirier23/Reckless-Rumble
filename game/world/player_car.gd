@@ -174,12 +174,13 @@ func _inputs(dt: float) -> Array:
 	return [th, br, st, hb]
 
 func _lights(dt: float, st: float) -> void:
-	# high beams: tap to switch, hold to flash
-	if Input.is_action_just_pressed("high_beams"): _hb_down = 0.0
-	if Input.is_action_pressed("high_beams"): _hb_down += dt
-	if Input.is_action_just_released("high_beams"):
+	# high beams: tap to switch, hold to flash (hands off while a menu's up; the lamps still work)
+	var hands := not locked
+	if hands and Input.is_action_just_pressed("high_beams"): _hb_down = 0.0
+	if hands and Input.is_action_pressed("high_beams"): _hb_down += dt
+	if hands and Input.is_action_just_released("high_beams"):
 		if _hb_down < 0.35: high_beams = not high_beams
-	var flashing := Input.is_action_pressed("high_beams") and _hb_down >= 0.35
+	var flashing := hands and Input.is_action_pressed("high_beams") and _hb_down >= 0.35
 	var want := 1.0 if (high_beams or flashing) else 0.0
 	beam = move_toward(beam, want, dt * 5.0)
 	var on := lights_on or flashing
@@ -189,9 +190,9 @@ func _lights(dt: float, st: float) -> void:
 	head_light.offset = Vector2(lerpf(64.0, 120.0, beam), 0)
 	view.headlights = on
 	# blinkers: they cancel themselves when you straighten out after a turn
-	if Input.is_action_just_pressed("blink_left"): blink = 0 if blink == -1 else -1
-	if Input.is_action_just_pressed("blink_right"): blink = 0 if blink == 1 else 1
-	if Input.is_action_just_pressed("hazards"): hazards = not hazards
+	if hands and Input.is_action_just_pressed("blink_left"): blink = 0 if blink == -1 else -1
+	if hands and Input.is_action_just_pressed("blink_right"): blink = 0 if blink == 1 else 1
+	if hands and Input.is_action_just_pressed("hazards"): hazards = not hazards
 	if blink != 0:
 		if signf(st) == float(blink) and absf(st) > 0.5: _blink_steer = 1.0
 		elif _blink_steer > 0.0 and absf(st) < 0.15:
@@ -209,7 +210,7 @@ func _physics_process(dt: float) -> void:
 	var br: float = ins[1]
 	var st: float = ins[2]
 	var hb: float = ins[3]
-	if not locked: _lights(dt, Controls.steer_axis())
+	_lights(dt, Controls.steer_axis() if not locked else 0.0)
 	throttle_in = th
 	_hb_t = 0.0 if hb > 0.5 else _hb_t + dt
 	sim.surface = city.surface_at(sim.pos)
@@ -229,7 +230,7 @@ func _physics_process(dt: float) -> void:
 		last_hit = other
 		hit_frame = Engine.get_physics_frames()
 		var vn := -vw.dot(n)
-		var is_car := other is TrafficCar or other is PlayerCar
+		var is_car := other is TrafficCar or other is PlayerCar or other is Wildlife.Animal
 		if is_car: vn = -(vw - other.velocity_vec()).dot(n)
 		if vn > 0.0:
 			var hit_dir := -n
@@ -242,7 +243,9 @@ func _physics_process(dt: float) -> void:
 			if is_car:
 				# two cars: share the hit by mass (traffic's is a guess: about 1,500 kg)
 				var m1 := float(spec.mass)
-				var m2 := float(other.spec.mass) if other is PlayerCar else 1500.0
+				var m2 := 1500.0
+				if other is PlayerCar: m2 = float(other.spec.mass)
+				elif other is Wildlife.Animal: m2 = (other as Wildlife.Animal).mass
 				other.hit(-n * vn * (m1 / (m1 + m2)) * 1.6, col.get_position() / PX)
 				vw += n * vn * (m2 / (m1 + m2)) * 1.3
 			else:
@@ -262,7 +265,7 @@ var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var _scrape_t := 0.0
 
 ## Some hits you don't walk away from. What it was decides the death screen.
-const FATAL_KMH := { "tree": 70.0, "building": 76.0, "rail": 88.0, "traffic": 84.0, "edge": 76.0 }
+const FATAL_KMH := { "tree": 70.0, "building": 76.0, "rail": 88.0, "traffic": 84.0, "edge": 76.0, "moose": 55.0, "deer": 150.0 }
 
 func _check_fatal(col: KinematicCollision2D, other: Object, vn: float, d: float, speed: float) -> void:
 	if not can_die or dead or sim.assist == CarSim.Assist.ARCADE: return
@@ -274,6 +277,9 @@ func _check_fatal(col: KinematicCollision2D, other: Object, vn: float, d: float,
 		var rel := cos(angle_difference(sim.heading, oh))
 		if d > 0.6: sub = "headon" if rel < -0.5 else ("rear" if rel > 0.5 else "tbone")
 		else: sub = "tbone"
+	elif other is Wildlife.Animal:
+		cause = (other as Wildlife.Animal).kind
+		vn = maxf(vn, speed * 0.9)          # it doesn't bounce off a moose; it comes through the glass
 	elif other is BuildingNode: cause = "building"
 	else:
 		var owner_node = col.get_collider_shape()
