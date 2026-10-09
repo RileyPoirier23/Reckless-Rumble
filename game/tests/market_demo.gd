@@ -58,4 +58,31 @@ func _run() -> void:
 	p.sel = 3
 	await _wait(0.4)
 	await _shot("4_meetup")
+	main.market.cancel()
+	# selling: your garage, an ad, and two days of answers
+	main.save.erase("selling")
+	for e in main.save.garage: (e as Dictionary).erase("for_sale")
+	main.save.current = 0
+	main.job_board.open(main.sky, main.save, "", Market.places(main.world.map))
+	main.job_board.app = 1
+	m.tab = 1
+	m.screen = "garage"
+	m.gsel = 1
+	await _wait(0.4)
+	await _shot("5_sell_garage")
+	m.amount = maxi(100, int(round(Market.your_value(main.save.garage[1]) * 1.1 / 100.0)) * 100)
+	m.screen = "price"
+	await _wait(0.4)
+	await _shot("6_sell_price")
+	var ad := Market.list_car(main.save, 1, m.amount, m.now_h)
+	Market.roll_offers(ad, m.now_h + 40.0)
+	m.screen = "offers"
+	m.osel = 0
+	await _wait(0.4)
+	await _shot("7_sell_offers")
+	m.screen = "garage"
+	await _wait(0.4)
+	await _shot("8_sell_listed")
+	main.save.erase("selling")
+	for e in main.save.garage: (e as Dictionary).erase("for_sale")
 	get_tree().quit()

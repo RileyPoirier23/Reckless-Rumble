@@ -162,6 +162,7 @@ void fragment() {
 	add_child(market)
 	market.setup(self)
 	job_board.meet.connect(market.start)
+	job_board.sold.connect(_on_car_sold)
 	police = Police.new()
 	add_child(police)
 	police.setup(self)
@@ -458,6 +459,12 @@ func _on_garage_repair(i: int) -> void:
 func _exit_tree() -> void:
 	if StoryState.active: return
 	_store_car()
+	SaveGame.write(save)
+
+## A car went out of the garage on MarketThing: everything after it moved up a slot.
+func _on_car_sold(index: int, text: String) -> void:
+	if car_i > index: car_i -= 1
+	hud.post(text, 6.0)
 	SaveGame.write(save)
 
 func _on_job_picked(k: String) -> void:

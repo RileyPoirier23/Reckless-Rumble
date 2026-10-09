@@ -80,5 +80,68 @@ func _init() -> void:
 	sim.set_wear(entry.wear)
 	check("bought cars bring their faults home", sim.clutch_cond < 0.3 and sim.head_gasket and not spec.is_empty(), "clutch %.2f" % sim.clutch_cond)
 	check("selling gets a fair-ish offer", Market.sell_offer(entry, rng) > 0)
+	# selling your own
+	var save := SaveGame.default_data()
+	save.cash = 1000
+	save.current = 0
+	var worth := Market.your_value(save.garage[1])
+	check("your car has a value", worth > 200, "$%d" % worth)
+	var parted: Dictionary = (save.garage[1] as Dictionary).duplicate(true)
+	parted.parts = { "intake": "intake_kandm" }
+	check("parts you put on add a little", Market.your_value(parted) > worth)
+	var bent: Dictionary = (save.garage[1] as Dictionary).duplicate(true)
+	bent.damage = { "front": 1.0, "rear": 0.5, "left": 0.0, "right": 0.0 }
+	check("a bent car is worth less", Market.your_value(bent) < worth)
+	check("you can't sell the car you're in", Market.cant_sell(save, 0) != "")
+	var tow_i := -1
+	for i in (save.garage as Array).size():
+		if String(save.garage[i].id) == "tow": tow_i = i
+	check("you can't sell Toby's wrecker", tow_i < 0 or Market.cant_sell(save, tow_i) != "")
+	check("you can sell another of yours", Market.cant_sell(save, 1) == "")
+	check("nobody bites at 4 a.m. like they do at 6 p.m.", Market.bite_odds(1000, 1000, 4.0) < Market.bite_odds(1000, 1000, 18.0) * 0.5)
+	check("a dreamer's price gets fewer bites", Market.bite_odds(3000, 1000, 18.0) < Market.bite_odds(1000, 1000, 18.0) * 0.3)
+	var ad := Market.list_car(save, 1, worth, 3.0 * 24.0 + 17.0)
+	check("listing it marks the car", Market.ad_for(save, 1) == ad and Market.garage_index(save, int(ad.uid)) == 1)
+	var got := Market.roll_offers(ad, 5.0 * 24.0 + 17.0)
+	var again := Market.roll_offers(ad, 5.0 * 24.0 + 17.0)
+	var offers := got.filter(func(o): return o.kind == "offer")
+	var scams := got.filter(func(o): return o.kind == "scam")
+	check("two days at a fair price brings answers", got.size() >= 3, "%d" % got.size())
+	check("looking again doesn't make up more", again.is_empty())
+	var over := false
+	for o in offers: over = over or int(o.amount) > int(ad.ask)
+	check("real buyers never offer over asking", not over)
+	var dupe := Market.list_car(SaveGame.default_data(), 1, worth, 0.0)
+	var many: Array = []
+	dupe.uid = 99
+	for k in 30:
+		dupe.last_h = float(k * 200)
+		many.append_array(Market.roll_offers(dupe, float(k * 200 + 199)))
+	var caps := many.filter(func(o): return o.kind == "scam")
+	var caps_ok := not caps.is_empty()
+	for o in caps: caps_ok = caps_ok and int(o.amount) > int(dupe.ask) and String(o.text).to_lower().contains("cheque")
+	check("the captain always pays over asking, by cheque", caps_ok, "%d scams" % caps.size())
+	var kinds := {}
+	for o in many: kinds[String(o.buyer)] = true
+	check("all sorts answer an ad", kinds.size() >= 6, str(kinds.keys()))
+	var n0 := (save.garage as Array).size()
+	if not offers.is_empty():
+		var res := Market.accept(save, ad, offers[0])
+		check("taking an offer sells the car and pays", (save.garage as Array).size() == n0 - 1 and int(save.cash) == 1000 + int(offers[0].amount) and int(res.index) == 1, str(res))
+		check("the ad comes down with it", Market.ads(save).is_empty())
+	else:
+		check("taking an offer sells the car and pays", false, "no offers rolled")
+	var s2 := SaveGame.default_data()
+	s2.cash = 500
+	s2.current = 2
+	var ad2 := Market.list_car(s2, 1, 3000, 0.0)
+	var r2 := Market.accept(s2, ad2, { "buyer": "scammer", "kind": "scam", "amount": 4000, "text": "" })
+	check("the cheque bounces: car gone, no money", (s2.garage as Array).size() == 3 and int(s2.cash) == 500 and String(r2.text).contains("BOUNCES"))
+	check("selling a car ahead of yours keeps you in yours", int(s2.current) == 1)
+	var ad3 := Market.list_car(s2, 0, 3000, 0.0)
+	var r3 := Market.accept(s2, ad3, { "buyer": "tirekicker", "kind": "msg", "amount": 0, "text": "" })
+	check("Gerald's questions aren't offers", int(r3.index) == -1 and (s2.garage as Array).size() == 3)
+	Market.unlist(s2, ad3)
+	check("taking the ad down", Market.ads(s2).is_empty() and not (s2.garage[0] as Dictionary).has("for_sale"))
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

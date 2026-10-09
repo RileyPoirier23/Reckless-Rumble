@@ -78,6 +78,12 @@ Hit a traffic car and the impact is shared by mass. It slides and spins, then pu
 
 Pull up to Covington Auto's bay doors and stop: the garage opens. Pick which car to take out, or have Gus fix one up. Your cars, their paint and their damage are saved (`user://driveboss_save.json`).
 
+## MarketThing
+
+The used-car app on Leo's phone (GIGS, then the shoulder buttons):
+- **BUY:** a new batch of listings every morning off the catalogue. Sellers lie (or don't), you haggle in the chat, and then you meet them in a parking lot. Touch the hood, pull the dipstick, put the creeper light under it and take it for a test drive before you hand over cash. Every hidden fault shows up in at least one check.
+- **SELL:** put one of your own cars up at a price you pick. Gus tells you what it's worth (age, kilometres, what's worn out, dents, plus a bit for the parts you put on). Answers come in by the hour: Brandon lowballs, the dealer offers fast and low, Nathalie is fair, Trevor needs his dad to see it, Gerald only asks questions, and Jay-P wants to trade a sled. A fair price gets bites; a dreamer's price gets Gerald, and nobody writes at four in the morning. Take an offer and the buyer picks the car up at Gus's. If someone offers over asking by certified cheque, the car leaves and the cheque bounces. You can't sell the car you're driving, your last car, or Toby's wrecker.
+
 ## Cars, dashes and GPS
 
 Each car has its own instrument cluster and its own GPS, with day and night looks:

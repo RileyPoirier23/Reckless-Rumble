@@ -7,6 +7,7 @@ extends Control
 signal picked(kind: String)
 signal quit_job
 signal meet(listing: Dictionary)
+signal sold(index: int, text: String)
 
 const INK := Color("0b090d")
 const BONE := Color("f3ead2")
@@ -25,6 +26,7 @@ var market := MarketApp.new()
 
 func _ready() -> void:
 	market.meet.connect(func(l: Dictionary): meet.emit(l))
+	market.sold.connect(func(i: int, t: String): sold.emit(i, t))
 
 func open(the_sky: WorldSky, the_save: Dictionary, job: String, places: Array) -> void:
 	sky = the_sky
@@ -32,7 +34,7 @@ func open(the_sky: WorldSky, the_save: Dictionary, job: String, places: Array) -
 	current = job
 	visible = true
 	sel = maxi(0, Jobs.ORDER.find(job))
-	market.setup(save, places, sky.day)
+	market.setup(save, places, sky.day, sky.time_h)
 
 func _process(_dt: float) -> void:
 	if not visible: return

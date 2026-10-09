@@ -366,7 +366,8 @@ class PoliceHud extends Control:
 		if police == null or police.drive == null or StoryState.active: return
 		var h := police.heat()
 		if h < 1.0 and not police.chasing(): return
-		var r := Rect2(470, 222, 166, 22)        # just over the GPS
+		var r := Rect2(470, 222, 166, 22 if police.chasing() else 12)        # just over the GPS
+		if not police.chasing(): r.position.y += 10
 		draw_rect(r, Color(0, 0, 0, 0.55))
 		PixelFont.draw(self, r.position + Vector2(6, 4), "HEAT", Color("f3ead2"))
 		for i in 5:

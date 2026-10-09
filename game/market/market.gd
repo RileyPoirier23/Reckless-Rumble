@@ -213,3 +213,150 @@ static func sell_offer(entry: Dictionary, rng: RandomNumberGenerator) -> int:
 	if float(w.get("turbo", 1.0)) < 0.3: faults.append("dead_turbo")
 	var v := value(float(e.get("price", 5000.0)), int(entry.get("odo_km", 150000.0)), faults)
 	return int(round(v * rng.randf_range(0.8, 1.0) / 50.0)) * 50
+
+# ------------------------------------------------------------------ selling your own car
+
+## Who answers your ad: what share of the car's worth they offer, what they say, and how often
+## they turn up. Tire-kickers and traders only ever talk. The "captain" pays over asking by
+## certified cheque, which is how you know.
+const BUYERS := {
+	"lowballer": { "name": "BRANDON (NO PIC)", "w": 2.0, "share": [0.45, 0.62],
+		"lines": ["is this still available? %s cash today", "%s. thats fair for what it is", "%s cash rn no questions"] },
+	"dealer": { "name": "ST-ANSELME AUTO SALES", "w": 1.0, "share": [0.72, 0.82],
+		"lines": ["We can do %s today, as is. Our truck picks it up.", "%s cash. We handle the paperwork."] },
+	"fair": { "name": "NATHALIE G.", "w": 1.0, "share": [0.86, 1.0],
+		"lines": ["Hi! Would you take %s? I can come tonight.", "%s if it starts when I get there?"] },
+	"kid": { "name": "TREVOR (17)", "w": 0.8, "share": [0.92, 1.06],
+		"lines": ["yo is it fast. %s and my dad has to see it", "%s?? its gonna be my first car"] },
+	"tirekicker": { "name": "GERALD", "w": 1.4,
+		"msg": ["What's the lowest you'll go?", "Does it have a tape deck?", "Would you deliver to Bouctouche?", "Is the price negotiable? Not buying, just asking.", "Any rust? Be honest."] },
+	"trader": { "name": "JAY-P", "w": 0.7, "msg": ["trade for a sled?", "would u take a jet ski and $300", "four wheeler straight up?"] },
+	"scammer": { "name": "CAPT. R. WILLIAMS", "w": 0.6, "scam": true,
+		"lines": ["I will pay %s by certified cheque. My shipper collects. You send back the difference.", "%s. I am overseas. Cheque arrives tomorrow, please release the car tonight."] },
+}
+const BUYER_ODDS := ["lowballer", "dealer", "fair", "kid", "tirekicker", "trader", "scammer"]
+
+## What your car is worth: the catalogue price for its age and mileage, less what's wrong with
+## it (going by its wear), plus a little for the parts you put on it.
+static func your_value(entry: Dictionary) -> int:
+	var e := CarCatalog.entry(String(entry.id))
+	var faults: Array = []
+	var w: Dictionary = entry.get("wear", {})
+	if bool(w.get("gasket", false)): faults.append("head_gasket")
+	if float(w.get("clutch", 1.0)) < 0.5: faults.append("worn_clutch")
+	if float(w.get("turbo", 1.0)) < 0.3: faults.append("dead_turbo")
+	var dmg := 0.0
+	for k in (entry.get("damage", {}) as Dictionary): dmg += float(entry.damage[k])
+	var v := value(float(e.get("price", 5000.0)), int(entry.get("odo_km", 150000.0)), faults) * clampf(1.0 - dmg * 0.15, 0.4, 1.0)
+	for slot in (entry.get("parts", {}) as Dictionary): v += Parts.price(String(entry.parts[slot])) * 0.4
+	return int(round(v / 50.0)) * 50
+
+## Why you can't sell this one ("" when you can).
+static func cant_sell(save: Dictionary, i: int) -> String:
+	var g: Array = save.garage
+	var entry: Dictionary = g[i]
+	if String(entry.id) == "tow": return "IT'S TOBY'S WRECKER. HE'D NOTICE."
+	if i == int(save.get("current", 0)): return "YOU'RE SITTING IN IT. TAKE SOMETHING ELSE OUT FIRST."
+	if g.size() <= 1: return "IT'S YOUR ONLY CAR."
+	if not (entry.get("installing", []) as Array).is_empty(): return "GUS IS STILL WORKING ON IT."
+	return ""
+
+static func ads(save: Dictionary) -> Array:
+	if not save.has("selling"): save.selling = []
+	return save.selling
+
+## The ad for garage car i, or {} when it isn't listed.
+static func ad_for(save: Dictionary, i: int) -> Dictionary:
+	var uid := int((save.garage[i] as Dictionary).get("for_sale", -1))
+	for ad in ads(save):
+		if int(ad.uid) == uid: return ad
+	return {}
+
+static func garage_index(save: Dictionary, uid: int) -> int:
+	var g: Array = save.garage
+	for i in g.size():
+		if int((g[i] as Dictionary).get("for_sale", -1)) == uid: return i
+	return -1
+
+## Put car i up for sale at `ask`. `now_h` is the game clock in hours (day x 24 + time).
+static func list_car(save: Dictionary, i: int, ask: int, now_h: float) -> Dictionary:
+	var entry: Dictionary = save.garage[i]
+	var uid := int(save.get("ad_uid", 1000)) + 1
+	save.ad_uid = uid
+	entry.for_sale = uid
+	var e := CarCatalog.entry(String(entry.id))
+	var ad := { "uid": uid, "car": String(entry.id), "ask": ask, "value": your_value(entry), "since_h": now_h, "last_h": floorf(now_h),
+		"offers": [], "title": "%s %s - %s KM" % [String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper(), _km(int(entry.get("odo_km", 0.0)))] }
+	ads(save).append(ad)
+	return ad
+
+## How likely an answer is in any one hour: a fair price gets bites, a dreamer's price doesn't,
+## and nobody's on MarketThing at four in the morning.
+static func bite_odds(ask: int, worth: int, hour: float) -> float:
+	var p := 0.35 * clampf(1.7 - float(ask) / maxf(float(worth), 1.0), 0.06, 1.0)
+	var h := fmod(hour, 24.0)
+	if h < 7.0 or h >= 23.0: p *= 0.3
+	return p
+
+## The messages that came in since you last looked (each hour gets its own roll).
+static func roll_offers(ad: Dictionary, now_h: float) -> Array:
+	var out: Array = []
+	var from := int(ad.last_h) + 1
+	var to := int(floorf(now_h))
+	for hr in range(maxi(from, to - 72), to + 1):
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(ad.uid) * 100003 + hr
+		if rng.randf() >= bite_odds(int(ad.ask), int(ad.value), float(hr)): continue
+		var who := _pick_buyer(rng)
+		var b: Dictionary = BUYERS[who]
+		var o := { "buyer": who, "h": hr, "kind": "msg", "amount": 0, "text": "" }
+		if b.has("msg"):
+			o.text = String((b.msg as Array)[rng.randi() % (b.msg as Array).size()])
+		else:
+			var amt := 0
+			if b.has("scam"):
+				amt = int(ad.ask) + int(round(rng.randf_range(300.0, 1200.0) / 50.0)) * 50
+				o.kind = "scam"
+			else:
+				amt = mini(int(ad.ask), int(round(float(ad.value) * rng.randf_range(float(b.share[0]), float(b.share[1])) / 50.0)) * 50)
+				o.kind = "offer"
+			o.amount = amt
+			var line := String((b.lines as Array)[rng.randi() % (b.lines as Array).size()])
+			o.text = line % ("$%d" % amt) if amt < int(ad.ask) or b.has("scam") else "FULL ASKING. $%d. WHEN CAN I COME?" % amt
+		out.append(o)
+	ad.last_h = float(to)
+	(ad.offers as Array).append_array(out)
+	return out
+
+static func _pick_buyer(rng: RandomNumberGenerator) -> String:
+	var total := 0.0
+	for k in BUYER_ODDS: total += float(BUYERS[k].w)
+	var x := rng.randf() * total
+	for k in BUYER_ODDS:
+		x -= float(BUYERS[k].w)
+		if x <= 0.0: return k
+	return "lowballer"
+
+## Take an offer: the car leaves the garage (the buyer picks it up at Gus's) and the money comes
+## in, unless it was the captain's cheque. Returns { index, cash, text } (index: the garage slot
+## the car was in, so whoever's counting slots can shift theirs).
+static func accept(save: Dictionary, ad: Dictionary, o: Dictionary) -> Dictionary:
+	var i := garage_index(save, int(ad.uid))
+	if i < 0 or not String(o.kind) in ["offer", "scam"]: return { "index": -1, "cash": 0, "text": "THERE'S NOTHING TO ACCEPT. IT'S %s." % String(BUYERS[String(o.buyer)].name) }
+	var why := cant_sell(save, i)
+	if why != "": return { "index": -1, "cash": 0, "text": why }
+	(save.garage as Array).remove_at(i)
+	if i < int(save.get("current", 0)): save.current = int(save.current) - 1
+	ads(save).erase(ad)
+	var e := CarCatalog.entry(String(ad.car))
+	var name := "%s %s" % [String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
+	if String(o.kind) == "scam":
+		return { "index": i, "cash": 0, "text": "THE SHIPPER TAKES THE %s. THE CHEQUE BOUNCES. THE CAR IS IN QUEBEC NOW." % name }
+	save.cash = int(save.get("cash", 0)) + int(o.amount)
+	return { "index": i, "cash": int(o.amount), "text": "SOLD. %s TAKES THE %s FOR $%d. GUS: \"GOOD. MORE ROOM.\"" % [String(BUYERS[String(o.buyer)].name), name, int(o.amount)] }
+
+## Take the ad down.
+static func unlist(save: Dictionary, ad: Dictionary) -> void:
+	var i := garage_index(save, int(ad.uid))
+	if i >= 0: (save.garage[i] as Dictionary).erase("for_sale")
+	ads(save).erase(ad)
