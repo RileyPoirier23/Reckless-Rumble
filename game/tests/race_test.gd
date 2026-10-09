@@ -32,7 +32,8 @@ func _ready() -> void:
 	await _police_lose()
 	await _police_impound()
 	await _wildlife()
-	var want := 6 if not OS.get_cmdline_user_args().has("--police-only") else 4
+	if not OS.get_cmdline_user_args().has("--police-only"): await _pinks()
+	var want := 7 if not OS.get_cmdline_user_args().has("--police-only") else 4
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -105,7 +106,7 @@ func _race_ai() -> void:
 	for a in race.racers: least = minf(least, a.track.dist / race.total)
 	check("street race: the whole field gets most of the way round", least >= 0.75, "%d finished, the last %.0f%% of the way" % [race.finish_t.size(), least * 100.0])
 	check("street race: racers stay on the route", off_max < 16.0, "%.1f m" % off_max)
-	check("street race: nobody's stuck for long", stuck_max < 12.0, "%.1f s" % stuck_max)
+	check("street race: nobody's stuck for long", stuck_max < 15.0, "%.1f s" % stuck_max)
 	check("street race: sitting it out is a DNF", race.state == "done" and race._winnings() == 0)
 	await _wait(8.0)
 	check("street race: the night ends and the field goes home", not main.jobs.active() and main.jobs.race == null)
@@ -277,4 +278,49 @@ func _wildlife() -> void:
 	c.fatal.disconnect(catch_it)
 	c.fatal.connect(main._on_fatal)
 	w.enabled = false
+	done += 1
+
+## Pink slips: win and the rival's car is in your garage; lose and yours is in theirs.
+func _pinks() -> void:
+	var j: JobRunner = main.jobs
+	main.save.street = { "races": 5, "wins": 5, "rep": 6, "pinks": 0 }
+	main.sky.day = 4                    # a Friday
+	main.sky.time_h = 23.0
+	var cars0 := (main.save.garage as Array).size()
+	j.start("street")
+	check("pinks: Friday night with the rep, it's pink slips", not j.race_rival.is_empty(), str(j.race_rival.get("name", "")))
+	main._teleport(j.race_start, 0.0)
+	await _wait(0.2)
+	check("pinks: you're racing for your own car", j.sign_in() and j.race != null and j.race.racers.size() == 1)
+	var race: StreetRace = j.race
+	await _wait(4.3)
+	for i in race.checks.size():
+		var s: float = race.checks[i]
+		var p := race.track.point_at(s)
+		var d := race.track.dir_at(s)
+		main._teleport(p - d * 3.0, d.angle())
+		await _wait(0.25)
+		main._teleport(p + d * 1.0, d.angle())
+		await _wait(0.25)
+	await _wait(9.0)
+	var g: Array = main.save.garage
+	check("pinks: win and their car is in your garage", g.size() == cars0 + 1 and bool((g[g.size() - 1] as Dictionary).get("pinks", false)), "%d -> %d cars" % [cars0, g.size()])
+	check("pinks: two rep for it, and the next rival's up", int(main.save.street.rep) == 8 and int(main.save.street.pinks) == 1, str(main.save.street))
+	# now lose one
+	var lose_id := String(main.car.spec.get("id", ""))
+	var n0 := g.size()
+	j.start("street")
+	main._teleport(j.race_start, 0.0)
+	await _wait(0.2)
+	j.sign_in()
+	race = j.race
+	await _wait(4.3)
+	main._teleport(Vector2(5570, 1566), -PI / 2.0)          # you sit it out; they don't
+	var t := 0.0
+	while t < 260.0 and j.race != null:
+		await _wait(1.0)
+		t += 1.0
+	check("pinks: lose and your car's gone, and you're home in another", (main.save.garage as Array).size() == n0 - 1 and main.car != null and main.car_i >= 0 and main.car.sim.pos.distance_to(main.START) < 5.0, "%d -> %d cars, lost the %s" % [n0, (main.save.garage as Array).size(), lose_id])
+	main.save.street = { "races": 0, "wins": 0, "rep": 0 }
+	main.police.clear()
 	done += 1

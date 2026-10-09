@@ -33,6 +33,19 @@ const RACERS := [
 	{ "name": "BRAYDEN WITH THE SUBWOOFER", "skill": 0.78, "line": "You hear him two blocks before you see him." },
 	{ "name": "CHANTAL 'THE ACCOUNTANT' GOGUEN", "skill": 0.92, "line": "\"I've done the math. You lose.\"" },
 ]
+## Street rep you need before Marco lets you into each route.
+const REP_NEED := { "main_mile": 0, "riverside": 1, "downtown": 3, "northend": 5 }
+const PINKS_REP := 6
+## Pink slips, Friday and Saturday nights once people know your name: one on one down the Main
+## Street Mile, and the winner drives home in both cars. Each rival's car comes off the catalogue
+## (a quick one from its class).
+const RIVALS := [
+	{ "name": "MIKE 'TWO-STEP' HACHE", "class": "hot_hatch", "skill": 0.86, "line": "\"Pinks. Don't cry when I take it. My mom's watching.\"" },
+	{ "name": "DANIELLE 'DEE' DOUCET", "class": "sports", "skill": 0.92, "line": "\"I don't race for money. I race for the parking spot at the Tim's.\"" },
+	{ "name": "SABRINA COMEAU", "class": "jdm", "skill": 0.88, "line": "\"I built this in my dad's shed. You can visit it.\"" },
+	{ "name": "RICKY 'THE RIVET' ROBICHAUD", "class": "muscle", "skill": 0.9, "line": "\"Four hundred cubic inches. You've got four hundred excuses.\"" },
+	{ "name": "THE KING OF MAIN STREET", "class": "exotic", "skill": 0.95, "line": "Nobody knows his name. Everybody knows the car." },
+]
 const CLASSES := ["sports", "jdm", "muscle", "pony", "hot_hatch", "rally", "exotic", "coupe", "euro", "compact", "sedan"]
 const CUT := 0.10             # Marco's tenth
 const DNF_S := 45.0           # after the winner's in, this long to finish
@@ -53,6 +66,7 @@ var t := 0.0
 var clock := 0.0
 var _rb_t := 0.0
 var panel: RaceHud
+var rival := {}               # pink slips: who you're racing (and for which car); {} for a pot race
 
 ## Pure: the route's waypoints snapped to the road graph and joined up with GPS routes.
 static func build_path(map: MapData, r: Dictionary) -> PackedVector2Array:
@@ -64,6 +78,25 @@ static func build_path(map: MapData, r: Dictionary) -> PackedVector2Array:
 		for p in leg:
 			if out.is_empty() or out[out.size() - 1].distance_to(p) > 0.5: out.append(p)
 	return out
+
+## The car a pink-slip rival brings: from their class, quicker than most of it.
+static func rival_car(rung: int) -> String:
+	var r: Dictionary = RIVALS[clampi(rung, 0, RIVALS.size() - 1)]
+	var ids: Array = CarCatalog.by_class(String(r["class"]))
+	ids.sort_custom(func(a, b): return hp_per_t(CarCatalog.spec(String(a))) < hp_per_t(CarCatalog.spec(String(b))))
+	return String(ids[int(ids.size() * 0.7)]) if not ids.is_empty() else "charjer"
+
+## A rival with their car filled in.
+static func make_rival(rung: int) -> Dictionary:
+	var r: Dictionary = (RIVALS[clampi(rung, 0, RIVALS.size() - 1)] as Dictionary).duplicate()
+	r.car = rival_car(rung)
+	return r
+
+## Rep after a race: a win's worth one (a pink slip two), a loss nothing, a no-show costs one.
+static func rep_after(rep: int, finished: bool, place: int, pinks: bool) -> int:
+	if not finished: return maxi(0, rep - 1)
+	if place == 1: return rep + (2 if pinks else 1)
+	return rep
 
 ## What the winner takes home: the pot, less Marco's cut.
 static func purse(buy_in: int, field: int) -> int:
@@ -89,9 +122,10 @@ static func pick_cars(rng: RandomNumberGenerator, player_spec: Dictionary, n: in
 	for i in mini(n, scored.size()): out.append(scored[i][1])
 	return out
 
-func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator) -> void:
+func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator, pinks := {}) -> void:
 	drive = the_drive
 	route = r
+	rival = pinks
 	z_index = 3050
 	z_as_relative = false
 	var map: MapData = drive.world.map
@@ -131,21 +165,23 @@ func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator) -> void:
 		var d := track.dir_at(s)
 		slots.append(track.point_at(s) + Vector2(-d.y, d.x) * (-2.3 if i % 2 == 0 else 2.3))
 		heads.append(d.angle())
-	var mine := rng.randi() % 4
-	var cars := pick_cars(rng, drive.car.spec, 3)
-	var names := RACERS.duplicate()
+	var field := 3 if rival.is_empty() else 1
+	var mine := rng.randi() % (4 if field == 3 else 2)
+	var cars := pick_cars(rng, drive.car.spec, 3) if field == 3 else [String(rival.car)]
+	var names := RACERS.duplicate() if field == 3 else [rival]
 	for i in names.size():
 		var j := rng.randi() % names.size()
 		var tmp: Variant = names[i]
 		names[i] = names[j]
 		names[j] = tmp
 	var k := 0
-	for i in 4:
+	for i in field + 1:
 		if i == mine: continue
 		var a := AiCar.new()
 		drive.ysort.add_child(a)
 		var spec := CarCatalog.spec(String(cars[k]))
 		spec.paint = "#%02x%02x%02x" % [rng.randi_range(30, 230), rng.randi_range(30, 230), rng.randi_range(30, 230)]
+		if not rival.is_empty(): rival.paint = spec.paint
 		a.setup_ai(spec, drive.world, drive.skids, drive.hud, slots[i], float(heads[i]), 60 + k)
 		a.traffic = drive.traffic
 		a.skill = float(names[k].skill)
@@ -177,7 +213,8 @@ func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator) -> void:
 	panel.size = Vector2(640, 360)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	drive.get_node("HudLayer").add_child(panel)
-	drive.hud.post("MARCO: \"WINNER TAKES $%d. NO CRYING.\"" % purse(int(r.buy_in), 4), 4.0)
+	if rival.is_empty(): drive.hud.post("MARCO: \"WINNER TAKES $%d. NO CRYING.\"" % purse(int(r.buy_in), 4), 4.0)
+	else: drive.hud.post("MARCO: \"PINK SLIPS. SIGN HERE, AND HERE. NO TAKE-BACKS.\"", 4.0)
 	drive._on_dest("CHECKPOINT", track.point_at(checks[0]), true)
 
 static func clock_str(sec: float) -> String:
@@ -266,7 +303,11 @@ func place() -> int:
 	return order().find(-1) + 1
 
 func _winnings() -> int:
+	if not rival.is_empty(): return 0
 	return purse(int(route.buy_in), racers.size() + 1) if finish_t.has(-1) and place() == 1 else 0
+
+func won_pinks() -> bool:
+	return not rival.is_empty() and finish_t.has(-1) and place() == 1
 
 func _end() -> void:
 	if state == "done": return
@@ -276,9 +317,17 @@ func _end() -> void:
 	var won := _winnings()
 	var st: Dictionary = drive.save.get("street", { "races": 0, "wins": 0 })
 	st.races = int(st.races) + 1
-	if won > 0: st.wins = int(st.wins) + 1
+	if won > 0 or won_pinks(): st.wins = int(st.wins) + 1
+	var was := int(st.get("rep", 0))
+	st.rep = rep_after(was, finish_t.has(-1), place(), not rival.is_empty())
 	drive.save.street = st
-	if won > 0: drive.hud.post("YOU WIN. MARCO COUNTS OUT $%d LIKE IT HURTS HIM." % won, 6.0)
+	if int(st.rep) > was: drive.hud.post("STREET REP %d. PEOPLE ARE STARTING TO SAY YOUR NAME RIGHT." % int(st.rep), 5.0)
+	if not rival.is_empty():
+		var e := CarCatalog.entry(String(rival.car))
+		var nm := "%s %s" % [String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
+		if won_pinks(): drive.hud.post("%s HANDS OVER THE KEYS TO THE %s. HIS HANDS ARE SHAKING." % [String(rival.name), nm], 7.0)
+		else: drive.hud.post("%s TAKES YOUR KEYS. MARCO: \"THAT'S PINKS, BUD.\"" % String(rival.name), 7.0)
+	elif won > 0: drive.hud.post("YOU WIN. MARCO COUNTS OUT $%d LIKE IT HURTS HIM." % won, 6.0)
 	elif finish_t.has(-1): drive.hud.post("P%d. MARCO: \"THERE'S ALWAYS NEXT FRIDAY.\"" % place(), 5.0)
 	else: drive.hud.post("DNF. EVERYBODY ELSE IS ALREADY AT THE TIM'S.", 5.0)
 	for a in racers: a.speed_cap = 11.0
@@ -356,6 +405,7 @@ class RaceHud extends Control:
 		if race.state == "done":
 			var p := race.place()
 			var won := race._winnings()
-			var title := "YOU WIN" if won > 0 else ("P%d" % p if race.finish_t.has(-1) else "DNF")
+			var title := "YOU WIN" if won > 0 or race.won_pinks() else ("P%d" % p if race.finish_t.has(-1) else "DNF")
+			if not race.rival.is_empty() and not race.won_pinks(): title = "PINKS: LOST"
 			PixelFont.draw_centered(self, 320, 110, title, gold, 4, Color(0, 0, 0, 0.8))
 			if won > 0: PixelFont.draw_centered(self, 320, 150, "+$%d" % won, Color("6fbf5a"), 2, Color(0, 0, 0, 0.8))

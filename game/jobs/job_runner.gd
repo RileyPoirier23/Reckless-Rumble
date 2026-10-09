@@ -40,6 +40,7 @@ var strip: DragStrip
 var race: StreetRace
 var race_route := {}
 var race_start := Vector2.ZERO
+var race_rival := {}
 
 func setup(the_drive: Node) -> void:
 	drive = the_drive
@@ -81,10 +82,23 @@ func start(k: String) -> void:
 			drive.hud.post("DRAG NIGHT. PULL ONTO RUNWAY 7 AND STOP AT THE LINE.", 5.0)
 		"street":
 			stage = "drive"
-			race_route = Jobs.street_route(drive.sky.day)
+			var st: Dictionary = drive.save.get("street", {})
+			var rep := int(st.get("rep", 0))
+			var rung := int(st.get("pinks", 0))
+			race_rival = {}
+			if Jobs.pinks_tonight(drive.sky.day, rep) and rung < StreetRace.RIVALS.size():
+				race_rival = StreetRace.make_rival(rung)
+				race_route = StreetRace.ROUTES[0]
+				var e := CarCatalog.entry(String(race_rival.car))
+				drive.hud.post("PINK SLIPS TONIGHT: %s IN THE %s %s. WIN AND IT'S YOURS. LOSE AND YOURS IS THEIRS." % [String(race_rival.name), String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()], 7.0)
+			else:
+				race_route = Jobs.street_route(drive.sky.day, rep)
+				var tonight := Jobs.street_route(drive.sky.day)
+				if tonight.id != race_route.id:
+					drive.hud.post("MARCO: \"%s IS FOR PEOPLE WITH A NAME. YOU GET %s.\"" % [String(tonight.name), String(race_route.name)], 6.0)
+				drive.hud.post("STREET RACE: %s. MEET MARCO AT THE START. $%d BUY-IN." % [race_route.name, int(race_route.buy_in)], 5.0)
 			race_start = StreetRace.build_path(map(), race_route)[0]
 			drive._on_dest("MARCO", race_start)
-			drive.hud.post("STREET RACE: %s. MEET MARCO AT THE START. $%d BUY-IN." % [race_route.name, int(race_route.buy_in)], 5.0)
 		"cruise":
 			stage = "cruise"
 			_cruise_m = 0.0
@@ -325,7 +339,12 @@ func _street(_dt: float) -> void:
 
 ## Pay Marco and line up.
 func sign_in() -> bool:
-	var fee := int(race_route.buy_in)
+	if not race_rival.is_empty():
+		var why := pinks_block()
+		if why != "":
+			drive.hud.post(why, 4.0)
+			return false
+	var fee := int(race_route.buy_in) if race_rival.is_empty() else 0
 	if int(drive.save.get("cash", 0)) < fee:
 		drive.hud.post("MARCO: \"$%d. I DON'T DO IOUS. I'VE MET YOU.\"" % fee, 4.0)
 		return false
@@ -333,13 +352,31 @@ func sign_in() -> bool:
 	earned -= fee
 	race = StreetRace.new()
 	add_child(race)
-	race.setup(drive, race_route, rng)
+	race.setup(drive, race_route, rng, race_rival)
 	race.closed.connect(_on_race_closed)
 	stage = "race"
 	return true
 
+## Why you can't put this car's pink slip on the line ("" when you can).
+func pinks_block() -> String:
+	if drive.car_i < 0: return "MARCO: \"THAT'S NOT YOUR CAR TO BET.\""
+	if String(car().spec.get("id", "")) == "tow": return "MARCO: \"TOBY'S WRECKER? NO.\""
+	if (drive.save.garage as Array).size() < 2: return "MARCO: \"IT'S YOUR ONLY CAR. HOW WOULD YOU GET HOME?\""
+	return ""
+
 func _on_race_closed(won: int) -> void:
 	if won > 0: pay(won)
+	if race and not race.rival.is_empty():
+		var st: Dictionary = drive.save.get("street", {})
+		if race.won_pinks():
+			var e := CarCatalog.entry(String(race.rival.car))
+			(drive.save.garage as Array).append({ "id": String(race.rival.car), "paint": String(race.rival.get("paint", "#8a8e94")), "damage": {},
+				"parts": {}, "looks": {}, "tune": {}, "wear": { "fuel": 0.3 }, "installing": [], "odo_km": float(int(e.get("year", 2000)) % 17) * 9000.0 + 40000.0, "pinks": true })
+			st.pinks = int(st.get("pinks", 0)) + 1
+		else:
+			drive.lose_current_car()
+		drive.save.street = st
+		SaveGame.write(drive.save)
 	finish(true)
 
 # ------------------------------------------------------------------ markers

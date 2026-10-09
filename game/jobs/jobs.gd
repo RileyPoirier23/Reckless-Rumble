@@ -26,9 +26,27 @@ const KINDS := {
 }
 const ORDER := ["pizza", "tow", "drag", "street", "cruise"]
 
-## Tonight's street race: Marco runs a different route each night.
-static func street_route(day: int) -> Dictionary:
-	return StreetRace.ROUTES[posmod(day, StreetRace.ROUTES.size())]
+## Tonight's street race: Marco runs a different route each night, unless you haven't the rep for
+## it, in which case you get the best one you're allowed into.
+static func street_route(day: int, rep := 99) -> Dictionary:
+	var r: Dictionary = StreetRace.ROUTES[posmod(day, StreetRace.ROUTES.size())]
+	if int(StreetRace.REP_NEED.get(r.id, 0)) <= rep: return r
+	var best: Dictionary = StreetRace.ROUTES[0]
+	for o in StreetRace.ROUTES:
+		var need := int(StreetRace.REP_NEED.get(o.id, 0))
+		if need <= rep and need >= int(StreetRace.REP_NEED.get(best.id, 0)): best = o
+	return best
+
+## Friday and Saturday nights, once you've got the rep: pink slips.
+static func pinks_tonight(day: int, rep: int) -> bool:
+	return rep >= StreetRace.PINKS_REP and weekday(day) in ["FRIDAY", "SATURDAY"]
+
+## The street gig's line on the phone: tonight, and where you stand.
+static func street_line(save: Dictionary, day: int) -> String:
+	var st: Dictionary = save.get("street", {})
+	var rep := int(st.get("rep", 0))
+	if pinks_tonight(day, rep) and int(st.get("pinks", 0)) < StreetRace.RIVALS.size(): return "PINK SLIPS TONIGHT.  REP %d" % rep
+	return "%s.  REP %d" % [String(street_route(day, rep).name), rep]
 
 ## The drag ladder at Airstrip 7, slowest crew first. Each racer: car, how fast they react,
 ## how close they run to their dial-in, entry fee, and what they say.

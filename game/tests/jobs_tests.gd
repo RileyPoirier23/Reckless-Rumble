@@ -119,6 +119,28 @@ func _init() -> void:
 		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
+	# street rep and pink slips
+	var gated := true
+	for d in 8:
+		if Jobs.street_route(d, 0).id != "main_mile": gated = false
+	check("with no rep it's the Main Street Mile every night", gated)
+	var ne_day := 3
+	check("the North End needs rep 5; with 4 you get the Downtown Box", Jobs.street_route(ne_day).id == "northend" and Jobs.street_route(ne_day, 4).id == "downtown" and Jobs.street_route(ne_day, 5).id == "northend",
+		"%s / %s / %s" % [Jobs.street_route(ne_day).id, Jobs.street_route(ne_day, 4).id, Jobs.street_route(ne_day, 5).id])
+	var fri := 4
+	check("pink slips: Friday and Saturday, with the rep", Jobs.weekday(fri) == "FRIDAY" and Jobs.pinks_tonight(fri, 6) and Jobs.pinks_tonight(fri + 1, 9) and not Jobs.pinks_tonight(fri, 5) and not Jobs.pinks_tonight(fri + 2, 9))
+	check("rep: a win's one, pinks two, a loss nothing, a no-show costs one", StreetRace.rep_after(3, true, 1, false) == 4 and StreetRace.rep_after(3, true, 1, true) == 5 and StreetRace.rep_after(3, true, 3, false) == 3 and StreetRace.rep_after(3, false, 4, false) == 2 and StreetRace.rep_after(0, false, 4, false) == 0)
+	var rv_ok := true
+	var hpt: Array = []
+	for i in StreetRace.RIVALS.size():
+		var rid := StreetRace.rival_car(i)
+		if not CarCatalog.has(rid): rv_ok = false
+		else: hpt.append(StreetRace.hp_per_t(CarCatalog.spec(rid)))
+	var climbing := true
+	for i in range(1, hpt.size()): climbing = climbing and float(hpt[i]) >= float(hpt[i - 1])
+	check("every pink-slip rival brings a real car, each quicker than the last", rv_ok and climbing, str(hpt))
+	var line := Jobs.street_line({ "street": { "rep": 7, "pinks": 0 } }, fri)
+	check("the phone says pink slips on the night", line.begins_with("PINK SLIPS") and Jobs.street_line({}, 0).ends_with("REP 0"), line)
 	# moose and deer
 	check("no moose downtown", Wildlife.odds(19.0, "fall", "street", "downtown") == 0.0 and Wildlife.odds(19.0, "fall", "arterial", "") == 0.0)
 	check("dusk on a country road is when they're out", Wildlife.odds(19.0, "summer", "rural", "rural") > Wildlife.odds(13.0, "summer", "rural", "rural") * 5.0)

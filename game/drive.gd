@@ -481,6 +481,22 @@ func _exit_tree() -> void:
 	_store_car()
 	SaveGame.write(save)
 
+## The car you're in is gone (pink slips): you get dropped at Gus's in whatever's left.
+func lose_current_car() -> void:
+	var i := car_i
+	if i < 0 or i >= (save.garage as Array).size(): return
+	(save.garage as Array).remove_at(i)
+	car_i = -1
+	var next := 0
+	for k in (save.garage as Array).size():
+		if String(save.garage[k].id) != "tow":
+			next = k
+			break
+	save.current = next
+	_spawn_car(next, START, -PI / 2.0)
+	_teleport(START, -PI / 2.0)
+	hud.post("MARCO'S COUSIN DROPS YOU AT GUS'S. GUS DOESN'T ASK. GUS KNOWS.", 6.0)
+
 ## A car went out of the garage on MarketThing: everything after it moved up a slot.
 func _on_car_sold(index: int, text: String) -> void:
 	if car_i > index: car_i -= 1
