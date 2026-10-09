@@ -1,6 +1,8 @@
 ## Scripted counter screenshots: godot --path game -- --counter-demo <out_dir>
 ## The line in the lot, ASK and a proof, the binder, Hatch and the notebook, the sticker log's
-## gap, a Halloween mask, a warning, and the end of the day.
+## gap, a Halloween mask, a warning, and the end of the day. Then Desk 2.1: a regular coming
+## back, tint and a medical exemption, the courier's box, Hachey's audit, a busy day's tally,
+## and the end of the run.
 extends Node
 
 var scene: CounterScene
@@ -120,5 +122,111 @@ func _run() -> void:
 	scene.tick(0.1)
 	scene.close_up()
 	await _shot("11_day_end")
+	await _desk21()
 	print("COUNTER DEMO DONE")
 	get_tree().quit()
+
+## Regular `id` out of today's line (still on the way, or already in the lot).
+func _booked(id: String) -> Dictionary:
+	for i in scene.arrivals.size():
+		if String(scene.arrivals[i].c.get("regular", "")) == id: return scene.arrivals.pop_at(i).c
+	for i in scene.waiting.size():
+		if String(scene.waiting[i].get("regular", "")) == id: return scene.waiting.pop_at(i)
+	return {}
+
+func _desk21() -> void:
+	# Jayden, turned away bald on Tuesday, back on the Friday of week two
+	DeskBook.reset()
+	scene.start_day(1)
+	scene.press()
+	_serve(_booked("jayden"))
+	scene.stamp("DENIED")
+	await get_tree().create_timer(0.1).timeout
+	scene.press()
+	scene.start_day(11)
+	scene.press()
+	scene.clock = 75.0
+	scene.tick(0.01)
+	_serve(_booked("jayden"))
+	scene.cur = Vector2(60, 200)
+	await _shot("12_regular_back")
+	# Mrs. Doiron's tint, and her doctor's form out of the visor
+	scene.start_day(29)
+	scene.press()
+	scene.clock = 120.0
+	scene.tick(0.01)
+	_serve(_booked("doiron"))
+	scene.inspecting = true
+	scene.tab = scene._tabs_today().find("INSPECTION")
+	var tint := {}
+	for f in scene.fields():
+		if f.key == "measure" and String(f.val.kind) == "tint": tint = f
+	scene.pick(tint)
+	for f in scene.fields():
+		if f.key == "rule" and f.val == "tint": scene.pick(f)
+	scene.ask("tint")
+	await _shot("13_tint_exemption")
+	scene.verdict = {}
+	scene.inspecting = false
+	# the courier: the wrong part number on the slip
+	scene.start_day(31)
+	scene.press()
+	scene.clock = 150.0
+	scene.tick(0.01)
+	var box := scene.rules.courier(31, "wrong_part")
+	while not box.has("customs"): box = scene.rules.courier(31, "customs_value")
+	_serve(box)
+	scene.tab = scene._tabs_today().find("PARTS")
+	scene.inspecting = true
+	scene.pick(_field("order", "paid"))
+	scene.pick(_field("customs", "paid"))
+	await _shot("14_courier")
+	scene.inspecting = false
+	scene.verdict = {}
+	scene.stamp("DENIED")
+	await get_tree().create_timer(0.1).timeout
+	await _shot("15_courier_refused")
+	scene.press()
+	# Hachey's audit: a file from last week, the stamp under his thumb
+	scene.start_day(39)
+	scene.press()
+	for want in ["expired_reg", "clean", "noise"]:
+		_serve(scene.rules.walk_in(39, want))
+		scene.stamp("DENIED" if want != "clean" else "APPROVED")
+		await get_tree().create_timer(0.05).timeout
+		scene.press()
+	scene.start_day(42)
+	scene.press()
+	while scene.clock < 91.0:
+		scene.tick(0.5)
+		if scene.phase == "counter" and scene.c.kind != "audit":
+			scene.stamp("DENIED")
+			scene._resolve()
+		if scene.phase == "result": scene.press()
+	while scene.phase != "counter" or scene.c.kind != "audit":
+		if scene.phase == "counter":
+			scene.stamp("DENIED")
+			scene._resolve()
+		if scene.phase == "result": scene.press()
+		scene.tick(0.1)
+	scene.tab = scene._tabs_today().find("MINISTRY")
+	scene.cur = Vector2(330, 250)
+	await _shot("16_audit")
+	scene.stamp("APPROVED" if String(scene.c.audit.stamp) == "DENIED" else "DENIED")
+	await get_tree().create_timer(0.1).timeout
+	await _shot("17_audit_disagree")
+	scene.press()
+	# a busy day's tally, and the end of the run
+	scene.day_log.merge({ "fees": 75, "audits": 2, "audits_same": 1 }, true)
+	scene.clock = CounterRules.SHIFT_LEN - 1.0
+	scene.arrivals = []
+	scene.tick(0.1)
+	scene.close_up()
+	await _shot("18_day_end_busy")
+	scene.day = CounterRules.LAST_DAY
+	scene.phase = "month_end"
+	await _shot("19_audit_over")
+	# the new mornings: the courier, Remembrance Day and the noise rule, and Hachey at the door
+	for d in [30, 36, 42]:
+		scene.start_day(d)
+		await _shot("20_brief_%d" % d)

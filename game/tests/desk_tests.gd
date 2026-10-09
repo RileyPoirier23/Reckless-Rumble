@@ -576,7 +576,10 @@ func _layout() -> void:
 			if note == "": note = "%s / %s" % [row[0], row[1]]
 	check("the day-end rows all fit at the labels' size, values lined up on the right", fits, note)
 	check("every row of a busy day is on the sheet", rows.size() >= 11)
-	check("the sheet and its small print stay above the prompts", 68 + rows.size() * 14 + 10 + 3 * 8 + 10 < 296)
+	sc.day_log.citations = ["AUDIT: YOUR OWN WORK ORDER SAYS APPROVED. TODAY YOU SAY DENIED. THE MINISTRY WOULD LIKE YOU TO PICK ONE", "B", "C"]
+	var small := sc._small_print()
+	check("the small print wraps instead of running off the sheet, four lines at most", small.size() <= 4 and small.all(func(l): return PixelFont.width(String(l)) <= CounterScene.LEDGER_R - CounterScene.LEDGER_L))
+	check("the sheet and its small print stay above the prompts", 66 + rows.size() * CounterScene.LEDGER_PITCH + 6 + small.size() * 8 + 10 < 296)
 	done(sc)
 	# every tab of the binder fits on its page, every day of the run
 	sc = desk(132)

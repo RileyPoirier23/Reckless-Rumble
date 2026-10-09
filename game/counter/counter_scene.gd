@@ -362,6 +362,8 @@ func next_customer() -> void:
 	for id in order:
 		if c.docs.has(id) and not c.hidden.has(id): docs.append({ "id": id, "pos": _home(id, docs.size()), "fresh": 0.0 })
 	if c.napkin != "": docs.append({ "id": "napkin", "pos": _home("napkin", docs.size()), "fresh": 0.0 })
+	# a pulled file opens at its cover sheet: the work order, Hachey's thumb on the stamp
+	if c.kind == "audit": _raise(_doc_index("work"))
 	sfx("paper")
 
 ## Where each paper lands when it's handed over.
@@ -1510,6 +1512,7 @@ func _day_end_rows() -> Array:
 
 const LEDGER_L := 136.0                # the day-end tally's left edge (labels)...
 const LEDGER_R := 504.0                # ...and right edge (values line up on it)
+const LEDGER_PITCH := 15.0             # one row of it
 
 ## One line of a tally: the label on the left, the value on the right, dots between, both at 2x.
 func _ledger_row(y: float, label: String, value: String, col: Color, left := LEDGER_L, right := LEDGER_R, label_col := ASH) -> void:
@@ -1525,20 +1528,26 @@ func _draw_day_end() -> void:
 	var r := Rect2(110, 30, 420, 300)
 	_panel(r, 0.96)
 	PixelFont.draw_centered(self, 320, 42, "6:00 P.M. %s IS DONE" % CounterRules.day_name(day), GOLD, 3, INK)
-	var y := 68.0
+	var y := 66.0
 	for row in _day_end_rows():
 		_ledger_row(y, String(row[0]), String(row[1]), row[2])
-		y += 14
+		y += LEDGER_PITCH
 	# the small print: what the Ministry wrote down, and where the licence stands
-	y += 2
 	draw_rect(Rect2(LEDGER_L, y, LEDGER_R - LEDGER_L, 1), Color(ASH, 0.3))
 	y += 6
-	for cit in (day_log.citations + day_log.warnings).slice(0, 3):
-		var t := "- " + String(cit)
-		if t.length() > 92: t = t.substr(0, 89) + "..."
-		PixelFont.draw(self, Vector2(LEDGER_L, y), t, RED.lightened(0.3))
+	for l in _small_print():
+		PixelFont.draw(self, Vector2(LEDGER_L, y), l, RED.lightened(0.3))
 		y += 8
 	PixelFont.draw(self, Vector2(LEDGER_L, y + 2), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
+
+## What the Ministry wrote down today, wrapped to the sheet: four lines at most.
+func _small_print() -> Array:
+	var out: Array = []
+	for cit in day_log.citations + day_log.warnings:
+		var ls := wrap_text("- " + String(cit), 90)
+		for i in ls.size(): out.append(ls[i] if i == 0 else "  " + ls[i])
+	if out.size() > 4: out = out.slice(0, 3) + ["  ...AND MORE. THE MINISTRY KEEPS THE REST."]
+	return out
 	if not story.is_empty():
 		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
@@ -1586,8 +1595,9 @@ func audit_verdict() -> String:
 	var pulled := DeskBook.audits.size()
 	var same := DeskBook.audits.filter(func(a): return String(a.was) == String(a.now)).size()
 	if pulled == 0: return "HACHEY'S REPORT: \"NO FILES PULLED. THE STATION WAS VERY BUSY. SO WAS I.\""
-	if same == pulled: return "HACHEY'S REPORT: %d FILES PULLED, %d STAMPED THE SAME TWICE. \"STATION 0117 AGREES WITH ITSELF.\" HE UNDERLINES IT." % [pulled, same]
-	return "HACHEY'S REPORT: %d FILES PULLED, %d STAMPED THE SAME TWICE. \"STATION 0117 HAS OPINIONS. SEVERAL. ABOUT THE SAME CARS.\"" % [pulled, same]
+	var tally := "HACHEY'S REPORT: %d %s PULLED, %d STAMPED THE SAME TWICE." % [pulled, "FILE" if pulled == 1 else "FILES", same]
+	if same == pulled: return tally + " \"STATION 0117 AGREES WITH ITSELF.\" HE UNDERLINES IT."
+	return tally + " \"STATION 0117 HAS OPINIONS. SEVERAL. ABOUT THE SAME CARS.\""
 
 func _draw_month_end() -> void:
 	_panel(Rect2(80, 40, 480, 280), 0.97)
