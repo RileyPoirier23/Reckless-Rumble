@@ -94,7 +94,6 @@ func _init() -> void:
 	var note := ""
 	#    (all of it as the desk draws it: every paper, every tab of the binder, after asking
 	#    every question there is, so the pockets and the masks are empty)
-	var stray := 0
 	for day in open_days():
 		for prob in CounterRules.PROBLEM_RULE.keys() + [""]:
 			if prob != "" and not CounterRules.rule_active(CounterRules.PROBLEM_RULE[prob], day): continue
@@ -132,7 +131,7 @@ func _init() -> void:
 				sc.car_view.free()
 				sc.free()
 	check("inspect proves every problem, from the desk as drawn", unprovable == 0, "%d/%d unprovable %s" % [unprovable, tried, note])
-	check("inspect shows no red on clean customers (but the discrepancy a proof covers)", false_red == 0 and stray == 0, "%d %s" % [false_red, note])
+	check("inspect shows no red on clean customers (but the discrepancy a proof covers)", false_red == 0, "%d %s" % [false_red, note])
 	_desk()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

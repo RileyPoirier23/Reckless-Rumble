@@ -1075,6 +1075,8 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 			if bad:
 				r.correct = false
 				r.citation = _citation_for(probs[0])
+				r.line = ["They drive off happy. The Ministry won't be.", "\"Pleasure doing business.\" It was not, legally speaking.",
+					"Gus watches them go and doesn't say anything. Loudly."][int(c.person.face) % 3]
 			else:
 				r.money = PAY.get(c.request, 80)
 				r.review = 1

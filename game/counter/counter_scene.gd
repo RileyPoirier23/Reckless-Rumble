@@ -239,7 +239,9 @@ func tick(dt: float) -> void:
 	if not phase in ["idle", "counter", "stamping", "result"]: return
 	var rate := CounterRules.SHIFT_LEN / CounterRules.REAL_SECONDS
 	if tutorial: rate *= 0.5
-	if phase == "idle": rate *= 12.0          # nobody at the window: the afternoon drags by fast
+	if phase == "idle":
+		# nobody at the window: the afternoon drags by fast (and if nobody else is coming, faster)
+		rate *= 12.0 if not arrivals.is_empty() else 60.0
 	clock = minf(CounterRules.SHIFT_LEN, clock + dt * rate)
 	while not arrivals.is_empty() and float(arrivals[0].t) <= clock:
 		var cc: Dictionary = arrivals.pop_front().c
