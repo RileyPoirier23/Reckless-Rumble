@@ -88,7 +88,7 @@ func _draw() -> void:
 		var k: String = Jobs.ORDER[i]
 		var job: Dictionary = Jobs.KINDS[k]
 		var open := Jobs.open_now(k, sky.time_h)
-		var h := 58.0
+		var h := 48.0
 		var box := Rect2(r.position.x + 6, y, r.size.x - 12, h - 4)
 		draw_rect(box, Color(1, 1, 1, 0.09) if i == sel else Color(1, 1, 1, 0.03))
 		if i == sel: draw_rect(box, GOLD, false, 1.0)
@@ -98,7 +98,7 @@ func _draw() -> void:
 		PixelFont.draw(self, box.position + Vector2(box.size.x - 5 - PixelFont.width(status), 4), status, scol)
 		PixelFont.draw(self, box.position + Vector2(5, 14), String(job.pay), GOLD if open else ASH)
 		var lines := Hud.wrap_lines(String(job.blurb), 38)
-		for li in mini(lines.size(), 3): PixelFont.draw(self, box.position + Vector2(5, 24 + li * 8), lines[li], ASH)
+		for li in mini(lines.size(), 2): PixelFont.draw(self, box.position + Vector2(5, 24 + li * 8), lines[li], ASH)
 		y += h
 	var hint := "{updown}: PICK  {ui_accept}: %s  {shift}: APPS" % ("QUIT THIS JOB" if Jobs.ORDER[sel] == current else "TAKE IT")
 	PixelFont.draw_centered(self, r.get_center().x, r.end.y - 26, Hints.fmt(hint), BONE)

@@ -12,16 +12,23 @@ const KINDS := {
 		"blurb": "Thirty minutes or it's free. Corner hard and the pizza ends up on the lid.",
 		"pay": "$6 A RUN + TIPS" },
 	"tow": { "title": "TOW CALL", "open": [0.0, 24.0],
-		"blurb": "Somebody's in the ditch. Toby's wrecker, the boom, and a slow drive back.",
+		"blurb": "Somebody's in the ditch. Toby's wrecker, the boom, a slow drive back.",
 		"pay": "$90 + $2.50/KM, MORE AT NIGHT AND IN WEATHER" },
 	"drag": { "title": "DRAG NIGHT AT AIRSTRIP 7", "open": [19.0, 27.0],
-		"blurb": "Eighth-mile bracket racing. Set a dial-in, beat the tree, don't break out.",
+		"blurb": "Eighth-mile bracket racing. Set a dial-in. Don't break out.",
 		"pay": "PURSE AND SIDE BETS" },
+	"street": { "title": "STREET RACE", "open": [22.0, 28.0],
+		"blurb": "Marco, three locals, a route. Everyone pays in. Winner takes the pot.",
+		"pay": "THE POT, LESS MARCO'S TENTH. AND HEAT." },
 	"cruise": { "title": "NIGHT DRIVE", "open": [21.0, 29.0],
-		"blurb": "No job. No phone. No GPS voice. Just the road and the radio you don't have yet.",
+		"blurb": "No job. No GPS voice. Just the road and the radio you don't have yet.",
 		"pay": "NOTHING. THAT'S THE POINT." },
 }
-const ORDER := ["pizza", "tow", "drag", "cruise"]
+const ORDER := ["pizza", "tow", "drag", "street", "cruise"]
+
+## Tonight's street race: Marco runs a different route each night.
+static func street_route(day: int) -> Dictionary:
+	return StreetRace.ROUTES[posmod(day, StreetRace.ROUTES.size())]
 
 ## The drag ladder at Airstrip 7, slowest crew first. Each racer: car, how fast they react,
 ## how close they run to their dial-in, entry fee, and what they say.

@@ -56,6 +56,14 @@ The other drivers follow the lanes (right-hand traffic) and keep a safe gap to w
 
 Cars spawn out of sight around you, and there are more downtown and at rush hour, fewer at 3 a.m. They signal before turns, show brake lights and use headlights at night.
 
+## Street races and the police
+
+- **Street races** (GIGS, 10 p.m. to 4 a.m.): Marco runs one route a night: the Main Street Mile, the Downtown Box, the Riverside Loop or the North End Sprint. Pay the buy-in and line up with three locals in cars about as quick as yours (matched on horsepower per tonne). Hit the checkpoints in order; the GPS shows the next one. The winner takes the pot, less Marco's tenth.
+- **The other racers** drive the same physics as your car. They follow the route, brake for the corners they can see coming, go round slower traffic when the road is wide enough, follow it when it isn't, and back out when they get stuck. The leaders lift a little and the stragglers try harder, so it stays close.
+- **The police** (Port Rumble Police, white Dodgy Charjers with a light bar) patrol at the limit. Go 20 km/h over, or race, where one can see you and they light you up. Pull over and Constable Tremblay writes the ticket. Keep going and it's a chase: the heat climbs and more cars join. Stay out of their sight for 14 seconds and they lose you. High heat, racing or a long chase gets the car impounded.
+- **Heat** shows above the GPS and cools off slowly. Tickets are $100 plus $8 for every km/h past 15 over, doubled at 50 over (stunt driving). Racing adds $1,500, running $1,000, and hitting a police car $800. The impound is $450 more.
+- Cruisers show on the GPS (flashing when they're after you), and so do the other racers.
+
 ## Crashes
 
 Damage is tracked per side (front, back, left, right):
@@ -153,8 +161,12 @@ godot --headless --path game -s tests/run_tests.gd
 godot --headless --path game -s tests/counter_tests.gd
 godot --headless --path game -s tests/desk_tests.gd
 godot --headless --path game -s tests/world_tests.gd
+godot --headless --path game -s tests/jobs_tests.gd
 godot --headless --path game -- --traffic-test
+godot --headless --path game -- --race-test
 ```
+
+The race test (`--race-test`) runs inside the drive scene: three AI racers round the Downtown Box through traffic (they have to finish, stay on the route and not get stuck), a race you win and get paid for, a pull-over and a ticket, a chase you get away from, and an impound. The jobs tests check the routes follow real roads, the field is matched to your car, and the ticket and impound rules.
 
 The map, sky and car tests check that:
 - the map builds quickly;
@@ -188,6 +200,10 @@ The driving tests (16 checks) run headless on every push:
 | `render/car_art.gd` | Draws the car pixel by pixel as 16 stacked slices |
 | `render/car_view.gd` | Stacks and rotates the slices, with body roll, steering wheels and lights |
 | `world/player_car.gd` | Input, collisions, tire marks, smoke and steam |
+| `world/ai_car.gd` | A car with somebody else driving it: the same sim, steered down a line of points at the speed the corners allow |
+| `world/path_track.gd` | A line to drive and how far along it a car is (laps included) |
+| `world/police.gd` | Patrols, spotting, pull-overs, chases, tickets, the impound, and the heat meter |
+| `jobs/street_race.gd` | Marco's street races: the routes, the field, the grid, checkpoints, the running order and the pot |
 | `ui/hud.gd` | The dashboard |
 | `render/engine_audio.gd` | The engine and tire sounds, made live from the sim |
 | `data/cars/silvio.json` | The car itself: weight, torque curve, gears, brakes, tires |

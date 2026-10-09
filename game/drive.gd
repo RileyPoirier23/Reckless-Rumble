@@ -44,6 +44,8 @@ var _dying := false
 var jobs: JobRunner
 var job_board: JobBoard
 var market: MarketRunner
+var police: Police
+var hold_car := false          # a scene (or a test) has the car stopped
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
 func _ready() -> void:
@@ -160,6 +162,12 @@ void fragment() {
 	add_child(market)
 	market.setup(self)
 	job_board.meet.connect(market.start)
+	police = Police.new()
+	add_child(police)
+	police.setup(self)
+	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
+	for arg in OS.get_cmdline_user_args():
+		if arg.ends_with("-test") or arg.ends_with("-demo"): police.enabled = false
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
 	else:
@@ -194,6 +202,14 @@ void fragment() {
 		var md: Node = load("res://tests/market_demo.gd").new()
 		md.main = self
 		add_child(md)
+	elif OS.get_cmdline_user_args().has("--race-demo"):
+		var rd: Node = load("res://tests/race_demo.gd").new()
+		rd.main = self
+		add_child(rd)
+	elif OS.get_cmdline_user_args().has("--race-test"):
+		var rt: Node = load("res://tests/race_test.gd").new()
+		rt.main = self
+		add_child(rt)
 	elif OS.get_cmdline_user_args().has("--jobs-demo"):
 		var jd: Node = load("res://tests/jobs_demo.gd").new()
 		jd.main = self
@@ -338,6 +354,7 @@ func _after_death() -> void:
 	if jobs.active():
 		jobs.finish(false)
 		hud.post("THE JOB'S OFF. NOBODY TIPS A WRECK.", 4.0)
+	police.clear()
 	car.dead = false
 	car.respawn()
 	_teleport(car.start_pos, car.start_heading)
@@ -466,10 +483,10 @@ func clear_route() -> void:
 	dest = { "name": "", "p": Vector2.ZERO }
 	gps.set_route(PackedVector2Array(), "")
 
-func _on_dest(name: String, at: Vector2) -> void:
+func _on_dest(name: String, at: Vector2, quiet := false) -> void:
 	dest = { "name": name, "p": at }
 	gps.set_route(world.map.route(car.sim.pos, at), name)
-	hud.post("GPS: %s" % name, 3.0)
+	if not quiet: hud.post("GPS: %s" % name, 3.0)
 
 func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticles2D:
 	var p := CPUParticles2D.new()
@@ -544,6 +561,14 @@ func _process(dt: float) -> void:
 	var r := Vector2(320, 180).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	# the GPS shows the police (flashing when they're after you) and whoever you're racing
+	var bl: Array = []
+	var flash := fmod(Time.get_ticks_msec() / 250.0, 2.0) < 1.0
+	for k in police.cruisers:
+		bl.append([k.sim.pos, (Color(1, 0.2, 0.15) if flash else Color(0.3, 0.5, 1.0)) if k.siren else Color(0.35, 0.5, 0.95)])
+	if jobs.race:
+		for a in jobs.race.racers: bl.append([a.sim.pos, Color("d9a441")])
+	gps.blips = bl
 	if not StoryState.active: _deliveries(dt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
@@ -629,7 +654,8 @@ func _teleport(at: Vector2, heading: float) -> void:
 	world.warm(at, Vector2(40, 25))
 
 func _inputs() -> void:
-	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"])
+	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car
 	if garage.visible or death.visible or car.dead: return
 	if job_board.visible or market.panel_open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
@@ -650,7 +676,9 @@ func _inputs() -> void:
 		car.sim.auto_gearbox = not car.sim.auto_gearbox
 		hud.post("AUTOMATIC" if car.sim.auto_gearbox else Hints.fmt("MANUAL: {shift} TO SHIFT"))
 	if Input.is_action_just_pressed("help"): hud.show_help = not hud.show_help
-	if Input.is_action_just_pressed("reset"):
+	if Input.is_action_just_pressed("reset") and police.chasing():
+		hud.post("TOBY ISN'T TOWING YOU OUT OF A POLICE CHASE.", 3.0)
+	elif Input.is_action_just_pressed("reset"):
 		car.respawn()
 		world.warm(car.sim.pos, Vector2(40, 25))
 	if Input.is_action_just_pressed("menu_back"):

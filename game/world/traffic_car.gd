@@ -47,6 +47,7 @@ var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var gone := false
 var paint := Color.WHITE
 var _art_damage := -1.0
+var pull := 0.0              # moved over (m, right) for a siren coming up behind
 
 static var _cone: ImageTexture
 
@@ -119,7 +120,16 @@ func desired_speed(road: Dictionary) -> float:
 
 func _lane(road: Dictionary) -> float:
 	var lanes: Array = Traffic.LANE[road.cls]
-	return lanes[mini(lane_i, lanes.size() - 1)]
+	return float(lanes[mini(lane_i, lanes.size() - 1)]) + pull
+
+## A siren coming up behind: move over and slow down (0 = carry on, 1 = pulled over).
+func _siren_behind() -> float:
+	var fwd := Vector2(cos(heading), sin(heading))
+	for o in traffic.extra:
+		if not is_instance_valid(o) or not o.siren: continue
+		var rel: Vector2 = (o as AiCar).sim.pos - pos
+		if rel.length_squared() < 50.0 * 50.0 and rel.dot(fwd) < 2.0: return 1.0
+	return 0.0
 
 # ------------------------------------------------------------------ driving
 
@@ -137,6 +147,8 @@ func drive(dt: float) -> void:
 	if road.is_empty():
 		gone = true
 		return
+	var yielding := _siren_behind()
+	pull = move_toward(pull, 1.6 * yielding, dt * 1.2)
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
@@ -161,7 +173,7 @@ func drive(dt: float) -> void:
 		var lat_err := (pos - A).dot(nrm) - _lane(road)
 		pos -= nrm * clampf(lat_err, -1.5 * dt, 1.5 * dt)
 	# --- how fast it wants to go: the limit, then slower for the bend ahead
-	var v0 := desired_speed(road)
+	var v0 := desired_speed(road) * (1.0 - 0.55 * yielding)
 	var jr: float = traffic.junctions.get(b, {}).get("radius", 0.0)
 	var bend := absf(turn_ahead)
 	if bend > 0.25:

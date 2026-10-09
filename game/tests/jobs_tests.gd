@@ -69,5 +69,48 @@ func _init() -> void:
 	check("the tow drop-offs are on roads", map.ground_at(Jobs.road_point(map, Jobs.COVINGTON)) == "asphalt" and map.ground_at(Jobs.road_point(map, Jobs.IMPOUND)) == "asphalt")
 	check("runway 7 holds an eighth mile plus room to stop", DragStrip.RUNWAY.has_point(DragStrip.START) and DragStrip.RUNWAY.has_point(Vector2(DragStrip.LINE_X + DragStrip.EIGHTH + 100.0, 1016.0)))
 	check("the strip is paved", map.ground_at(DragStrip.START) == "asphalt" and map.ground_at(Vector2(DragStrip.LINE_X + DragStrip.EIGHTH, 1016.0)) == "asphalt")
+	var long_blurbs: Array = []
+	for k in Jobs.ORDER:
+		if Hud.wrap_lines(String(Jobs.KINDS[k].blurb).to_upper(), 38).size() > 2: long_blurbs.append(k)
+	check("every gig's blurb fits its two lines on the phone", long_blurbs.is_empty(), str(long_blurbs))
+	# street races
+	check("street racing opens late", Jobs.open_now("street", 23.0) and Jobs.open_now("street", 2.0) and not Jobs.open_now("street", 20.0))
+	check("Marco runs a different route every night", Jobs.street_route(0).id != Jobs.street_route(1).id and Jobs.street_route(4).id == Jobs.street_route(0).id)
+	check("the winner takes the pot less Marco's tenth", StreetRace.purse(300, 4) == 1080, "%d" % StreetRace.purse(300, 4))
+	for r in StreetRace.ROUTES:
+		var pth := StreetRace.build_path(map, r)
+		var L := 0.0
+		var jumps := 0
+		for i in pth.size() - 1:
+			L += pth[i].distance_to(pth[i + 1])
+			if map.road_at(pth[i].lerp(pth[i + 1], 0.5)).is_empty(): jumps += 1
+		var direct := 0.0
+		var wp: Array = r.pts
+		for i in wp.size() - 1: direct += (wp[i] as Vector2).distance_to(wp[i + 1])
+		if r.loop: direct += (wp[wp.size() - 1] as Vector2).distance_to(wp[0])
+		var near := true
+		for w in wp:
+			var bd := INF
+			for q in pth: bd = minf(bd, q.distance_to(w))
+			if bd > 30.0: near = false
+		check("route %s follows the roads through every waypoint" % r.id, pth.size() > 3 and jumps == 0 and near and L < direct * 1.35, "%.0f m (straight %.0f), %d off-road legs" % [L, direct, jumps])
+		if r.loop: check("route %s comes back to the start" % r.id, pth[0].distance_to(pth[pth.size() - 1]) < 1.0)
+	var rr := RandomNumberGenerator.new()
+	rr.seed = 5
+	var mine := SaveGame.load_spec("silvio")
+	var field := StreetRace.pick_cars(rr, mine, 3)
+	var close_ok := field.size() == 3
+	for id in field:
+		var ratio := StreetRace.hp_per_t(CarCatalog.spec(String(id))) / StreetRace.hp_per_t(mine)
+		if ratio < 0.6 or ratio > 1.6: close_ok = false
+	check("the field brings cars about as quick as yours", close_ok, str(field))
+	# police
+	check("speed limits round like the signs", Police.limit_kmh("street") == 50.0 and Police.limit_kmh("arterial") == 60.0 and Police.limit_kmh("highway") == 100.0 and Police.limit_kmh("rural") == 80.0)
+	check("a little over is a small ticket", Police.fine(25.0, ["speeding"]) == 180, "%d" % Police.fine(25.0, ["speeding"]))
+	check("50 over is stunt driving: double", Police.fine(55.0, ["speeding"]) == 840, "%d" % Police.fine(55.0, ["speeding"]))
+	check("racing and running cost more than speeding", Police.fine(0.0, ["racing", "fleeing"]) == 2500)
+	check("racing gets the car impounded", Police.impounds(0.0, ["racing"], 0.0) and not Police.impounds(20.0, ["speeding"], 0.0))
+	check("a long chase gets the car impounded", Police.impounds(10.0, ["speeding", "fleeing"], 60.0) and not Police.impounds(10.0, ["speeding", "fleeing"], 10.0))
+	check("more heat, more patrol cars", Police.want_cruisers(90.0, "downtown", false) > Police.want_cruisers(0.0, "downtown", false) and Police.want_cruisers(0.0, "rural", false) == 0)
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

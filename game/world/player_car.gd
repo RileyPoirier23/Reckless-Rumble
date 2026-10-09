@@ -23,6 +23,13 @@ var damage_bucket := 0
 var throttle_in := 0.0
 var start_pos := Vector2.ZERO
 var start_heading := 0.0
+var quiet := false                # somebody else's car: it doesn't talk to the HUD
+var hit_police := 0               # times this car drove into a police car (not the other way round)
+var last_hit: Object = null       # the last thing it ran into
+var hit_frame := -1               # the physics frame it last hit something
+var skid_base := 10               # its own strips of rubber on the road
+
+static var _cone: ImageTexture
 
 func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud, at_m: Vector2, heading: float) -> void:
 	spec = car_spec
@@ -39,6 +46,7 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	sim.heading = heading
 	position = at_m * PX
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	collision_mask = 1 | 2            # the city and traffic (1), and the other drivers' cars (2)
 	safe_margin = 0.5
 	shape_node = CollisionShape2D.new()
 	var shape := RectangleShape2D.new()
@@ -54,7 +62,8 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	steam = _particles(Color(0.95, 0.97, 1.0, 0.5), 1.6, 30)
 	engine_smoke = _particles(Color(0.12, 0.12, 0.14, 0.7), 2.0, 40)
 	head_light = PointLight2D.new()
-	head_light.texture = _cone_tex()
+	if _cone == null: _cone = _cone_tex()
+	head_light.texture = _cone
 	head_light.energy = 1.3
 	head_light.color = Color(1.0, 0.96, 0.85)
 	head_light.offset = Vector2(64, 0)
@@ -65,6 +74,11 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	tail_light.energy = 0.8
 	tail_light.color = Color(1, 0.25, 0.2)
 	add_child(tail_light)
+
+## The smoke lives on the parent (so it stays where it was puffed out): it goes with the car.
+func _exit_tree() -> void:
+	for p in smoke + [steam, engine_smoke]:
+		if is_instance_valid(p): p.queue_free()
 
 func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	var p := CPUParticles2D.new()
@@ -87,7 +101,7 @@ func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	get_parent().add_child.call_deferred(p)
 	return p
 
-func _cone_tex() -> ImageTexture:
+static func _cone_tex() -> ImageTexture:
 	var img := Image.create(160, 96, false, Image.FORMAT_RGBA8)
 	for y in 96:
 		for x in 160:
@@ -112,7 +126,7 @@ func respawn() -> void:
 	position = start_pos * PX
 	damage_bucket = -1
 	for k in damage: damage[k] = 0.0
-	hud.post("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
+	_say("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
 
 var can_die := true               # the story turns this off when a crash is the plot
 var dead := false
@@ -188,7 +202,9 @@ func _lights(dt: float, st: float) -> void:
 
 func _physics_process(dt: float) -> void:
 	if dead: return
-	var ins := _inputs(dt) if not locked else [0.0, 0.3 if sim.speed() > 0.5 else 0.0, 0.0, 0.0]
+	# locked: ease to a stop and hold it there on the handbrake (the brake pedal past 0.3 at a
+	# standstill would find reverse)
+	var ins := _inputs(dt) if not locked else ([0.0, 0.3, 0.0, 0.0] if sim.speed() > 0.5 else [0.0, 0.25, 0.0, 1.0])
 	var th: float = ins[0]
 	var br: float = ins[1]
 	var st: float = ins[2]
@@ -210,32 +226,36 @@ func _physics_process(dt: float) -> void:
 		var n := col.get_normal()
 		var vw := sim.world_velocity()
 		var other = col.get_collider()
+		last_hit = other
+		hit_frame = Engine.get_physics_frames()
 		var vn := -vw.dot(n)
-		if other is TrafficCar: vn = -(vw - other.velocity_vec()).dot(n)
+		var is_car := other is TrafficCar or other is PlayerCar
+		if is_car: vn = -(vw - other.velocity_vec()).dot(n)
 		if vn > 0.0:
 			var hit_dir := -n
 			var d := hit_dir.dot(sim.forward())
 			var where := "front" if d > 0.6 else ("rear" if d < -0.6 else "side")
 			_check_fatal(col, other, vn, d, vw.length())
+			if other is AiCar and (other as AiCar).lights.a > 0.0 and vn > 3.0: hit_police += 1
 			sim.impact(vn, where)
 			_take_damage(-n, vn, col.get_position() / PX)
-			if other is TrafficCar:
-				# two cars: share the hit by mass (theirs is a guess: about 1,500 kg)
+			if is_car:
+				# two cars: share the hit by mass (traffic's is a guess: about 1,500 kg)
 				var m1 := float(spec.mass)
-				var m2 := 1500.0
+				var m2 := float(other.spec.mass) if other is PlayerCar else 1500.0
 				other.hit(-n * vn * (m1 / (m1 + m2)) * 1.6, col.get_position() / PX)
 				vw += n * vn * (m2 / (m1 + m2)) * 1.3
 			else:
 				vw += n * vn * 1.25
 			var tang := vw - n * vw.dot(n)
-			vw -= tang * (0.18 if not (other is TrafficCar) else 0.08)
+			vw -= tang * (0.18 if not is_car else 0.08)
 			sim.set_world_velocity(vw)
 			sim.yaw_rate *= 0.55
 			sim.w_wheel = sim.vx / float(spec.tires.radius) if absf(sim.vx) > 0.5 else sim.w_wheel
-			if vn > 6.0: hud.post("CRUNCH (%d KM/H)" % int(vn * 3.6), 2.0)
+			if vn > 6.0: _say("CRUNCH (%d KM/H)" % int(vn * 3.6), 2.0)
 		move_and_collide(col.get_remainder().slide(n))
 	sim.pos = position / PX
-	for m in sim.messages: hud.post(m)
+	for m in sim.messages: _say(m)
 	_update_look(dt, br)
 
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
@@ -248,9 +268,10 @@ func _check_fatal(col: KinematicCollision2D, other: Object, vn: float, d: float,
 	if not can_die or dead or sim.assist == CarSim.Assist.ARCADE: return
 	var cause := "edge"
 	var sub := ""
-	if other is TrafficCar:
+	if other is TrafficCar or other is PlayerCar:
 		cause = "traffic"
-		var rel := cos(angle_difference(sim.heading, (other as TrafficCar).heading))
+		var oh: float = (other as TrafficCar).heading if other is TrafficCar else (other as PlayerCar).sim.heading
+		var rel := cos(angle_difference(sim.heading, oh))
 		if d > 0.6: sub = "headon" if rel < -0.5 else ("rear" if rel > 0.5 else "tbone")
 		else: sub = "tbone"
 	elif other is BuildingNode: cause = "building"
@@ -274,12 +295,13 @@ func _die(cause: String, sub: String, kmh: float, other: Object) -> void:
 		"reverse": sim.gear < 0, "blink": blink != 0 and not hazards, "flat": flat,
 		"hot": sim.coolant_c > 118.0 or sim.head_gasket, "lights": lights_on, "surface": sim.surface,
 	}
-	if other is TrafficCar:
-		var tc := other as TrafficCar
-		var ob := String(tc.spec.get("side_body", tc.spec.get("body", "sedan")))
+	if other is TrafficCar or other is PlayerCar:
+		var os: Dictionary = other.spec
+		var ob := String(os.get("side_body", os.get("body", "sedan")))
 		info.other_body = "pickup" if ob == "tow" else ob
-		info.other_name = String(tc.spec.get("name", ""))
-		info.other_paint = tc.paint
+		info.other_name = String(os.get("name", ""))
+		info.other_paint = other.paint
+		info.other_police = other is AiCar and (other as AiCar).lights.a > 0.0
 	Input.start_joy_vibration(0, 1.0, 1.0, 1.0)
 	fatal.emit(info)
 
@@ -301,10 +323,27 @@ func _take_damage(dir_world: Vector2, vn: float, at: Vector2) -> void:
 		var sgn := 1.0 if zone == "front" else -1.0
 		var p := sim.pos + sim.forward() * sgn * float(spec.length) * 0.5
 		Debris.spawn(get_parent(), p, sim.heading, sim.world_velocity() * 0.6 + sim.forward() * sgn * 2.0, "bumper", paint, float(spec.width))
-		hud.post("THERE GOES THE %s BUMPER" % ("FRONT" if zone == "front" else "REAR"), 3.0)
+		_say("THERE GOES THE %s BUMPER" % ("FRONT" if zone == "front" else "REAR"), 3.0)
 	elif amt > 0.25 and randf() < 0.4:
 		Debris.spawn(get_parent(), at, sim.heading, sim.world_velocity() * 0.5, "hubcap" if randf() < 0.3 else "glass", paint)
 	if amt >= 0.02: damage_bucket = -2         # redraw the art now
+
+func _say(msg: String, secs := 4.0) -> void:
+	if not quiet: hud.post(msg, secs)
+
+func velocity_vec() -> Vector2:
+	return sim.world_velocity()
+
+## Another car hit this one: `dv` is the shove it got (m/s, world), `at` where (metres).
+func hit(dv: Vector2, at: Vector2) -> void:
+	if dead: return
+	sim.set_world_velocity(sim.world_velocity() + dv)
+	sim.yaw_rate += (at - sim.pos).cross(dv) * 0.35 / maxf(float(spec.length), 1.0)
+	var vn := dv.length()
+	if vn > 0.5:
+		sim.impact(vn, "side")
+		_take_damage(-dv / vn, vn * 1.2, at)
+	if vn > 6.0: _say("CRUNCH (%d KM/H)" % int(vn * 3.6), 2.0)
 
 func _wheel_world(u: float, v: float) -> Vector2:
 	return position + (sim.forward() * u + sim.right() * v) * PX
@@ -331,13 +370,13 @@ func _update_look(dt: float, br: float) -> void:
 		var rear := _wheel_world(-half_wb, v)
 		var slip: float = sim.wheel_slip[2 + side]
 		var s := clampf((slip - 2.0) / 6.0, 0.0, 1.0)
-		skids.mark(10 + side, rear, s, mark_col)
+		skids.mark(skid_base + side, rear, s, mark_col)
 		smoke[side].global_position = rear
 		smoke[side].emitting = slip > 4.5 and sim.surface != "ice"
 		smoke[side].color_ramp.colors[0] = Color(0.88, 0.9, 0.95, 0.6) if snow else Color(0.85, 0.85, 0.88, 0.55)
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)
-		skids.mark(20 + side, front, fs, mark_col)
+		skids.mark(skid_base + 10 + side, front, fs, mark_col)
 	var nose := _wheel_world(float(spec.length) * 0.45, 0.0)
 	steam.global_position = nose
 	steam.emitting = sim.coolant_c > 112.0 or sim.head_gasket

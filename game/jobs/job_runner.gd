@@ -36,6 +36,10 @@ var _cruise_m := 0.0
 
 # drag
 var strip: DragStrip
+# street race
+var race: StreetRace
+var race_route := {}
+var race_start := Vector2.ZERO
 
 func setup(the_drive: Node) -> void:
 	drive = the_drive
@@ -75,6 +79,12 @@ func start(k: String) -> void:
 			stage = "drive"
 			drive._on_dest("AIRSTRIP 7", DragStrip.START + Vector2(-20, 0))
 			drive.hud.post("DRAG NIGHT. PULL ONTO RUNWAY 7 AND STOP AT THE LINE.", 5.0)
+		"street":
+			stage = "drive"
+			race_route = Jobs.street_route(drive.sky.day)
+			race_start = StreetRace.build_path(map(), race_route)[0]
+			drive._on_dest("MARCO", race_start)
+			drive.hud.post("STREET RACE: %s. MEET MARCO AT THE START. $%d BUY-IN." % [race_route.name, int(race_route.buy_in)], 5.0)
 		"cruise":
 			stage = "cruise"
 			_cruise_m = 0.0
@@ -96,9 +106,15 @@ func finish(done := true) -> void:
 		strip.close()
 		strip.queue_free()
 		strip = null
+	if race:
+		race.close()
+		race.queue_free()
+		race = null
+		if not done: drive.hud.post("YOU PULL OUT OF THE RACE. MARCO KEEPS YOUR BUY-IN. OF COURSE HE DOES.", 4.0)
 	match k:
 		"pizza": drive.hud.post("SHIFT OVER. %d RUNS, $%d IN YOUR POCKET. YOU SMELL LIKE OREGANO." % [runs, earned], 6.0)
 		"tow": if not done: drive.hud.post("YOU LEAVE IT IN THE DITCH. SOMEBODY ELSE'S PROBLEM NOW.", 4.0)
+		"street": if done: drive.hud.post("RACE NIGHT: %s." % ("$%d UP" % earned if earned > 0 else "$%d DOWN" % -earned), 5.0)
 		"cruise": drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
 	if k == "tow" and String(car().spec.get("id", "")) == "tow": drive.job_restore_car()
 	kind = ""
@@ -123,6 +139,7 @@ func _process(dt: float) -> void:
 		"pizza": _pizza(dt)
 		"tow": _tow(dt)
 		"drag": _drag(dt)
+		"street": _street(dt)
 		"cruise":
 			_cruise_m += car().sim.speed() * dt
 	_objective()
@@ -142,6 +159,8 @@ func _objective() -> void:
 			elif stage == "deliver": o = "TOW IT TO %s. EASY ON THE BRAKES: IT WEIGHS %d KG." % [tow_dest.name, int(target.mass)]
 		"drag":
 			if stage == "drive": o = "DRAG NIGHT: AIRSTRIP 7. STOP AT THE START LINE ON RUNWAY 7."
+		"street":
+			if race == null: o = "STREET RACE: %s. %s STOP AT THE START AND SIGN IN WITH MARCO." % [race_route.name, race_route.blurb]
 		"cruise": o = ""
 	drive.hud.objective = o
 
@@ -295,6 +314,34 @@ func _on_strip_closed(won: int) -> void:
 		strip = null
 	finish(true)
 
+# ------------------------------------------------------------------ street race
+
+func _street(_dt: float) -> void:
+	if race: return
+	var c := car()
+	if c.sim.pos.distance_to(race_start) < 22.0 and c.sim.speed() < 2.0:
+		drive.hud.post(Hints.fmt("{use}: SIGN IN WITH MARCO ($%d)" % int(race_route.buy_in)), 0.2)
+		if Input.is_action_just_pressed("use"): sign_in()
+
+## Pay Marco and line up.
+func sign_in() -> bool:
+	var fee := int(race_route.buy_in)
+	if int(drive.save.get("cash", 0)) < fee:
+		drive.hud.post("MARCO: \"$%d. I DON'T DO IOUS. I'VE MET YOU.\"" % fee, 4.0)
+		return false
+	drive.save.cash = int(drive.save.cash) - fee
+	earned -= fee
+	race = StreetRace.new()
+	add_child(race)
+	race.setup(drive, race_route, rng)
+	race.closed.connect(_on_race_closed)
+	stage = "race"
+	return true
+
+func _on_race_closed(won: int) -> void:
+	if won > 0: pay(won)
+	finish(true)
+
 # ------------------------------------------------------------------ markers
 
 func _draw() -> void:
@@ -308,6 +355,9 @@ func _draw() -> void:
 			r = 18.0
 		"drag":
 			if stage == "drive" and strip == null: p = DragStrip.START
+		"street":
+			if race == null: p = race_start
+			r = 20.0
 	if p == Vector2.INF: return
 	var pulse := 0.5 + 0.5 * sin(t * 4.0)
 	draw_arc(p * CarArt.PX, r * CarArt.PX, 0.0, TAU, 48, Color(1.0, 0.75, 0.2, 0.35 + 0.3 * pulse), 4.0)

@@ -34,6 +34,7 @@ var route := PackedVector2Array()
 var dest_name := ""
 var screen: Rect2            # where the map goes, inside the bezel
 var _route_i := 0
+var blips: Array = []          # [metres, colour]: the police, the other racers
 var _clip: Control
 var _top: Control
 var _args := []
@@ -154,6 +155,11 @@ func _map(ci: CanvasItem, r: Rect2, heading_up: bool, tilt: float, scale_px_per_
 		if r.has_point(end):
 			ci.draw_rect(Rect2(end + Vector2(0, -10), Vector2(2, 10)), P.text)
 			ci.draw_rect(Rect2(end + Vector2(2, -10), Vector2(7, 5)), P.route)
+	for b in blips:
+		var q: Vector2 = toscreen.call(b[0])
+		if r.grow(-3.0).has_point(q):
+			ci.draw_rect(Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5)), Color(0, 0, 0, 0.7))
+			ci.draw_rect(Rect2(q - Vector2(1.5, 1.5), Vector2(3, 3)), b[1])
 	_arrow(ci, centre, 0.0 if heading_up else sim.heading + PI / 2.0, P.route if style != "tomtum" else Color("e04020"))
 
 func _arrow(ci: CanvasItem, c: Vector2, ang: float, col: Color) -> void:

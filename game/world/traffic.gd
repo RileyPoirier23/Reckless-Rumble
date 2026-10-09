@@ -43,6 +43,8 @@ var sky: WorldSky
 var ysort: Node2D
 var player: PlayerCar
 var cars: Array[TrafficCar] = []
+var extra: Array = []          # cars with other drivers (racers, the police): traffic gives them room too
+var hush := Rect2()            # a street race is on in here: Marco's crew has the side streets blocked
 var junctions := {}                 # node -> { control, major_roads, radius, queue, offset }
 var _node_cells := {}               # Vector2i -> Array of node ids (64 m cells)
 var _grid := {}                     # per frame: Vector2i (20 m) -> Array of cars
@@ -204,7 +206,7 @@ func _spawn(cam_m: Vector2) -> void:
 		if L < ja + jb + 2.0: continue
 		var s := ja + rng.randf() * (L - ja - jb)
 		var p := lane_point(a, b, s, lane)
-		if p.distance_to(cam_m) < SPAWN_MIN * 0.9: continue
+		if p.distance_to(cam_m) < SPAWN_MIN * 0.9 or hush.has_point(p): continue
 		var clear := true
 		for c in cars:
 			if c.pos.distance_to(p) < 30.0: clear = false
@@ -241,7 +243,7 @@ func step(dt: float, cam_m: Vector2) -> void:
 		var c := cars[i]
 		# wrecks get towed once you've moved on
 		if c.state == "parked" and ((c.wreck_t > 20.0 and c.pos.distance_to(cam_m) > 60.0) or c.wreck_t > 40.0): c.gone = true
-		if c.pos.distance_to(cam_m) > DESPAWN or c.gone:
+		if c.pos.distance_to(cam_m) > DESPAWN or c.gone or (hush.has_point(c.pos) and c.pos.distance_to(cam_m) > 90.0):
 			_leave_junctions(c)
 			c.queue_free()
 			cars.remove_at(i)
@@ -274,6 +276,10 @@ func leader(car: TrafficCar, reach: float) -> Array:
 				_consider(car, path, o.pos, o.velocity_vec(), o.length, o.width, best, o)
 	if player and not ignore_player:
 		_consider(car, path, player.sim.pos, player.sim.world_velocity(), float(player.spec.length), float(player.spec.width), best, player)
+	for o in extra:
+		if is_instance_valid(o):
+			var oc: PlayerCar = o
+			_consider(car, path, oc.sim.pos, oc.sim.world_velocity(), float(oc.spec.length), float(oc.spec.width), best, oc)
 	return best
 
 func _consider(car: TrafficCar, path: PackedVector2Array, p: Vector2, vel: Vector2, olen: float, owid: float, best: Array, who) -> void:
