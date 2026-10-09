@@ -882,10 +882,10 @@ func _draw_book() -> void:
 	else:
 		draw_rect(Rect2(BOOK.position, Vector2(BOOK.size.x, 18)), Color("3a4a3a"))
 		PixelFont.draw(self, BOOK.position + Vector2(6, 6), "INSPECTION STICKERS - STATION 0117", BONE)
-		var tr := _log_tab_rect()
+		var tab_r := _log_tab_rect()
 		if DeskBook.old_log:
-			draw_rect(tr, Color("e4e2d8") if log_old else Color("5a6a5a"))
-			PixelFont.draw_centered(self, tr.get_center().x, tr.position.y + 3, "LAST FALL (2018)" if log_old else "THIS FALL (2019)", PAPER_INK if log_old else BONE)
+			draw_rect(tab_r, Color("e4e2d8") if log_old else Color("5a6a5a"))
+			PixelFont.draw_centered(self, tab_r.get_center().x, tab_r.position.y + 3, "LAST FALL (2018)" if log_old else "THIS FALL (2019)", PAPER_INK if log_old else BONE)
 	var lay := _book_layout()
 	if lay.is_empty():
 		var empty := "NOTHING YET. GUS SAYS WRITE DOWN ANYTHING THAT DOESN'T SIT RIGHT. (INSPECT WHAT SOMEBODY SAYS, THEN THIS NOTEBOOK.)" if nb else "NO STICKERS ISSUED YET. APPROVE AN INSPECTION AND IT GOES IN HERE."
@@ -904,10 +904,10 @@ func _draw_book() -> void:
 
 ## The customer's face (or the licence photo): a CAGE BOSS-style portrait that matches the
 ## person's sex and the age on the date of birth.
-func _face_tex(seed: int, small := false) -> ImageTexture:
+func _face_tex(face_seed: int, small := false) -> ImageTexture:
 	var fem := int(c.person.get("fem", 0))
 	var age := CounterRules.YEAR - int(c.person.dob[0])
-	return Face.small_texture(seed, fem, age) if small else Face.texture(seed, fem, age)
+	return Face.small_texture(face_seed, fem, age) if small else Face.texture(face_seed, fem, age)
 
 func _face_rect() -> Rect2:
 	return Rect2(11, 10, 128, 128)   # the 64px portrait at 2x, above the counter top (y 142)
@@ -1184,9 +1184,9 @@ func _rule_blocks() -> Array:
 	if CounterRules.binder(day):
 		by += 12.0
 		var tabs := _tabs_today()
-		var name: String = tabs[clampi(tab, 0, tabs.size() - 1)]
-		list = list.filter(func(r): return r.tab == name)
-		if name == "MINISTRY": extra = CounterRules.MINISTRY_LINES
+		var tab_name: String = tabs[clampi(tab, 0, tabs.size() - 1)]
+		list = list.filter(func(r): return r.tab == tab_name)
+		if tab_name == "MINISTRY": extra = CounterRules.MINISTRY_LINES
 	for r in list:
 		var ls := wrap_text(r.text, 38)
 		out.append({ "r": Rect2(BOARD.position.x + 3, by, BOARD.size.x - 6, ls.size() * 7), "rule": r, "lines": ls, "today": r.day == day })

@@ -177,8 +177,8 @@ const STING_ASK := ["I GOT THE PAPERS DONE AT THE, UH... THE TIM BURTONS? THE ON
 var rng := RandomNumberGenerator.new()
 var bolo: Array = []                    # [{plate, vin, car}] on the police list this week
 
-func _init(seed := 506) -> void:
-	rng.seed = seed
+func _init(start_seed := 506) -> void:
+	rng.seed = start_seed
 
 # ------------------------------------------------------------------ dates and the calendar
 
@@ -810,12 +810,12 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 		"insurance", "glovebox": return [["INSURED", d.holder, "name", d.holder], ["COMPANY", d.insurer, "", null],
 			["POLICY", d.policy, "", null], ["VIN", d.vin, "vin", d.vin], ["FROM", date_str(d.from), "start", d.from], ["TO", date_str(d.to), "expiry", d.to]]
 		"sheet":
-			var tr: Array = d.tread
+			var treads: Array = d.tread
 			var pd: Array = d.pads
 			var rows := [["VIN", d.vin, "vin", d.vin]]
 			if rule_active("door", day): rows.append(["DOOR", d.door, "vin", d.door])
 			rows.append_array([["ODO", "%d KM" % d.odo, "odo", d.odo],
-				["TREAD", "FL %.1f FR %.1f RL %.1f RR %.1f" % [tr[0], tr[1], tr[2], tr[3]], "measure", { "kind": "tread", "v": tr }],
+				["TREAD", "FL %.1f FR %.1f RL %.1f RR %.1f" % [treads[0], treads[1], treads[2], treads[3]], "measure", { "kind": "tread", "v": treads }],
 				["PADS", "FRONT %.1f  REAR %.1f" % [pd[0], pd[1]], "measure", { "kind": "pads", "v": pd }],
 				["LIGHTS", "ALL WORKING" if d.lights else "LEFT TAIL OUT", "measure", { "kind": "lights", "v": d.lights }],
 				["RUST", ("SURFACE ONLY" if d.get("surface", false) else "NONE") if not d.rust else "THROUGH THE ROCKER", "measure", { "kind": "rust", "v": d.rust }]])
