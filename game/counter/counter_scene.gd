@@ -1321,7 +1321,11 @@ func _draw_wall() -> void:
 		for i in cars.size():
 			var b: Dictionary = cars[i]
 			PixelFont.draw(self, br.position + Vector2(4, 12 + i * pitch), b.plate, INK)
-			PixelFont.draw(self, br.position + Vector2(36, 12 + i * pitch), b.car, PAPER_DIM)
+			# a long name stops at the edge of the sheet
+			var car_name := String(b.car)
+			var fit := floori((br.size.x - 40.0) / 4.0)
+			if car_name.length() > fit: car_name = car_name.substr(0, fit - 1) + "."
+			PixelFont.draw(self, br.position + Vector2(36, 12 + i * pitch), car_name, PAPER_DIM)
 		if not parts.is_empty():
 			var py: float = br.position.y + 12 + cars.size() * pitch
 			draw_rect(Rect2(br.position.x + 3, py, br.size.x - 6, 1), Color(BLUE, 0.6))

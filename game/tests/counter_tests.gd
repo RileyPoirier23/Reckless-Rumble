@@ -492,7 +492,7 @@ func _regulars() -> void:
 				tried += 1
 				var p := String(s.get("problem", "clean"))
 				var found := CounterRules.find_problems(c, day, r.bolo)
-				if found != c.flags or (p != "clean" and not CounterRules.rule_active(CounterRules.PROBLEM_RULE[p], day)) or c.kind != "regular" or String(s.last) != key:
+				if found != c.flags or (p != "clean" and not CounterRules.possible(p, day)) or c.kind != "regular" or String(s.last) != key:
 					wrong += 1
 					if note == "": note = "%s %d %s: %s vs %s" % [id, k, key, found, c.flags]
 	DeskBook.reset()

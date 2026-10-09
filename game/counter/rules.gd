@@ -81,10 +81,9 @@ const PROBLEM_RULE := {
 }
 ## Problems the right answer to is REPORT, not DENY.
 const REPORT_PROBLEMS := ["stolen", "title_washed", "hot_part"]
-## Problems that come in a courier's box, not a customer's car.
+## Problems that come in a courier's box, not a customer's car. (A stolen part comes either way:
+## customer(day, "hot_part") is a car, courier(day, "hot_part") a box.)
 const COURIER_PROBLEMS := ["wrong_part", "customs_value", "ship_to"]
-## ...and the one that can come either way (customer(day, "hot_part") is a car; courier(day, "hot_part") a box).
-const BOX_PROBLEMS := ["wrong_part", "customs_value", "ship_to", "hot_part"]
 ## The exceptions: a discrepancy -> [the document that can explain it, the rule that makes it count].
 const PROOFS := {
 	"name_mismatch": ["bos", "bos"], "expired_reg": ["permit", "permit"], "no_insurance": ["glovebox", "insured"],
@@ -103,9 +102,8 @@ const HOT_PARTS := [["CATALYTIC CONVERTER", "CAT CONVERTER", "CAT"], ["AIRBAG MO
 const HOT_LISTED := 4
 ## Where somebody got the part on their car.
 const PART_SELLERS := ["MARKETTHING (PRIVATE SALE)", "SALISBURY SALVAGE", "DIEPPE AUTO RECYCLERS", "THE FLEA MARKET ON MAIN", "FUNDY PARTS SUPPLY"]
-## What the registration says the car is for, once winter tires care.
-const USES := ["PRIVATE", "TAXI", "RIDESHARE", "COMMERCIAL"]
-## The ones that need winter tires on from NOV 25 (the stations) or DEC 1 (the road) to APR 30.
+## What the ownership says the car's for (PRIVATE, or one of these) once winter tires care. These
+## need winter tires on from NOV 25 (at the stations) or DEC 1 (on the road) to APR 30.
 const WINTER_USES := ["TAXI", "RIDESHARE", "COMMERCIAL"]
 const WINTER_SEASON := [[11, 25], [4, 30]]
 const STUD_SEASON := [[10, 15], [4, 30]]
