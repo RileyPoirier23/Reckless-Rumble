@@ -97,7 +97,7 @@ func _init() -> void:
 	for day in open_days():
 		for prob in CounterRules.PROBLEM_RULE.keys() + [""]:
 			if prob != "" and not CounterRules.rule_active(CounterRules.PROBLEM_RULE[prob], day): continue
-			for seed in (8 if day < 5 else 2):
+			for seed in (8 if day < 5 else (2 if day < 26 else 1)):
 				var rr := CounterRules.new(seed * 7 + day * 101)
 				rr.make_bolo()
 				var cust := rr.customer(day, prob) if prob != "" else rr.customer(day, "")
@@ -200,7 +200,7 @@ func _desk() -> void:
 	for day in open_days():
 		for prob in CounterRules.PROBLEM_RULE:
 			if not CounterRules.rule_active(CounterRules.PROBLEM_RULE[prob], day): continue
-			for seed in 5:
+			for seed in (5 if day < 26 else 3):
 				var r := CounterRules.new(seed * 101 + day)
 				r.make_bolo()
 				var c := r.customer(day, prob)

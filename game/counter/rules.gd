@@ -761,7 +761,7 @@ func courier(day: int, want := "", fam := false) -> Dictionary:
 			c.slip.no = part_tweak(no)
 			if rng.randf() < 0.35: _proof(c, "wrong_part", day, "bad")
 		"customs_value":
-			# declared low to dodge the duty (or high, by a tired clerk in Ohio)
+			# declared low to skip the duty (or high, by a tired clerk in Ohio)
 			c.customs.value = maxi(15, floori(paid / (2.0 + rng.randi() % 3))) if rng.randf() < 0.75 else paid * 2 + rng.randi() % 40
 		"ship_to": c.slip.shipto = FAMILIA_SHIPTO if fam else WRONG_SHIPTO[rng.randi() % WRONG_SHIPTO.size()]
 	if prob != "": c.flags.append(prob)
