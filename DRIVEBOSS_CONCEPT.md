@@ -8,6 +8,18 @@ A 506Studios game, in the same creative family as **CAGE BOSS**: pixel art, R-ra
 
 ---
 
+## Decisions so far
+
+| | Decided |
+|---|---|
+| **Setting** | A Maritime-inspired city (Port Rumble) |
+| **Art** | Hand-drawn pixel art (layered sprites, sprite-stacked cars in the open world) |
+| **Camera** | 3/4 top-down open world; drag races switch to a side view |
+| **Price** | Free, with paid extras (never pay-to-win) |
+| **Engine** | Godot 4 |
+
+---
+
 ## 0. Pillars
 
 1. **The counter is a weapon.** Every car that rolls into Covington Auto comes with paperwork, and the paperwork lies. The Papers, Please desk from CAGE BOSS is back, now with VINs, registrations, inspection stickers and stolen-car bulletins. Your stamp decides who gets a safety sticker, who gets reported, and whose car quietly gets a new identity in Bay 3.
@@ -443,21 +455,78 @@ Every assist can also be toggled separately. Controller rumble follows tire slip
 
 ---
 
-## 14. Art direction
+## 14. Art direction: hand-drawn pixel art
 
-**Resolution:** 640×360 internal, scaled pixel-perfect. This is more detail than CAGE BOSS's 480×270, but still crisp pixels.
+**Resolution:** 640×360 internal, scaled pixel-perfect. This is more room for detail than CAGE BOSS's 480×270, but still crisp pixels. Everything is drawn by hand: no 3D renders. The trick is drawing things in **layers** so a few hand-made pieces combine into thousands of looks.
 
-**Recommended look: 3D-rendered pixel art** (see question 2).
-- **How it works:**
-  - Cars, characters and the city are built as low-poly 3D models.
-  - The engine draws them through a pixel-art shader: low resolution, hard toon lighting, 1px outlines, a limited palette.
-  - It reads as 2D pixel art. *Dead Cells* used this approach for its characters.
-- **Why it's the right call for DriveBoss:**
-  - **Cars:** every car can be seen from any angle, with real suspension, steering, damage and every body kit, rim and paint combination. That's impossible to hand-draw for 60+ cars.
-  - **Seasons, weather and night** are lighting and material changes, not four hand-painted versions of the whole city.
-  - **Characters** animate smoothly, with real walk cycles, driving poses, fights, hugs and lip-sync. That's the big upgrade from CAGE BOSS's rigs. Leo's clothes and hair change across 8 years.
-- **Still hand-made where it counts:** UI, portraits, paperwork, MarketThing photos, the newspaper, signs and decals are drawn as pixel art.
-- **Cutscenes:** in-engine on built sets with close-up portrait shots, like CAGE BOSS but with animated faces (blinks, eye direction, mouth shapes).
+### Cars: the hero art
+Every car gets three hand-drawn views.
+
+| View | Size (mid-size car) | Where you see it |
+|---|---|---|
+| **Profile (side)** | about 200×64 px | Drag races, the garage lift, MarketThing photos, the showroom, pink-slip screens. This is where the detail lives: panel gaps, door handles, the interior through the glass, brake calipers behind the spokes, badges, exhaust tips |
+| **Top-down (open world)** | about 48×24 px footprint, **sprite-stacked** | Driving, drifting, chases. The car is drawn as 20 to 30 thin horizontal slices, like a pixel-art layer cake. The game stacks them with a 1-pixel offset and rotates each slice, so the car turns smoothly through 360° and still looks hand-made. Many top-down pixel car games use this. (Fallback: 16 hand-drawn angles, 9 drawn and 7 mirrored) |
+| **Front 3/4 "beauty shot"** | about 160×96 px | MarketThing listing photos, the title screen, story moments. Optional per car |
+
+**Layered, so it can be customized:**
+- **Paint:**
+  - The body is drawn in greys, and a shader paints it any colour, with metallic, pearl, matte and two-tone ramps.
+  - One drawing gives every paint job.
+- **Separate layers for:**
+  - glass, chrome/trim, lights (with a glow layer), brakes;
+  - wheels (spin frames, and steering angle in top-down);
+  - tires (sidewall lettering).
+- **Body kits:**
+  - Swappable overlay parts per view: front and rear bumpers (3 to 5 each), skirts, wings (6+), hoods.
+  - **Rims:** about 20 styles shared across every car, scaled to size.
+- **Ride height, camber and suspension squat:** pixel offsets between the body and wheel layers, so no extra drawing.
+- **Damage:**
+  - **Profile:** every panel has clean / dented / smashed / missing versions.
+  - **Top-down:** dent and scrape decals plus tweaked slices.
+- **Dirt, salt crust, rust and snow on the roof:** shader masks over the paint, so they work on every car for free.
+- **Livery editor:** draw pixel decals onto the profile and top views.
+
+**Art budget:** a car is a few days of an artist's time. Launch with about 30 cars, then add more over updates (this is also where paid car packs come in; see section 17).
+
+### Characters: the big upgrade
+- **Frame-by-frame animation,** about 48 px tall in the world, with 8 directions (5 drawn, 3 mirrored).
+- **Real animation sets:**
+  - idle with breathing, walk, run;
+  - getting in and out of cars (door opens, lean in), sliding under a car on the creeper, leaning over an engine bay;
+  - smoking, drinking, phone calls, talking gestures;
+  - shoves and scuffles, hugs, dancing at the meet, the family-barbecue toast.
+- **Paper-doll layers:** body base, outfit, hair, accessories. Leo's look changes across 8 years and every season (hoodie, winter jacket and toque, work coveralls, a suit for the funeral) without redrawing the whole character every time.
+- **Portraits:** large hand-drawn portraits (about 96×96) with:
+  - 8 expressions;
+  - blink frames and 4 talking mouth shapes;
+  - an aged version per chapter (Ava at 14 and at 22).
+
+  CAGE BOSS's portraits were still; these move.
+- **Cutscenes:**
+  - The big moments are hand-animated pixel scenes: the prologue crash, Frank's tapes, the brake line on the lift, the Coast Road.
+  - Everything else is staged in-engine on built sets with animated portraits, like CAGE BOSS but alive.
+
+### The world
+- **Tiles and buildings:**
+  - A 3/4 top-down tile world (16×16 tiles).
+  - Big hand-drawn buildings, signs and landmarks (the lighthouse, the cranes, the Tim Burtons, Covington Auto).
+- **Seasons without drawing the city four times:**
+  - One base tile set.
+  - A **snow layer** that piles up by depth.
+  - Fall leaf litter and spring puddles.
+  - A wet-road shader that darkens and reflects lights in rain.
+  - Plowed snowbanks along the roads in winter.
+- **Day and night:**
+  - 2D lights with normal maps, made from the sprites and touched up by hand.
+  - Headlights sweep across walls; streetlights cast orange pools; neon glows on wet asphalt.
+
+### Who draws it
+- **Tools:** pixel artists in Aseprite, imported straight into the engine (layers, slices and tags become parts and animations).
+- **Placeholders first:** the code draws simple placeholder art (like CAGE BOSS's procedural art), so every system works before the real art lands. Then it's swapped piece by piece.
+- **An art bible before the first real sprite:**
+  - a palette of about 64 colours;
+  - outline rules and the light direction;
+  - pixel density per object, and the car-drawing template (slice count, wheel positions, part anchors).
 
 **Palette and mood:**
 - Sodium-orange streetlights and neon at night.
@@ -483,7 +552,8 @@ Every assist can also be toggled separately. Controller rumble follows tire slip
 
 **Engine: Godot 4** (the same engine CAGE BOSS is being ported to).
 - **Strengths:**
-  - A real 3D renderer for the pixel-art pipeline.
+  - A strong 2D renderer: 2D lights with normal maps, shaders for paint, dirt and snow, TileMaps, and Aseprite import.
+  - A sprite-stacking node for the top-down cars (a few hundred lines of our own code).
   - Solid physics.
   - Exports to Windows, Mac, Linux and Android today.
   - iOS with a Mac build machine.
@@ -506,7 +576,35 @@ Every assist can also be toggled separately. Controller rumble follows tire slip
 
 ---
 
-## 17. Build order
+## 17. Free, with paid extras
+
+**The whole story is free.** All 8 years, every crew, every ending, every car you need. Extras are optional and never pay-to-win.
+
+**Paid extras:**
+- **Car packs:** new parody cars, each with its own MarketThing listings, history and a crew race. About 3 to 5 cars per pack.
+- **Style packs:**
+  - rims, body kits, wings;
+  - liveries and decal sets;
+  - neon and underglow colours;
+  - garage décor;
+  - outfits for Leo.
+- **Story expansions** (after launch), for example a road trip chapter, or Frank's 1987 season as a playable prequel.
+- **The supporter pack:** the soundtrack, a digital art book and your name in the credits, the paid version of SUPPORT THE DEV.
+
+**Never for sale:** money, performance parts, race wins, skipping the story, or anything that makes a race easier. Everything that affects driving is earned in the game.
+
+**Where it sells:**
+
+| Store | How it works |
+|---|---|
+| **Steam** | Free to play, extras as DLC |
+| **Google Play** | Free, extras as in-app purchases. A sideloaded APK from the website can't sell extras, so Android goes through the Play Store for this game |
+| **506clicks.ca / itch.io** | The free game, plus the supporter pack |
+| **Consoles** | Free, extras through each console's store, once approved |
+
+---
+
+## 18. Build order
 
 Each step is a playable build.
 
@@ -526,7 +624,7 @@ Each step is a playable build.
 
 ---
 
-## 18. House rules
+## 19. House rules
 
 - **Parody characters, never actors.** Our names, our designs, nobody's real face or real name.
 - **No real car brands or logos.** Parody makes only, drawn to suggest, not copy.
@@ -538,7 +636,7 @@ Each step is a playable build.
 
 ---
 
-## 19. Ideas: pick what you want
+## 20. Ideas: pick what you want
 
 **Car culture**
 1. **Cars & Double-Doubles:** a Sunday morning meet where your build gets judged. Win clout and offers.
@@ -579,17 +677,14 @@ Each step is a playable build.
 
 ---
 
-## 20. Questions for you
+## 21. Questions for you
 
-1. **Setting:** a Maritime-inspired city (Port Rumble), an American Fast & Furious-style city, or a Maritime home city with road trips to bigger ones?
-2. **Art:** 3D-rendered pixel art (recommended, as described above) or hand-drawn sprites like CAGE BOSS?
-3. **Driving view:** a 3/4 top-down open world with side-view drag races (recommended), or top-down for everything?
-4. **Price:** free like CAGE BOSS, paid on Steam, or free with paid extras?
-5. **Length:** about 25 hours for the story, or a big 40+ hour one?
-6. **Endings:** four endings, as proposed, or one fixed ending?
-7. **Frank's killer:** is Dale Hatch right, or do you have someone in mind? (Also: should I know, or do you want to write that part yourself?)
-8. **Leo's vices:** should he be able to get sober as part of the story, or always stay a mess?
-9. **Bryan:** keep the Bryan parody, with a tribute ending, or leave him out?
-10. **Multiplayer:** couch versus only, or online crews too?
-11. **Music:** same artists as CAGE BOSS, new ones, or both? Radio DJs voiced by friends?
-12. **Which ideas** from section 19 are in?
+1. **Length:** about 25 hours for the story, or a big 40+ hour one?
+2. **Endings:** four endings, as proposed, or one fixed ending?
+3. **Frank's killer:** is Dale Hatch right, or do you have someone in mind? (Also: should I know, or do you want to write that part yourself?)
+4. **Leo's vices:** should he be able to get sober as part of the story, or always stay a mess?
+5. **Bryan:** keep the Bryan parody, with a tribute ending, or leave him out?
+6. **Multiplayer:** couch versus only, or online crews too?
+7. **Music:** same artists as CAGE BOSS, new ones, or both? Radio DJs voiced by friends?
+8. **Which ideas** from section 20 are in?
+9. **Art:** will you draw, hire pixel artists, or should I start with code-drawn placeholder art and we swap it later?
