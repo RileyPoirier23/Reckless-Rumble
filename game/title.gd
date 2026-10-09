@@ -14,7 +14,7 @@ func _items() -> void:
 	if StoryState.has_save():
 		ITEMS.append(["CONTINUE THE STORY", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
 	ITEMS.append(["NEW STORY", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE.", "story:new"])
-	ITEMS.append(["THE COUNTER", "SEVEN WEEKS OF SHIFTS AT COVINGTON AUTO. READ THE PAPERS. STAMP THEM.", "res://counter.tscn"])
+	ITEMS.append(["THE COUNTER", "EIGHT WEEKS OF SHIFTS AT COVINGTON AUTO. READ THE PAPERS. STAMP THEM.", "res://counter.tscn"])
 	ITEMS.append(["THE LOT", "FREE DRIVE: PORT RUMBLE TO SALISBURY AND HAVELOCK, WITH TRAFFIC.", "res://drive.tscn"])
 	ITEMS.append(["QUIT", "", ""])
 
