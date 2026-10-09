@@ -49,6 +49,7 @@ func colors() -> Array:
 		"plant": return [Color("9a948a"), Color("7a746a"), Color("6a665e")]
 		"tower": return [Color("b8b8bc"), Color("8a8a90"), Color("c8c8cc")]
 		"pumps": return [Color("d8d8d0"), Color("a8a8a0"), Color("e8e8e0")]
+		"junk": return [Color("6a5040"), Color("3a2c24"), Color("5a4a40")]
 	return [Color("7a6a5a"), Color("5a4e42"), Color("3a383e")]
 
 ## The four footprint corners (px, local), clockwise from the north-west.
@@ -105,6 +106,8 @@ func _draw() -> void:
 		_quad(a, b, b + hv, a + hv, wc)
 		if data.kind in ["barn"]:
 			_quad(a.lerp(b, 0.35), a.lerp(b, 0.65), a.lerp(b, 0.65) + hv * 0.6, a.lerp(b, 0.35) + hv * 0.6, c[1])
+		elif data.kind == "junk":
+			_crushed(a, b, hv)
 		elif data.kind not in ["pumps", "church"]:
 			_windows_on(a, b, hv, Color("1e2430"), Color("3a4658"), 1.0)
 		if data.kind == "garage":
@@ -130,6 +133,19 @@ func _draw() -> void:
 			draw_colored_polygon(half, c[2].lightened(0.12))
 			draw_line(m0 + up * 6.0, m1 + up * 6.0, c[2].darkened(0.3), 2.0)
 			if data.kind == "barn": draw_line(m0 + up * 6.0, m1 + up * 6.0, c[2].lightened(0.25), 3.0)
+		"junk":
+			# the top of the stack: a couple of flattened roofs, rust round the edges
+			var rng := RandomNumberGenerator.new()
+			rng.seed = int(position.x + position.y)
+			var along := fp.size.x >= fp.size.y
+			var k := 4.0
+			var L := fp.size.x if along else fp.size.y
+			while k + 30.0 < L:
+				var w := 26.0 + rng.randf() * 10.0
+				var cr := Rect2(fp.position + (Vector2(k, 4) if along else Vector2(4, k)) + hv, Vector2(w, fp.size.y - 8) if along else Vector2(fp.size.x - 8, w))
+				draw_rect(cr, CRUSHED[rng.randi() % CRUSHED.size()])
+				draw_rect(cr, Color("4a2c1a"), false, 2.0)
+				k += w + 6.0
 		"church":
 			var top := fp.get_center() + hv
 			draw_colored_polygon(PackedVector2Array([top + Vector2(-12, 0), top + Vector2(12, 0), top + up * 70.0]), c[2].lightened(0.1))
@@ -143,6 +159,29 @@ func _draw() -> void:
 				draw_rect(Rect2(p, Vector2(12 + rng.randi() % 10, 8 + rng.randi() % 6)), c[2].lightened(0.15))
 				draw_rect(Rect2(p + Vector2(2, 2), Vector2(4, 3)), c[2].darkened(0.3))
 	_sign(false)
+
+const CRUSHED := [Color("7a2a24"), Color("2a4a6a"), Color("8a8a84"), Color("c8c0a8"), Color("3a5a3a"), Color("a86a2a"), Color("2a2a30")]
+
+## A wall of crushed cars: flat slabs of old paint, stacked, with rust between.
+func _crushed(a: Vector2, b: Vector2, hv: Vector2) -> void:
+	var L := a.distance_to(b)
+	var H := hv.length()
+	if L < 8.0 or H < 4.0: return
+	var dir := (b - a) / L
+	var upn := hv / H
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(position.x * 5.0 + a.x + a.y)
+	var y := 1.0
+	while y + 5.0 < H:
+		var h := 5.0 + rng.randf() * 3.0
+		var x := rng.randf() * 6.0
+		while x + 8.0 < L:
+			var w := minf(18.0 + rng.randf() * 16.0, L - x)
+			var p := a + dir * x + upn * y
+			_quad(p, p + dir * w, p + dir * w + upn * (h - 1.0), p + upn * (h - 1.0), CRUSHED[rng.randi() % CRUSHED.size()].darkened(0.15))
+			if rng.randf() < 0.4: draw_line(p + upn * (h * 0.5), p + dir * minf(6.0, w) + upn * (h * 0.5), Color("d8d0c0", 0.5), 1.0)
+			x += w + 2.0
+		y += h
 
 ## Window grid on one wall, a..b along the ground, hv up the wall.
 func _windows_on(a: Vector2, b: Vector2, hv: Vector2, glass: Color, frame: Color, lit_chance: float) -> void:
@@ -192,7 +231,7 @@ class Windows extends Node2D:
 	var building: BuildingNode
 	func _draw() -> void:
 		var kind: String = building.data.kind
-		if kind in ["tower", "pumps", "barn"]: return
+		if kind in ["tower", "pumps", "barn", "junk"]: return
 		var hv := CarView.screen_up * building.hpx
 		var lit := 0.55 if kind in ["apts", "house", "farmhouse", "shop"] else 0.3
 		for w in building.visible_walls():

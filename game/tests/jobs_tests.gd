@@ -119,6 +119,39 @@ func _init() -> void:
 		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
+	# Northside Salvage
+	var pile := SalvageYard.stock(12)
+	var again := SalvageYard.stock(12)
+	var n_part := pile.filter(func(it): return it.kind == "part").size()
+	var n_wear := pile.filter(func(it): return it.kind == "wear").size()
+	check("the yard's pile: six used parts and three worn bits, the same all day", n_part == 6 and n_wear == 3 and str(pile) == str(again), "%d + %d" % [n_part, n_wear])
+	var cheap := true
+	var a_dud := false
+	var grades := {}
+	for d in 40:
+		for it in SalvageYard.stock(d):
+			grades[int(it.grade)] = true
+			if it.kind == "part":
+				if int(it.price) >= Parts.price(String(it.id))  * 0.6: cheap = false
+				if int(it.grade) == 0 and bool(it.dud): a_dud = true
+			elif int(it.price) >= int(SalvageYard.WEAR[String(it.id)].gus): cheap = false
+	check("used is cheaper than new, and cheaper than Gus fixing it", cheap)
+	check("an A-grade part is never junk; every grade turns up", not a_dud and grades.size() == 4, str(grades.keys()))
+	var duds := 0
+	var d_parts := 0
+	for d in 200:
+		for it in SalvageYard.stock(d):
+			if it.kind == "part" and int(it.grade) == 3:
+				d_parts += 1
+				if bool(it.dud): duds += 1
+	check("a D-grade part is a lottery ticket", d_parts > 30 and duds > d_parts * 0.25 and duds < d_parts * 0.55, "%d of %d" % [duds, d_parts])
+	check("Lloyd pays a fifth for what's on the bench", SalvageYard.offer("exh_magnaflown") == 140, "$%d" % SalvageYard.offer("exh_magnaflown"))
+	var yard_lm := map.landmarks.filter(func(l): return l.name == "NORTHSIDE SALVAGE")
+	var in_yard := map.buildings.filter(func(b): return (b.r as Rect2).intersects(MapData.SALVAGE))
+	var only_ours := in_yard.all(func(b): return b.kind in ["shop", "junk"])
+	check("the yard's on the GPS, a gravel lot of junk", yard_lm.size() == 1 and map.ground_at(SalvageYard.OFFICE) == "gravel" and only_ours and in_yard.size() >= 5,
+		"%s, %d buildings" % [map.ground_at(SalvageYard.OFFICE), in_yard.size()])
+	check("you can drive up to the trailer", map.route(Jobs.COVINGTON, SalvageYard.OFFICE).size() >= 2 and map.buildings.all(func(b): return not (b.r as Rect2).grow(2.0).has_point(SalvageYard.OFFICE)))
 	# HOPP-IN
 	var rr2 := RandomNumberGenerator.new()
 	rr2.seed = 2

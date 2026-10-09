@@ -46,6 +46,7 @@ var job_board: JobBoard
 var market: MarketRunner
 var police: Police
 var fuel: FuelStop
+var salvage: SalvageYard
 var wildlife: Wildlife
 var hold_car := false          # a scene (or a test) has the car stopped
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
@@ -171,6 +172,9 @@ void fragment() {
 	fuel = FuelStop.new()
 	add_child(fuel)
 	fuel.setup(self)
+	salvage = SalvageYard.new()
+	add_child(salvage)
+	salvage.setup(self)
 	wildlife = Wildlife.new()
 	add_child(wildlife)
 	wildlife.setup(self)
@@ -217,6 +221,10 @@ void fragment() {
 		var wd2: Node = load("res://tests/wild_demo.gd").new()
 		wd2.main = self
 		add_child(wd2)
+	elif OS.get_cmdline_user_args().has("--salvage-demo"):
+		var sd: Node = load("res://tests/salvage_demo.gd").new()
+		sd.main = self
+		add_child(sd)
 	elif OS.get_cmdline_user_args().has("--fuel-demo"):
 		var fd: Node = load("res://tests/fuel_demo.gd").new()
 		fd.main = self
@@ -415,8 +423,12 @@ func _deliveries(dt: float) -> void:
 	var left: Array = []
 	for o in save.get("orders", []):
 		if float(save.clock_h) >= float(o.arrives_h):
+			if bool(o.get("dud", false)):
+				hud.post("GUS: \"THAT %s FROM LLOYD'S? %s. IT'S IN THE SCRAP BIN.\"" % [Parts.name_of(String(o.part)), String(o.get("why", "IT'S JUNK"))], 7.0)
+				continue
 			save.shelf.append(o.part)
-			hud.post("GUS: \"A BOX CAME FOR YOU. %s. IT'S ON THE BENCH.\"" % Parts.name_of(String(o.part)), 6.0)
+			if o.get("yard", false): hud.post("GUS: \"THE YARD TRUCK DROPPED OFF A %s. IT'S DIRTY, BUT IT'S ON THE BENCH.\"" % Parts.name_of(String(o.part)), 6.0)
+			else: hud.post("GUS: \"A BOX CAME FOR YOU. %s. IT'S ON THE BENCH.\"" % Parts.name_of(String(o.part)), 6.0)
 		else:
 			left.append(o)
 	save.orders = left
@@ -426,6 +438,7 @@ func _deliveries(dt: float) -> void:
 		var spec_d := SaveGame.load_spec(String(save.garage[ci].id))
 		hud.post("GUS: \"THE %s IS IN THE %s. GO GIVE IT THE BEANS.\"" % [Parts.name_of(String(d[1])), String(spec_d.get("model", "CAR")).to_upper()], 7.0)
 		if ci == car_i and not garage.visible:
+			_store_car()
 			var at := car.sim.pos
 			var h := car.sim.heading
 			_spawn_car(car_i, at, h)
@@ -699,9 +712,9 @@ func _teleport(at: Vector2, heading: float) -> void:
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open()
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open()
 	if garage.visible or death.visible or car.dead: return
-	if job_board.visible or market.panel_open() or fuel.open(): return
+	if job_board.visible or market.panel_open() or fuel.open() or salvage.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
 		job_board.open(sky, save, jobs.kind, Market.places(world.map))
 		return

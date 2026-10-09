@@ -80,6 +80,7 @@ func build() -> void:
 	_index_roads()
 	_find_bridges_and_crossings()
 	_buildings()
+	_salvage()
 	_street_lights()
 	_graph()
 
@@ -306,6 +307,22 @@ func _landmarks() -> void:
 	lights.append({ "p": Vector2(834, 2738), "type": "neon", "seed": 77 })
 	landmarks.append({ "name": "RIVERSIDE", "p": Vector2(5840, 1880), "dest": true })
 	landmarks.append({ "name": "DIEPPE", "p": Vector2(6500, 1300), "dest": false })
+
+## Northside Salvage: it takes over a block of the industrial park after the warehouses are
+## placed (so nothing else on the map moves): a trailer, stacks of crushed cars, a gravel lot.
+const SALVAGE := Rect2(6410, 910, 100, 60)
+func _salvage() -> void:
+	var r := SALVAGE
+	buildings = buildings.filter(func(b): return not (b.r as Rect2).intersects(r))
+	lots = lots.filter(func(l): return not (l.r as Rect2).intersects(r))
+	lights = lights.filter(func(l): return not r.has_point(l.p))
+	lots.append({ "r": r, "kind": "gravel", "name": "", "lines": false })
+	buildings.append({ "r": Rect2(6412, 912, 26, 12), "h": 4.0, "kind": "shop", "name": "SALVAGE", "zone": "industrial" })
+	for s in [Rect2(6446, 912, 26, 7), Rect2(6476, 912, 30, 7), Rect2(6500, 924, 8, 30), Rect2(6450, 938, 36, 6), Rect2(6412, 958, 22, 8)]:
+		buildings.append({ "r": s, "h": 3.0, "kind": "junk", "name": "", "zone": "industrial" })
+	lights.append({ "p": Vector2(6442, 930), "type": "sodium", "seed": 6442 })
+	lights.append({ "p": Vector2(6490, 962), "type": "sodium_flicker", "seed": 6490 })
+	landmarks.append({ "name": "NORTHSIDE SALVAGE", "p": Vector2(6426, 940), "dest": true })
 
 func _tims(p: Vector2, zone: String) -> void:
 	var r := Rect2(p - Vector2(14, 14), Vector2(28, 28))

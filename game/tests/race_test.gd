@@ -34,7 +34,8 @@ func _ready() -> void:
 	await _wildlife()
 	if not OS.get_cmdline_user_args().has("--police-only"): await _pinks()
 	await _ride()
-	var want := 8 if not OS.get_cmdline_user_args().has("--police-only") else 5
+	await _salvage()
+	var want := 9 if not OS.get_cmdline_user_args().has("--police-only") else 6
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -351,4 +352,59 @@ func _ride() -> void:
 	check("rides: dropped off, paid the fare and a tip", j.runs == 1 and int(main.save.cash) >= cash0 + fare, "$%d -> $%d (fare $%d)" % [cash0, int(main.save.cash), fare])
 	check("rides: it goes on your rating", int(main.save.get("rides", {}).get("count", 0)) == 1)
 	j.finish(true)
+	done += 1
+
+func _salvage() -> void:
+	var y: SalvageYard = main.salvage
+	main.sky.time_h = 10.0
+	main.save.cash = 5000
+	main.save.erase("salvage")
+	main._teleport(SalvageYard.OFFICE, 0.0)
+	main.car.sim.set_world_velocity(Vector2.ZERO)
+	await _wait(0.4)
+	check("salvage: you're at the yard, and it's open", y.at_yard() and y.is_open())
+	var pile := y.today()
+	var wi := -1
+	var part_i := -1
+	for i in pile.size():
+		var it: Dictionary = pile[i]
+		if it.kind == "wear" and it.id != "turbo" and wi < 0: wi = i
+		if it.kind == "part" and part_i < 0: part_i = i
+	var sim: CarSim = main.car.sim
+	sim.pads_mm = 1.0
+	sim.clutch_cond = 0.1
+	sim.engine_health = 0.2
+	for t in sim.tires: t.tread = 0.5
+	var w: Dictionary = pile[wi]
+	var cash0 := int(main.save.cash)
+	var clock0 := float(main.save.clock_h)
+	var said := y.buy(wi)
+	var k := String(w.id)
+	var now := SalvageYard.life_now(k, sim)
+	check("salvage: the nephew swaps a worn %s in the yard" % k, absf(now - SalvageYard.life(k, int(w.grade), sim.spec)) < 0.01 and int(main.save.cash) == cash0 - int(w.price) - SalvageYard.NEPHEW,
+		"%s: %.2f, $%d -> $%d" % [said, now, cash0, int(main.save.cash)])
+	check("salvage: and it takes a while", float(main.save.clock_h) > clock0 + 0.4)
+	check("salvage: it's saved with the car", absf(float(main.save.garage[main.car_i].wear.get({"clutch": "clutch", "turbo": "turbo", "motor": "engine", "pads": "pads", "tires": "tread"}[k], -1.0)) - now) < 0.01)
+	check("salvage: once it's bought it's gone", y.bought(wi) and y.buy(wi).contains("SOLD"))
+	var p: Dictionary = pile[part_i]
+	var n0 := (main.save.orders as Array).size()
+	var shelf0 := (main.save.shelf as Array).count(String(p.id))
+	y.buy(part_i)
+	var ord: Array = main.save.orders
+	check("salvage: a used part goes on the yard truck", ord.size() == n0 + 1 and bool(ord[ord.size() - 1].get("yard", false)))
+	main.save.clock_h = float(main.save.clock_h) + 1.2
+	await _wait(0.3)
+	var shelf1 := (main.save.shelf as Array).count(String(p.id))
+	check("salvage: Gus opens the box (%s)" % ("junk" if p.dud else "good"), shelf1 == shelf0 + (0 if p.dud else 1), "%d -> %d" % [shelf0, shelf1])
+	main.save.shelf.append("exh_magnaflown")
+	var cash1 := int(main.save.cash)
+	y.sell("exh_magnaflown")
+	check("salvage: Lloyd buys off the bench", int(main.save.cash) == cash1 + SalvageYard.offer("exh_magnaflown"))
+	y.panel.open()
+	await _wait(0.2)
+	check("salvage: the trailer window holds the car", main.car.locked and y.open())
+	y.panel.visible = false
+	main.sky.time_h = 21.0
+	await _wait(0.2)
+	check("salvage: closed at night", not y.is_open())
 	done += 1
