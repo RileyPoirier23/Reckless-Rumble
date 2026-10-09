@@ -6,6 +6,9 @@
 ##   ["set", name]                 change the background mid-scene
 ##   ["cash", amount]              money changes hands
 ##   ["flag", name]                remember something
+##   ["pose", who, pose]           someone in the scene changes pose (stand, crossed, pockets, cup, phone, bow, point, hips, wave)
+## A scene's "cast" is who's standing in the set: [who, x (0..320), facing (1 right / -1 left), pose].
+## Anyone who speaks but isn't in the cast is on Leo's phone (texts).
 ## Text can use {MANAGER} (the old manager's name), {CASH} and {DEBT}.
 class_name StoryScript
 extends RefCounted
@@ -22,11 +25,12 @@ const CAST := {
 	"TOBY":      { "name": "TOBY CORMIER", "seed": 506506, "female": 0, "age": 31, "color": "ffa020" },
 	"TREMBLAY":  { "name": "CONST. TREMBLAY", "seed": 911911, "female": 1, "age": 41, "color": "4a7ab8" },
 	"DARRELL":   { "name": "DARRELL (SELLER)", "seed": 900900, "female": 0, "age": 58, "color": "8a8478" },
+	"FRANK":     { "name": "FRANK COVINGTON", "seed": 190001, "female": 0, "age": 49, "color": "c8c0a8" },
 }
 
 const SCENES := {
 	# ------------------------------------------------------------------ prologue
-	"party": { "set": "party", "lines": [
+	"party": { "set": "party", "cast": [["LEO", 120, 1, "cup"], ["MIKEY", 186, -1, "cup"]], "lines": [
 		["*", "A WAREHOUSE ON INDUSTRIAL DRIVE. SOMEBODY'S COUSIN'S BIRTHDAY. NOBODY KNOWS WHOSE."],
 		["MIKEY", "Leo. LEO. Buddy. You've been staring at that speaker for ten minutes."],
 		["LEO", "It's breathing, Mikey. The speaker's breathing."],
@@ -43,7 +47,7 @@ const SCENES := {
 		["choice", [["\"I'm always good to drive.\"", "cocky"], ["\"...Yeah.\"", "quiet"], ["\"Mikey. Look at me. I'm a professional.\"", "joke"]]],
 		["MIKEY", "...Text me when you're home. Use words. Not just the eggplant."],
 	]},
-	"the_meet": { "set": "airstrip", "lines": [
+	"the_meet": { "set": "airstrip", "cast": [["MIA", 34, 1, "hips"], ["LEO", 216, -1, "stand"], ["DOM", 252, -1, "crossed"], ["SAL", 292, -1, "pockets"]], "lines": [
 		["*", "AIRSTRIP 7. FRIDAY NIGHT. THE FAMILIA'S MEET."],
 		["*", "TWENTY CARS IN A CIRCLE. HEADLIGHTS ON. ONE OF THEM IS NOW INSIDE ANOTHER ONE."],
 		["MIA", "That's my car. That WAS my car. Dom. DOM. He parked in my car."],
@@ -52,14 +56,20 @@ const SCENES := {
 		["MIA", "MINE. That's my turbo. On the ground. Where turbos don't go."],
 		["DOM", "Everybody. Quiet."],
 		["*", "DOM TORTELLINI WALKS AROUND THE WRECK ONCE. SLOWLY. THEN HE BOWS HIS HEAD."],
+		["pose", "DOM", "bow"],
+		["pose", "SAL", "bow"],
 		["DOM", "Lord. Thank you for this meet. For the cars. For the family. For the kid who didn't die tonight, even though he tried his best."],
 		["DOM", "Amen."],
 		["SAL", "Amen."],
+		["pose", "DOM", "crossed"],
+		["pose", "SAL", "pockets"],
 		["MIA", "...Amen. I'm still going to kill him."],
 		["DOM", "You're Frank Covington's boy."],
 		["LEO", "You knew my dad?"],
 		["DOM", "Everybody knew your dad. Your dad fixed my first car on credit. Never asked for the money. Never had to."],
+		["pose", "DOM", "point"],
 		["DOM", "You broke family's car. So now you work for family."],
+		["pose", "DOM", "crossed"],
 		["DOM", "Your father's garage? It's a nice garage. Be a shame if it was... legitimate."],
 		["LEO", "It has an inspection licence. You can't just—"],
 		["DOM", "I know. That's why it's a nice garage."],
@@ -71,7 +81,7 @@ const SCENES := {
 		["DOM", "Then bring all four. Family doesn't leave pieces behind."],
 		["flag", "owes_familia"],
 	]},
-	"gus_morning": { "set": "office", "lines": [
+	"gus_morning": { "set": "office", "cast": [["GUS", 70, 1, "crossed"], ["LEO", 246, -1, "stand"]], "lines": [
 		["*", "COVINGTON AUTO. 7:58 A.M. LEO HAS A HEADACHE SHAPED LIKE A SUPREEM."],
 		["GUS", "You look like something I'd drain out of a transmission."],
 		["LEO", "Morning, Gus."],
@@ -83,13 +93,15 @@ const SCENES := {
 		["GUS", "Every car that wants a sticker, you read every paper. VIN on the ownership against the VIN on the dash. I read it off the car myself. Every one."],
 		["LEO", "Who ran the counter before Dad's... before?"],
 		["GUS", "{MANAGER}. Ran it for years, then one day didn't. Left a drawer full of pens and a coffee mug that says WORLD'S OKAYEST BOSS."],
+		["pose", "GUS", "point"],
 		["GUS", "Don't touch the mug."],
 	]},
-	"clock_out_1": { "set": "lot_dusk", "lines": [
+	"clock_out_1": { "set": "lot_dusk", "cast": [["GUS", 92, 1, "crossed"], ["LEO", 150, -1, "pockets"]], "lines": [
 		["*", "CLOCK OUT. 6:02 P.M."],
 		["GUS", "Not bad. Not good. Not bad. Your father's first day he passed a car with no brakes, so you're ahead of him."],
 		["LEO", "Dad passed a car with no brakes?"],
 		["GUS", "Once. Never again. Checked his own every Sunday after that. Every single Sunday."],
+		["pose", "LEO", "phone"],
 		["*", "LEO'S PHONE BUZZES. TWICE."],
 		["ARIES", "are u alive. toby said u drove into the mafia"],
 		["LEO", "Not the mafia. A family. With a lot of cars."],
@@ -101,14 +113,17 @@ const SCENES := {
 		["MIKEY", "bro the jar is for emergencies. u are an emergency"],
 		["TOBY", "Heard you need a ride to the Tim's. Take the wrecker. Don't touch the boom. Don't touch the radio. Don't eat the timbits on the dash, they're evidence."],
 	]},
-	"runs_great": { "set": "tims", "lines": [
+	"runs_great": { "set": "tims", "cast": [["LEO", 124, 1, "stand"], ["DARRELL", 172, -1, "hips"]], "lines": [
 		["*", "TIM BURTONS, MOUNTAIN ROAD. A '91 NISSUN SILVIO UNDER THE ONLY LAMP THAT WORKS."],
 		["DARRELL", "You Mikey's guy?"],
+		["pose", "LEO", "pockets"],
 		["LEO", "I'm Mikey's guy."],
 		["DARRELL", "Runs great. Needs nothing. Selling it for my wife's husband."],
 		["LEO", "...Isn't that you?"],
 		["DARRELL", "Hence the price."],
+		["pose", "LEO", "point"],
 		["LEO", "Why's there a puddle under it?"],
+		["pose", "LEO", "stand"],
 		["DARRELL", "That's a rain puddle."],
 		["LEO", "It hasn't rained in a week."],
 		["DARRELL", "It's a very old rain puddle. Nine hundred. No lowballs, I know what I have."],
@@ -122,7 +137,7 @@ const SCENES := {
 		["flag", "owns_silvio"],
 		["*", "IT STARTS ON THE THIRD TRY. IT SOUNDS LIKE A BLENDER FULL OF BOLTS. IT IS THE MOST BEAUTIFUL THING LEO HAS EVER OWNED."],
 	]},
-	"home_night": { "set": "apartment", "lines": [
+	"home_night": { "set": "apartment", "cast": [["LEO", 140, 1, "stand"], ["ARIES", 222, -1, "crossed"]], "lines": [
 		["*", "THE APARTMENT OVER THE GARAGE. 11:40 P.M."],
 		["ARIES", "Is that your new car? It sounds like it's crying."],
 		["LEO", "It's singing."],
@@ -133,9 +148,10 @@ const SCENES := {
 		["*", "SHE GOES TO BED. LEO SITS IN THE DARK FOR A WHILE. THE SILVIO TICKS AS IT COOLS DOWN IN THE BAY BELOW."],
 	]},
 	# ------------------------------------------------------------------ chapter 1
-	"clock_out_2": { "set": "lot_dusk", "lines": [
+	"clock_out_2": { "set": "lot_dusk_charjer", "cast": [["LEO", 118, 1, "stand"], ["MIA", 176, -1, "hips"]], "lines": [
 		["*", "CLOCK OUT. A BLACK DODGY CHARJER IS IDLING ACROSS THE STREET. IT HAS BEEN IDLING ACROSS THE STREET FOR AN HOUR."],
 		["MIA", "Leo. Walk with me."],
+		["pose", "MIA", "crossed"],
 		["MIA", "Dom wants you to start paying. Tonight there's a car at Airstrip 7. Black Charjer, the other one. Bring it here. Bay 3."],
 		["LEO", "What's wrong with it?"],
 		["MIA", "Nothing's wrong with it. Something's wrong with its paperwork. That's your department now."],
@@ -143,13 +159,14 @@ const SCENES := {
 		["LEO", "Mia, I'm sorry about your car."],
 		["MIA", "...It was a good car. My dad built it. Don't make me cry in front of the Tim's."],
 	]},
-	"bay_three": { "set": "bay", "lines": [
+	"bay_three": { "set": "bay", "cast": [["LEO", 100, 1, "pockets"], ["GUS", 160, -1, "stand"]], "lines": [
 		["*", "BAY 3. THE CHARJER SITS UNDER A TARP. GUS IS NOT LOOKING AT IT VERY HARD."],
 		["GUS", "Your father had a bay like this once. Before you were born. Before he went straight."],
 		["LEO", "Dad never talked about before."],
 		["GUS", "No. He didn't."],
 		["GUS", "He checked his brakes every Sunday, Leo. Every Sunday for twenty years. You know what kind of man misses his brakes the one week it snows?"],
 		["LEO", "A drunk one. That's what the report says."],
+		["pose", "GUS", "crossed"],
 		["GUS", "Report says a lot of things. Reports get written by people."],
 		["*", "GUS GOES BACK TO WORK. HE DOESN'T SAY ANOTHER WORD ALL NIGHT."],
 		["flag", "clue_brakes"],

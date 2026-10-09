@@ -39,6 +39,8 @@ var garage: GarageScreen
 var mission: StoryMissions.MissionRunner
 var blur_rect: ColorRect
 var _save_t := 30.0
+var death: DeathScreen
+var _dying := false
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
 func _ready() -> void:
@@ -132,6 +134,9 @@ void fragment() {
 	blur_rect.visible = false
 	get_node("HudLayer").add_child(blur_rect)
 	get_node("HudLayer").move_child(blur_rect, 0)
+	death = DeathScreen.new()
+	death.continued.connect(_after_death)
+	get_node("HudLayer").add_child(death)
 	garage = GarageScreen.new()
 	garage.size = Vector2(640, 360)
 	garage.visible = false
@@ -150,7 +155,7 @@ void fragment() {
 		hud.show_help = false        # the story has its own words up top; F1/START still shows the controls
 	else:
 		hud.post("COLD START. LET IT WARM UP BEFORE YOU WRING IT OUT.", 6.0)
-		hud.post("TAB OR D-UP: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE.", 8.0)
+		hud.post(Hints.fmt("{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."), 8.0)
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -163,6 +168,14 @@ void fragment() {
 		var wd: Node = load("res://tests/world_demo.gd").new()
 		wd.main = self
 		add_child(wd)
+	elif OS.get_cmdline_user_args().has("--veg-demo"):
+		var vd: Node = load("res://tests/veg_demo.gd").new()
+		vd.main = self
+		add_child(vd)
+	elif OS.get_cmdline_user_args().has("--crash-demo"):
+		var cd: Node = load("res://tests/crash_demo.gd").new()
+		cd.main = self
+		add_child(cd)
 	elif OS.get_cmdline_user_args().has("--demo"):
 		var d: Node = load("res://tests/demo.gd").new()
 		d.main = self
@@ -181,6 +194,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car = PlayerCar.new()
 	ysort.add_child(car)
 	car.setup(spec, world, skids, hud, at, heading)
+	car.fatal.connect(_on_fatal)
 	car.sim.set_world_velocity(old_v)
 	hud.sim = car.sim
 	hud.player = car
@@ -210,6 +224,8 @@ func _start_mission(m: Dictionary) -> void:
 	var w: Dictionary = WorldSky.WEATHER[String(m.weather)]
 	sky.cloud = w.cloud; sky.fog = w.fog; sky.rain = w.rain; sky.snow = w.snow
 	car.impaired = float(m.get("impaired", 0.0))
+	for o in m.objectives:
+		if o.get("crash_ends", false): car.can_die = false
 	if m.get("gasket", false): car.sim.head_gasket = true
 	mission = StoryMissions.MissionRunner.new()
 	add_child(mission)
@@ -236,6 +252,7 @@ func _swap_story_car(id: String) -> void:
 	_teleport(at, h)
 
 func _hook_car(spec: Dictionary, at: Vector2, heading: float) -> void:
+	car.fatal.connect(_on_fatal)
 	hud.sim = car.sim
 	hud.player = car
 	if traffic: traffic.player = car
@@ -248,6 +265,55 @@ func _hook_car(spec: Dictionary, at: Vector2, heading: float) -> void:
 	car.sim.assist = CarSim.Assist.STREET
 	cam_rot = heading + PI / 2.0
 	cam.global_position = car.global_position
+
+## A crash you don't walk away from: a beat of slow motion, then the death screen.
+func _on_fatal(info: Dictionary) -> void:
+	var z := world.map.zone_at(car.sim.pos)
+	info.style = String(z.style)
+	info.time_h = sky.time_h
+	info.season = sky.season
+	info.weather = sky.weather
+	info.night = night
+	info.driver = "LEO" if StoryState.active or StoryState.avatar.is_empty() else "AVATAR"
+	if car.spec.get("id", "") == "tow" and StoryState.active: info.driver = "LEO"
+	info.place = String(z.label) if String(z.label) != "" else "COUNTRY"
+	info.car_name = "%s %s '%s" % [String(car.spec.get("make", "")), String(car.spec.get("model", "")), str(int(car.spec.get("year", 0)) % 100).pad_zeros(2)]
+	if mission: mission.set_process(false)
+	hud.objective = ""
+	audio.horn = false
+	# slow motion while the camera pulls in on the wreck, then a freeze-frame without the HUD
+	_dying = true
+	cam.position_smoothing_enabled = false
+	Engine.time_scale = 0.25
+	await get_tree().create_timer(1.0, true, false, true).timeout
+	var layer := get_node("HudLayer")
+	var was: Array = []
+	for c in layer.get_children():
+		was.append(c.visible)
+		if c is CanvasItem: c.visible = false
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var shot := get_viewport().get_texture().get_image()
+	var i := 0
+	for c in layer.get_children():
+		if c is CanvasItem: c.visible = was[i]
+		i += 1
+	Engine.time_scale = 1.0
+	death.open(info, shot)
+
+func _after_death() -> void:
+	_dying = false
+	cam.position_smoothing_enabled = true
+	if StoryState.active:
+		# try the drive again from the start
+		StoryState.go(get_tree())
+		return
+	car.dead = false
+	car.respawn()
+	_teleport(car.start_pos, car.start_heading)
+	if car_i >= 0:
+		for k in save.garage[car_i].damage: save.garage[car_i].damage[k] = 0.0
+	hud.post("GUS TOWED WHAT WAS LEFT TO THE SHOP AND REBUILT IT. HE'S NOT TALKING TO YOU.", 6.0)
 
 ## Write the car you're driving back into the save (its paint and its dents).
 func _store_car() -> void:
@@ -344,10 +410,15 @@ func _process(dt: float) -> void:
 	var up := Vector2(0, -1).rotated(cam_rot)
 	CarView.screen_up = up
 	var spd := car.sim.speed()
-	var ahead := up * (70.0 + minf(spd * PX * 0.35, 150.0))
-	cam.global_position = car.global_position + ahead
-	var z := lerpf(1.0, 0.6, clampf(spd / 55.0, 0.0, 1.0)) * zoom_mult
-	cam.zoom = cam.zoom.lerp(Vector2(z, z), 1.5 * dt)
+	var ahead := up * (40.0 + minf(spd * PX * 0.14, 50.0))     # see more of what's ahead, more as you go faster
+	if _dying:
+		# the death cam: in close on the wreck
+		cam.global_position = cam.global_position.lerp(car.global_position, minf(1.0, 3.0 * dt / maxf(Engine.time_scale, 0.05)))
+		cam.zoom = cam.zoom.lerp(Vector2(2.6, 2.6), minf(1.0, 2.5 * dt / maxf(Engine.time_scale, 0.05)))
+	else:
+		cam.global_position = car.global_position + ahead
+		var z := lerpf(1.55, 1.0, clampf(spd / 50.0, 0.0, 1.0)) * zoom_mult        # in close; pulls back with speed
+		cam.zoom = cam.zoom.lerp(Vector2(z, z), 1.5 * dt)
 	var r := Vector2(320, 180).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
@@ -399,8 +470,8 @@ func _process(dt: float) -> void:
 	hud.surface = car.sim.surface
 	hud.place = world.map.zone_at(car.sim.pos).label if world.map.zone_at(car.sim.pos).label != "" else "COUNTRY"
 	audio.throttle = car.throttle_in
-	# into the river
-	if car.sim.surface == "water":
+	# into the river (when the car can't die there, Toby tows you out instead)
+	if car.sim.surface == "water" and (not car.can_die or car.sim.assist == CarSim.Assist.ARCADE):
 		_water_t += dt
 		if _water_t > 1.2:
 			_water_t = 0.0
@@ -435,10 +506,10 @@ func _teleport(at: Vector2, heading: float) -> void:
 	world.warm(at, Vector2(40, 25))
 
 func _inputs() -> void:
-	if garage.visible: return
+	if garage.visible or death.visible or car.dead: return
 	# the garage: pull up to the bay doors and stop
 	if not StoryState.active and GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:
-		hud.post("F / Y: THE GARAGE", 0.15)
+		hud.post(Hints.fmt("{use}: THE GARAGE"), 0.15)
 		if Input.is_action_just_pressed("use"):
 			_store_car()
 			garage.open(save)
@@ -449,7 +520,7 @@ func _inputs() -> void:
 	if map_screen.visible: return
 	if Input.is_action_just_pressed("gearbox"):
 		car.sim.auto_gearbox = not car.sim.auto_gearbox
-		hud.post("AUTOMATIC" if car.sim.auto_gearbox else "MANUAL: E/Q OR RB/LB TO SHIFT")
+		hud.post("AUTOMATIC" if car.sim.auto_gearbox else Hints.fmt("MANUAL: {shift} TO SHIFT"))
 	if Input.is_action_just_pressed("help"): hud.show_help = not hud.show_help
 	if Input.is_action_just_pressed("reset"):
 		car.respawn()

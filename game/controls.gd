@@ -32,6 +32,15 @@ static func setup() -> void:
 		"menu_back": [KEY_ESCAPE],
 		"ui_back_pad": [JOY_BUTTON_BACK],
 	}
+	# Godot's built-in menu actions don't listen to a controller: A confirms, B backs out
+	for pair in [["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B]]:
+		var has := false
+		for e in InputMap.action_get_events(pair[0]):
+			if e is InputEventJoypadButton and (e as InputEventJoypadButton).button_index == pair[1]: has = true
+		if not has:
+			var jb := InputEventJoypadButton.new()
+			jb.button_index = pair[1]
+			InputMap.action_add_event(pair[0], jb)
 	for action in map:
 		if InputMap.has_action(action): continue
 		InputMap.add_action(action, 0.1)

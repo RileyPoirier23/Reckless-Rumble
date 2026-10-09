@@ -26,7 +26,7 @@ func _ready() -> void:
 	Controls.setup()
 	_items()
 	var args := OS.get_cmdline_user_args()
-	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo"):
+	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo") or args.has("--crash-demo") or args.has("--veg-demo"):
 		get_tree().change_scene_to_file.call_deferred("res://drive.tscn")
 		return
 	if args.has("--counter-demo"):
@@ -108,4 +108,5 @@ func _draw() -> void:
 		PixelFont.draw(self, r.position + Vector2(10, 5), ("> " if on else "  ") + ITEMS[i][0], GOLD if on else BONE, 2)
 		PixelFont.draw(self, r.position + Vector2(26, 20), ITEMS[i][1], ASH)
 	PixelFont.draw(self, Vector2(8, 350), "PROTOTYPE 0.2", ASH)
-	PixelFont.draw(self, Vector2(632 - PixelFont.width("ARROWS / D-PAD, ENTER / A"), 350), "ARROWS / D-PAD, ENTER / A", ASH)
+	var hint := Hints.fmt("{updown}: PICK  {ui_accept}: GO")
+	PixelFont.draw(self, Vector2(632 - PixelFont.width(hint), 350), hint, ASH)

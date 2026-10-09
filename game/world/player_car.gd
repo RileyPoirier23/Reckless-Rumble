@@ -4,6 +4,8 @@ extends CharacterBody2D
 
 const PX := CarArt.PX
 
+signal fatal(info: Dictionary)
+
 var sim: CarSim
 var view: CarView
 var city: World
@@ -112,6 +114,10 @@ func respawn() -> void:
 	for k in damage: damage[k] = 0.0
 	hud.post("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
 
+var can_die := true               # the story turns this off when a crash is the plot
+var dead := false
+var _hb_t := 99.0                 # seconds since the handbrake was pulled
+var _water_t := 0.0
 var impaired := 0.0               # 0 sober .. 1 hammered: lag, sway, overcorrection
 var _st_lag := 0.0
 var _drunk_t := 0.0
@@ -180,6 +186,7 @@ func _lights(dt: float, st: float) -> void:
 	view.blink_right = hazards or blink == 1
 
 func _physics_process(dt: float) -> void:
+	if dead: return
 	var ins := _inputs(dt)
 	var th: float = ins[0]
 	var br: float = ins[1]
@@ -187,7 +194,11 @@ func _physics_process(dt: float) -> void:
 	var hb: float = ins[3]
 	_lights(dt, Controls.steer_axis())
 	throttle_in = th
+	_hb_t = 0.0 if hb > 0.5 else _hb_t + dt
 	sim.surface = city.surface_at(sim.pos)
+	# into the river: a couple of seconds and that's it
+	_water_t = _water_t + dt if sim.surface == "water" else 0.0
+	if _water_t > 2.2: _die("water", "", sim.speed() * 3.6 + 40.0, null)
 	var before := sim.pos
 	sim.step(dt, th, br, st, hb)
 	var motion := (sim.pos - before) * PX
@@ -204,6 +215,7 @@ func _physics_process(dt: float) -> void:
 			var hit_dir := -n
 			var d := hit_dir.dot(sim.forward())
 			var where := "front" if d > 0.6 else ("rear" if d < -0.6 else "side")
+			_check_fatal(col, other, vn, d, vw.length())
 			sim.impact(vn, where)
 			_take_damage(-n, vn, col.get_position() / PX)
 			if other is TrafficCar:
@@ -227,6 +239,48 @@ func _physics_process(dt: float) -> void:
 
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var _scrape_t := 0.0
+
+## Some hits you don't walk away from. What it was decides the death screen.
+const FATAL_KMH := { "tree": 70.0, "building": 76.0, "rail": 88.0, "traffic": 84.0, "edge": 76.0 }
+
+func _check_fatal(col: KinematicCollision2D, other: Object, vn: float, d: float, speed: float) -> void:
+	if not can_die or dead or sim.assist == CarSim.Assist.ARCADE: return
+	var cause := "edge"
+	var sub := ""
+	if other is TrafficCar:
+		cause = "traffic"
+		var rel := cos(angle_difference(sim.heading, (other as TrafficCar).heading))
+		if d > 0.6: sub = "headon" if rel < -0.5 else ("rear" if rel > 0.5 else "tbone")
+		else: sub = "tbone"
+	elif other is BuildingNode: cause = "building"
+	else:
+		var owner_node = col.get_collider_shape()
+		if owner_node is CollisionShape2D:
+			if owner_node.shape is CircleShape2D: cause = "tree"
+			elif owner_node.shape is SegmentShape2D: cause = "rail"
+	if vn * 3.6 < float(FATAL_KMH[cause]): return
+	_die(cause, sub, maxf(vn, speed) * 3.6, other)
+
+func _die(cause: String, sub: String, kmh: float, other: Object) -> void:
+	if dead or not can_die or sim.assist == CarSim.Assist.ARCADE: return
+	dead = true
+	var flat := false
+	for tr in sim.tires: flat = flat or tr.flat
+	var info := {
+		"cause": cause, "sub": sub, "speed_kmh": kmh,
+		"car": String(spec.get("id", "")), "body": String(spec.get("body", "sedan")), "paint": paint,
+		"length": float(spec.get("length", 4.6)), "impaired": impaired > 0.3, "handbrake": _hb_t < 1.5,
+		"reverse": sim.gear < 0, "blink": blink != 0 and not hazards, "flat": flat,
+		"hot": sim.coolant_c > 118.0 or sim.head_gasket, "lights": lights_on, "surface": sim.surface,
+	}
+	if other is TrafficCar:
+		var tc := other as TrafficCar
+		var name := String(tc.spec.get("name", ""))
+		var ob := String(tc.spec.get("body", "sedan"))
+		info.other_body = "van" if "CARAVAN" in name else ("pickup" if ob == "tow" else ob)
+		info.other_paint = tc.paint
+	Input.start_joy_vibration(0, 1.0, 1.0, 1.0)
+	fatal.emit(info)
 
 ## Where the hit landed decides what gets bent. Glancing hits along a wall scrape the paint;
 ## a hard hit on a bumper can take it right off.

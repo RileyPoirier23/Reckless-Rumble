@@ -75,5 +75,5 @@ func _draw() -> void:
 		if i == sel: draw_rect(Rect2(12, y - 3, 156, 13), Color(0.85, 0.64, 0.25, 0.25))
 		PixelFont.draw(self, Vector2(18, y), dests[i].name, GOLD if i == sel else BONE)
 		PixelFont.draw(self, Vector2(132, y), "%.1fK" % (dests[i].p.distance_to(sim.pos) / 1000.0 * 8.0), ASH)
-	PixelFont.draw(self, Vector2(10, 318), "UP/DOWN TO PICK, ENTER OR A TO SET THE GPS. TAB OR D-UP TO CLOSE.", ASH)
+	PixelFont.draw(self, Vector2(10, 318), Hints.fmt("{updown}: PICK  {ui_accept}: SET THE GPS  {map}: CLOSE"), ASH)
 	PixelFont.draw(self, Vector2(10, 330), "DISTANCES ARE REAL-WORLD KM. THE MAP IS ABOUT 1:8.", Color(ASH, 0.7))

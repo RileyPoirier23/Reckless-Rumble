@@ -18,8 +18,9 @@ var shown := 0.0
 var set_name := "black"
 var choice_sel := 0
 var t := 0.0
-var history: Array = []           # set name at each line (so going back restores the set)
+var history: Array = []           # [set, cast poses] at each line (so going back restores both)
 var demo := false
+var cast := {}                     # who -> { x, facing, pose } for the people standing in the set
 
 func _ready() -> void:
 	Controls.setup()
@@ -31,6 +32,8 @@ func _ready() -> void:
 		var sc: Dictionary = StoryScript.SCENES[step.id]
 		set_name = sc.set
 		lines = sc.lines
+		for c in sc.get("cast", []):
+			cast[String(c[0])] = { "x": int(c[1]), "facing": int(c[2]), "pose": String(c[3]) }
 	demo = OS.get_cmdline_user_args().has("--story-demo")
 
 func _process(dt: float) -> void:
@@ -57,7 +60,7 @@ func _process(dt: float) -> void:
 		var opts: Array = lines[i][1]
 		if Input.is_action_just_pressed("ui_down"): choice_sel = (choice_sel + 1) % opts.size()
 		if Input.is_action_just_pressed("ui_up"): choice_sel = (choice_sel + opts.size() - 1) % opts.size()
-	if Input.is_action_just_pressed("menu_back"):
+	if Input.is_action_just_pressed("menu_back") or Input.is_action_just_pressed("ui_back_pad"):
 		get_tree().change_scene_to_file("res://title.tscn")
 	queue_redraw()
 
@@ -69,6 +72,11 @@ func _input(e: InputEvent) -> void:
 				if _choice_rect(k, opts.size()).has_point(get_global_mouse_position()):
 					choice_sel = k
 		press()
+
+func _poses() -> Dictionary:
+	var d := {}
+	for who in cast: d[who] = cast[who].pose
+	return d
 
 func _is_choice() -> bool:
 	return step.type == "scene" and i < lines.size() and String(lines[i][0]) == "choice"
@@ -91,7 +99,7 @@ func press() -> void:
 	_next()
 
 func _next() -> void:
-	history.append(set_name)
+	history.append([set_name, _poses()])
 	i += 1
 	shown = 0.0
 	choice_sel = 0
@@ -101,9 +109,12 @@ func _next() -> void:
 func back() -> void:
 	# step back to the previous spoken line (instructions don't count)
 	var j := i - 1
-	while j >= 0 and String(lines[j][0]) in ["set", "cash", "flag"]: j -= 1
+	while j >= 0 and String(lines[j][0]) in ["set", "cash", "flag", "pose"]: j -= 1
 	if j < 0: return
-	while history.size() > j: set_name = history.pop_back()
+	while history.size() > j:
+		var h: Array = history.pop_back()
+		set_name = h[0]
+		for who in h[1]: cast[who].pose = h[1][who]
 	i = j
 	shown = 9999.0
 
@@ -115,12 +126,67 @@ func _draw() -> void:
 		_card()
 		return
 	StorySets.draw(self, set_name, t)
+	var ln: Array = lines[i] if i < lines.size() else ["*", ""]
+	var who := String(ln[0])
+	var talking := cast.has(who) and shown < StoryState.fill(String(ln[1])).length()
+	_people(who, talking)
 	if i >= lines.size(): return
-	var ln: Array = lines[i]
-	if String(ln[0]) == "choice":
+	if who == "choice":
 		_choices(ln[1])
-	elif not String(ln[0]) in ["set", "cash", "flag"]:
-		_box(String(ln[0]), StoryState.fill(String(ln[1])))
+	elif not who in ["set", "cash", "flag", "pose"]:
+		if who != "*" and not cast.has(who) and who != "MANAGER": _phone(who, StoryState.fill(String(ln[1])))
+		_box(who, StoryState.fill(String(ln[1])))
+
+## The cast, standing in the set (2x), the one talking lit and bobbing, the rest a touch darker.
+func _people(speaker: String, talking: bool) -> void:
+	var order := cast.keys()
+	order.sort_custom(func(a, b): return cast[a].x < cast[b].x)
+	var k := 0
+	for who in order:
+		var c: Dictionary = cast[who]
+		var is_speaker: bool = who == speaker
+		var frame := 1 if (is_speaker and talking and int(t * 9.0) % 2 == 0) else 0
+		var tex := PixPeople.sprite(String(who), String(c.pose), frame)
+		var bob := 0.0
+		if is_speaker and talking: bob = -2.0 * absf(sin(t * 9.0))
+		elif fmod(t + float(k) * 0.9, 3.2) < 0.35: bob = -2.0           # breathing
+		var x := float(c.x) * 2.0
+		var y := 128.0 * 2.0 - 128.0 + bob
+		# a soft shadow on the floor
+		draw_rect(Rect2(x - 16, 254, 32, 4), Color(0, 0, 0, 0.28))
+		var mod := Color(1, 1, 1) if (is_speaker or speaker == "*" or not cast.has(speaker)) else Color(0.78, 0.78, 0.82)
+		if int(c.facing) < 0:
+			draw_set_transform(Vector2(x, y), 0.0, Vector2(-1, 1))
+			draw_texture_rect(tex, Rect2(-26, 0, 52, 128), false, mod)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		else:
+			draw_texture_rect(tex, Rect2(x - 26, y, 52, 128), false, mod)
+		k += 1
+
+## Texts from people who aren't there: Leo's phone, up in the corner, with the message on it.
+func _phone(who: String, text: String) -> void:
+	var r := Rect2(470, 26, 132, 220)
+	draw_rect(r.grow(4), Color("0e0e12"))
+	draw_rect(r.grow(4), Color("3a3a40"), false, 2.0)
+	draw_rect(r, Color("e8e4dc"))
+	var cst: Dictionary = StoryScript.CAST.get(who, {})
+	var col := Color(cst.get("color", "8a8478"))
+	draw_rect(Rect2(r.position, Vector2(r.size.x, 22)), col.darkened(0.3))
+	if not cst.is_empty():
+		draw_texture_rect(Face.small_texture(int(cst.seed), int(cst.female), int(cst.age)), Rect2(r.position + Vector2(3, 3), Vector2(16, 16)), false)
+	PixelFont.draw(self, r.position + Vector2(23, 8), String(cst.get("name", who)), Color("f3ead2"))
+	# the bubble
+	var shown_text := text.substr(0, int(shown))
+	var ls := _wrap(shown_text, 28)
+	var bh := 8.0 + ls.size() * 9.0
+	var by := r.position.y + 32.0
+	draw_rect(Rect2(r.position.x + 6, by, r.size.x - 18, bh), Color("ffffff"))
+	draw_rect(Rect2(r.position.x + 6, by, r.size.x - 18, bh), Color("c8c4bc"), false, 1.0)
+	for k in mini(ls.size(), 18):
+		PixelFont.draw(self, Vector2(r.position.x + 10, by + 5 + k * 9), ls[k], Color("1a1614"))
+	if int(t * 2.0) % 2 == 0 and shown < text.length():
+		draw_rect(Rect2(r.position.x + 8, r.end.y - 14, 18, 8), Color("d8d4cc"))
+		PixelFont.draw(self, Vector2(r.position.x + 10, r.end.y - 12), "...", Color("6a6a70"))
 
 func _card() -> void:
 	draw_rect(Rect2(0, 0, 640, 360), Color("0b090d"))
@@ -129,7 +195,7 @@ func _card() -> void:
 	if String(step.get("sub", "")) != "":
 		PixelFont.draw_centered(self, 320, 162, String(step.sub), Color(BONE, a), 3)
 	PixelFont.draw_centered(self, 320, 200, String(step.get("small", "")), Color(ASH, a), 1)
-	if t > 1.0: PixelFont.draw_centered(self, 320, 320, "PRESS A / ENTER", Color(BONE, 0.4 + 0.3 * sin(t * 4.0)))
+	if t > 1.0: PixelFont.draw_centered(self, 320, 320, Hints.fmt("PRESS {ui_accept}"), Color(BONE, 0.4 + 0.3 * sin(t * 4.0)))
 
 func _box(who: String, text: String) -> void:
 	var r := Rect2(8, 262, 624, 92)
@@ -162,7 +228,7 @@ func _box(who: String, text: String) -> void:
 		PixelFont.draw(self, Vector2(x0, y + k * 14), ls[k], tc, 2)
 	if shown >= text.length():
 		PixelFont.draw(self, Vector2(600, 340), ">" if int(t * 3.0) % 2 == 0 else " ", GOLD, 2)
-	PixelFont.draw(self, Vector2(14, 342), "A/ENTER NEXT   LB/BACKSPACE BACK   ESC MENU", Color(ASH, 0.6))
+	PixelFont.draw(self, Vector2(14, 342), Hints.fmt("{ui_accept} NEXT  {shift_down} BACK  {menu_back} MENU"), Color(ASH, 0.6))
 
 func _choice_rect(k: int, n: int) -> Rect2:
 	return Rect2(120, 270 - (n - k) * 22, 400, 18)
@@ -170,7 +236,7 @@ func _choice_rect(k: int, n: int) -> Rect2:
 func _choices(opts: Array) -> void:
 	draw_rect(Rect2(8, 262, 624, 92), Color(0.04, 0.035, 0.05, 0.94))
 	PixelFont.draw(self, Vector2(20, 272), "LEO:", GOLD, 2)
-	PixelFont.draw(self, Vector2(20, 300), "UP/DOWN TO PICK, A/ENTER TO SAY IT", Color(ASH, 0.7))
+	PixelFont.draw(self, Vector2(20, 300), Hints.fmt("{updown}: PICK  {ui_accept}: SAY IT"), Color(ASH, 0.7))
 	for k in opts.size():
 		var r := _choice_rect(k, opts.size())
 		var on := k == choice_sel

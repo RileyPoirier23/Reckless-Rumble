@@ -18,7 +18,7 @@ func _init() -> void:
 			"card", "avatar", "counter": pass
 			_: bad.append(st.type)
 	check("every step points at a real scene or mission", bad.is_empty(), str(bad))
-	var sets := ["party", "airstrip", "office", "lot_dusk", "tims", "apartment", "bay", "black"]
+	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay", "black"]
 	var who_bad := []
 	var set_bad := []
 	var lines := 0
@@ -28,9 +28,17 @@ func _init() -> void:
 		for ln in sc.lines:
 			lines += 1
 			var w: String = ln[0]
+			if w == "pose":
+				if not StoryScript.CAST.has(String(ln[1])): who_bad.append("pose for " + String(ln[1]))
+				continue
 			if w in ["*", "choice", "set", "cash", "flag", "MANAGER"]: continue
 			if not StoryScript.CAST.has(w): who_bad.append(w)
 			if (String(ln[1]).length() > 230): who_bad.append("too long: " + String(ln[1]).substr(0, 30))
+	for id in StoryScript.SCENES:
+		for c in StoryScript.SCENES[id].get("cast", []):
+			if not StoryScript.CAST.has(String(c[0])): who_bad.append("cast " + String(c[0]))
+			elif PixPeople.image(int(StoryScript.CAST[c[0]].seed), int(StoryScript.CAST[c[0]].female), int(StoryScript.CAST[c[0]].age), PixPeople.OUTFITS.get(c[0], {}), String(c[3]), 0).get_width() != PixPeople.W:
+				who_bad.append("sprite " + String(c[0]))
 	check("every speaker is in the cast", who_bad.is_empty(), str(who_bad))
 	check("every set exists", set_bad.is_empty(), str(set_bad))
 	check("there's a story to tell", lines > 100, "%d lines" % lines)
@@ -54,6 +62,17 @@ func _init() -> void:
 			# the GPS routes node to node; the last stretch is the street the place is on
 			check("%s: you can drive to '%s'" % [id, String(o.text).substr(0, 24)], r.size() >= 1 and r[r.size() - 1].distance_to(o.to) < 250.0 and map.ground_at(o.to) == "asphalt")
 			from = o.to
+	# prompts follow the device
+	Controls.setup()
+	Hints.pad = false
+	check("keyboard prompts say keyboard keys", Hints.key("ui_accept") == "ENTER" and Hints.key("handbrake") == "SPACE", Hints.key("ui_accept") + "/" + Hints.key("handbrake"))
+	Hints.pad = true
+	Hints.playstation = false
+	check("controller prompts say pad buttons", Hints.key("ui_accept") == "A" and Hints.key("throttle") == "RT" and Hints.key("handbrake") == "B", Hints.key("ui_accept") + "/" + Hints.key("throttle"))
+	check("keyboard-only bits drop out on a pad", not Hints.fmt("SHIFT {shift}  AUTO {gearbox}").contains("AUTO"), Hints.fmt("SHIFT {shift}  AUTO {gearbox}"))
+	Hints.playstation = true
+	check("PlayStation names", Hints.key("ui_accept") == "CROSS", Hints.key("ui_accept"))
+	Hints.pad = false
 	# the save round-trips
 	StoryState.new_game()
 	StoryState.step = 7

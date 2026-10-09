@@ -101,12 +101,12 @@ func _draw() -> void:
 	if show_help:
 		_panel(Rect2(196, 150, 248, 72))
 		var lines := [
-			"DRIVE W/S RT/LT   STEER A/D STICK   HANDBRAKE SPACE/B",
-			"SHIFT E/Q RB/LB   AUTO/MANUAL G   TOW HOME R",
-			"BLINKERS Z/C D-LEFT/RIGHT  HAZARDS V/D-DOWN",
-			"HIGH BEAMS B/D-UP (HOLD TO FLASH)  HORN H/X",
-			"MAP TAB/BACK   USE (GARAGE) F/Y",
-			"HIDE THIS F1/START   MENU ESC",
+			Hints.fmt("DRIVE {drive}  STEER {steer}  HANDBRAKE {handbrake}"),
+			Hints.fmt("SHIFT {shift}  AUTO/MANUAL {gearbox}  TOW HOME {reset}"),
+			Hints.fmt("BLINKERS {blinkers}  HAZARDS {hazards}"),
+			Hints.fmt("HIGH BEAMS {high_beams} (HOLD TO FLASH)  HORN {horn}"),
+			Hints.fmt("MAP {map}  USE (GARAGE) {use}"),
+			Hints.fmt("HIDE THIS {help}  MENU {menu_back}"),
 		]
 		for i in lines.size():
 			PixelFont.draw(self, Vector2(202, 155 + i * 11), lines[i], BONE if i < 5 else ASH)

@@ -108,5 +108,5 @@ func _draw() -> void:
 		if val != "": PixelFont.draw(self, Vector2(360, y), val, BONE if on else ASH, 2)
 	edit.position = Vector2(360, 90)
 	edit.size = Vector2(240, 22)
-	PixelFont.draw(self, Vector2(24, 318), "UP/DOWN: PICK A ROW   LEFT/RIGHT: CHANGE   X/H: SOMEONE ELSE ENTIRELY   A/ENTER: DONE", ASH)
-	PixelFont.draw(self, Vector2(24, 330), "KEYBOARD: TYPE YOUR NAME. CONTROLLER: LEFT/RIGHT ON NAME PICKS ONE.", Color(ASH, 0.7))
+	PixelFont.draw(self, Vector2(24, 318), Hints.fmt("{updown}: PICK A ROW  {leftright}: CHANGE  {horn}: SOMEONE ELSE ENTIRELY  {ui_accept}: DONE"), ASH)
+	PixelFont.draw(self, Vector2(24, 330), "LEFT/RIGHT ON NAME PICKS ONE FOR YOU." if Hints.pad else "TYPE YOUR NAME, OR LEFT/RIGHT ON NAME TO PICK ONE.", Color(ASH, 0.7))

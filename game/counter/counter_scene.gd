@@ -187,6 +187,12 @@ func _pay_bills() -> void:
 
 # ------------------------------------------------------------------ input
 
+## The little label under each stamp: the hotkey on a keyboard, the button on a pad.
+func _sub(b: Dictionary) -> String:
+	if not Hints.pad: return String(b.sub)
+	if b.id == "INSPECT": return Hints.key("inspect")
+	return ("OFF BOOKS  " if b.id == "WRENCH" else "") + "POINT + " + Hints.key("click")
+
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
 		cur = get_global_mouse_position()
@@ -515,7 +521,7 @@ func _draw_booth() -> void:
 	else:
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
 		PixelFont.draw_centered(self, 75, 70, "CLOSED", ASH, 2)
-	PixelFont.draw(self, Vector2(8, 350), "ESC / BACK: MENU", Color(ASH, 0.6))
+	PixelFont.draw(self, Vector2(8, 350), Hints.fmt("{menu_back}: MENU"), Color(ASH, 0.6))
 
 func _speech() -> String:
 	match c.kind:
@@ -603,7 +609,7 @@ func _draw_tray() -> void:
 		draw_rect(r, col.lightened(0.15) if on else col)
 		draw_rect(Rect2(r.position + Vector2(0, r.size.y - 4), Vector2(r.size.x, 4)), col.darkened(0.4))
 		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 10, b.label, BONE, 2, INK)
-		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 26, b.sub, Color(BONE, 0.7))
+		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 26, _sub(b), Color(BONE, 0.7))
 
 func _draw_inspect() -> void:
 	if inspecting:
@@ -656,7 +662,7 @@ func _draw_brief() -> void:
 			for l in wrap_text(n.text, 100):
 				PixelFont.draw(self, Vector2(80, y), l, BONE)
 				y += 8
-	PixelFont.draw_centered(self, 320, 304, "CLICK, SPACE OR A TO OPEN THE COUNTER", Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
+	PixelFont.draw_centered(self, 320, 304, Hints.fmt("{ui_accept}: OPEN THE COUNTER") if Hints.pad else "CLICK, SPACE OR ENTER TO OPEN THE COUNTER", Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:
 	var r := Rect2(164, 128, 292, 168)

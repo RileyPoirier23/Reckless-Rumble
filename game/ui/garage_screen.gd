@@ -96,4 +96,4 @@ func _draw() -> void:
 	var s: Dictionary = specs[sel]
 	PixelFont.draw(self, Vector2(12, 300), String(s.get("blurb", "")).to_upper().substr(0, 150), BONE)
 	PixelFont.draw(self, Vector2(12, 312), "%s - %s - %d KG - DASH: %s - GPS: %s" % [String(s.engine.name).to_upper(), s.get("drivetrain", "RWD"), int(s.mass), String(s.get("dash", "")).to_upper(), String(s.get("gps", "")).to_upper()], ASH)
-	PixelFont.draw(self, Vector2(12, 336), "LEFT/RIGHT: PICK   ENTER/Y: TAKE IT OUT   H/X: GUS FIXES IT UP   ESC/B: CLOSE", ASH)
+	PixelFont.draw(self, Vector2(12, 336), Hints.fmt("{leftright}: PICK  {use}: TAKE IT OUT  {horn}: GUS FIXES IT UP  {ui_cancel}: CLOSE"), ASH)
