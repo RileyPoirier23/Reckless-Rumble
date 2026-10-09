@@ -13,6 +13,14 @@
 ## Pick what somebody said, then Leo's notebook, and he writes it down. The sticker log keeps
 ## every sticker the station has issued.
 ##
+## Every stamp goes in the filing cabinet (DeskBook.files): the regulars and the people Leo
+## turned away come back knowing what he stamped (regulars.gd). From week 5 the courier brings
+## the bay's parts (sign for the box, or send it back); in week 7 Inspector Hachey pulls two old
+## work orders a day, covers the stamp with his thumb and watches Leo stamp them again.
+##
+## The room makes a few quiet sounds (DeskAudio): the horn from the lot, the stamp, paper, the
+## wall clock, and the till when somebody takes money off the shop.
+##
 ## Mouse; keyboard alone (arrows move a cursor, Space clicks and drags); or a controller (left
 ## stick moves the cursor, D-pad left/right jumps to the next thing, A clicks and drags, Y
 ## inspects, X asks, B cancels, LB/RB turn the binder's tabs, D-pad up/down the books).
@@ -81,6 +89,21 @@ const BRIEFS := {
 	21: ["A FAX: \"SALVAGE BRAND: NO STICKER WITHOUT A STRUCTURAL CERTIFICATE.\"", "GUS: \"AND IF IT WAS SALVAGE IN NOVA SCOTIA AND IT'S CLEAN HERE, THAT'S NOT A MIRACLE. THAT'S A WASHED TITLE. YOU REPORT THAT.\""],
 	24: ["HALLOWEEN. A MEMO FROM THE MINISTRY: \"MASKS COME OFF AT THE COUNTER.\"", "GUS IS WEARING A HOCKEY HELMET. NOBODY ASKS HIM WHY. ASK THE CUSTOMERS, THOUGH."],
 	25: ["FRIDAY, NOVEMBER 1. THE MINISTRY TALLIES THE MONTH TONIGHT.", "GUS: \"SMILE. THEY CAN'T SEE YOU, BUT SMILE.\""],
+	28: ["NOVEMBER. THE FIRST SNOW DIDN'T STICK. THE FAX DID.", "\"WINDOW TINT: FRONT SIDE WINDOWS MUST PASS 70% OF LIGHT.\"",
+		"GUS: \"LIGHT METER'S ON MY SHEET NOW. SEVENTY OR BETTER. UNDER THAT IT'S NOT A WINDOW, IT'S A WALL. SOME OF 'EM HAVE A DOCTOR'S FORM. READ THE FORM.\""],
+	30: ["GUS OPENED AN ACCOUNT WITH FUNDY PARTS SUPPLY. THE BAY'S PARTS COME BY COURIER NOW, RIGHT TO THE WINDOW.",
+		"GUS: \"OUR ORDER PRINTS OFF THE PC. THE BOX COMES WITH A SLIP. NUMBERS DON'T MATCH, IT'S NOT OUR PART. THE STUFF FROM THE STATES HAS A CUSTOMS FORM. IT BETTER SAY WHAT WE PAID. I TAPED A PAGE IN THE BINDER.\""],
+	32: ["FRIDAY. BILLS TONIGHT.", "GUS: \"DARRELL CALLED. SAYS HE'S 'IN THE AREA.' DARRELL'S ALWAYS IN THE AREA.\""],
+	36: ["YESTERDAY WAS REMEMBRANCE DAY. GUS STOOD AT THE CENOTAPH ON MAIN STREET AT ELEVEN, IN HIS GOOD COAT. HE DOES IT EVERY YEAR. HE DOESN'T SAY WHO FOR.",
+		"A FAX: \"EXHAUST: NO HOLES. 95 DB MAX AT 3,000 RPM.\"",
+		"GUS: \"I HOLD IT AT THREE GRAND AND READ THE METER. OVER NINETY-FIVE, IT FAILS. A HOLE, IT FAILS. I DON'T CARE HOW QUIET THE HOLE IS.\""],
+	42: ["A MAN IN A GREY RAINCOAT IS AT THE DOOR AT 7:45 WITH A BRIEFCASE AND A THERMOS. INSPECTOR HACHEY. THE MINISTRY.",
+		"\"GOOD MORNING. DON'T MIND ME. I'M JUST GOING TO STAND HERE AND BE THE MINISTRY.\" TWICE A DAY THIS WEEK HE PULLS ONE OF YOUR OLD WORK ORDERS, COVERS THE STAMP WITH HIS THUMB, AND WATCHES YOU STAMP IT AGAIN.",
+		"GUS: \"IF YOU WERE RIGHT THE FIRST TIME, YOU'LL BE RIGHT AGAIN. IF YOU WEREN'T... READ THE PAPER.\""],
+	43: ["HACHEY'S AT THE DOOR AT 7:45 AGAIN. SAME THERMOS. GUS MAKES HIM A COFFEE ANYWAY. HACHEY WRITES DOWN THAT GUS MADE HIM A COFFEE."],
+	44: ["GUS: \"HE ASKED ME HOW LONG I'VE WORKED HERE. I SAID SINCE 1981. HE WROTE DOWN 1981. THEN HE UNDERLINED IT.\""],
+	45: ["HACHEY BRINGS MUFFINS. NOBODY KNOWS IF IT'S A TEST. GUS EATS ONE ANYWAY.", "GUS: \"IF IT'S A TEST, I PASSED.\""],
+	46: ["FRIDAY. THE LAST DAY OF THE AUDIT. HACHEY'S REPORT GOES TO FREDERICTON TONIGHT.", "GUS: \"WHATEVER HE WRITES, THE SHOP'S STILL HERE MONDAY. PROBABLY.\""],
 }
 ## For mornings nobody wrote anything down.
 const MORNINGS := ["GUS READS THE CANADIAN TIRED FLYER LIKE IT'S SCRIPTURE.", "THE COFFEE MAKER MAKES A NOISE LIKE IT'S DYING. IT'S BEEN DYING SINCE 1997.",
@@ -93,10 +116,14 @@ const TIPS := [
 	"GUS: THE CLOCK'S RUNNING. MINISTRY GIVES YOU TWO WARNINGS A DAY. AFTER THAT IT'S A HUNDRED BUCKS A MISTAKE.",
 	"GUS: LAST ONE. THEN WE LOCK UP AND YOU GO DEAL WITH WHATEVER YOU'RE DEALING WITH.",
 ]
-const TAB_SHORT := { "INSPECTION": "INSP.", "DOCUMENTS": "DOCS", "POLICE": "POLICE", "MINISTRY": "MIN.", "SEASONAL": "SEAS." }
-const TAB_COL := { "INSPECTION": Color("c8a030"), "DOCUMENTS": Color("6a9a5a"), "POLICE": Color("4a6aa8"), "MINISTRY": Color("a84a3a"), "SEASONAL": Color("8a5aa0") }
+const TAB_SHORT := { "INSPECTION": "INSP.", "DOCUMENTS": "DOCS", "POLICE": "POLICE", "MINISTRY": "MIN.", "SEASONAL": "SEAS.", "PARTS": "PARTS" }
+const TAB_COL := { "INSPECTION": Color("c8a030"), "DOCUMENTS": Color("6a9a5a"), "POLICE": Color("4a6aa8"), "MINISTRY": Color("a84a3a"),
+	"SEASONAL": Color("8a5aa0"), "PARTS": Color("a8743a") }
 ## First open day of each week of free play.
-const WEEK_DAYS := [0, 8, 14, 21]
+const WEEK_DAYS := [0, 8, 14, 21, 28, 36, 42]
+## What the stamps say on a box (signing for it) and on a pulled file.
+const STAMP_WORD := { "APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
+const BOX_WORD := { "APPROVED": "SIGNED FOR", "DENIED": "REFUSED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
 
 var rules: CounterRules
 var day := 0
@@ -131,6 +158,11 @@ var honk_t := 0.0
 var warnings_used := 0
 var _qid := 0
 var _qtex := {}                       # queue car pictures by customer
+
+# the room's sounds
+var audio: DeskAudio                  # null when there's no tree to play in (the tests)
+var heard: Array = []                 # every sound the desk asked for, newest last
+var _tick_acc := 0.0
 
 # ASK
 var topics: Array = []                # what Leo has proven wrong with this one, newest first
@@ -177,6 +209,8 @@ func _ready() -> void:
 	car_view.position = Vector2(WINDOW.position.x + 160, 72)
 	car_view.scale = Vector2(1.5, 1.5)
 	add_child(car_view)
+	audio = DeskAudio.new()
+	add_child(audio)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "counter":
 		story = StoryState.current()
 		tutorial = bool(story.get("tutorial", false))
@@ -194,13 +228,16 @@ func _ready() -> void:
 # ------------------------------------------------------------------ the day
 
 func _new_week() -> void:
-	week = { "earned": 0, "dirty": 0, "fines": 0, "citations": 0, "warnings": 0, "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
+	week = { "earned": 0, "dirty": 0, "fines": 0, "fees": 0, "citations": 0, "warnings": 0, "heat": 0, "trust": 0, "reviews": 0, "correct": 0, "seen": 0 }
 
 func start_day(d: int) -> void:
 	day = d
 	var extra: Array = story.get("customers", [])
 	arrivals = rules.shift(day, heat(), extra, chapter)
 	if tutorial: arrivals = _tutorial_line(arrivals)
+	# audit week: Hachey pulls a file at 9:30 and at 2:00 (which one, he decides when he gets here)
+	for at in CounterRules.audit_times(day): arrivals.append({ "t": at, "c": rules.hachey(day) })
+	arrivals.sort_custom(func(a, b): return a.t < b.t)
 	waiting = []
 	walked = []
 	served = 0
@@ -211,8 +248,8 @@ func start_day(d: int) -> void:
 	inspecting = false
 	verdict = {}
 	tab = _newest_tab()
-	day_log = { "earned": 0, "dirty": 0, "fines": 0, "citations": [], "warnings": [], "heat": 0, "trust": 0, "reviews": 0,
-		"correct": 0, "seen": 0, "walked": 0, "walked_money": 0, "stickers": [] }
+	day_log = { "earned": 0, "dirty": 0, "fines": 0, "fees": 0, "citations": [], "warnings": [], "heat": 0, "trust": 0, "reviews": 0,
+		"correct": 0, "seen": 0, "walked": 0, "walked_money": 0, "stickers": [], "audits": 0, "audits_same": 0 }
 	# last fall's sticker log comes out of the filing cabinet (in free play, a week early)
 	if day >= 29 or (story.is_empty() and day >= 22): DeskBook.old_log = true
 	phase = "brief"
@@ -243,12 +280,23 @@ func tick(dt: float) -> void:
 		# nobody at the window: the afternoon drags by fast (and if nobody else is coming, faster)
 		rate *= 12.0 if not arrivals.is_empty() else 60.0
 	clock = minf(CounterRules.SHIFT_LEN, clock + dt * rate)
+	# the wall clock, once a second (and not while the afternoon's racing by)
+	_tick_acc += dt
+	if _tick_acc >= 1.0:
+		_tick_acc = fmod(_tick_acc, 1.0)
+		if phase != "idle" and clock < CounterRules.SHIFT_LEN:
+			sfx("tick" if int(clock) % 2 == 0 else "tock", 1.0, 3.0 if clock >= CounterRules.SHIFT_LEN - 60.0 else 0.0)
 	while not arrivals.is_empty() and float(arrivals[0].t) <= clock:
 		var cc: Dictionary = arrivals.pop_front().c
+		if cc.kind == "audit" and not cc.has("audit"):
+			cc = _pull_file(cc)
+			if cc.is_empty(): continue
 		cc.qid = _qid
 		cc.arrived = clock
 		_qid += 1
-		waiting.append(cc)
+		# the Ministry doesn't wait in line
+		if cc.kind == "audit": waiting.push_front(cc)
+		else: waiting.append(cc)
 	if clock >= CounterRules.SHIFT_LEN:
 		arrivals = []
 		if not waiting.is_empty():
@@ -260,7 +308,29 @@ func tick(dt: float) -> void:
 	if phase in ["counter", "stamping"] and not waiting.is_empty() and clock - since > CounterRules.HONK_AFTER and clock >= next_honk:
 		honk_t = 1.4
 		next_honk = clock + 25.0
+		sfx("honk", 0.97 + 0.06 * float(int(clock) % 3) / 2.0)
 	honk_t = maxf(0.0, honk_t - dt)
+
+## Hachey's turn at the cabinet: he pulls one of Leo's old work orders and brings it to the
+## window. Nothing to pull yet, and he comes back in an hour (once, before the afternoon's out).
+func _pull_file(slot: Dictionary) -> Dictionary:
+	var rec := CounterRules.pull(DeskBook.files, day, rules.rng)
+	var c2 := CounterRules.audit_customer(rec) if not rec.is_empty() else {}
+	if c2.is_empty():
+		if clock + 60.0 < CounterRules.SHIFT_LEN - 60.0 and not slot.get("retry", false):
+			slot.retry = true
+			arrivals.append({ "t": clock + 60.0, "c": slot })
+			arrivals.sort_custom(func(a, b): return a.t < b.t)
+		return {}
+	rec.pulled = true
+	c2.queue_car = slot.car
+	return c2
+
+## A sound from the room (logged, so the tests can hear it too).
+func sfx(sound_name: String, pitch := 1.0, gain_db := 0.0) -> void:
+	heard.append(sound_name)
+	if heard.size() > 64: heard.pop_front()
+	if audio != null and audio.is_inside_tree(): audio.play(sound_name, pitch, gain_db)
 
 func next_customer() -> void:
 	if waiting.is_empty():
@@ -280,22 +350,31 @@ func next_customer() -> void:
 	asked = []
 	said = {}
 	book = ""
-	var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
-	car_view.art = CarArt.new(spec, Color(c.car.paint), 0.15 if c.sheet.rust else 0.0, c.person.face)
-	car_view.heading = 0.0
-	car_view.visible = true
+	# a pulled file has no car in the bay: it's long gone
+	if c.kind != "audit":
+		var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
+		car_view.art = CarArt.new(spec, Color(c.car.paint), 0.15 if c.get("sheet", {}).get("rust", false) else 0.0, c.person.face)
+		car_view.heading = 0.0
+	car_view.visible = c.kind != "audit"
 	docs = []
-	var order := ["work", "reg", "licence", "insurance", "glovebox", "history", "old_reg", "cert", "bos", "permit", "door_inv", "sheet", "letter"]
+	var order := ["work", "order", "reg", "licence", "insurance", "glovebox", "history", "old_reg", "cert", "bos", "permit", "door_inv",
+		"exempt", "slip", "customs", "notice", "sheet", "letter"]
 	for id in order:
 		if c.docs.has(id) and not c.hidden.has(id): docs.append({ "id": id, "pos": _home(id, docs.size()), "fresh": 0.0 })
 	if c.napkin != "": docs.append({ "id": "napkin", "pos": _home("napkin", docs.size()), "fresh": 0.0 })
+	sfx("paper")
 
 ## Where each paper lands when it's handed over.
 func _home(id: String, n: int) -> Vector2:
 	var spots := { "work": Vector2(156, 116), "reg": Vector2(306, 118), "licence": Vector2(158, 186), "insurance": Vector2(306, 194),
 		"glovebox": Vector2(306, 194), "sheet": Vector2(226, 222), "napkin": Vector2(380, 240), "history": Vector2(196, 150),
-		"old_reg": Vector2(290, 148), "cert": Vector2(176, 236), "letter": Vector2(346, 150) }
+		"old_reg": Vector2(290, 148), "cert": Vector2(176, 236), "letter": Vector2(346, 150), "exempt": Vector2(176, 150),
+		"order": Vector2(156, 118), "slip": Vector2(304, 122), "customs": Vector2(300, 212), "notice": Vector2(170, 214) }
 	return spots.get(id, Vector2(212 + n * 6, 136 + n * 4))
+
+## The paper the stamp goes on: the work order, or a courier's packing slip.
+func _stamp_doc() -> String:
+	return "slip" if c.has("slip") else "work"
 
 func stamp(s: String) -> void:
 	if phase != "counter": return
@@ -304,11 +383,12 @@ func stamp(s: String) -> void:
 	phase = "stamping"
 	inspecting = false
 	book = ""
-	var i := _doc_index("work")
+	var i := _doc_index(_stamp_doc())
 	if i >= 0: _raise(i)
+	sfx("stamp", 0.96 + 0.08 * float(served % 3) / 2.0)
 
 func _resolve() -> void:
-	result = CounterRules.judge(c, stamped, day, bolo_now())
+	result = CounterRules.judge(c, stamped, jday(), bolo_now())
 	var pen := CounterRules.penalty(c, result, warnings_used)
 	result.fine = int(pen.fine)
 	result.warning = bool(pen.warning)
@@ -321,19 +401,32 @@ func _resolve() -> void:
 			DeskBook.citations += 1
 			day_log.citations.append(result.citation)
 	result.sticker = 0
-	if stamped == "APPROVED" and CounterRules.INSPECTIONS.has(c.request):
+	if stamped == "APPROVED" and CounterRules.INSPECTIONS.has(c.request) and c.kind != "audit":
 		result.sticker = DeskBook.issue(day, c)
 		day_log.stickers.append(result.sticker)
 	for f in result.get("flags", []): DeskBook.raise(String(f))
+	# into the filing cabinet: the regulars and the people turned away remember it; Hachey pulls it
+	if c.kind == "audit":
+		DeskBook.audits.append({ "no": int(c.audit.no), "day": day, "was": String(c.audit.stamp), "now": stamped })
+		day_log.audits += 1
+		if result.correct: day_log.audits_same += 1
+	else:
+		DeskBook.file(day, c, stamped, bool(result.correct), CounterRules.find_problems(c, day, bolo_now()))
 	for k in ["heat", "trust", "dirty"]: day_log[k] += int(result[k])
 	day_log.earned += int(result.money)
 	day_log.fines += result.fine
+	day_log.fees += int(result.get("fee", 0))
 	day_log.reviews += int(result.review)
 	day_log.seen += 1
 	if result.correct: day_log.correct += 1
-	cash += int(result.money) + int(result.dirty) - result.fine
+	cash += int(result.money) + int(result.dirty) - result.fine - int(result.get("fee", 0))
+	if result.fine + int(result.get("fee", 0)) > 0: sfx("till")
 	served += 1
 	phase = "result"
+
+## The day the papers are read against: today, or the day on a pulled file.
+func jday() -> int:
+	return int(c.audit.day) if c.get("kind", "") == "audit" and c.has("audit") else day
 
 ## Six o'clock: whoever's still in the lot drives off with their money.
 func close_up() -> void:
@@ -343,7 +436,11 @@ func close_up() -> void:
 	clock = CounterRules.SHIFT_LEN
 	day_log.walked = walked.size()
 	day_log.walked_money = 0
-	for w in walked: day_log.walked_money += int(CounterRules.PAY.get(w.request, 80))
+	for w in walked:
+		day_log.walked_money += CounterRules.walked_pay(w)
+		# the regulars (and whoever came back) remember being left in the lot
+		var spec: Dictionary = w.get("script", {})
+		if String(w.get("regular", "")) != "" or int(spec.get("of", 0)) > 0: DeskBook.file(day, w, "WALKED", true, [])
 	c = {}
 	book = ""
 	inspecting = false
@@ -354,7 +451,7 @@ func end_day() -> void:
 	if not story.is_empty():
 		_clock_out()
 		return
-	for k in ["earned", "dirty", "fines", "heat", "trust", "reviews", "correct", "seen"]: week[k] += day_log[k]
+	for k in ["earned", "dirty", "fines", "fees", "heat", "trust", "reviews", "correct", "seen"]: week[k] += day_log[k]
 	week.citations += day_log.citations.size()
 	week.warnings += day_log.warnings.size()
 	for k in ["seen", "correct", "earned"]: month[k] += day_log[k]
@@ -372,7 +469,7 @@ func _clock_out() -> void:
 	var wage := 60 + int(day_log.earned * 0.15)
 	StoryState.cash += wage
 	StoryState.debt = maxi(0, StoryState.debt - int(day_log.dirty))
-	StoryState.last_result = { "earned": day_log.earned, "dirty": day_log.dirty, "fines": day_log.fines, "correct": day_log.correct,
+	StoryState.last_result = { "earned": day_log.earned, "dirty": day_log.dirty, "fines": day_log.fines, "fees": day_log.fees, "correct": day_log.correct,
 		"seen": day_log.seen, "wage": wage, "walked": day_log.walked, "warnings": day_log.warnings.size(), "citations": day_log.citations.size() }
 	if DeskBook.revoked(): DeskBook.raise("desk_licence_revoked")
 	DeskBook.close_book()
@@ -432,6 +529,7 @@ func _hand_over(doc: String) -> void:
 	c.hidden.erase(doc)
 	if not c.docs.has(doc): c.docs.append(doc)
 	docs.append({ "id": doc, "pos": Vector2(232, 128), "fresh": 1.6 })
+	sfx("paper", 1.08)
 
 # ------------------------------------------------------------------ the binder and the books
 
@@ -464,6 +562,7 @@ func open_book(which: String) -> void:
 	book = "" if book == which else which
 	pick_a = {} if not inspecting else pick_a
 	drag = -1
+	sfx("page", 1.0 if book != "" else 1.15, 0.0 if book != "" else -4.0)
 
 # ------------------------------------------------------------------ input
 
@@ -580,6 +679,7 @@ func press() -> void:
 		d = _raise(d)
 		drag = d
 		drag_off = cur - docs[d].pos
+		sfx("paper", 1.2, -6.0)
 
 func _shelf_hit() -> bool:
 	return NOTEBOOK_ICON.has_point(cur) or LOG_ICON.has_point(cur)
@@ -669,12 +769,14 @@ func fields() -> Array:
 	if book != "": out.append_array(_book_fields())
 	elif phase == "counter":
 		for i in range(docs.size() - 1, -1, -1): out.append_array(_doc_fields(docs[i]))
+	var audit: bool = phase == "counter" and c.kind == "audit"
 	if phase == "counter":
 		var bub := _bubble()
 		out.append({ "r": bub.r, "key": "says", "val": { "text": bub.text, "clue": bub.clue }, "doc": "", "label": "WHAT THEY SAID" })
-		out.append({ "r": _face_rect(), "key": "person", "val": c.face_shown, "doc": "", "label": "THE PERSON AT THE COUNTER" })
-		out.append({ "r": _plate_rect(), "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE", "label": "THE PLATE ON THE CAR" })
-	out.append({ "r": Rect2(474, 4, 54, 42), "key": "today", "val": CounterRules.today(day), "doc": "", "label": "TODAY" })
+		out.append({ "r": _face_rect(), "key": "person", "val": c.face_shown, "doc": "", "label": "INSPECTOR HACHEY" if audit else "THE PERSON AT THE COUNTER" })
+		# a pulled file: the car's long gone, and its day is the date on the work order
+		if not audit: out.append({ "r": _plate_rect(), "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE", "label": "THE PLATE ON THE CAR" })
+	if not audit: out.append({ "r": Rect2(474, 4, 54, 42), "key": "today", "val": CounterRules.today(day), "doc": "", "label": "TODAY" })
 	for blk in _rule_blocks():
 		if blk.has("rule"): out.append({ "r": blk.r, "key": "rule", "val": blk.rule.id, "doc": "", "label": "THE RULE: " + String(blk.lines[0]) })
 	if CounterRules.rule_active("bolo", day):
@@ -716,7 +818,7 @@ func compare(a: Dictionary, b: Dictionary) -> Array:
 		if o.key in ["notebook", "note"]: return _jot(s.val)
 		return ["NOTHING TO COMPARE", null, ""]
 	if a.key == "sticker" and b.key == "sticker": return _sticker_gap(int(a.val), int(b.val))
-	return CounterRules.compare(c, day, bolo_now(), a, b)
+	return CounterRules.compare(c, jday(), bolo_now(), a, b)
 
 ## Something somebody said, against the notebook: write it down, or catch them out.
 func _jot(v: Dictionary) -> Array:
@@ -744,16 +846,17 @@ const DOC_W := 160.0
 const PAPER := { "work": Color("efe2b0"), "reg": Color("cfe0c4"), "licence": Color("c6d6e8"), "insurance": Color("ecd2cc"),
 	"glovebox": Color("f2c6d6"), "sheet": Color("e8e6de"), "napkin": Color("f4f2ec"), "history": Color("dcd4f0"),
 	"old_reg": Color("e8dcb8"), "bos": Color("f0ecd8"), "permit": Color("f4e08a"), "door_inv": Color("d8e8e8"),
-	"cert": Color("e4ecd0"), "letter": Color("f6f0e2") }
+	"cert": Color("e4ecd0"), "letter": Color("f6f0e2"), "exempt": Color("e0e8f4"), "order": Color("e4ecec"),
+	"slip": Color("f0e6d0"), "customs": Color("e8d8e8"), "notice": Color("f4f0c8") }
 
 func _rows(id: String) -> Array:
-	return CounterRules.doc_rows(c, id, day)
+	return CounterRules.doc_rows(c, id, jday())
 
 func _doc_size(id: String) -> Vector2:
 	match id:
 		"licence": return Vector2(DOC_W, 58)
 		"napkin": return Vector2(92, 18 + wrap_text(c.napkin, 20).size() * 8)
-		"work": return Vector2(DOC_W, 14 + 4 * 9 + 18)
+		"work", "slip": return Vector2(DOC_W, 14 + _rows(id).size() * 9 + 18)
 		"letter": return Vector2(118, 16 + (c.letter.get("lines", []) as Array).size() * 8)
 		"history": return Vector2(DOC_W + 12, 14 + _rows(id).size() * 9 + 4)
 	return Vector2(DOC_W, 14 + _rows(id).size() * 9 + 4)
@@ -764,6 +867,8 @@ func _row_x(id: String) -> float:
 func _title(id: String) -> String:
 	var t := String(CounterRules.DOC_TITLES.get(id, ""))
 	if id == "old_reg": t += " - " + String(c.old_reg.prov)
+	if id == "slip": t += " - " + String(c.slip.supplier)
+	if id == "work" and c.kind == "audit": t = "WORK ORDER %04d (FILE COPY)" % int(c.audit.no)
 	return t
 
 func _doc_fields(d: Dictionary) -> Array:
@@ -803,7 +908,9 @@ func _draw_doc(d: Dictionary) -> void:
 	PixelFont.draw(self, r.position + Vector2(4, 3), _title(d.id), PAPER_INK)
 	var rows := _rows(d.id)
 	var x0 := _row_x(d.id)
-	var lw := 48.0 if d.id == "history" else 32.0
+	var lw := 32.0
+	for row in rows: lw = maxf(lw, PixelFont.width(String(row[0])) + 4.0)
+	if d.id == "history": lw = 48.0
 	for i in rows.size():
 		var p: Vector2 = r.position + Vector2(x0, 14 + i * 9)
 		PixelFont.draw(self, p, rows[i][0], PAPER_DIM)
@@ -812,17 +919,29 @@ func _draw_doc(d: Dictionary) -> void:
 		"licence":
 			draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 34)), paper.darkened(0.3))
 			draw_texture(_face_tex(c.licence.face, true), r.position + Vector2(4, 13))
-		"permit", "cert", "door_inv", "bos", "glovebox":
+		"permit", "cert", "door_inv", "bos", "glovebox", "exempt", "notice", "customs":
 			# a stamp or a seal: real ones and fakes look the same from here
 			draw_circle(r.position + Vector2(size.x - 14, size.y - 12), 7.0, Color(paper.darkened(0.35), 0.5), false, 1.0)
-		"work":
-			var box := Rect2(r.position + Vector2(size.x - 70, size.y - 17), Vector2(66, 14))
-			draw_rect(box, paper.darkened(0.12))
-			if stamped == "": PixelFont.draw_centered(self, box.get_center().x, box.position.y + 5, "STAMP HERE", PAPER_DIM)
-			else:
-				var col: Color = Color("2f7a2a") if stamped == "APPROVED" else (Color("a8282a") if stamped == "DENIED" else (Color("2a4a8a") if stamped == "REPORT" else Color("3a3438")))
-				draw_rect(box.grow(1), col, false, 2.0)
-				PixelFont.draw_centered(self, box.get_center().x, box.position.y + 3, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3"}[stamped], col, 2)
+	if String(d.id) == _stamp_doc(): _draw_stamp_box(r, paper)
+
+## The box the stamp lands in. On a pulled file, Hachey's thumb is over the old one.
+func _draw_stamp_box(r: Rect2, paper: Color) -> void:
+	var box := Rect2(r.position + Vector2(r.size.x - 70, r.size.y - 17), Vector2(66, 14))
+	draw_rect(box, paper.darkened(0.12))
+	if stamped == "":
+		var audit: bool = c.kind == "audit"
+		PixelFont.draw_centered(self, box.get_center().x, box.position.y + 5, "STAMP AGAIN" if audit else ("SIGN HERE" if c.has("slip") else "STAMP HERE"), PAPER_DIM)
+		if audit:
+			# the thumb, on the old stamp
+			var th := Rect2(box.position + Vector2(-46, 0), Vector2(40, 14))
+			draw_rect(th, paper.darkened(0.12))
+			draw_rect(Rect2(th.position + Vector2(4, 2), Vector2(32, 10)), Color("d8a888"))
+			draw_rect(Rect2(th.position + Vector2(26, 3), Vector2(8, 8)), Color("ecc8b0"))
+		return
+	var col: Color = Color("2f7a2a") if stamped == "APPROVED" else (Color("a8282a") if stamped == "DENIED" else (Color("2a4a8a") if stamped == "REPORT" else Color("3a3438")))
+	draw_rect(box.grow(1), col, false, 2.0)
+	var word: String = (BOX_WORD if c.has("slip") else STAMP_WORD)[stamped]
+	PixelFont.draw_centered(self, box.get_center().x, box.position.y + 3, word, col, 2 if PixelFont.width(word, 2) <= box.size.x - 2 else 1)
 
 # ------------------------------------------------------------------ the books
 
@@ -908,6 +1027,12 @@ func _face_tex(face_seed: int, small := false) -> ImageTexture:
 	var fem := int(c.person.get("fem", 0))
 	var age := CounterRules.YEAR - int(c.person.dob[0])
 	return Face.small_texture(face_seed, fem, age) if small else Face.texture(face_seed, fem, age)
+
+## Who's at the window: the customer, or (with a pulled file) Inspector Hachey.
+func _window_tex() -> ImageTexture:
+	var w: Dictionary = c.get("window", {})
+	if w.is_empty(): return _face_tex(c.face_shown)
+	return Face.texture(int(w.face), int(w.fem), CounterRules.YEAR - int(w.dob[0]))
 
 func _face_rect() -> Rect2:
 	return Rect2(11, 10, 128, 128)   # the 64px portrait at 2x, above the counter top (y 142)
@@ -996,7 +1121,7 @@ func _draw_booth() -> void:
 	draw_rect(Rect2(0, 0, 150, 150), Color("3a3a44"))
 	for i in 7: draw_rect(Rect2(0, i * 22, 150, 1), Color("34343c"))
 	if phase in ["counter", "stamping", "result"]:
-		draw_texture_rect(_face_tex(c.face_shown), _face_rect(), false)
+		draw_texture_rect(_window_tex(), _face_rect(), false)
 		if String(c.get("mask", "")) != "": _draw_mask(String(c.mask))
 		# the counter top and the glass
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
@@ -1072,7 +1197,11 @@ func _draw_window() -> void:
 	draw_rect(Rect2(WINDOW.position.x + 60, 38, 6, 56), Color("c8a030"))
 	draw_rect(Rect2(WINDOW.position.x + 236, 38, 6, 56), Color("c8a030"))
 	_draw_lot()
-	if phase in ["counter", "stamping", "result"]:
+	if phase in ["counter", "stamping", "result"] and c.kind == "audit":
+		PixelFont.draw_centered(self, WINDOW.get_center().x, 60, "MINISTRY AUDIT: WORK ORDER %04d, %s" % [int(c.audit.no), CounterRules.date_str(CounterRules.today(int(c.audit.day)))], INK)
+		PixelFont.draw_centered(self, WINDOW.get_center().x, 72, "THE CAR'S LONG GONE. THE PAPERS AREN'T.", Color("3a3a40"))
+		PixelFont.draw_centered(self, WINDOW.get_center().x, 84, "THE STAMP'S UNDER HACHEY'S THUMB.", Color("3a3a40"))
+	elif phase in ["counter", "stamping", "result"]:
 		var pr := _plate_rect()
 		draw_rect(pr, Color("e8e4d4"))
 		draw_rect(pr, Color("2a4a8a"), false, 1.0)
@@ -1120,9 +1249,10 @@ func _draw_lot() -> void:
 func _queue_tex(w: Dictionary) -> ImageTexture:
 	var id: int = int(w.get("qid", 0))
 	if _qtex.has(id): return _qtex[id]
-	var qlen := clampi(int(float(w.car.len) * 8.0), 30, 46)
+	var car: Dictionary = w.get("queue_car", w.car)
+	var qlen := clampi(int(float(car.len) * 8.0), 30, 46)
 	w._qlen = qlen
-	var img := PixCars.image(qlen, PixCars.body_of({ "body": w.car.get("side_body", "sedan") }), Color(w.car.paint))
+	var img := PixCars.image(qlen, PixCars.body_of({ "body": car.get("side_body", "sedan") }), Color(car.paint))
 	var t := ImageTexture.create_from_image(img)
 	_qtex[id] = t
 	return t
@@ -1326,14 +1456,17 @@ func _draw_brief() -> void:
 				PixelFont.draw(self, Vector2(70, y), l, BONE)
 				y += 8
 	if story.is_empty() and fresh:
-		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF 4 >  {desk_tab_next}" % CounterRules.week_of(day)), GOLD)
+		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF %d >  {desk_tab_next}" % [CounterRules.week_of(day), CounterRules.WEEKS]), GOLD)
 	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:
 	var r := Rect2(164, 126, 292, 174)
 	_panel(r, 0.94)
 	var good: bool = result.correct
-	PixelFont.draw_centered(self, 310, 134, {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED TO POLICE", "WRENCH": "BAY 3, NO PAPERS"}[stamped], GOLD, 2)
+	var title: String = {"APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED TO POLICE", "WRENCH": "BAY 3, NO PAPERS"}[stamped]
+	if c.has("slip") and stamped in ["APPROVED", "DENIED"]: title = BOX_WORD[stamped]
+	if c.kind == "audit": title = "THE SAME STAMP" if good else "A DIFFERENT STAMP"
+	PixelFont.draw_centered(self, 310, 134, title, GOLD, 2)
 	var y := 152.0
 	for l in wrap_text(result.line, 66):
 		PixelFont.draw(self, Vector2(174, y), l, BONE)
@@ -1341,6 +1474,7 @@ func _draw_result() -> void:
 	y += 4
 	if result.money > 0: PixelFont.draw(self, Vector2(174, y), "+$%d FOR THE SHOP" % result.money, GREEN, 2); y += 14
 	if result.dirty > 0: PixelFont.draw(self, Vector2(174, y), "+$%d CASH. NO RECEIPT." % result.dirty, GOLD, 2); y += 14
+	if int(result.get("fee", 0)) > 0: PixelFont.draw(self, Vector2(174, y), "-$%d OFF THE SHOP" % int(result.fee), RED, 2); y += 14
 	if int(result.sticker) > 0: PixelFont.draw(self, Vector2(174, y), "STICKER %04d ON THE WINDSHIELD. IN THE LOG." % int(result.sticker), BONE); y += 10
 	if result.citation != "":
 		if result.warning: PixelFont.draw(self, Vector2(174, y), "MINISTRY WARNING %d OF %d. NO FINE. THIS TIME." % [warnings_used, CounterRules.WARNINGS], GOLD)
@@ -1356,26 +1490,55 @@ func _draw_result() -> void:
 	var last := clock >= CounterRules.SHIFT_LEN
 	PixelFont.draw_centered(self, 310, 288, Hints.fmt("{desk_click}: CLOSE UP FOR THE DAY") if last else (Hints.fmt("{desk_click}: NEXT!") if not waiting.is_empty() else Hints.fmt("{desk_click}: BACK TO THE WINDOW")), Color(BONE, 0.7))
 
+## The day's tally, one line each: [label, value, colour]. Every value is short enough to sit at
+## the labels' size (the reasons go in the small print underneath).
+func _day_end_rows() -> Array:
+	var rows: Array = [["CUSTOMERS", "%d (%d RIGHT)" % [day_log.seen, day_log.correct], BONE]]
+	var w: int = day_log.walked
+	rows.append(["DROVE OFF AT SIX", "%d (-$%d)" % [w, day_log.walked_money] if w > 0 else "NOBODY", GOLD if w > 0 else ASH])
+	rows.append(["SHOP MONEY", "+$%d" % day_log.earned, GREEN])
+	rows.append(["CASH, NO RECEIPTS", "+$%d" % day_log.dirty, GOLD])
+	if day_log.fees > 0: rows.append(["PARTS SENT BACK", "-$%d" % day_log.fees, RED])
+	rows.append(["WARNINGS", "%d OF %d" % [day_log.warnings.size(), CounterRules.WARNINGS], BONE])
+	var n: int = day_log.citations.size()
+	rows.append(["CITATIONS", "%d (-$%d)" % [n, day_log.fines] if day_log.fines > 0 else str(n), RED if day_log.fines > 0 else BONE])
+	if day_log.audits > 0: rows.append(["FILES PULLED", "%d, %d THE SAME" % [day_log.audits, day_log.audits_same], BONE])
+	rows.append(["REVIEWS", "%+d STARS" % day_log.reviews, BONE])
+	rows.append(["HEAT / FAMILIA", "%+d / %+d" % [day_log.heat, day_log.trust], BONE])
+	rows.append(["CASH ON HAND", "$%d" % cash, GREEN if cash >= 0 else RED])
+	return rows
+
+const LEDGER_L := 136.0                # the day-end tally's left edge (labels)...
+const LEDGER_R := 504.0                # ...and right edge (values line up on it)
+
+## One line of a tally: the label on the left, the value on the right, dots between, both at 2x.
+func _ledger_row(y: float, label: String, value: String, col: Color, left := LEDGER_L, right := LEDGER_R, label_col := ASH) -> void:
+	PixelFont.draw(self, Vector2(left, y), label, label_col, 2)
+	var vx := right - PixelFont.width(value, 2)
+	PixelFont.draw(self, Vector2(vx, y), value, col, 2)
+	var x := left + PixelFont.width(label, 2) + 8.0
+	while x < vx - 8.0:
+		draw_rect(Rect2(x, y + 8, 2, 1), Color(ASH, 0.35))
+		x += 6.0
+
 func _draw_day_end() -> void:
 	var r := Rect2(110, 30, 420, 300)
 	_panel(r, 0.96)
 	PixelFont.draw_centered(self, 320, 42, "6:00 P.M. %s IS DONE" % CounterRules.day_name(day), GOLD, 3, INK)
-	var y := 70.0
-	var rows := [["CUSTOMERS", "%d (%d RIGHT CALLS)" % [day_log.seen, day_log.correct], BONE],
-		["DROVE OFF AT SIX", "%d  (-$%d THE SHOP NEVER SAW)" % [day_log.walked, day_log.walked_money], ASH if day_log.walked == 0 else GOLD],
-		["SHOP MONEY", "+$%d" % day_log.earned, GREEN], ["CASH, NO RECEIPTS", "+$%d" % day_log.dirty, GOLD],
-		["WARNINGS", "%d OF %d" % [day_log.warnings.size(), CounterRules.WARNINGS], BONE],
-		["CITATIONS", "%d  (-$%d)" % [day_log.citations.size(), day_log.fines], RED if day_log.fines > 0 else BONE],
-		["REVIEWS", "%+d STARS" % day_log.reviews, BONE], ["HEAT / FAMILIA", "%+d / %+d" % [day_log.heat, day_log.trust], BONE],
-		["CASH ON HAND", "$%d" % cash, GREEN if cash >= 0 else RED]]
-	for row in rows:
-		PixelFont.draw(self, Vector2(136, y), row[0], ASH, 2)
-		PixelFont.draw(self, Vector2(318, y), row[1], row[2], 2 if String(row[1]).length() < 14 else 1)
-		y += 16
+	var y := 68.0
+	for row in _day_end_rows():
+		_ledger_row(y, String(row[0]), String(row[1]), row[2])
+		y += 14
+	# the small print: what the Ministry wrote down, and where the licence stands
+	y += 2
+	draw_rect(Rect2(LEDGER_L, y, LEDGER_R - LEDGER_L, 1), Color(ASH, 0.3))
+	y += 6
 	for cit in (day_log.citations + day_log.warnings).slice(0, 3):
-		PixelFont.draw(self, Vector2(136, y), "- " + String(cit), RED.lightened(0.3))
+		var t := "- " + String(cit)
+		if t.length() > 92: t = t.substr(0, 89) + "..."
+		PixelFont.draw(self, Vector2(LEDGER_L, y), t, RED.lightened(0.3))
 		y += 8
-	PixelFont.draw(self, Vector2(136, y + 4), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
+	PixelFont.draw(self, Vector2(LEDGER_L, y + 2), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
 	if not story.is_empty():
 		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
@@ -1390,12 +1553,10 @@ func _draw_week_end() -> void:
 	var y := 60.0
 	var short := 0
 	for b in bills_paid:
-		PixelFont.draw(self, Vector2(110, y), b[0], BONE, 2)
-		PixelFont.draw(self, Vector2(400, y), ("$%d" % b[1]) if b[2] else "CAN'T PAY", GREEN if b[2] else RED, 2)
+		_ledger_row(y, String(b[0]), ("$%d" % b[1]) if b[2] else "CAN'T PAY", GREEN if b[2] else RED, 110.0, 530.0, BONE)
 		if not b[2]: short += int(b[1])
 		y += 15
-	PixelFont.draw(self, Vector2(110, y + 2), "LEFT IN THE TILL", ASH, 2)
-	PixelFont.draw(self, Vector2(400, y + 2), "$%d" % cash, BONE, 2)
+	_ledger_row(y + 2, "LEFT IN THE TILL", "$%d" % cash, BONE, 110.0, 530.0)
 	y += 26
 	var lines: Array = []
 	if short == 0: lines.append("EVERYTHING'S PAID. GUS COUNTS THE TILL TWICE AND NODS ONCE. FROM GUS, THAT'S A PARADE.")
@@ -1420,17 +1581,26 @@ func _draw_week_end() -> void:
 	var nxt := "THE LICENCE" if DeskBook.revoked() else ("THE END OF THE MONTH" if day >= CounterRules.LAST_DAY else "NEXT WEEK")
 	PixelFont.draw_centered(self, 320, 318, Hints.fmt("{desk_click}: " + nxt), Color(BONE, 0.7))
 
+## Inspector Hachey's report on the week: one line, the way the Ministry writes them.
+func audit_verdict() -> String:
+	var pulled := DeskBook.audits.size()
+	var same := DeskBook.audits.filter(func(a): return String(a.was) == String(a.now)).size()
+	if pulled == 0: return "HACHEY'S REPORT: \"NO FILES PULLED. THE STATION WAS VERY BUSY. SO WAS I.\""
+	if same == pulled: return "HACHEY'S REPORT: %d FILES PULLED, %d STAMPED THE SAME TWICE. \"STATION 0117 AGREES WITH ITSELF.\" HE UNDERLINES IT." % [pulled, same]
+	return "HACHEY'S REPORT: %d FILES PULLED, %d STAMPED THE SAME TWICE. \"STATION 0117 HAS OPINIONS. SEVERAL. ABOUT THE SAME CARS.\"" % [pulled, same]
+
 func _draw_month_end() -> void:
 	_panel(Rect2(80, 40, 480, 280), 0.97)
-	PixelFont.draw_centered(self, 320, 54, "NOVEMBER.", GOLD, 3, INK)
+	PixelFont.draw_centered(self, 320, 54, "NOVEMBER 22. THE AUDIT'S OVER.", GOLD, 3, INK)
 	var y := 90.0
-	var ls := ["A MONTH AT THE COUNTER. %d CUSTOMERS, %d RIGHT CALLS, $%d FOR THE SHOP." % [month.seen, month.correct, month.earned],
+	var ls := ["%d WEEKS AT THE COUNTER. %d CUSTOMERS, %d RIGHT CALLS, $%d FOR THE SHOP." % [CounterRules.WEEKS, month.seen, month.correct, month.earned],
 		"%d STICKERS ON %d WINDSHIELDS. %d CITATIONS ON YOUR LICENCE." % [DeskBook.stickers.size(), DeskBook.stickers.size(), DeskBook.citations],
+		audit_verdict(),
 		"GUS LOCKS UP. \"NOT BAD, KID.\" HE THINKS ABOUT IT. \"NOT GOOD EITHER. BUT NOT BAD.\"",
 		"THE FULL GAME HAS EIGHT YEARS OF THESE."]
 	for para in ls:
-		for l in wrap_text(para, 64):
-			PixelFont.draw(self, Vector2(100, y), l, BONE, 2)
+		for l in wrap_text(para, 52):
+			PixelFont.draw(self, Vector2(108, y), l, BONE, 2)
 			y += 13
 		y += 6
 	PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_click}: BACK TO THE MENU"), Color(BONE, 0.7))

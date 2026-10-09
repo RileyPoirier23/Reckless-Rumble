@@ -7,8 +7,13 @@
 ## wall. The tests check that the two always agree, so every problem in the game can actually
 ## be caught by a player who looks, and an exception only holds when its proof does.
 ##
-## Days count from Monday 7 October 2019 (day 0). Weekends and Thanksgiving are closed. The
-## rules arrive on the days in RULES: Year 1, weeks 1 to 4 (bible section 3.8).
+## Days count from Monday 7 October 2019 (day 0). Weekends, Thanksgiving and Remembrance Day
+## are closed. The rules arrive on the days in RULES: Year 1, weeks 1 to 7 (bible section 3.8),
+## ending with the Ministry's audit week. From week 5 the courier brings the shop's parts to the
+## window (bible section 3.2): a box, a packing slip, and our own order to read it against.
+##
+## Walk-ins are made from seeds of their own, so a work order can be pulled out of the file and
+## rebuilt exactly (the audit, and the people who come back: see regulars.gd).
 class_name CounterRules
 extends RefCounted
 
@@ -18,8 +23,9 @@ const DAYS := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY
 const MONTHS := ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 const VIN_CHARS := "ABCDEFGHJKLMNPRSTUVWXYZ0123456789"
 ## Days the shop is shut besides the weekends.
-const CLOSED := { 7: "THANKSGIVING" }
-const LAST_DAY := 25                    # Friday 1 November: the end of week four
+const CLOSED := { 7: "THANKSGIVING", 35: "REMEMBRANCE DAY" }
+const LAST_DAY := 46                    # Friday 22 November: the end of week seven, and of the audit
+const WEEKS := 7
 
 # ------------------------------------------------------------------ the shift
 const SHIFT_LEN := 600.0                # minutes on the clock, 8:00 to 18:00
@@ -30,7 +36,8 @@ const REVOKE_AT := 12                   # citations (after the warnings) that co
 const MEETINGS_TO_REVOKE := 3           # ...or this many Ministry meetings (four citations in a week is a meeting)
 
 # the Ministry's rules: what's checked from which day, and which tab of the binder it lives in
-const TABS := ["INSPECTION", "DOCUMENTS", "POLICE", "MINISTRY", "SEASONAL"]
+# (PARTS is Gus's own page, taped in)
+const TABS := ["INSPECTION", "DOCUMENTS", "POLICE", "MINISTRY", "SEASONAL", "PARTS"]
 const RULES := [
 	{ "day": 0, "id": "match", "tab": "INSPECTION", "text": "THE CAR MUST MATCH ITS REGISTRATION: PLATE AND VIN." },
 	{ "day": 0, "id": "inspect", "tab": "INSPECTION", "text": "SAFETY INSPECTIONS: TREAD 1.6 MM+, PADS 3 MM+, ALL LIGHTS, NO RUST-THROUGH." },
@@ -46,6 +53,10 @@ const RULES := [
 	{ "day": 17, "id": "oop", "tab": "MINISTRY", "text": "OUT-OF-PROVINCE CARS ON A NEW REGISTRATION NEED A FULL INSPECTION." },
 	{ "day": 21, "id": "salvage", "tab": "MINISTRY", "text": "SALVAGE BRAND: NO STICKER WITHOUT A STRUCTURAL CERTIFICATE. A BRAND ON THE OLD OWNERSHIP THAT'S GONE FROM THE NEW ONE: REPORT IT." },
 	{ "day": 24, "id": "masks", "tab": "SEASONAL", "text": "HALLOWEEN: MASKS COME OFF AT THE COUNTER. ASK." },
+	{ "day": 28, "id": "tint", "tab": "INSPECTION", "text": "WINDOW TINT: FRONT SIDE WINDOWS MUST PASS 70% OF LIGHT. A MINISTRY MEDICAL EXEMPTION COVERS IT: THIS VIN, THIS DRIVER, NOT EXPIRED." },
+	{ "day": 30, "id": "courier", "tab": "PARTS", "text": "GUS: SIGN FOR A BOX ONLY IF THE PACKING SLIP MATCHES OUR ORDER: PART NO. AND SHIP TO. A SUPPLIER'S SUPERSESSION NOTICE COVERS A NEW PART NO. FROM THE STATES, CUSTOMS MUST DECLARE WHAT WE PAID." },
+	{ "day": 36, "id": "noise", "tab": "INSPECTION", "text": "EXHAUST: NO HOLES. 95 DB MAX AT 3,000 RPM." },
+	{ "day": 42, "id": "audit", "tab": "MINISTRY", "text": "AUDIT WEEK: THE INSPECTOR PULLS TWO OF YOUR WORK ORDERS A DAY. STAMP EACH ONE AGAIN. DISAGREEING WITH YOUR OWN STAMP IS A CITATION." },
 ]
 ## Lines on the Ministry tab that aren't checks you make, but checks made on you.
 const MINISTRY_LINES := ["TWO MINISTRY WARNINGS A SHIFT. FROM THE THIRD MISTAKE, $100 A CITATION.",
@@ -60,14 +71,56 @@ const PROBLEM_RULE := {
 	"insurance_vin": "insured", "name_mismatch": "owner", "stolen": "bolo", "photo_mismatch": "photo",
 	"odo_rollback": "odo", "bos_expired": "bos", "bos_forged": "bos", "vin_door_mismatch": "door",
 	"out_of_province": "oop", "salvage_no_cert": "salvage", "title_washed": "salvage",
+	"tint": "tint", "noise": "noise", "wrong_part": "courier", "customs_value": "courier", "ship_to": "courier",
 }
 ## Problems the right answer to is REPORT, not DENY.
 const REPORT_PROBLEMS := ["stolen", "title_washed"]
+## Problems that come in a courier's box, not a customer's car.
+const COURIER_PROBLEMS := ["wrong_part", "customs_value", "ship_to"]
 ## The exceptions: a discrepancy -> [the document that can explain it, the rule that makes it count].
 const PROOFS := {
 	"name_mismatch": ["bos", "bos"], "expired_reg": ["permit", "permit"], "no_insurance": ["glovebox", "insured"],
 	"vin_door_mismatch": ["door_inv", "door"], "salvage_no_cert": ["cert", "salvage"],
+	"tint": ["exempt", "tint"], "wrong_part": ["notice", "courier"],
 }
+const TINT_MIN := 70                    # % of light through the front side windows
+const NOISE_MAX := 95                   # dB at 3,000 rpm
+
+# ------------------------------------------------------------------ the courier (week 5 on)
+
+const SHOP := "COVINGTON AUTO"
+## The two people who bring the boxes: Fundy's own van, and the parcel company from the border.
+const COURIERS := {
+	"fundy": { "person": { "first": "RHEAL", "last": "BOURQUE", "face": 311707, "fem": 0, "dob": [1968, 5, 30], "address": "FUNDY PARTS SUPPLY" },
+		"car": "chevrolay_expresso_2010", "paint": "#e8e4dc", "supplier": "FUNDY PARTS SUPPLY" },
+	"parcel": { "person": { "first": "DENISE", "last": "ARSENAULT", "face": 522119, "fem": 1, "dob": [1985, 9, 9], "address": "MARITIME PARCEL" },
+		"car": "fjord_transitory_2016", "paint": "#6a2a4a", "supplier": "ROCKBOTTOMAUTO.COM" },
+}
+## What the bay orders: [part, what we pay, the job that's waiting on it].
+const ORDER_PARTS := [
+	["BRAKE PADS, FRONT (SET)", 48, "BRAKE JOB"], ["BRAKE ROTORS, FRONT (PAIR)", 96, "BRAKE JOB"],
+	["CALIPER, FRONT LEFT", 84, "BRAKE JOB"], ["MUFFLER, DIRECT FIT", 138, "SAFETY INSPECTION"],
+	["TAIL LIGHT ASSEMBLY, LEFT", 76, "SAFETY INSPECTION"], ["OXYGEN SENSOR, UPSTREAM", 62, "CHECK ENGINE LIGHT"],
+	["IGNITION COILS (SET OF 4)", 118, "CHECK ENGINE LIGHT"], ["OIL FILTERS (CASE OF 12)", 54, "OIL CHANGE"],
+	["TIRE VALVE STEMS (BAG OF 50)", 31, "WINTER TIRES ON"], ["WHEEL BEARING, FRONT", 79, "SAFETY INSPECTION"],
+]
+## Boxes that came to the wrong Covington.
+const WRONG_SHIPTO := ["COVINGTON DENTAL", "COVINGTON AUTO BODY", "LINDSAY'S LUBE & INSPECT", "COVINGTON HOME HARDWARE"]
+const FAMILIA_SHIPTO := "COVINGTON - BAY 3 - SAL"
+const RESTOCK := 0.15                   # what a supplier keeps when you send back a part you signed for
+const CUSTOMS_PENALTY := 75             # the broker's bill for a false declaration you signed for
+const DOCTORS := ["DR. LEGER", "DR. MALLET", "DR. CHIASSON", "DR. MACLEAN"]
+
+# ------------------------------------------------------------------ the audit (week 7)
+
+## Inspector Hachey, the Ministry, at the window in audit week.
+const HACHEY := { "first": "GERARD", "last": "HACHEY", "face": 425117, "fem": 0, "dob": [1957, 2, 11], "address": "THE MINISTRY, FREDERICTON" }
+const HACHEY_CAR := { "catalogue": "fjord_crown_victorious_2005", "paint": "#8a8e94" }
+## When he pulls a file: 9:30 and 2:00.
+const AUDIT_TIMES := [90.0, 360.0]
+## A file is re-judged from its papers alone: no face at the window, no car in the bay, no
+## stolen list from that week.
+const UNAUDITABLE := ["stolen", "photo_mismatch"]
 
 const FIRST := ["MARC", "JOEL", "DANIELLE", "KAYLA", "BRANDON", "NATALIE", "LUC", "SHAWN", "CHANTAL", "TYLER", "MELANIE", "JASON", "AMBER", "RENE", "KRISTA", "DEREK", "SYLVIE", "COREY", "JESSICA", "PAUL", "MONIQUE", "TRAVIS", "ASHLEY", "GILLES", "BRITTANY", "DYLAN", "NICOLE", "ROGER", "TAMMY", "KEVIN"]
 const WOMEN := ["DANIELLE", "KAYLA", "NATALIE", "CHANTAL", "MELANIE", "AMBER", "KRISTA", "SYLVIE", "JESSICA", "MONIQUE", "ASHLEY", "BRITTANY", "NICOLE", "TAMMY"]
@@ -96,8 +149,8 @@ const BODY_SHOPS := ["DIEPPE COLLISION", "BOUDREAU BODY & PAINT", "FENDER BENDER
 const INSPECTORS := ["J. GOGUEN, LIC. 4471", "R. MAILLET, LIC. 2290", "D. STEEVES, LIC. 3318"]
 const PROVINCES := ["NOVA SCOTIA", "QUEBEC", "ONTARIO", "P.E.I.", "NEWFOUNDLAND"]
 const MASKS := ["GOALIE", "PUMPKIN", "GHOST"]
-# what each job brings into the shop
-const PAY := { "SAFETY INSPECTION": 75, "FULL INSPECTION": 140, "OIL CHANGE": 70, "BRAKE JOB": 320, "WINTER TIRES ON": 110, "CHECK ENGINE LIGHT": 140 }
+# what each job brings into the shop (a delivery brings nothing until the job it's for goes ahead)
+const PAY := { "SAFETY INSPECTION": 75, "FULL INSPECTION": 140, "OIL CHANGE": 70, "BRAKE JOB": 320, "WINTER TIRES ON": 110, "CHECK ENGINE LIGHT": 140, "DELIVERY": 0 }
 # what Friday night takes back out
 const BILLS := [["RENT ON THE GARAGE", 1100], ["THE FAMILIA (FOR MIA'S CAR)", 400], ["ARIES'S HOCKEY", 120], ["GUS'S PAY", 800]]
 const FINE := 100
@@ -117,6 +170,8 @@ const QUESTIONS := {
 	"out_of_province": "THIS CAR'S FROM AWAY. IT NEEDS THE FULL INSPECTION.", "salvage_no_cert": "IT'S BRANDED SALVAGE. WHERE'S THE STRUCTURAL?",
 	"title_washed": "IT WAS SALVAGE IN THE OTHER PROVINCE. HERE IT'S CLEAN?", "mask": "CAN YOU TAKE THAT OFF?",
 	"local": "SO. WHICH TIM'S DO YOU GO TO?",
+	"tint": "THOSE WINDOWS ARE TOO DARK.", "noise": "YOUR EXHAUST FAILS.", "wrong_part": "THAT'S NOT THE PART WE ORDERED.",
+	"customs_value": "CUSTOMS SAYS WE PAID SOMETHING ELSE.", "ship_to": "THIS BOX ISN'T ADDRESSED TO US.",
 }
 ## Small talk from people who actually live here.
 const LOCAL_LINES := ["THE MOUNTAIN TIM'S. LIKE A NORMAL PERSON.", "THE ONE ON MAIN. THE DRIVE-THRU KID THERE'S SEEN THINGS.",
@@ -159,6 +214,16 @@ const EXCUSES := {
 		"THE CERTIFICATE'S AT HOME. ON THE FRIDGE. UNDER A MAGNET SHAPED LIKE A LOBSTER."],
 	"title_washed": ["THEY SAY SALVAGE, NEW BRUNSWICK SAYS CLEAN. I TRUST NEW BRUNSWICK.", "THE BRAND FELL OFF IN THE MOVE. LIKE A HUBCAP.",
 		"WHAT BRAND? I DON'T SEE A BRAND."],
+	"tint": ["IT'S FACTORY. THE FACTORY WAS MY COUSIN'S GARAGE.", "I'M SENSITIVE TO LIGHT. AND TO POLICE.",
+		"THAT'S NOT TINT. THAT'S DIRT. I'LL WASH IT IN THE SPRING.", "MY BUDDY DID IT FOR FREE. HE SAID IT WAS LEGAL. HE SAID IT FROM INSIDE A VERY DARK CAR."],
+	"noise": ["IT'S SUPPOSED TO SOUND LIKE THAT. IT'S A SPORTS CAR. SPIRITUALLY.", "THE HOLE'S FOR PERFORMANCE. IT LETS THE NOISE OUT.",
+		"THAT'S NOT THE EXHAUST, THAT'S THE RADIO. I LISTEN TO A LOT OF EXHAUST.", "THE NEIGHBOURS LOVE IT. THEY TELL ME EVERY MORNING. AT SIX."],
+	"wrong_part": ["I JUST DRIVE THE VAN, BUD. SIGN OR DON'T.", "THE WAREHOUSE PICKS 'EM. THE WAREHOUSE IS ONE GUY NAMED RODNEY.",
+		"IT'S PROBABLY THE SAME PART. THEY'RE ALL KIND OF THE SAME PART."],
+	"customs_value": ["I DON'T WRITE THE CUSTOMS FORMS. I JUST CARRY THEM. VERY CAREFULLY.", "THE AMERICANS FILL THOSE OUT. THEY USE A DIFFERENT KIND OF NUMBERS.",
+		"LOWER'S BETTER, RIGHT? LESS TAX? I'M ON YOUR SIDE HERE."],
+	"ship_to": ["IT SAYS COVINGTON. YOU'RE COVINGTON. CLOSE ENOUGH FOR THE VAN.", "THE SCANNER SAYS THIS STOP. I DON'T ARGUE WITH THE SCANNER. IT HAS A TEMPER.",
+		"THERE'S A LOT OF COVINGTONS. YOU'RE THE ONE WITH THE PARKING."],
 }
 ## What people say as they hand over a proof. Same words whether it's real or not.
 const PROOF_LINES := {
@@ -168,7 +233,29 @@ const PROOF_LINES := {
 	"glovebox": ["OH WAIT. GLOVEBOX. HANG ON.", "...THE PINK CARD? IT'S PINK? WHY DIDN'T ANYBODY SAY IT WAS PINK."],
 	"door_inv": ["BODY SHOP DID THE DOOR. I'VE GOT THE BILL RIGHT HERE. WORST $900 I EVER SPENT.", "NEW DOOR. HERE'S THE INVOICE. THEY EVEN MATCHED THE PAINT. ALMOST."],
 	"cert": ["HERE'S THE STRUCTURAL. THE GUY IN SALISBURY SIGNED IT ON HIS TAILGATE.", "STRUCTURAL CERTIFICATE. FRAME'S STRAIGHTER THAN ME."],
+	"exempt": ["MY DOCTOR SIGNED THE MINISTRY FORM. FOR MY EYES. HERE.", "MEDICAL EXEMPTION. IT'S IN THE VISOR. EVERYTHING'S IN THE VISOR."],
+	"notice": ["OH, THERE'S A NOTE IN THE BOX. NEW NUMBER, SAME PART, IT SAYS.", "THE SUPPLIER CHANGED THE NUMBER. HERE'S THE PAPER. THEY CHANGE IT EVERY TIME THEY GET A NEW INTERN."],
 }
+## The courier at the window, by who brings it.
+const COURIER_SAYS := {
+	"fundy": ["FUNDY PARTS. ONE BOX FOR COVINGTON. SIGN HERE. AND HERE. AND... NO, JUST HERE.", "MORNING. RODNEY PACKED THIS ONE. I'D CHECK IT. I'D CHECK ANYTHING RODNEY PACKED.",
+		"BOX FOR YOU. IT RATTLES. RODNEY SAYS IT'S SUPPOSED TO RATTLE."],
+	"parcel": ["PARCEL FROM THE STATES. THERE'S A CUSTOMS FORM. THERE'S ALWAYS A CUSTOMS FORM.", "ROCKBOTTOM. IT CROSSED THE BORDER TWICE. DON'T ASK ME HOW. I JUST DRIVE.",
+		"SIGNATURE FOR THE BOX FROM OHIO. IT'S BEEN ON A JOURNEY."],
+}
+## Fundy's driver remembers the last box you signed for, or didn't.
+const COURIER_AGAIN := {
+	"DENIED": "THE RIGHT ONE THIS TIME. RODNEY TRIPLE-CHECKED. RODNEY'S NEVER CHECKED ANYTHING ONCE.",
+	"DENIED_WRONG": "YOU SENT BACK A GOOD BOX LAST TIME. RODNEY TOOK IT PERSONALLY. RODNEY TAKES EVERYTHING PERSONALLY.",
+	"APPROVED_WRONG": "HOW'D THAT LAST PART FIT? RODNEY WANTS TO KNOW. RODNEY KNOWS.",
+}
+## Inspector Hachey: what he says when he puts a file on the desk, and when you ASK him things.
+const HACHEY_SAYS := ["GOOD MORNING. DON'T MIND ME. I'M JUST GOING TO STAND HERE AND BE THE MINISTRY.",
+	"ONE OF YOURS. I'VE COVERED THE STAMP WITH MY THUMB. STAMP IT AGAIN, PLEASE. TAKE YOUR TIME. I'M TIMING IT.",
+	"A FILE FROM YOUR CABINET. YOU'VE SEEN IT BEFORE. HAVE ANOTHER LOOK.",
+	"I PICKED THIS ONE AT RANDOM. THE MINISTRY'S RANDOM IS VERY CAREFUL."]
+const HACHEY_LOCAL := "THE ONE ON MAIN. I TAKE IT BLACK. I WRITE DOWN HOW LONG THE LINE IS."
+const HACHEY_ASK := "I'M NOT THE CUSTOMER, MR. COVINGTON. I'M THE MINISTRY. THE FILE IS THE CUSTOMER."
 const MASK_LINES := ["IT'S A COSTUME. IT'S HALLOWEEN, BUD.", "OH. RIGHT. FORGOT I HAD IT ON. IT'S VERY COMFORTABLE.", "...FINE. BUT YOU'RE NO FUN."]
 ## Undercover people don't know local things. Ask them anything and they stumble.
 const STING_ASK := ["I GOT THE PAPERS DONE AT THE, UH... THE TIM BURTONS? THE ONE ON MOUNTAIN STREET?",
@@ -316,6 +403,19 @@ func plate_tweak(p: String) -> String:
 	while nd == digits: nd = (digits + 1 + rng.randi() % 9) % 1000
 	return p.substr(0, 4) + "%03d" % nd
 
+## A supplier's part number: Fundy's are FP-, RockBottom's are longer and American.
+func part_no(states: bool) -> String:
+	if states: return "RB%d-%04d" % [100 + rng.randi() % 900, rng.randi() % 10000]
+	return "FP-%05d" % (rng.randi() % 100000)
+
+## The part number one digit over: the wrong part, in the right box.
+func part_tweak(p: String) -> String:
+	var at: Array[int] = []
+	for i in p.length(): if p[i] >= "0" and p[i] <= "9": at.append(i)
+	var i: int = at[at.size() - 1 - rng.randi() % mini(3, at.size())]
+	var d := int(p[i])
+	return p.substr(0, i) + str((d + 1 + rng.randi() % 9) % 10) + p.substr(i + 1)
+
 func person() -> Dictionary:
 	var first: String = FIRST[rng.randi() % FIRST.size()]
 	return {
@@ -342,6 +442,7 @@ func make_bolo(n := 6) -> void:
 ## otherwise it's rolled. `fixed` pins parts of them down: person, car (a partial dict, or
 ## "catalogue": id), request, and "plain" (no random extras: no exceptions, transfers or masks).
 func customer(day: int, want := "", fixed := {}) -> Dictionary:
+	if COURIER_PROBLEMS.has(want): return courier(day, want)
 	var p := person()
 	if fixed.has("person"): p.merge(fixed.person, true)
 	var fcar: Dictionary = fixed.get("car", {})
@@ -369,13 +470,16 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 			"from": date_add(t, -(10 + rng.randi() % 300)), "to": date_add(t, 20 + rng.randi() % 300),
 			"policy": "P-%06d" % (rng.randi() % 1000000) },
 		"sheet": { "vin": car.vin, "door": car.vin, "odo": car.odo, "tread": [], "pads": [], "lights": true, "rust": false,
-			"surface": float(car.rust_look) > 0.05 },
+			"surface": float(car.rust_look) > 0.05, "tint": 80, "db": 85, "hole": false },
 		"work": { "name": name, "plate": car.plate, "car": desc },
 		"flags": [], "napkin": "", "docs": ["work", "reg", "licence", "insurance", "sheet"], "hidden": [],
 		"ask": {}, "exception": {}, "says": "", "clue": {},
 	}
 	for i in 4: c.sheet.tread.append(snappedf(2.4 + rng.randf() * 6.0, 0.1))
 	for i in 2: c.sheet.pads.append(snappedf(3.5 + rng.randf() * 7.0, 0.1))
+	# Gus's light meter and sound meter: factory glass, a tired but legal muffler
+	c.sheet.tint = 72 + rng.randi() % 17
+	c.sheet.db = 78 + rng.randi() % 15
 	# clean variety once the rules know about it: cars from away, and rebuilt salvage with its certificate
 	if not plain:
 		if rule_active("oop", day) and rng.randf() < 0.15: _transfer(c, day)
@@ -386,7 +490,7 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 	# what's wrong with it (only problems the rules check today, so nothing is unfair)
 	var options: Array = []
 	for pr in PROBLEM_RULE:
-		if rule_active(PROBLEM_RULE[pr], day): options.append(pr)
+		if rule_active(PROBLEM_RULE[pr], day) and not COURIER_PROBLEMS.has(pr): options.append(pr)
 	var prob := "" if want == "clean" else want
 	if want == "" and rng.randf() < 0.45 and not options.is_empty():
 		prob = options[rng.randi() % options.size()]
@@ -493,14 +597,27 @@ func _inject(c: Dictionary, prob: String, day: int) -> void:
 			c.old_reg.brand = "SALVAGE"
 			c.reg.brand = "CLEAN"
 			c.request = "FULL INSPECTION"
+		"tint":
+			c.request = inspection_job(c)
+			c.sheet.tint = _dark()
+			if rng.randf() < 0.4: _proof(c, "tint", day, "bad")
+		"noise":
+			c.request = inspection_job(c)
+			# too loud, or a hole (a hole can be quiet enough and still fail)
+			if rng.randf() < 0.5: c.sheet.db = NOISE_MAX + 1 + rng.randi() % 16
+			else: c.sheet.hole = true
 	c.flags.append(prob)
+
+## Film on the front windows: 5% to 65% of the light gets through.
+func _dark() -> int:
+	return 5 + (rng.randi() % 13) * 5
 
 ## The proof a customer pulls out when you ASK: `how` is "valid", "bad" (forged or out of
 ## date), or for a bill of sale "bos_expired"/"bos_forged". It stays hidden until asked for.
 func _proof(c: Dictionary, base: String, day: int, how: String) -> void:
 	var t := today(day)
 	var doc: String = PROOFS[base][0]
-	var dash: String = c.sheet.vin
+	var dash: String = String(c.sheet.vin) if c.has("sheet") else ""
 	var bad := how != "valid"
 	match doc:
 		"bos":
@@ -536,6 +653,22 @@ func _proof(c: Dictionary, base: String, day: int, how: String) -> void:
 			var d := { "vin": dash, "by": INSPECTORS[rng.randi() % INSPECTORS.size()], "issued": date_add(t, -(3 + rng.randi() % 200)) }
 			if bad: d.vin = vin_tweak(dash)
 			c.cert = d
+		"exempt":
+			# a medical exemption is the driver's, for one car, and it runs out
+			var d := { "name": c.licence.name, "vin": dash, "dr": DOCTORS[rng.randi() % DOCTORS.size()], "expires": date_add(t, 20 + rng.randi() % 700) }
+			if bad:
+				match rng.randi() % 3:
+					0: d.expires = date_add(t, -(1 + rng.randi() % 200))
+					1: d.vin = vin_tweak(dash)
+					2: d.name = other_name(String(c.licence.name))
+			c.exempt = d
+		"notice":
+			# the supplier's notice: the number we ordered is now the number on the box
+			var d := { "supplier": c.slip.supplier, "was": c.order.no, "now": c.slip.no, "dated": date_add(t, -(2 + rng.randi() % 60)) }
+			if bad:
+				if rng.randf() < 0.5: d.was = part_tweak(String(c.order.no))
+				else: d.now = part_tweak(String(c.slip.no))
+			c.notice = d
 	if not c.hidden.has(doc): c.hidden.append(doc)
 	c.exception = { "problem": base, "doc": doc, "valid": not bad }
 	var lines: Array = PROOF_LINES[doc]
@@ -546,6 +679,8 @@ func _proof(c: Dictionary, base: String, day: int, how: String) -> void:
 func excuse(c: Dictionary, day: int, base := "") -> bool:
 	var bases: Array = []
 	for b in PROOFS:
+		# a box's papers can only explain a box; a car's, a car
+		if COURIER_PROBLEMS.has(b) != c.has("slip"): continue
 		if rule_active(PROBLEM_RULE[b], day) and rule_active(PROOFS[b][1], day): bases.append(b)
 	if base == "":
 		if bases.is_empty(): return false
@@ -559,7 +694,12 @@ func excuse(c: Dictionary, day: int, base := "") -> bool:
 			_brand_salvage(c)
 			c.erase("cert")
 			c.docs.erase("cert")
+		"tint":
+			c.request = inspection_job(c)
+			c.sheet.tint = _dark()
+		"wrong_part": c.slip.no = part_tweak(String(c.order.no))
 	_proof(c, base, day, "valid")
+	if c.has("sheet"): _ensure_history(c, day)
 	return true
 
 ## Thursday on: one of the Familia's cars. Something's wrong with it, and there's a napkin.
@@ -582,32 +722,163 @@ func sting(day: int) -> Dictionary:
 	c.docs.erase("history")
 	return c
 
+## Week 5 on: the courier at the window with a box for the bay. Our order (printed off the
+## counter PC) against their packing slip, and from the States a customs form too. `want`
+## forces a problem ("clean" for none). `fam`: the Familia's box, addressed to Bay 3.
+func courier(day: int, want := "", fam := false) -> Dictionary:
+	var t := today(day)
+	var states := want == "customs_value" or (want != "ship_to" and not fam and rng.randf() < 0.35)
+	var who: Dictionary = COURIERS["parcel" if states else "fundy"]
+	var p := person()
+	p.merge((who.person as Dictionary).duplicate(true), true)
+	var m := model(String(who.car))
+	var part: Array = ORDER_PARTS[rng.randi() % ORDER_PARTS.size()]
+	var no := part_no(states)
+	var paid := roundi(float(part[1]) * (0.72 if states else 0.92)) + rng.randi() % 12
+	var c := {
+		"person": p, "kind": "familia" if fam else "courier", "courier": "parcel" if states else "fundy", "request": "DELIVERY",
+		"car": { "make": m.make, "model": m.model, "year": m.year, "paint": String(who.paint), "len": m.len, "wid": m.wid,
+			"wheelbase": m.wheelbase, "body": m.body, "side_body": m.side_body, "class": m["class"], "cat": m.id, "quirk": "",
+			"rust_look": 0.0, "plate": plate(), "vin": vin(), "odo": 40000 + rng.randi() % 200000 },
+		"face_shown": p.face, "mask": "",
+		"order": { "supplier": String(who.supplier), "no": no, "part": part[0], "job": part[2], "for": LAST[rng.randi() % LAST.size()],
+			"paid": paid, "shipto": SHOP },
+		"slip": { "supplier": String(who.supplier), "no": no, "part": part[0], "qty": 1, "shipto": SHOP,
+			"shipped": date_add(t, -(1 + rng.randi() % 5)) },
+		"flags": [], "napkin": "", "docs": ["order", "slip"], "hidden": [], "ask": {}, "exception": {}, "says": "", "clue": {},
+	}
+	if states:
+		c.customs = { "from": "ROCKBOTTOMAUTO.COM, OHIO", "contents": part[0], "value": paid }
+		c.docs.append("customs")
+	var prob := "" if want == "clean" else want
+	if fam: prob = "ship_to"
+	elif want == "" and rng.randf() < 0.4:
+		var opts: Array = ["wrong_part", "wrong_part", "ship_to"]
+		if states: opts.append("customs_value")
+		prob = opts[rng.randi() % opts.size()]
+	match prob:
+		"wrong_part":
+			c.slip.no = part_tweak(no)
+			if rng.randf() < 0.35: _proof(c, "wrong_part", day, "bad")
+		"customs_value":
+			# declared low to dodge the duty (or high, by a tired clerk in Ohio)
+			c.customs.value = maxi(15, floori(paid / (2.0 + rng.randi() % 3))) if rng.randf() < 0.75 else paid * 2 + rng.randi() % 40
+		"ship_to": c.slip.shipto = FAMILIA_SHIPTO if fam else WRONG_SHIPTO[rng.randi() % WRONG_SHIPTO.size()]
+	if prob != "": c.flags.append(prob)
+	elif want == "" and rng.randf() < 0.15: excuse(c, day, "wrong_part")
+	var lines: Array = COURIER_SAYS[c.courier]
+	c.says = lines[rng.randi() % lines.size()]
+	if fam:
+		c.says = "BOX FOR BAY 3. SAL SAID YOU'D KNOW. I DON'T KNOW. I DON'T WANT TO KNOW."
+		c.napkin = "DON'T OPEN IT. DON'T SHAKE IT. BAY 3. DOM SAYS THANK YOU. -S"
+	elif not states:
+		# Fundy's driver remembers the last box you signed for, or didn't
+		var last := DeskRegulars.outcome("courier_fundy", day)
+		if COURIER_AGAIN.has(last): c.says = COURIER_AGAIN[last]
+	return c
+
 ## Stings come every other Friday while the heat is up (and the first Friday, to say hello).
 static func sting_day(day: int, heat: int) -> bool:
 	return day == 4 or (posmod(day, 7) == 4 and week_of(day) % 2 == 1 and heat >= 30)
 
 ## The day at the window: who arrives when. [{t (minutes since 8:00), c}], in order.
 ## `extra` is a story step's own customers (ids from data/story_customers.json, or specs).
+## The regulars come on their own days, and the people you turned away come back (both read
+## DeskBook, so what you stamped before decides who's in the line and what they bring).
 func shift(day: int, heat := 0, extra: Array = [], chapter := 1) -> Array:
 	var out: Array = []
 	var lo := 40.0 - minf(10.0, day * 0.5)
 	var hi := 75.0 - minf(14.0, day * 0.7)
 	var t := 4.0 + rng.randf() * 14.0
 	while t < 555.0:
-		out.append({ "t": t, "c": customer(day) })
+		out.append({ "t": t, "c": walk_in(day) })
 		t += rng.randf_range(lo, hi)
 	var specs: Array = []
 	for id in scheduled(chapter, day): specs.append(story_spec(id))
 	for e in extra: specs.append(story_spec(e) if e is String else e)
-	# a scripted Familia car takes the Thursday napkin's place
+	specs.append_array(DeskRegulars.visits(day))
+	specs.append_array(DeskRegulars.returns(day))
+	# a scripted Familia car takes the Thursday napkin's place; from week six it's sometimes a box
 	var fam_scripted := specs.any(func(s): return String((s as Dictionary).get("kind", "")) == "familia")
-	if (posmod(day, 7) == 3 or day == 4) and not fam_scripted: out.append({ "t": 60.0 + rng.randf() * 360.0, "c": familia(day) })
+	if (posmod(day, 7) == 3 or day == 4) and not fam_scripted:
+		var box := rule_active("noise", day) and rng.randf() < 0.5
+		out.append({ "t": 60.0 + rng.randf() * 360.0, "c": courier(day, "", true) if box else familia(day) })
 	if sting_day(day, heat): out.append({ "t": 120.0 + rng.randf() * 300.0, "c": sting(day) })
+	if rule_active("courier", day) and rng.randf() < 0.8: out.append({ "t": 50.0 + rng.randf() * 340.0, "c": courier(day) })
 	for s in specs:
 		if (s as Dictionary).is_empty(): continue
 		out.append({ "t": arrive_of(s), "c": scripted(s, day) })
 	out.sort_custom(func(a, b): return a.t < b.t)
 	return out
+
+## A walk-in off the street, made from a seed of their own so their file can be rebuilt later
+## (the audit pulls it; if you turned them away, they come back).
+func walk_in(day: int, want := "") -> Dictionary:
+	var s := rng.randi()
+	var r := CounterRules.new(s)
+	r.bolo = bolo
+	var c := r.customer(day, want)
+	c.seed = s
+	if want != "": c.want = want
+	return c
+
+## A walk-in's papers as they were on the day, from the file: {} if they weren't a walk-in.
+## (A stolen car's plate came off that week's list, so those don't rebuild; nobody asks.)
+static func rebuild(rec: Dictionary) -> Dictionary:
+	var s := int(rec.get("seed", -1))
+	if s < 0: return {}
+	var want := String(rec.get("want", ""))
+	var c := CounterRules.new(s).customer(int(rec.day), want)
+	c.seed = s
+	if want != "": c.want = want
+	return c
+
+## When Inspector Hachey pulls a file in audit week (minutes since 8:00).
+static func audit_times(day: int) -> Array:
+	return AUDIT_TIMES.duplicate() if rule_active("audit", day) else []
+
+## Can Hachey pull this work order? A walk-in you approved or denied, judged from papers
+## alone, not pulled before, not from the future.
+static func auditable(rec: Dictionary, day: int) -> bool:
+	if String(rec.get("kind", "")) != "regular" or int(rec.get("seed", -1)) < 0 or rec.get("pulled", false): return false
+	if not String(rec.get("stamp", "")) in ["APPROVED", "DENIED"] or int(rec.day) > day: return false
+	for p in rec.get("probs", []): if UNAUDITABLE.has(String(p)): return false
+	return true
+
+## The file he pulls from the cabinet: an older one if there is one (today's if that's all
+## there is). {} if there's nothing to pull.
+static func pull(files: Array, day: int, r: RandomNumberGenerator) -> Dictionary:
+	var older: Array = files.filter(func(f): return auditable(f, day) and int(f.day) < day)
+	var pool: Array = older if not older.is_empty() else files.filter(func(f): return auditable(f, day))
+	if pool.is_empty(): return {}
+	return pool[r.randi() % pool.size()]
+
+## The file on the desk: every paper the customer had that day (out of their pockets too),
+## the stamp under Hachey's thumb, and Hachey at the window.
+static func audit_customer(rec: Dictionary) -> Dictionary:
+	var c := rebuild(rec)
+	if c.is_empty(): return {}
+	for h in c.hidden: if not c.docs.has(h): c.docs.append(h)
+	c.hidden = []
+	c.mask = ""
+	c.kind = "audit"
+	c.audit = { "no": int(rec.no), "day": int(rec.day), "stamp": String(rec.stamp), "correct": bool(rec.correct), "who": String(rec.get("who", "")) }
+	c.window = HACHEY.duplicate(true)
+	c.says = "WORK ORDER %04d. %s. %s" % [int(rec.no), date_str(today(int(rec.day))), HACHEY_SAYS[int(rec.no) % HACHEY_SAYS.size()]]
+	c.erase("seed")
+	return c
+
+## Hachey in the line before he's pulled anything: the Ministry's car in the lot.
+func hachey(day: int) -> Dictionary:
+	var m := model(String(HACHEY_CAR.catalogue))
+	return { "kind": "audit", "request": "AUDIT", "person": HACHEY.duplicate(true),
+		"car": { "make": m.make, "model": m.model, "year": m.year, "paint": String(HACHEY_CAR.paint), "len": m.len, "wid": m.wid,
+			"wheelbase": m.wheelbase, "side_body": m.side_body, "plate": "GOV %03d" % (100 + day) } }
+
+## What the shop loses when somebody drives off at six (deliveries and the Ministry cost nothing).
+static func walked_pay(c: Dictionary) -> int:
+	if c.kind in ["audit", "courier"]: return 0
+	return int(PAY.get(c.request, 80))
 
 ## A day's customers in the order they turn up (the shift without the times).
 func day_line(day: int) -> Array:
@@ -647,10 +918,10 @@ static func arrive_of(spec: Dictionary) -> float:
 		return clampf(int(hm[0]) * 60.0 + (int(hm[1]) if hm.size() > 1 else 0) - 480.0, 0.0, SHIFT_LEN - 30.0)
 	return clampf(float(a), 0.0, SHIFT_LEN - 30.0)
 
-## A scripted customer: the same papers every time (seeded by the id), their own lines,
-## and what each stamp does to the story. See data/story_customers.json for the keys.
+## A scripted customer: the same papers every time (seeded by the id, or "seed"), their own
+## lines, and what each stamp does to the story. See data/story_customers.json for the keys.
 func scripted(spec: Dictionary, day: int) -> Dictionary:
-	var r := CounterRules.new(hash(String(spec.get("id", "story"))))
+	var r := CounterRules.new(hash(String(spec.get("seed", spec.get("id", "story")))))
 	r.bolo = bolo
 	# a member of the cast wears their own face (JSON numbers come in as floats)
 	var who: Dictionary = (spec.get("person", {}) as Dictionary).duplicate()
@@ -667,11 +938,18 @@ func scripted(spec: Dictionary, day: int) -> Dictionary:
 	if spec.has("request"): fixed.request = spec.request
 	var prob := String(spec.get("problem", "clean"))
 	var c := r.customer(day, prob if prob != "" else "clean", fixed)
+	if spec.get("from_away", false):
+		r._transfer(c, day)
+		r._ensure_history(c, day)
 	if spec.has("excuse"): r.excuse(c, day, String(spec.excuse))
+	# a proof that won't hold up, for a problem whose proof keeps its name when it's bad (a bad
+	# bill of sale is bos_forged, and a bad pink card is expired insurance: ask for those instead)
+	if spec.get("forged", false) and PROOFS.has(prob) and not prob in ["name_mismatch", "no_insurance"]: r._proof(c, prob, day, "bad")
 	for k in ["reg", "licence", "insurance", "sheet", "work"]:
 		if spec.has("papers") and (spec.papers as Dictionary).has(k): (c[k] as Dictionary).merge(spec.papers[k], true)
 	c.kind = String(spec.get("kind", "story"))
 	c.script = spec
+	c.regular = String(spec.get("regular", ""))
 	c.napkin = String(spec.get("napkin", c.napkin))
 	c.says = String(spec.get("says", ""))
 	c.clue = spec.get("clue", {})
@@ -708,12 +986,14 @@ static func proof_ok(c: Dictionary, base: String, day: int) -> bool:
 	if not rule_active(PROOFS[base][1], day) or not c.has(doc): return false
 	var d: Dictionary = c[doc]
 	var t := today(day)
+	if doc == "notice": return d.was == c.order.no and d.now == c.slip.no and date_cmp(d.dated, t) <= 0
 	var dash: String = c.sheet.vin
 	match doc:
 		"bos": return bos_check(c, day) == ""
 		"permit", "glovebox": return d.vin == dash and date_cmp(d.from, t) <= 0 and date_cmp(d.to, t) >= 0
 		"door_inv": return d.vin == dash and d.door == c.sheet.door and date_cmp(d.date, t) <= 0
 		"cert": return d.vin == dash and date_cmp(d.issued, t) <= 0
+		"exempt": return d.vin == dash and d.name == c.licence.name and date_cmp(d.expires, t) >= 0
 	return false
 
 ## The service history disagrees with the odometer: a reading above today's, or one that went down.
@@ -728,6 +1008,7 @@ static func odo_rolled(c: Dictionary) -> bool:
 ## the documents (and the ones they'd get by asking), the car in the window, the rules,
 ## the stolen list on the wall, the person's face.
 static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
+	if c.has("slip"): return _box_problems(c, day)
 	var out: Array = []
 	var t := today(day)
 	var reg: Dictionary = c.reg
@@ -763,6 +1044,21 @@ static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 	if rule_active("salvage", day):
 		if String(reg.get("brand", "CLEAN")) == "SALVAGE" and not proof_ok(c, "salvage_no_cert", day): out.append("salvage_no_cert")
 		if c.has("old_reg") and String(c.old_reg.brand) == "SALVAGE" and String(reg.get("brand", "CLEAN")) != "SALVAGE": out.append("title_washed")
+	if rule_active("tint", day) and INSPECTIONS.has(c.request) and int(sheet.get("tint", 100)) < TINT_MIN and not proof_ok(c, "tint", day):
+		out.append("tint")
+	if rule_active("noise", day) and INSPECTIONS.has(c.request) and (bool(sheet.get("hole", false)) or int(sheet.get("db", 0)) > NOISE_MAX):
+		out.append("noise")
+	return out
+
+## A courier's box against our order: who it's for, the part number, what customs says we paid.
+static func _box_problems(c: Dictionary, day: int) -> Array:
+	var out: Array = []
+	if not rule_active("courier", day): return out
+	var o: Dictionary = c.order
+	var s: Dictionary = c.slip
+	if s.shipto != o.shipto: out.append("ship_to")
+	if s.no != o.no and not proof_ok(c, "wrong_part", day): out.append("wrong_part")
+	if c.has("customs") and int(c.customs.value) != int(o.paid): out.append("customs_value")
 	return out
 
 # ------------------------------------------------------------------ the desk: what Leo can put side by side
@@ -771,7 +1067,9 @@ static func find_problems(c: Dictionary, day: int, bolo_list: Array) -> Array:
 const DOC_TITLES := { "work": "WORK ORDER - COVINGTON AUTO", "reg": "VEHICLE REGISTRATION", "licence": "DRIVER'S LICENCE",
 	"insurance": "PROOF OF INSURANCE", "glovebox": "PINK CARD (FROM THE GLOVEBOX)", "sheet": "GUS'S SHEET (READ OFF THE CAR)",
 	"history": "SERVICE HISTORY", "old_reg": "OLD OWNERSHIP", "bos": "BILL OF SALE", "permit": "TEMPORARY PERMIT",
-	"door_inv": "BODY SHOP INVOICE", "cert": "STRUCTURAL CERTIFICATE", "napkin": "", "letter": "" }
+	"door_inv": "BODY SHOP INVOICE", "cert": "STRUCTURAL CERTIFICATE", "napkin": "", "letter": "",
+	"exempt": "TINT EXEMPTION - MINISTRY", "order": "OUR ORDER - PARTSWEB 98", "slip": "PACKING SLIP",
+	"customs": "CUSTOMS DECLARATION", "notice": "SUPERSESSION NOTICE" }
 ## What Leo can ASK about, in two or three words.
 const TOPIC_LABEL := {
 	"vin_mismatch": "THE VIN", "plate_mismatch": "THE PLATE", "fails_inspection": "WHY IT FAILS", "expired_reg": "THE REGISTRATION",
@@ -779,16 +1077,20 @@ const TOPIC_LABEL := {
 	"name_mismatch": "WHOSE CAR IT IS", "stolen": "THE STOLEN LIST", "photo_mismatch": "THE PHOTO", "odo_rollback": "THE ODOMETER",
 	"bos_expired": "THE SALE DATE", "bos_forged": "THE BILL OF SALE", "vin_door_mismatch": "THE DOOR", "out_of_province": "WHERE IT'S FROM",
 	"salvage_no_cert": "THE SALVAGE BRAND", "title_washed": "THE OLD BRAND", "mask": "THE MASK", "local": "SMALL TALK",
+	"tint": "THE TINT", "noise": "THE EXHAUST", "wrong_part": "THE PART NUMBER", "customs_value": "THE DECLARED VALUE", "ship_to": "WHO IT'S FOR",
 }
 ## Which papers a mismatch points at, by the kind of fact and the paper that's wrong.
 const _TOPIC_BY_DOC := {
 	"vin": { "reg": "vin_mismatch", "insurance": "insurance_vin", "glovebox": "insurance_vin", "bos": "bos_forged",
-		"permit": "expired_reg", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch", "sheet": "vin_door_mismatch" },
+		"permit": "expired_reg", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch", "sheet": "vin_door_mismatch", "exempt": "tint" },
 	"plate": { "reg": "plate_mismatch", "work": "plate_mismatch", "permit": "expired_reg" },
-	"name": { "bos": "bos_forged" }, "owner": { "bos": "bos_forged" },
+	"name": { "bos": "bos_forged", "exempt": "tint" }, "owner": { "bos": "bos_forged" },
+	"part": { "order": "wrong_part", "slip": "wrong_part", "notice": "wrong_part" },
+	"paid": { "order": "customs_value", "customs": "customs_value" },
+	"shipto": { "order": "ship_to", "slip": "ship_to" },
 }
 const _DATE_TOPIC := { "reg": "expired_reg", "permit": "expired_reg", "insurance": "insurance_expired", "glovebox": "insurance_expired",
-	"bos": "bos_expired", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch" }
+	"bos": "bos_expired", "cert": "salvage_no_cert", "door_inv": "vin_door_mismatch", "exempt": "tint", "notice": "wrong_part" }
 
 ## The rows of a paper: [label, text, fact key ("" if there's nothing to compare), value].
 ## Fact keys: name, owner, plate, vin, car, job, expiry, start, sold, dated, brand, prov, odo, km,
@@ -797,8 +1099,12 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 	var raw = c.get(id, {})
 	var d: Dictionary = raw if raw is Dictionary else {}
 	match id:
-		"work": return [["NAME", c.work.name, "name", c.work.name], ["PLATE", c.work.plate, "plate", c.work.plate],
-			["CAR", c.work.car, "car", c.work.car], ["WORK", c.request, "job", c.request]]
+		"work":
+			var rows := [["NAME", c.work.name, "name", c.work.name], ["PLATE", c.work.plate, "plate", c.work.plate],
+				["CAR", c.work.car, "car", c.work.car], ["WORK", c.request, "job", c.request]]
+			# a pulled file carries its own date: that's "today" for everything on it
+			if c.has("audit"): rows.append(["FILED", date_str(today(int(c.audit.day))), "today", today(int(c.audit.day))])
+			return rows
 		"reg":
 			var rows := [["OWNER", d.owner, "owner", d.owner], ["ADDRESS", d.address, "", null], ["CAR", d.car, "car", d.car],
 				["PLATE", d.plate, "plate", d.plate], ["VIN", d.vin, "vin", d.vin], ["EXPIRES", date_str(d.expires), "expiry", d.expires]]
@@ -819,6 +1125,14 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 				["PADS", "FRONT %.1f  REAR %.1f" % [pd[0], pd[1]], "measure", { "kind": "pads", "v": pd }],
 				["LIGHTS", "ALL WORKING" if d.lights else "LEFT TAIL OUT", "measure", { "kind": "lights", "v": d.lights }],
 				["RUST", ("SURFACE ONLY" if d.get("surface", false) else "NONE") if not d.rust else "THROUGH THE ROCKER", "measure", { "kind": "rust", "v": d.rust }]])
+			# the light meter and the sound meter join the sheet with their rules
+			if rule_active("tint", day):
+				var vlt := int(d.get("tint", 80))
+				rows.append(["TINT", "FRONT SIDES %d%% LIGHT" % vlt, "measure", { "kind": "tint", "v": vlt }])
+			if rule_active("noise", day):
+				var db := int(d.get("db", 85))
+				var hole: bool = d.get("hole", false)
+				rows.append(["EXHAUST", "%d DB AT 3000, %s" % [db, "A HOLE" if hole else "NO HOLES"], "measure", { "kind": "noise", "v": { "db": db, "hole": hole } }])
 			return rows
 		"history":
 			var rows: Array = []
@@ -836,6 +1150,14 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 		"door_inv": return [["SHOP", d.shop, "", null], ["CAR VIN", d.vin, "vin", d.vin], ["DOOR", d.door, "vin", d.door],
 			["DATE", date_str(d.date), "dated", d.date], ["AMOUNT", "$%d" % int(d.amount), "", null]]
 		"cert": return [["VIN", d.vin, "vin", d.vin], ["SIGNED", d.by, "", null], ["ISSUED", date_str(d.issued), "dated", d.issued]]
+		"exempt": return [["DRIVER", d.name, "name", d.name], ["VIN", d.vin, "vin", d.vin], ["SIGNED", d.dr, "", null],
+			["EXPIRES", date_str(d.expires), "expiry", d.expires]]
+		"order": return [["FROM", d.supplier, "", null], ["PART NO.", d.no, "part", d.no], ["PART", d.part, "", null],
+			["FOR", "%s - %s" % [String(d.job).replace(" LIGHT", ""), d["for"]], "", null], ["PAID", "$%d" % int(d.paid), "paid", int(d.paid)], ["SHIP TO", d.shipto, "shipto", d.shipto]]
+		"slip": return [["SHIP TO", d.shipto, "shipto", d.shipto], ["PART NO.", d.no, "part", d.no], ["PART", d.part, "", null],
+			["QTY", str(int(d.qty)), "", null], ["SHIPPED", date_str(d.shipped), "", null]]
+		"customs": return [["FROM", d.from, "", null], ["CONTENTS", d.contents, "", null], ["DECLARED", "$%d" % int(d.value), "paid", int(d.value)]]
+		"notice": return [["WAS NO.", d.was, "part", d.was], ["NOW NO.", d.now, "part", d.now], ["DATED", date_str(d.dated), "dated", d.dated]]
 	return []
 
 ## A door's VIN (on Gus's sheet or on the body shop's invoice), not the car's.
@@ -873,11 +1195,13 @@ static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b:
 	var kb: String = b.key
 	var pair := [ka, kb]
 	var t := today(day)
-	if ka == kb and ka in ["name", "owner", "plate", "vin", "car", "brand"]:
+	if ka == kb and ka in ["name", "owner", "plate", "vin", "car", "brand", "part", "paid", "shipto"]:
 		if a.val == b.val: return ["MATCH", true, ""]
 		return ["MISMATCH", false, _culprit(c, a, b)]
 	if pair.has("owner") and pair.has("name"):
 		if a.get("doc", "") == "bos" and b.get("doc", "") == "bos": return ["SELLER AND BUYER", null, ""]
+		if "exempt" in [a.get("doc", ""), b.get("doc", "")]:
+			return ["SAME PERSON", true, ""] if a.val == b.val else ["NOT THE DRIVER ON THE EXEMPTION", false, "tint"]
 		return ["SAME PERSON", true, ""] if a.val == b.val else ["NOT THE OWNER", false, "name_mismatch"]
 	if ka == "km" and kb == "km":
 		var early: Dictionary = a.val if date_cmp(a.val.date, b.val.date) <= 0 else b.val
@@ -896,6 +1220,7 @@ static func compare(c: Dictionary, day: int, bolo_list: Array, a: Dictionary, b:
 			"dated": return ["DATED IN THE FUTURE", false, topic] if date_cmp(d, t) > 0 else ["DATED BEFORE TODAY", true, ""]
 			"sold": return _sold(d, t)
 	if pair.has("photo") and pair.has("person"):
+		if c.has("audit"): return ["THAT'S HACHEY. THE CUSTOMER'S LONG GONE", null, ""]
 		if String(c.get("mask", "")) != "": return ["CAN'T SEE A FACE UNDER THAT MASK", null, "mask"]
 		return ["SAME PERSON", true, ""] if a.val == b.val else ["THAT'S NOT THEM", false, "photo_mismatch"]
 	if pair.has("bolo") and (pair.has("plate") or pair.has("vin")):
@@ -960,6 +1285,17 @@ static func _against_rule(c: Dictionary, day: int, rule: String, f: Dictionary) 
 				return ["SALVAGE, NO STRUCTURAL CERTIFICATE", false, "salvage_no_cert"]
 		"masks":
 			if k == "person": return ["MASK ON: ASK", null, "mask"] if String(c.get("mask", "")) != "" else ["NO MASK", true, ""]
+		"tint":
+			if k == "measure" and String(f.val.kind) == "tint":
+				var vlt := int(f.val.v)
+				return ["%d%% LIGHT: TOO DARK" % vlt, false, "tint"] if vlt < TINT_MIN else ["%d%% LIGHT: CLEAR ENOUGH" % vlt, true, ""]
+		"noise":
+			if k == "measure" and String(f.val.kind) == "noise":
+				var m: Dictionary = f.val.v
+				if m.hole: return ["A HOLE IN THE EXHAUST: FAILS", false, "noise"]
+				return ["%d DB AT 3000: OVER 95" % int(m.db), false, "noise"] if int(m.db) > NOISE_MAX else ["%d DB, NO HOLES: PASSES" % int(m.db), true, ""]
+		"courier":
+			if k == "shipto": return ["ADDRESSED TO US", true, ""] if String(f.val) == SHOP else ["NOT ADDRESSED TO US", false, "ship_to"]
 	return ["NOTHING TO COMPARE", null, ""]
 
 ## Everything on the desk and the wall as facts (no positions): the papers (with the ones
@@ -975,8 +1311,10 @@ static func desk_facts(c: Dictionary, day: int, pockets := true) -> Array:
 			if row[2] != "": out.append({ "key": row[2], "val": row[3], "doc": id, "row": row[0] })
 		if id == "licence": out.append({ "key": "photo", "val": c.licence.face, "doc": id, "row": "PHOTO" })
 	out.append({ "key": "today", "val": today(day), "doc": "" })
-	out.append({ "key": "person", "val": c.face_shown, "doc": "" })
-	out.append({ "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE" })
+	# a pulled file has no customer at the window and no car in the bay
+	if not c.has("audit"):
+		out.append({ "key": "person", "val": c.face_shown, "doc": "" })
+		out.append({ "key": "plate", "val": c.car.plate, "doc": "car", "row": "PLATE" })
 	if rule_active("bolo", day): out.append({ "key": "bolo", "val": 0, "doc": "" })
 	for r in rules_for(day): out.append({ "key": "rule", "val": r.id, "doc": "" })
 	return out
@@ -987,7 +1325,7 @@ static func standing_topics(c: Dictionary, day: int) -> Array:
 	var out: Array = []
 	if String(c.get("mask", "")) != "": out.append("mask")
 	var shown_glovebox: bool = c.has("glovebox") and not c.get("hidden", []).has("glovebox")
-	if rule_active("insured", day) and (c.insurance as Dictionary).is_empty() and not shown_glovebox: out.append("no_insurance")
+	if c.has("reg") and rule_active("insured", day) and (c.get("insurance", {}) as Dictionary).is_empty() and not shown_glovebox: out.append("no_insurance")
 	out.append("local")
 	return out
 
@@ -999,6 +1337,7 @@ static func answer(c: Dictionary, topic: String) -> Dictionary:
 	match c.kind:
 		"sting": return { "line": STING_ASK[h % STING_ASK.size()] }
 		"familia": return { "line": "DOM SAYS YOU DON'T ASK. HE SAYS IT NICE, BUT HE SAYS IT." }
+		"audit": return { "line": HACHEY_LOCAL if topic == "local" else HACHEY_ASK }
 	if topic == "local": return { "line": LOCAL_LINES[h % LOCAL_LINES.size()] }
 	var pool: Array = EXCUSES.get(topic, [])
 	if pool.is_empty(): return { "line": "I DON'T KNOW ANYTHING ABOUT THAT. I JUST DRIVE IT." }
@@ -1023,7 +1362,7 @@ static func judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> D
 	var spec: Dictionary = c.get("script", {})
 	if spec.is_empty(): return r
 	# a scripted customer: their own lines and what the story remembers
-	r.flags.append("desk_%s_%s" % [spec.get("id", "story"), stamp.to_lower()])
+	if not spec.get("quiet", false): r.flags.append("desk_%s_%s" % [spec.get("id", "story"), stamp.to_lower()])
 	var o: Dictionary = spec.get("outcomes", {}).get(stamp, {})
 	for k in ["line", "citation"]: if o.has(k): r[k] = String(o[k])
 	for k in ["money", "dirty", "heat", "trust", "review"]: if o.has(k): r[k] = int(o[k])
@@ -1032,8 +1371,10 @@ static func judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> D
 	return r
 
 static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> Dictionary:
+	var r := { "money": 0, "dirty": 0, "citation": "", "heat": 0, "trust": 0, "review": 0, "line": "", "correct": true, "fee": 0 }
+	if c.kind == "audit": return _judge_audit(c, stamp, r)
 	var probs := find_problems(c, day, bolo_list)
-	var r := { "money": 0, "dirty": 0, "citation": "", "heat": 0, "trust": 0, "review": 0, "line": "", "correct": true }
+	if c.kind == "courier": return _judge_box(c, stamp, probs, r)
 	match c.kind:
 		"familia":
 			match stamp:
@@ -1100,6 +1441,60 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 			r.citation = "OFF-BOOKS WORK ON A CUSTOMER CAR (NO WORK ORDER, NO RECEIPT)"
 	return r
 
+## Signing for a box (APPROVED) or sending it back (DENIED). A right box lets the job that was
+## waiting on it go ahead; a wrong one costs the shop, not the licence: the Ministry doesn't
+## care what's in your parts room.
+static func _judge_box(c: Dictionary, stamp: String, probs: Array, r: Dictionary) -> Dictionary:
+	var o: Dictionary = c.order
+	match stamp:
+		"APPROVED":
+			if probs.is_empty():
+				r.money = int(PAY.get(String(o.job), 0))
+				r.line = "Gus carries the box to the bay like it's a casserole. The %s for %s goes ahead." % [String(o.job).to_lower(), String(o["for"])]
+			else:
+				r.correct = false
+				match String(probs[0]):
+					"ship_to": r.line = "%s calls about their box. Gus drives it over on his lunch and comes back quieter." % String(c.slip.shipto)
+					"customs_value":
+						r.fee = CUSTOMS_PENALTY
+						r.line = "The broker's letter comes Thursday: a false declaration, signed for by you. The penalty's on the shop."
+					_:
+						r.fee = maxi(5, roundi(float(o.paid) * RESTOCK))
+						r.line = "It's the wrong part. It doesn't fit. Fundy takes it back, minus 15% for the trouble."
+		"DENIED":
+			if probs.is_empty():
+				r.correct = false
+				r.review = -1
+				r.line = "The %s waiting on that box waits another day. So does the customer. Loudly, online." % String(o.job).to_lower()
+			else:
+				r.line = ["\"Fair enough.\" The box goes back in the van. The right one's on tomorrow's truck.", "\"I'll tell Rodney.\" The box goes back in the van. Rodney will not be told."][int(c.person.face) % 2]
+		"REPORT":
+			r.correct = false
+			r.heat = 3
+			r.review = -1
+			r.line = "The police come to look at a box of %s. They look at it hard. It stays a box of %s." % [String(o.part).to_lower(), String(o.part).to_lower()]
+		"WRENCH":
+			r.correct = false
+			r.line = "The courier looks at Bay 3. Then at you. \"I just need a signature, man.\""
+	return r
+
+## Audit week: Hachey covers your stamp with his thumb and you stamp the file again. The
+## Ministry wants a station that agrees with itself.
+static func _judge_audit(c: Dictionary, stamp: String, r: Dictionary) -> Dictionary:
+	var was := String(c.audit.stamp)
+	var word := { "APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
+	if stamp == was:
+		var after := "He ticks a box." if c.audit.correct else "He writes something else down too, and doesn't say what."
+		r.line = "He lifts his thumb: %s. \"Consistent.\" %s" % [word.get(was, was), after]
+		return r
+	r.correct = false
+	r.citation = "AUDIT: YOUR OWN WORK ORDER SAYS %s. TODAY YOU SAY %s. THE MINISTRY WOULD LIKE YOU TO PICK ONE" % [word.get(was, was), word.get(stamp, stamp)]
+	r.line = "He lifts his thumb. Your own stamp says %s. He looks at it for a long time." % word.get(was, was)
+	if stamp == "WRENCH":
+		r.heat = 10
+		r.line = "You just offered the Ministry Bay 3. Hachey writes that down in full."
+	return r
+
 static func _citation_for(p: String) -> String:
 	match p:
 		"vin_mismatch": return "VIN ON THE REGISTRATION DOESN'T MATCH THE CAR"
@@ -1117,6 +1512,8 @@ static func _citation_for(p: String) -> String:
 		"vin_door_mismatch": return "DOOR-JAMB VIN DIDN'T MATCH THE DASH"
 		"out_of_province": return "OUT-OF-PROVINCE CAR WITHOUT THE FULL INSPECTION"
 		"salvage_no_cert": return "STICKERED A SALVAGE CAR WITHOUT A STRUCTURAL CERTIFICATE"
+		"tint": return "PASSED FRONT WINDOWS THAT DON'T LET 70% OF THE LIGHT THROUGH"
+		"noise": return "PASSED AN EXHAUST WITH A HOLE IN IT, OR OVER 95 DB"
 	return "PAPERWORK PROBLEM"
 
 static func _denied_line(p: String) -> String:
@@ -1133,4 +1530,6 @@ static func _denied_line(p: String) -> String:
 		"vin_door_mismatch": return "\"It's a GOOD door.\" It's somebody else's door."
 		"out_of_province": return "\"Fine. I'll book the full one. In Toronto we just... had cars.\""
 		"salvage_no_cert": return "\"My brother-in-law's going to be very hurt.\""
+		"tint": return "\"I'll peel it. With my teeth, probably.\""
+		"noise": return "\"It's not loud. You're quiet.\" The car argues the point all the way out of the lot."
 	return "They leave, muttering."
