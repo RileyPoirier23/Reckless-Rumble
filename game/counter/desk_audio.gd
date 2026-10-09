@@ -7,7 +7,7 @@ extends Node
 
 const RATE := 22050
 ## How loud each one plays (dB): the clock is the quietest thing in the room, the stamp the loudest.
-const LEVEL := { "honk": -17.0, "stamp": -9.0, "paper": -17.0, "page": -15.0, "tick": -28.0, "tock": -29.0, "till": -13.0 }
+const LEVEL := { "honk": -17.0, "stamp": -9.0, "paper": -17.0, "page": -15.0, "tick": -24.0, "tock": -25.0, "till": -13.0 }
 const VOICES := 6
 
 static var _bank := {}                 # name -> AudioStreamWAV

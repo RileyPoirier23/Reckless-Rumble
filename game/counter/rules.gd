@@ -769,7 +769,9 @@ func courier(day: int, want := "", fam := false) -> Dictionary:
 	var lines: Array = COURIER_SAYS[c.courier]
 	c.says = lines[rng.randi() % lines.size()]
 	if fam:
-		c.says = "BOX FOR BAY 3. SAL SAID YOU'D KNOW. I DON'T KNOW. I DON'T WANT TO KNOW."
+		# it came on Fundy's truck, on the shop's account: Fundy's driver doesn't want to know
+		c.courier = "familia"
+		c.says = "BOX FOR BAY 3. ON YOUR ACCOUNT. SAL SAID YOU'D KNOW. I DON'T KNOW. I DON'T WANT TO KNOW."
 		c.napkin = "DON'T OPEN IT. DON'T SHAKE IT. BAY 3. DOM SAYS THANK YOU. -S"
 	elif not states:
 		# Fundy's driver remembers the last box you signed for, or didn't

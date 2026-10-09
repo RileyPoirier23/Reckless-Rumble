@@ -85,24 +85,30 @@ Open the map (Tab or Back on the controller), pick a place, and the GPS routes y
 
 ## The counter
 
-October 7 to November 1, 2019: four weeks of shifts (closed weekends and Thanksgiving Monday). On the first brief, LB/RB (Q/E) picks the week to start in. Each customer brings papers:
+October 7 to November 22, 2019: seven weeks of shifts (closed weekends, Thanksgiving Monday and Remembrance Day). On the first brief, LB/RB (Q/E) picks the week to start in. Each customer brings papers:
 - a work order;
 - a registration;
 - a driver's licence;
 - proof of insurance;
-- Gus's sheet, read off the actual car (the door-jamb VIN joins it in week three);
+- Gus's sheet, read off the actual car (the door-jamb VIN joins it in week three, the light meter for window tint in week five, the sound meter for the exhaust in week six);
 - and, as the rules arrive, a service history, last province's ownership, a structural certificate.
 
 **The shift.** The wall clock runs 8:00 to 6:00 in ten real minutes. Customers line up in the lot (you can see them through the bay door). Spend more than an hour and a half with one and the next one leans on the horn. At six, whoever's still waiting drives off, and the day-end screen shows the money that went with them.
 
 **The rules grow.** Week one adds a rule a day, a stolen list on Thursday, the Familia's napkins and, on Friday, somebody asking for "new numbers" who isn't who he says he is. From week two the bulletin is a binder with tabs (Inspection, Documents, Police, Ministry, Seasonal): odometers only go up, a dated bill of sale covers a name mismatch, door-jamb VINs, temporary permits, out-of-province cars need the full inspection, salvage brands need a structural certificate (and a brand that vanished between provinces gets reported), and on Halloween the masks come off.
 
-- **Inspect** (I, Y or right-click), then pick two things to compare them: a VIN against a VIN, a name against a name, a date against the calendar, the licence photo against the face, a plate against the stolen list, a reading or a paper against a rule in the binder, a service reading against the odometer.
-- **ASK** (A or X, or click the question). A red verdict puts a question under the customer's speech bubble. Most answers are lies. Some customers pull a paper out of a pocket (a bill of sale, a permit, the pink card from the glovebox, a body shop invoice, a structural certificate) that makes the discrepancy fine, if that paper checks out too. Small talk is always on the list; people from here know which Tim's they go to.
-- **Stamp the work order:** APPROVE (1), DENY (2), REPORT to the police (3), or BAY 3 (4) for off-the-books work.
+**Weeks five to seven.** Front side windows must let 70% of the light through (a Ministry medical exemption covers it, for that driver and that car). Gus opens an account with Fundy Parts Supply, and **the courier** comes to the window with the bay's parts: sign for a box only if the packing slip matches our order printout (part number and ship-to; a supplier's supersession notice covers a new number), and a box from the States carries a customs form that must declare what we paid. Gus's rules for it are on a PARTS tab he taped into the binder. Sign for a wrong box and it costs the shop a restocking fee or the broker's penalty, not a citation; refuse a right one and the job waiting on it waits. After Remembrance Day the exhaust rule arrives (no holes, 95 dB at 3,000 rpm), and some Thursdays the Familia's visit is a box for Bay 3. Week seven is **the audit**: Inspector Hachey pulls two of your old work orders a day (at 9:30 and 2:00, ahead of the line), covers the stamp with his thumb, and you stamp the file again, read against the date on it. Disagree with your own stamp and it's a citation. His report closes the run.
+
+**The regulars, and people who remember you.** Jayden from the Mountain Tim's drive-thru, hockey dad Rob, Mrs. Doiron and her cursed Cava-lame, and Darrell with his trade-ins come in on their own days across the seven weeks, and what you stamped on them last time changes what they say and bring (fail Jayden's bald tire and he's back with four used tires and timbits for Gus; pass it and he's back off the causeway for a brake job; leave him in the lot at six and he tells you about it). Anybody else you turn away comes back one to four open days later: fixed, with a paper from a pocket (good or not), or hoping for a different clerk. Fundy's driver remembers the last box you sent back. Every stamp goes in the filing cabinet (`DeskBook.files`), which rides along in the story's save; that's also what Hachey pulls from.
+
+**Sounds.** No audio files: the horn from the lot, the stamp, paper on the desk, the wall clock and the till (for fines and fees) are made in code (`counter/desk_audio.gd`), and kept quiet.
+
+- **Inspect** (I, Y or right-click), then pick two things to compare them: a VIN against a VIN, a name against a name, a date against the calendar, the licence photo against the face, a plate against the stolen list, a reading or a paper against a rule in the binder, a service reading against the odometer, a part number against a part number.
+- **ASK** (A or X, or click the question). A red verdict puts a question under the customer's speech bubble. Most answers are lies. Some customers pull a paper out of a pocket (a bill of sale, a permit, the pink card from the glovebox, a body shop invoice, a structural certificate, a tint exemption, a supersession notice in the box) that makes the discrepancy fine, if that paper checks out too. Small talk is always on the list; people from here know which Tim's they go to.
+- **Stamp the work order:** APPROVE (1), DENY (2), REPORT to the police (3), or BAY 3 (4) for off-the-books work. For the courier the stamp goes on the packing slip: APPROVE signs for the box, DENY sends it back.
 - **Mistakes:** the first two a shift are Ministry warnings. After that each one is a $100 citation (police matters cost more and are never warnings). Twelve citations, or a third Ministry meeting, and the station loses its licence.
-- **Leo's notebook** (N or D-pad up): inspect what somebody said, then the notebook, and Leo writes it down. **The sticker log** (L or D-pad down) lists every sticker you've issued; in the last week, last fall's pages turn up, and they're worth reading closely.
-- **Scripted customers** come from `data/story_customers.json`: Dale Hatch the Wednesday after Thanksgiving, Darrell's trade-in a week later, the Familia's cars on Thursdays. A story step can bring its own (`"customers": [...]` on a counter step); stamps set story flags (`desk_<id>_<stamp>` plus the outcome's own), and so do notes (`desk_note_<id>`).
+- **Leo's notebook** (N or D-pad up): inspect what somebody said, then the notebook, and Leo writes it down. **The sticker log** (L or D-pad down) lists every sticker you've issued; from week four, last fall's pages turn up, and they're worth reading closely.
+- **Scripted customers** come from `data/story_customers.json`: Dale Hatch the Wednesday after Thanksgiving, Darrell's trade-in a week later, the Familia's cars on Thursdays. A story step can bring its own (`"customers": [...]` on a counter step); stamps set story flags (`desk_<id>_<stamp>` plus the outcome's own), and so do notes (`desk_note_<id>`). The regulars live in the same file (`"regulars"`: who they are, their visits, and an `after` branch for each stamp you might have given them last time); `DeskBook.last_file(id)` tells a story step what you stamped on anybody.
 - **Friday night:** rent, Gus's pay, Aries's hockey and the Familia's cut all come due.
 
 Drag the papers around with the mouse; with the arrow keys and Space; or with the left stick and A on a controller (D-pad left/right jumps the cursor to the next thing). B or Backspace cancels; Esc or Back returns to the menu.
@@ -164,14 +170,16 @@ The map, sky and car tests check that:
 - rain, sun, snow and freezing rain change the road;
 - all four cars draw and drive sensibly.
 
-The counter tests (`counter_tests.gd`, four weeks of rules) prove that:
-- every problem the game puts in the papers can be found again from the papers alone;
-- every problem type can be proven from the desk with the inspect tool, under its own ASK question;
+The counter tests (`counter_tests.gd`, seven weeks of rules) prove that:
+- every problem the game puts in the papers can be found again from the papers alone (couriers' boxes too);
+- every problem type can be proven from the desk with the inspect tool, under its own ASK question, and from a file Hachey pulls, on the file's own date;
 - a clean customer never shows red, and a covered one only shows the red its proof explains;
 - an exception holds only while its proof checks out (spoil the proof and the problem's back);
+- tint, exhaust, the courier and the audit are judged by their rules, and a walk-in's papers rebuild exactly from the file;
+- every regular's visit, down every branch, is honest about its papers; the people you turn away come back as the same person in the same car, once;
 - warnings, fines, the binder, the shift's arrivals and the scripted customers behave.
 
-The desk tests (`desk_tests.gd`) run the counter scene itself: the shift clock ends the day at six, a line builds and honks, whoever's left drives off, ASK hands over proofs and takes off masks, the notebook and the sticker log (and its gap) work, every desk action has a key and a pad button, and every prompt comes from `Hints`.
+The desk tests (`desk_tests.gd`) run the counter scene itself: the shift clock ends the day at six, a line builds and honks, whoever's left drives off, ASK hands over proofs and takes off masks, the notebook and the sticker log (and its gap) work, the regulars come back changed by what you stamped, the filing cabinet survives the save, the courier's stamp lands on the slip, Hachey jumps the line and re-stamping differs or doesn't, the room's sounds play when they should and stay quiet, the day-end rows line up, every tab of the binder fits, every desk action has a key and a pad button, and every prompt comes from `Hints`.
 
 The driving tests (16 checks) run headless on every push:
 - 0–100 km/h and top speed;
@@ -193,8 +201,10 @@ The driving tests (16 checks) run headless on every push:
 | `data/cars/silvio.json` | The car itself: weight, torque curve, gears, brakes, tires |
 | `counter/rules.gd` | The counter's rules: customers, papers, problems, comparisons, ASK answers and proofs, the binder, the shift's arrivals, stamps, warnings and pay. No drawing |
 | `counter/counter_scene.gd` | The counter: the shift clock, the line in the lot, desk, documents, inspect, ASK, stamps, the binder, the books, the day and the week |
-| `counter/desk_book.gd` | Leo's notebook, the sticker log and the Ministry's tally; rides along in the story save |
-| `data/story_customers.json` | Scripted customers (Dale Hatch, Darrell, the Familia's cars) and the days they come in |
+| `counter/desk_book.gd` | Leo's notebook, the sticker log, the filing cabinet (every stamp) and the Ministry's tally; rides along in the story save |
+| `counter/regulars.gd` | The regulars' visits and the people you turned away coming back, from what's in the filing cabinet |
+| `counter/desk_audio.gd` | The counter's sounds, made in code: the horn from the lot, the stamp, paper, the wall clock, the till |
+| `data/story_customers.json` | Scripted customers (Dale Hatch, Darrell, the Familia's cars) and the days they come in, and the regulars (Jayden, Rob, Mrs. Doiron, Darrell) with their visits |
 | `counter/face.gd` | Faces drawn pixel by pixel from a seed, for customers and licence photos |
 | `title.gd`, `drive.gd` | The title screen and the free-drive scene |
 | `world/map_data.gd` | The map as data: roads, river, rail, zones, buildings, lights, landmarks, GPS routing |

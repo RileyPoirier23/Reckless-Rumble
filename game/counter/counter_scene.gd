@@ -163,6 +163,7 @@ var _qtex := {}                       # queue car pictures by customer
 var audio: DeskAudio                  # null when there's no tree to play in (the tests)
 var heard: Array = []                 # every sound the desk asked for, newest last
 var _tick_acc := 0.0
+var _tock := false
 
 # ASK
 var topics: Array = []                # what Leo has proven wrong with this one, newest first
@@ -285,7 +286,9 @@ func tick(dt: float) -> void:
 	if _tick_acc >= 1.0:
 		_tick_acc = fmod(_tick_acc, 1.0)
 		if phase != "idle" and clock < CounterRules.SHIFT_LEN:
-			sfx("tick" if int(clock) % 2 == 0 else "tock", 1.0, 3.0 if clock >= CounterRules.SHIFT_LEN - 60.0 else 0.0)
+			_tock = not _tock
+			# a little louder in the last hour
+			sfx("tock" if _tock else "tick", 1.0, 3.0 if clock >= CounterRules.SHIFT_LEN - 60.0 else 0.0)
 	while not arrivals.is_empty() and float(arrivals[0].t) <= clock:
 		var cc: Dictionary = arrivals.pop_front().c
 		if cc.kind == "audit" and not cc.has("audit"):
