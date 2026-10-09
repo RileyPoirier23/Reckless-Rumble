@@ -292,7 +292,9 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var te := fuel * curve_torque(e_rpm) * boost_mult * power_mult() - friction
 	# idle: the ECU holds idle when nothing else drives the engine
 	if not clutch_locked and e_rpm < float(spec.engine.idle_rpm) and not engine_blown:
-		te += 60.0 * (1.0 - e_rpm / float(spec.engine.idle_rpm)) + friction
+		te += 160.0 * (1.0 - e_rpm / float(spec.engine.idle_rpm)) + friction
+	# anti-stall: the auto-clutch opens before the engine drops under idle
+	if clutch_locked and w_eng * RPM < float(spec.engine.idle_rpm) * 0.85: clutch_locked = false
 	# clutch engagement: launches slip the clutch, shifts open it
 	var engage := 0.0
 	if gr != 0.0 and handbrake < 0.5:

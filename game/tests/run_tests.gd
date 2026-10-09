@@ -127,5 +127,13 @@ func _init() -> void:
 	run(c, 0.6, 0.6, 0.0, 0.7, 1.0)
 	var slide := atan2(c.vy, c.vx)
 	check("handbrake turn slides the rear out", absf(slide) > 0.2, "slip angle %.2f rad" % slide)
+	# 12. stop at a light, then go again (the clutch must not stall the engine)
+	c = car()
+	run(c, 3.0, 1.0)
+	stop_distance(c)
+	run(c, 0.5, 0.0)
+	var idle_rpm := c.rpm
+	run(c, 4.0, 1.0)
+	check("stop, idle, and pull away again", idle_rpm > 600.0 and c.vx * 3.6 > 40.0, "idle %d rpm, then %d km/h" % [int(idle_rpm), int(c.vx * 3.6)])
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
