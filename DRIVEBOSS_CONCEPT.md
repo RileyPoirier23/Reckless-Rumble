@@ -21,7 +21,9 @@ A 506Studios game, in the same creative family as **CAGE BOSS**: pixel art, R-ra
 | **Endings** | Three: Clean, The street, Kingpin |
 | **Sister** | Aries. Dies at the end of Year 4 in a crash Leo causes drunk. Leo gets sober |
 | **Brian parody** | Not in the game (maybe a later DLC) |
-| **Online** | Online crews only in the co-op story mode |
+| **Online** | Online crews only in the co-op story mode, which comes **after launch** |
+| **Frank's killer** | Dale Hatch |
+| **Ideas** | All 27 ideas in section 20 are in |
 | **Engine** | Godot 4 |
 
 ---
@@ -142,7 +144,7 @@ Leo leaves a party drunk and high in his dad's old beater and is chased by nobod
 - **Frank clue:** Siphon was hired, and the payments trace back to one company.
 
 ### Chapter 8: "The Coast Road" (Year 8, age 26 to 27)
-- **The reveal** (proposal; see question 7): **Dale Hatch,** owner of Hatch Motors, the biggest dealer in the province, MarketThing's top seller and the sponsor of the new legal drag strip, the guy who helped you all game. He was Frank's old co-driver. Frank found out Hatch was running the export pipeline and was going to the police, so Hatch cut his brakes in the first snow and had a friend write the report.
+- **The reveal:** **Dale Hatch,** owner of Hatch Motors, the biggest dealer in the province, MarketThing's top seller and the sponsor of the new legal drag strip, the guy who helped you all game. He was Frank's old co-driver. Frank found out Hatch was running the export pipeline and was going to the police, so Hatch cut his brakes in the first snow and had a friend write the report.
 - **The final race:** the first snow of the eighth winter, at night, down the Coast Road where Frank died, in Frank's car, which you rebuilt from the MarketThing parts car.
 - **Three endings,** based on your choices across eight years:
   1. **Clean:** you bring Hatch the evidence and the police. Covington Auto goes fully legit, Leo is still sober, and the new bay has a plaque with Frank's and Aries's names on it.
@@ -410,7 +412,7 @@ Every assist can also be toggled separately. Controller rumble follows tire slip
 - The hacked-traffic gridlock.
 - The bridge jump (you don't make the bridge jump; Mikey's idea).
 
-**Co-op story (online):** friends join your crew and play the story with you, each in their own car. Crew races, set pieces and gang jobs are built for up to 4. Online crews (CSR Racing 2-style crew ladders and crew-vs-crew races) exist only inside co-op story mode. The solo story never needs a connection.
+**Co-op story (online, after launch):** friends join your crew and play the story with you, each in their own car. Crew races, set pieces and gang jobs are built for up to 4. Online crews (CSR Racing 2-style crew ladders and crew-vs-crew races) exist only inside co-op story mode. The solo story never needs a connection.
 
 **Jobs:**
 - Tow-truck calls and repo jobs.
@@ -641,6 +643,7 @@ Each step is a playable build.
 7. **The full city,** then the remaining chapters and crews.
 8. **Polish:** radio, the cast's animation pass, achievements and the Legacy mode.
 9. **Launch** on PC (Windows, Mac, Linux) and Android, then consoles.
+10. **After launch:** the online co-op story with online crews, then car packs, style packs and story expansions.
 
 ---
 
@@ -657,7 +660,7 @@ Each step is a playable build.
 
 ---
 
-## 20. Ideas: pick what you want
+## 20. Ideas (all of them are in)
 
 **Car culture**
 1. **Cars & Double-Doubles:** a Sunday morning meet where your build gets judged. Win clout and offers.
@@ -690,7 +693,7 @@ Each step is a playable build.
 **Bigger features**
 21. **Couch versus:** split-screen drag and tandem drift with a friend.
 22. **Ghost races:** download a friend's best time and race their ghost (no live online needed).
-23. **Online crews, in co-op story mode only:** friends join your crew and play the story together (see section 11).
+23. **Online crews, in co-op story mode only (after launch):** friends join your crew and play the story together (see section 11).
 24. **New Game+:** start Year 1 with your Year 8 skills, and nobody believes you.
 25. **Legacy mode:** endless garage and streets after the story, with new crews moving in.
 26. **Rally career:** a full side series on the back roads with Mikey as a terrible co-driver.
@@ -700,7 +703,4 @@ Each step is a playable build.
 
 ## 21. Questions for you
 
-1. **Frank's killer:** is Dale Hatch right, or do you have someone in mind? (Also: should I know, or do you want to write that part yourself?)
-2. **Music:** same artists as CAGE BOSS, new ones, or both? Radio DJs voiced by friends?
-3. **Which ideas** from section 20 are in?
-4. **Co-op:** is the co-op story a launch feature, or something that comes after launch? (It's the biggest single piece of work after the driving.)
+1. **Music:** same artists as CAGE BOSS, new ones, or both? Radio DJs voiced by friends?
