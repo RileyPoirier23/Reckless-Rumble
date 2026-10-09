@@ -33,7 +33,10 @@
  <polygon fill="#395db5" points="35,70 50,57 146,54 173,28 217,28 245,51 316,57 337,71 331,84 35,84"/>
  <polygon class="g o" points="171,30 195,26 216,27 240,48 158,48"/><line class="o" x1="199" y1="26" x2="200" y2="48"/>
  <polygon class="dk o" points="15,82 72,82 76,92 15,92"/><rect class="dk o" x="113" y="84" width="127" height="10"/>
- <polygon fill="#303741" class="o" points="230,22 242,7 247,7 252,21"/><rect fill="#303741" class="o" x="225" y="5" width="51" height="7"/>
+ <!-- Rear-mounted pedestal wing: vehicle faces right, so the rear deck is on the left. -->
+ <polygon fill="#303741" class="o" points="55,54 60,35 66,35 69,54"/>
+ <polygon fill="#303741" class="o" points="91,51 94,35 100,35 104,52"/>
+ <rect fill="#303741" class="o" x="46" y="29" width="69" height="8"/>
  <polygon fill="#cae4f6" points="50,57 81,54 170,84 133,84"/><polygon fill="#efb229" points="92,53 116,51 205,84 178,84"/>
  <polygon class="p o" points="131,49 155,41 171,39 165,55"/>
  <path d="M29 68h20M319 63h19" class="o" fill="none"/><rect fill="#f6d85b" x="316" y="58" width="17" height="10"/>
