@@ -66,6 +66,13 @@ var wheel_slip: Array = [0.0, 0.0, 0.0, 0.0]   # sliding speed per wheel (m/s)
 var front_locked := false
 var messages: Array[String] = []
 var odometer_m := 0.0
+# ---- fuel (only the car you drive burns it; everybody else's tank never runs dry)
+const FUEL_SCALE := 5.0      # the map is drawn small, so a tank lasts like a real one would on it
+var burn_fuel := false
+var tank_l := 50.0
+var fuel_l := 50.0
+var premium := 0.0           # how much of what's in the tank is premium (0..1)
+var _power_w := 0.0
 # what wears out (Gus's service puts them back): the clutch disc, the turbo, the pads, the fluid
 var clutch_cond := 1.0
 var turbo_cond := 1.0
@@ -88,6 +95,8 @@ const COMPOUND := {
 func _init(car_spec: Dictionary) -> void:
 	spec = car_spec
 	compound = String(spec.tires.get("compound", "summer"))
+	tank_l = float(spec.get("tank_l", clampf(float(spec.get("mass", 1400.0)) / 30.0, 30.0, 95.0)))
+	fuel_l = tank_l
 	reset_parts()
 
 func reset_parts() -> void:
@@ -223,6 +232,7 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 		_substep(h, throttle, brake, handbrake)
 	_heat(dt, throttle)
 	_wear_checks(dt, throttle)
+	_burn(dt)
 	if auto_gearbox: _auto_shift(dt, throttle)
 	odometer_m += absf(vx) * dt
 
@@ -334,10 +344,14 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fuel := throttle if shift_timer <= 0.0 else throttle * 0.15
 	if e_rpm >= limiter: fuel = 0.0            # rev limiter cuts fuel
 	if engine_blown: fuel = 0.0
+	# running on fumes it coughs; dry, it doesn't run at all
+	var has_gas := not burn_fuel or fuel_l > 0.0
+	if not has_gas or (burn_fuel and fuel_l < 0.8 and randf() < 0.3): fuel = 0.0
 	var friction := 12.0 + e_rpm * 0.0045 + (1.0 - fuel) * e_rpm * 0.004 + (35.0 if engine_blown else 0.0)   # pumping losses off the gas
 	var te := fuel * curve_torque(e_rpm) * boost_mult * power_mult() - friction
+	_power_w = maxf(0.0, (te + friction) * w_eng)
 	# idle: the ECU holds idle when nothing else drives the engine
-	if not clutch_locked and e_rpm < float(spec.engine.idle_rpm) and not engine_blown:
+	if not clutch_locked and e_rpm < float(spec.engine.idle_rpm) and not engine_blown and has_gas:
 		te += 160.0 * (1.0 - e_rpm / float(spec.engine.idle_rpm)) + friction
 	# anti-stall: the auto-clutch opens before the engine drops under idle
 	if clutch_locked and w_eng * RPM < float(spec.engine.idle_rpm) * 0.85: clutch_locked = false
@@ -519,7 +533,7 @@ func _tire_work(i: int, force: float, slide: float, h: float) -> void:
 
 ## Knock from an aggressive tune at full load, and the warnings when something's worn out.
 func _wear_checks(dt: float, throttle: float) -> void:
-	var risk := float(spec.get("knock_risk", 0.0))
+	var risk := float(spec.get("knock_risk", 0.0)) * lerpf(1.0, 0.3, premium)     # premium resists knock
 	if risk > 0.0 and throttle > 0.7 and rpm > float(spec.engine.redline_rpm) * 0.55 and not engine_blown:
 		_hurt_engine(risk * 0.01 * dt)
 		_knock_t += dt
@@ -539,11 +553,32 @@ func _warn(key: String, cond: bool, text: String) -> void:
 		say(text)
 
 ## Wear state as the save keeps it, and back.
+## Fuel burned this step: the engine's work at about 0.34 L a kWh (a petrol engine's 250 g/kWh),
+## plus a little to idle.
+func _burn(dt: float) -> void:
+	if not burn_fuel or fuel_l <= 0.0: return
+	var lph := _power_w / 1000.0 * 0.336 + (0.9 if w_eng * RPM > 300.0 else 0.0)
+	var was := fuel_l
+	fuel_l = maxf(0.0, fuel_l - lph / 3600.0 * FUEL_SCALE * dt)
+	if was >= tank_l * 0.15 and fuel_l < tank_l * 0.15: say("FUEL LIGHT'S ON")
+	if was > 0.0 and fuel_l <= 0.0: say("OUT OF GAS. IT COUGHS, AND THAT'S IT")
+
+func fuel_frac() -> float:
+	return clampf(fuel_l / maxf(tank_l, 1.0), 0.0, 1.0)
+
+## Put fuel in (up to a full tank), keeping track of how much of it is premium.
+func add_fuel(litres: float, is_premium: bool) -> float:
+	var l := clampf(litres, 0.0, tank_l - fuel_l)
+	if l <= 0.0: return 0.0
+	premium = (premium * fuel_l + (l if is_premium else 0.0)) / (fuel_l + l)
+	fuel_l += l
+	return l
+
 func wear_state() -> Dictionary:
 	var tread := 0.0
 	for t in tires: tread += float(t.tread) / 4.0
 	return { "clutch": clutch_cond, "turbo": turbo_cond, "pads": pads_mm, "fluid": fluid,
-		"engine": engine_health, "gasket": head_gasket, "tread": tread }
+		"engine": engine_health, "gasket": head_gasket, "tread": tread, "fuel": fuel_frac(), "premium": premium }
 
 func set_wear(w: Dictionary) -> void:
 	clutch_cond = float(w.get("clutch", 1.0))
@@ -554,6 +589,8 @@ func set_wear(w: Dictionary) -> void:
 	if bool(w.get("gasket", false)): head_gasket = true
 	if w.has("tread"):
 		for t in tires: t.tread = minf(float(t.tread), float(w.tread))
+	fuel_l = tank_l * clampf(float(w.get("fuel", 1.0)), 0.0, 1.0)
+	premium = clampf(float(w.get("premium", 0.0)), 0.0, 1.0)
 
 func arcade() -> bool:
 	return assist == Assist.ARCADE

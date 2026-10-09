@@ -115,5 +115,40 @@ func _init() -> void:
 	run(back, 1.0, 0.0, 1.0)
 	run(back, 3.0, 0.0, 1.0, -0.6)
 	check("no NaNs at 300 km/h or in reverse", ok_num(fast) and ok_num(back) and back.vx < -0.5, "reverse %.1f m/s" % back.vx)
+	# fuel: cruising sips it, flat out gulps it, dry it doesn't go, premium keeps a hot tune from knocking
+	var cruise := rolling(car(), 90.0)
+	cruise.burn_fuel = true
+	var f0 := cruise.fuel_l
+	for i in 120 * 60:
+		cruise.step(1.0 / 120.0, clampf(0.25 + (25.0 - cruise.vx) * 0.3, 0.0, 1.0), 0.0, 0.0, 0.0)
+	var per_min := f0 - cruise.fuel_l
+	var mins := cruise.tank_l / maxf(per_min, 0.001)
+	check("a tank lasts most of an hour at 90", mins > 35.0 and mins < 150.0, "%.2f L a minute, %.0f minutes a tank" % [per_min, mins])
+	var hard := car()
+	hard.burn_fuel = true
+	var h0 := hard.fuel_l
+	run(hard, 20.0, 1.0)
+	var hard_min := (h0 - hard.fuel_l) * 3.0
+	check("flat out burns it a lot faster", hard_min > per_min * 2.5, "%.2f vs %.2f L a minute" % [hard_min, per_min])
+	var dry := car()
+	dry.burn_fuel = true
+	dry.fuel_l = 0.0
+	run(dry, 5.0, 1.0)
+	var dry_v := dry.vx
+	dry.add_fuel(6.0, false)
+	run(dry, 5.0, 1.0)
+	check("dry, it doesn't go; a jerry can and it does", dry_v < 0.5 and dry.vx > 5.0, "%.1f then %.1f m/s" % [dry_v, dry.vx])
+	var kr := []
+	for prem in [0.0, 1.0]:
+		var k := rolling(car(), 60.0)
+		k.spec.knock_risk = 3.0
+		k.premium = prem
+		run(k, 12.0, 1.0)
+		kr.append(1.0 - k.engine_health)
+	check("premium keeps a hot tune from knocking itself to bits", float(kr[1]) < float(kr[0]) * 0.5 and float(kr[0]) > 0.0, "engine wear %.3f on regular, %.3f on premium" % [float(kr[0]), float(kr[1])])
+	var mix := car()
+	mix.fuel_l = mix.tank_l * 0.5
+	mix.add_fuel(mix.tank_l, true)
+	check("half a tank of regular topped up with premium is half premium", absf(mix.premium - 0.5) < 0.01 and absf(mix.fuel_l - mix.tank_l) < 0.01, "%.2f" % mix.premium)
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

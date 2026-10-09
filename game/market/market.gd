@@ -191,7 +191,7 @@ static func _km(n: int) -> String:
 
 ## The wear the car arrives with, from its faults and its age.
 static func wear_for(l: Dictionary) -> Dictionary:
-	var w := { "pads": 6.0 if int(l.km) > 80000 else 9.0, "fluid": 0.7 if int(l.km) > 100000 else 0.95,
+	var w := { "pads": 6.0 if int(l.km) > 80000 else 9.0, "fluid": 0.7 if int(l.km) > 100000 else 0.95, "fuel": 0.12 + float(int(l.get("uid", 0)) % 7) * 0.04,
 		"clutch": clampf(1.0 - float(l.km) / 600000.0, 0.5, 1.0), "turbo": clampf(1.0 - float(l.km) / 700000.0, 0.5, 1.0) }
 	for f in l.faults:
 		var fw: Dictionary = FAULTS[f].wear

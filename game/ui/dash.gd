@@ -30,7 +30,7 @@ func _draw() -> void:
 func _kmh() -> float: return sim.speed() * 3.6
 func _gear() -> String: return "R" if sim.gear < 0 else ("N" if sim.gear == 0 else str(sim.gear))
 func _redline() -> float: return float(sim.spec.engine.redline_rpm)
-func _fuel() -> float: return 1.0 - fmod(sim.odometer_m / 450000.0 + 0.2, 1.0)
+func _fuel() -> float: return sim.fuel_frac()
 
 ## A needle gauge: centre, radius, value 0..1, ticks, labels.
 func _gauge(c: Vector2, r: float, frac: float, face: Color, ink: Color, needle: Color, ticks: int, labels: Array, red_from := 2.0, sweep_deg := 260.0) -> void:

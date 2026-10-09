@@ -84,6 +84,9 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(296, 30), Vector2(306, 23), Vector2(306, 37)]), green)
 		if player.view.blink_right and on:
 			draw_colored_polygon(PackedVector2Array([Vector2(344, 30), Vector2(334, 23), Vector2(334, 37)]), green)
+		# the fuel light: on under a seventh of a tank, blinking when it's nearly dry
+		if sim.burn_fuel and sim.fuel_frac() < 0.15 and (sim.fuel_frac() > 0.04 or on):
+			PixelFont.draw(self, Vector2(352, 26), "FUEL", Color("ffb030"))
 		if player.beam > 0.5 and player.view.headlights:
 			draw_circle(Vector2(320, 30), 6, Color("3a7aff"))
 			for k in 4: draw_line(Vector2(312, 25 + k * 3), Vector2(306, 25 + k * 3), Color("3a7aff"), 1.0)

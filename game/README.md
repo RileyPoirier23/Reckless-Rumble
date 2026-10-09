@@ -56,6 +56,10 @@ The other drivers follow the lanes (right-hand traffic) and keep a safe gap to w
 
 Cars spawn out of sight around you, and there are more downtown and at rush hour, fewer at 3 a.m. They signal before turns, show brake lights and use headlights at night.
 
+## Gas
+
+Your car burns fuel by the work the engine does: about 45 minutes of steady highway driving on a tank, a lot less flat out. The FUEL light comes on under a seventh of a tank, and the dash gauges show what's left. Fill up at the pumps at the Gas Bars, the Ultramarge in Dieppe or the Big Stop (they're on the GPS): regular at $1.62 a litre, premium at $1.89, or twenty bucks' worth. Premium keeps a hot tune from knocking (it goes by how much of what's in the tank is premium). Run dry and the car coughs and stops; Toby brings a jerry can for $60. Each car's fuel is saved with it, and nobody else's car ever runs out.
+
 ## Street races and the police
 
 - **Street races** (GIGS, 10 p.m. to 4 a.m.): Marco runs one route a night: the Main Street Mile, the Downtown Box, the Riverside Loop or the North End Sprint. Pay the buy-in and line up with three locals in cars about as quick as yours (matched on horsepower per tonne). Hit the checkpoints in order; the GPS shows the next one. The winner takes the pot, less Marco's tenth.

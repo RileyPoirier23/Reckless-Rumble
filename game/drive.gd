@@ -45,6 +45,7 @@ var jobs: JobRunner
 var job_board: JobBoard
 var market: MarketRunner
 var police: Police
+var fuel: FuelStop
 var hold_car := false          # a scene (or a test) has the car stopped
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
@@ -166,6 +167,9 @@ void fragment() {
 	police = Police.new()
 	add_child(police)
 	police.setup(self)
+	fuel = FuelStop.new()
+	add_child(fuel)
+	fuel.setup(self)
 	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
 	for arg in OS.get_cmdline_user_args():
 		if arg.ends_with("-test") or arg.ends_with("-demo"): police.enabled = false
@@ -203,6 +207,10 @@ void fragment() {
 		var md: Node = load("res://tests/market_demo.gd").new()
 		md.main = self
 		add_child(md)
+	elif OS.get_cmdline_user_args().has("--fuel-demo"):
+		var fd: Node = load("res://tests/fuel_demo.gd").new()
+		fd.main = self
+		add_child(fd)
 	elif OS.get_cmdline_user_args().has("--race-demo"):
 		var rd: Node = load("res://tests/race_demo.gd").new()
 		rd.main = self
@@ -252,6 +260,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	for k in car.damage: car.damage[k] = float(entry.get("damage", {}).get(k, 0.0))
 	car.damage_bucket = -2
 	car.sim.set_wear(entry.get("wear", {}))
+	car.sim.burn_fuel = true
 	save.current = i
 	cam_rot = heading + PI / 2.0
 	cam.global_position = car.global_position
@@ -662,9 +671,9 @@ func _teleport(at: Vector2, heading: float) -> void:
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open()
 	if garage.visible or death.visible or car.dead: return
-	if job_board.visible or market.panel_open(): return
+	if job_board.visible or market.panel_open() or fuel.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
 		job_board.open(sky, save, jobs.kind, Market.places(world.map))
 		return
@@ -685,6 +694,8 @@ func _inputs() -> void:
 	if Input.is_action_just_pressed("help"): hud.show_help = not hud.show_help
 	if Input.is_action_just_pressed("reset") and police.chasing():
 		hud.post("TOBY ISN'T TOWING YOU OUT OF A POLICE CHASE.", 3.0)
+	elif Input.is_action_just_pressed("reset") and fuel.out_of_gas() and car.sim.speed() < 1.0:
+		fuel.jerry_can()
 	elif Input.is_action_just_pressed("reset"):
 		car.respawn()
 		world.warm(car.sim.pos, Vector2(40, 25))

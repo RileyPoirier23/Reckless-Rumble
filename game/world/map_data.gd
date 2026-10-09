@@ -282,9 +282,11 @@ func _landmarks() -> void:
 	landmarks.append({ "name": "THE BIG STOP", "p": Vector2(3540, 2010), "dest": true })
 	landmarks.append({ "name": "SALISBURY", "p": Vector2(3440, 2120), "dest": true })
 	# gas bars
-	_gas(Rect2(5640, 1210, 44, 34), "GAS BAR", "")
-	_gas(Rect2(6420, 1420, 44, 30), "ULTRAMARGE", "dieppe")
-	_gas(Rect2(3580, 2060, 40, 28), "GAS BAR", "salisbury")
+	_gas(Rect2(5640, 1210, 44, 34), "GAS BAR", "", "GAS BAR (NORTH END)")
+	_gas(Rect2(6420, 1420, 44, 30), "ULTRAMARGE", "dieppe", "ULTRAMARGE (DIEPPE)")
+	_gas(Rect2(3580, 2060, 40, 28), "GAS BAR", "salisbury", "GAS BAR (SALISBURY)")
+	# the Big Stop's diesel and regular islands, out front of the restaurant
+	buildings.append({ "r": Rect2(3534, 2012, 34, 3), "h": 1.0, "kind": "pumps", "name": "", "zone": "" })
 	# the Lutes Mountain towers: red lights you can see from everywhere
 	for i in 3:
 		var tp := Vector2(4360 + i * 40, 1040 + i * 18)
@@ -313,8 +315,9 @@ func _tims(p: Vector2, zone: String) -> void:
 	lights.append({ "p": p + Vector2(0, 5), "type": "neon_red", "seed": int(p.x) })
 	landmarks.append({ "name": "TIM BURTONS", "p": p, "dest": false })
 
-func _gas(r: Rect2, name: String, zone: String) -> void:
+func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
+	if dest != "": landmarks.append({ "name": dest, "p": r.get_center(), "dest": true })
 	lots.append({ "r": r, "kind": "asphalt", "name": "", "lines": false })
 	buildings.append({ "r": Rect2(r.position + Vector2(r.size.x - 14, 2), Vector2(12, 10)), "h": 5.0, "kind": "shop", "name": name, "zone": zone })
 	buildings.append({ "r": Rect2(r.position + Vector2(4, r.size.y * 0.45), Vector2(r.size.x * 0.55, 3)), "h": 1.0, "kind": "pumps", "name": "", "zone": zone })

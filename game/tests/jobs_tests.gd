@@ -104,6 +104,21 @@ func _init() -> void:
 		var ratio := StreetRace.hp_per_t(CarCatalog.spec(String(id))) / StreetRace.hp_per_t(mine)
 		if ratio < 0.6 or ratio > 1.6: close_ok = false
 	check("the field brings cars about as quick as yours", close_ok, str(field))
+	# gas
+	var st := FuelStop.find_stations(map)
+	var st_bad: Array = []
+	for s in st:
+		var sp: Vector2 = s.p
+		var lot := false
+		for dy in [-6.0, 6.0]:
+			if map.ground_at(sp + Vector2(0, dy)) == "asphalt": lot = true
+		if not lot or map.route(Jobs.COVINGTON, sp).size() < 2: st_bad.append(s.name)
+	check("four places to buy gas, paved and routable", st.size() >= 4 and st_bad.is_empty(), "%d, bad %s" % [st.size(), str(st_bad)])
+	var named := 0
+	for l in map.landmarks:
+		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
+	check("the gas stations are on the GPS", named >= 4, "%d" % named)
+	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
 	# police
 	check("speed limits round like the signs", Police.limit_kmh("street") == 50.0 and Police.limit_kmh("arterial") == 60.0 and Police.limit_kmh("highway") == 100.0 and Police.limit_kmh("rural") == 80.0)
 	check("a little over is a small ticket", Police.fine(25.0, ["speeding"]) == 180, "%d" % Police.fine(25.0, ["speeding"]))
