@@ -24,6 +24,8 @@ A 506Studios game, in the same creative family as **CAGE BOSS**: pixel art, R-ra
 | **Online** | Online crews only in the co-op story mode, which comes **after launch** |
 | **Frank's killer** | Dale Hatch |
 | **Ideas** | All 27 ideas in section 20 are in |
+| **Love interest** | None |
+| **Radio** | Built later, after the core game |
 | **Engine** | Godot 4 |
 
 ---
@@ -68,7 +70,7 @@ A fictional harbour city loosely inspired by the Maritimes. It has a working por
 - **His sister, Aries Covington:** 14 at the start. She's the reason Leo can't just run away. In Year 3 you teach her to drive. At the end of Year 4 she dies in a crash Leo causes, drunk and reckless, with her in the passenger seat. It's the turning point of the game, and the reason Leo gets sober.
 - **Gus Arsenault:** Frank's old mechanic, about 70, grumpy, has worked every Saturday since 1981. He's the Uncle Ray of this game: the mentor who won't say "I love you" but will rebuild your transmission at 2 a.m. He knows more about Frank than he lets on.
 - **Mikey Doucette:** Leo's best friend since kindergarten. A loveable stoner, the worst getaway driver in the province, and loyal to a fault.
-- **Jules Cormier:** a tow-truck driver who keeps pulling Leo out of ditches. Love interest if you treat her right.
+- **Toby Cormier:** a tow-truck driver who keeps pulling Leo out of ditches. A friend, and the one guy who tells Leo the truth to his face.
 
 ### Leo's vices (systems with consequences, not jokes)
 
@@ -180,7 +182,7 @@ Leo leaves a party drunk and high in his dad's old beater and is chased by nobod
 | **Saki** | Suki | Pink convertible, leads the girls' crew | Crew race series |
 
 ### Original cast
-Leo, Frank (on the tapes), Aries, Gus, Mikey, Jules and Dale Hatch, plus the regulars:
+Leo, Frank (on the tapes), Aries, Gus, Mikey, Toby and Dale Hatch, plus the regulars:
 - **Constable Tremblay:** the local cop who keeps giving Leo one more chance.
 - **The Ministry Inspector:** shows up to audit your safety stickers, Papers, Please style.
 - **Landlord Bertrand:** wants the lot.
@@ -560,7 +562,7 @@ Because it's all code, everything gets the same pixel style and palette automati
 ## 15. Audio
 
 - **Engines:** built from RPM and load in real time (inline-4 buzz, V8 burble, rotary brap, turbo whistle and flutter, straight-pipe crackle). Every swap sounds different.
-- **Radio:**
+- **Radio** (built later):
   - **CBOSS FM:** local hip-hop with the CAGE BOSS artists and new ones.
   - **Rock 101.9 The Rumble.**
   - **Country "the Barn".**
