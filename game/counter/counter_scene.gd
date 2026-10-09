@@ -454,7 +454,7 @@ func _tab_step(dir: int) -> void:
 		log_old = not log_old
 		return
 	if phase == "brief" and story.is_empty() and fresh:
-		week_pick = posmod(week_pick + dir, WEEK_DAYS.size())
+		week_pick = posmod(CounterRules.week_of(day) - 1 + dir, WEEK_DAYS.size())
 		start_day(WEEK_DAYS[week_pick])
 		return
 	if CounterRules.binder(day): tab = posmod(tab + dir, _tabs_today().size())
@@ -1254,7 +1254,7 @@ func _draw_tray() -> void:
 		draw_rect(Rect2(r.position + Vector2(0, r.size.y - 4), Vector2(r.size.x, 4)), col.darkened(0.4))
 		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 10, b.label, BONE, 2, INK)
 		var sub := Hints.fmt("{%s}" % b.key) if b.id == "INSPECT" or not Hints.pad else Hints.fmt("POINT + {desk_click}")
-		if b.id == "WRENCH": sub += " OFF BOOKS"
+		if b.id == "WRENCH": sub = "OFF BOOKS" if Hints.pad else sub + " OFF BOOKS"
 		PixelFont.draw_centered(self, r.get_center().x, r.position.y + 26, sub, Color(BONE, 0.7))
 
 func _draw_inspect() -> void:
@@ -1321,7 +1321,7 @@ func _draw_brief() -> void:
 				PixelFont.draw(self, Vector2(70, y), l, BONE)
 				y += 8
 	if story.is_empty() and fresh:
-		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF 4 >  {desk_tab_next}" % (week_pick + 1)), GOLD)
+		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF 4 >  {desk_tab_next}" % CounterRules.week_of(day)), GOLD)
 	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:

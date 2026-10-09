@@ -10,6 +10,7 @@ func _ready() -> void:
 	var a := OS.get_cmdline_user_args()
 	var k := a.find("--counter-demo")
 	if k >= 0 and k + 1 < a.size(): out = a[k + 1]
+	if a.has("--pad"): Hints.pad = true      # the controller's prompts
 	DirAccess.make_dir_recursive_absolute(out)
 	_run()
 
