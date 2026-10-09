@@ -14,6 +14,10 @@ func _run(out: String) -> void:
 	save.shelf = ["ind_greddy", "tire_sport", "susp_coilover", "aero_gt"]
 	save.garage[0].parts = { "exhaust": "exh_borlah", "brakes": "brk_brenbo", "susp": "" }
 	save.garage[0].parts.erase("susp")
+	save.garage[0].parts.induction = "ind_garrette"
+	save.garage[0].parts.fuel = "fuel_e85"
+	save.garage[0].tune = { "boost": 0.15, "timing": 2 }
+	save.garage[0].installing = [{ "slot": "internals", "part": "int_built", "done_h": float(save.get("clock_h", 0.0)) + 11.5 }]
 	save.orders = [{ "part": "lsd_osgiggle", "arrives_h": 30.0 }]
 	var g := GarageScreen.new()
 	g.size = Vector2(640, 360)

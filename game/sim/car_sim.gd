@@ -66,6 +66,13 @@ var wheel_slip: Array = [0.0, 0.0, 0.0, 0.0]   # sliding speed per wheel (m/s)
 var front_locked := false
 var messages: Array[String] = []
 var odometer_m := 0.0
+# what wears out (Gus's service puts them back): the clutch disc, the turbo, the pads, the fluid
+var clutch_cond := 1.0
+var turbo_cond := 1.0
+var pads_mm := 10.0
+var fluid := 1.0
+var _warned := {}
+var _knock_t := 0.0
 
 const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.36, "ice": 0.12, "gravel": 0.62, "leaves": 0.6, "grass": 0.5, "mud": 0.36, "water": 0.25 }
 const COMPOUND := {
@@ -99,6 +106,11 @@ func reset_parts() -> void:
 		tires.append({ "tread": float(spec.tires.tread_mm), "temp": ambient_c, "flat": false })
 	w_eng = idle_w()
 	clutch_locked = false
+	clutch_cond = 1.0
+	turbo_cond = 1.0
+	pads_mm = 10.0
+	fluid = 1.0
+	_warned = {}
 
 func idle_w() -> float:
 	return float(spec.engine.idle_rpm) / RPM
@@ -210,6 +222,7 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 	for i in SUBSTEPS:
 		_substep(h, throttle, brake, handbrake)
 	_heat(dt, throttle)
+	_wear_checks(dt, throttle)
 	if auto_gearbox: _auto_shift(dt, throttle)
 	odometer_m += absf(vx) * dt
 
@@ -291,10 +304,11 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fy_f := -mu_f * fz_f * pacejka(alpha_f, 10.0, 1.9)
 	var fy_r := -mu_r * fz_r * pacejka(alpha_r, 10.0, 1.9)
 	# --- brakes (fade when hot); burnout = line lock: front brake only
-	var fade_at: float = float(spec.brakes.get("fade_c", 450.0))
+	var fade_at: float = float(spec.brakes.get("fade_c", 450.0)) * (0.7 + 0.3 * fluid)     # wet old fluid boils early
 	var fade_f := 1.0 - clampf((brake_c[0] - fade_at) / 600.0, 0.0, 0.55)
 	var fade_r := 1.0 - clampf((brake_c[1] - fade_at) / 600.0, 0.0, 0.55)
-	var tb: float = float(spec.brakes.max_torque) * brake
+	var pad_k := 1.0 if pads_mm > 2.0 else (0.55 if pads_mm > 0.0 else 0.3)              # metal on metal
+	var tb: float = float(spec.brakes.max_torque) * brake * pad_k
 	var bias: float = spec.brakes.bias
 	var line_lock := throttle > 0.6 and brake > 0.6 and avx < 2.0
 	var tb_f := tb * bias * fade_f * (1.5 if line_lock else 1.0)
@@ -312,8 +326,11 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var boost_mult := 1.0
 	if not turbo.is_empty():
 		var target := clampf((e_rpm - float(turbo.spool_rpm) * 0.6) / (float(turbo.spool_rpm) * 0.5), 0.0, 1.0) * throttle
+		# a tired turbo can't make full boost; a dead one makes none
+		target *= (0.7 + 0.3 * turbo_cond) if turbo_cond > 0.1 else 0.0
 		boost = move_toward(boost, target, h / float(turbo.lag))
 		boost_mult = float(turbo.no_boost) + (1.0 - float(turbo.no_boost)) * boost
+		if boost > 0.9 and not arcade(): turbo_cond = maxf(0.0, turbo_cond - 0.0005 * h)
 	var fuel := throttle if shift_timer <= 0.0 else throttle * 0.15
 	if e_rpm >= limiter: fuel = 0.0            # rev limiter cuts fuel
 	if engine_blown: fuel = 0.0
@@ -334,7 +351,7 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		if clutch_locked or wheel_e_rpm > 1500.0: engage = 1.0
 		else: engage = clampf((e_rpm - launch * 0.75) / (launch * 0.55), 0.06 if throttle < 0.05 else 0.0, 1.0)
 	if handbrake >= 0.5: clutch_locked = false
-	var tc_max: float = float(spec.engine.clutch_torque) * engage
+	var tc_max: float = float(spec.engine.clutch_torque) * engage * ((0.15 + 0.85 * clutch_cond) if clutch_cond > 0.08 else 0.0)
 	# --- the driven axles: FWD drives the front, RWD the rear, AWD both through a locked centre.
 	# The handbrake splits an AWD car's rear off so it can still be thrown into a slide.
 	var hb_on := handbrake >= 0.5
@@ -379,6 +396,8 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		var diff := w_eng - w_wheel * gr
 		var tc := clampf(diff * 40.0, -tc_max, tc_max) if gr != 0.0 else 0.0
 		w_eng += (te - tc) / ie * h
+		# a slipping clutch turns work into heat and wear: about one disc per 4 MJ
+		if not arcade(): clutch_cond = maxf(0.0, clutch_cond - absf(tc * diff) * h / 4.0e6)
 		var w_before := w_wheel
 		w_wheel += (tc * gr * eff - road_t - t_brake_r * brake_dir) / iw * h
 		if t_brake_r > 0.0 and signf(w_wheel) != signf(w_before): w_wheel = 0.0
@@ -457,6 +476,7 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	_tire_work(2, mag_rt * 0.5, sl_r, h)
 	_tire_work(3, mag_rt * 0.5, sl_r, h)
 	# brakes heat with the work they do
+	if not arcade(): pads_mm = maxf(0.0, pads_mm - (tb_f * absf(front_w) + tb_r * absf(rear_w)) * h * 2.0e-8)
 	brake_c[0] += tb_f * absf(front_w) * h / 9000.0
 	brake_c[1] += tb_r * absf(rear_w) * h / 9000.0
 
@@ -496,6 +516,37 @@ func _tire_work(i: int, force: float, slide: float, h: float) -> void:
 	if t.tread <= 0.0 and not t.flat and not arcade():
 		t.flat = true
 		say("BLOWOUT: %s tire is down to the cords" % ["front left", "front right", "rear left", "rear right"][i])
+
+## Knock from an aggressive tune at full load, and the warnings when something's worn out.
+func _wear_checks(dt: float, throttle: float) -> void:
+	var risk := float(spec.get("knock_risk", 0.0))
+	if risk > 0.0 and throttle > 0.7 and rpm > float(spec.engine.redline_rpm) * 0.55 and not engine_blown:
+		_hurt_engine(risk * 0.01 * dt)
+		_knock_t += dt
+		if _knock_t > 3.0:
+			_knock_t = 0.0
+			say("KNOCK. PINGING UNDER LOAD: BACK OFF THE TUNE OR BUY BETTER FUEL")
+	_warn("pads2", pads_mm <= 2.0, "GRINDING: THE BRAKE PADS ARE DOWN TO THE BACKING PLATES")
+	_warn("clutch5", clutch_cond < 0.5, "THE CLUTCH SLIPS UNDER LOAD. SMELLS LIKE BURNT TOAST")
+	_warn("clutch0", clutch_cond <= 0.08, "THE CLUTCH IS GONE. NO DRIVE")
+	if not (spec.engine.get("turbo", {}) as Dictionary).is_empty():
+		_warn("turbo4", turbo_cond < 0.4, "BLUE SMOKE: THE TURBO'S EATING OIL")
+		_warn("turbo1", turbo_cond <= 0.1, "THE TURBO'S DONE. NO BOOST")
+
+func _warn(key: String, cond: bool, text: String) -> void:
+	if cond and not _warned.has(key):
+		_warned[key] = true
+		say(text)
+
+## Wear state as the save keeps it, and back.
+func wear_state() -> Dictionary:
+	return { "clutch": clutch_cond, "turbo": turbo_cond, "pads": pads_mm, "fluid": fluid }
+
+func set_wear(w: Dictionary) -> void:
+	clutch_cond = float(w.get("clutch", 1.0))
+	turbo_cond = float(w.get("turbo", 1.0))
+	pads_mm = float(w.get("pads", 10.0))
+	fluid = float(w.get("fluid", 1.0))
 
 func arcade() -> bool:
 	return assist == Assist.ARCADE

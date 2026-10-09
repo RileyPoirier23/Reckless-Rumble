@@ -12,15 +12,15 @@
 class_name Parts
 extends RefCounted
 
-const SLOTS := ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "clutch", "flywheel",
+const SLOTS := ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals", "clutch", "flywheel",
 	"final", "lsd", "suspension", "swaybar", "weight", "steering", "pads", "brakes", "tires", "aero"]
 
 const SLOT_NAMES := { "intake": "INTAKE", "exhaust": "EXHAUST", "headers": "HEADERS", "cams": "CAMSHAFTS", "ecu": "ECU / TUNE",
-	"induction": "TURBO / BLOWER", "intercooler": "INTERCOOLER", "clutch": "CLUTCH", "flywheel": "FLYWHEEL", "final": "FINAL DRIVE",
+	"induction": "TURBO / BLOWER", "intercooler": "INTERCOOLER", "fuel": "FUEL SYSTEM", "internals": "BOTTOM END", "clutch": "CLUTCH", "flywheel": "FLYWHEEL", "final": "FINAL DRIVE",
 	"lsd": "DIFFERENTIAL", "suspension": "SUSPENSION", "swaybar": "SWAY BARS", "weight": "WEIGHT", "steering": "STEERING",
 	"pads": "BRAKE PADS", "brakes": "BRAKE KIT", "tires": "TIRES", "aero": "AERO" }
 
-const GROUPS := [["ENGINE", ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler"]],
+const GROUPS := [["ENGINE", ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals"]],
 	["DRIVETRAIN", ["clutch", "flywheel", "final", "lsd"]],
 	["CHASSIS", ["suspension", "swaybar", "weight", "steering"]],
 	["BRAKES & TIRES", ["pads", "brakes", "tires"]],
@@ -54,6 +54,11 @@ const CATALOG := {
 	"ind_upgrade": ["induction", "BIGGER STOCK-FRAME TURBO", 2290, 5, { "torque": 1.18, "turbo": { "spool_rpm": 3500, "lag": 0.6, "no_boost": 0.68 } }, "LOOKS STOCK. ISN'T. GREAT FOR INSPECTIONS. NOT THAT YOU'D KNOW ANYTHING ABOUT THAT."],
 	# ---------------------------------------------------------------- intercooler
 	"ic_mishimotoh": ["intercooler", "MISHIMOTOH FRONT MOUNT", 690, 3, { "torque": 1.04, "boost_only": true }, "COLD AIR IS DENSE AIR. LIKE YOUR COUSIN."],
+	# ---------------------------------------------------------------- fuel and the bottom end: what lets you tune harder
+	"fuel_pump": ["fuel", "WALBRO-ISH 255 PUMP + INJECTORS", 690, 3, { "tune_boost": 0.1, "knock": -0.15 }, "MORE FUEL, LESS LEAN. LEAN IS HOW PISTONS MELT."],
+	"fuel_e85": ["fuel", "FLEX FUEL KIT (E85)", 1490, 4, { "torque": 1.03, "tune_boost": 0.15, "tune_timing": 2, "knock": -0.45 }, "CORN IN THE TANK. THE GAS STATION IN SALISBURY HAS IT. SOMETIMES."],
+	"int_rods": ["internals", "FORGED RODS + PISTONS", 2890, 6, { "wear": 0.6, "redline": 300, "tune_boost": 0.25 }, "THE KIND OF METAL THAT DOESN'T CARE HOW MUCH BOOST YOU SEND."],
+	"int_built": ["internals", "FULLY BUILT BOTTOM END", 5490, 9, { "wear": 0.4, "redline": 700, "torque_hi": 1.03, "tune_boost": 0.45, "tune_timing": 1 }, "GUS BALANCED IT HIMSELF. HE WON'T SAY HOW LONG IT TOOK. NINE DAYS."],
 	# ---------------------------------------------------------------- clutch / flywheel / final / diff
 	"clutch_s1": ["clutch", "EXEDY-ISH STAGE 1 CLUTCH", 420, 3, { "clutch": 150 }, "HOLDS A LITTLE MORE. YOUR LEFT LEG WON'T NOTICE."],
 	"clutch_s3": ["clutch", "ACT-UP STAGE 3 PUCK CLUTCH", 980, 4, { "clutch": 500 }, "ON OR OFF. NOTHING IN BETWEEN. LIKE GUS."],
@@ -94,6 +99,57 @@ const CATALOG := {
 	"aero_wing": ["aero", "STREET WING", 690, 4, { "cl": 0.2, "cda": 0.03, "spoiler": "wing" }, "SAYS 'I HAVE A GUY.'"],
 	"aero_gt": ["aero", "GT WING + SPLITTER", 1890, 6, { "cl": 0.42, "cda": 0.07, "spoiler": "gt", "kit_lip": true }, "SAYS 'I AM THE GUY.' MORE GRIP ABOVE 100 KM/H. MORE LOOKS AT THE TIM'S."],
 }
+
+## Performance stages, the way the shop talks about them: 1 bolt-ons, 2 serious, 3 race, 4 all-in.
+## (Budget junk counts as stage 1: it's what it does, not what it cost.)
+const STAGE := {
+	"intake_sock": 1, "intake_kandm": 1, "intake_injenuity": 2, "exh_straight": 1, "exh_magnaflown": 1, "exh_borlah": 2,
+	"hdr_jbah": 2, "hdr_long": 3, "cam_comp": 2, "cam_tomeii": 3, "ecu_laptop": 1, "ecu_cobbled": 1, "ecu_apexii": 3,
+	"ind_upgrade": 2, "ind_garrette": 3, "ind_greddy": 4, "ind_single": 4, "ind_whippled": 3, "ic_mishimotoh": 2,
+	"fuel_pump": 2, "fuel_e85": 3, "int_rods": 3, "int_built": 4,
+	"clutch_s1": 1, "clutch_s3": 3, "fly_light": 2, "final_short": 2, "final_long": 2,
+	"lsd_welded": 1, "lsd_kaaz": 2, "lsd_osgiggle": 3,
+	"susp_springs": 1, "susp_coilover": 2, "susp_race": 3, "susp_air": 2, "susp_lift": 1, "sway_rear": 1, "sway_front": 2,
+	"wt_gut": 1, "wt_carbon": 3, "wt_full": 4, "steer_quick": 2, "steer_angle": 3,
+	"pads_hawke": 1, "pads_race": 3, "brk_brenbo": 3, "brk_wilwood": 4,
+	"tire_allseason": 1, "tire_winter": 1, "tire_at": 1, "tire_sport": 2, "tire_semi": 3, "tire_drag": 3,
+	"aero_lip": 1, "aero_ducktail": 1, "aero_wing": 2, "aero_gt": 4,
+}
+
+## Game hours for Gus to put a part in (the slots that share access share his time).
+const INSTALL_H := { "intake": 0.5, "exhaust": 1.5, "headers": 3.0, "cams": 6.0, "ecu": 1.0, "induction": 8.0,
+	"intercooler": 3.0, "fuel": 4.0, "internals": 14.0, "clutch": 5.0, "flywheel": 5.0, "final": 4.0, "lsd": 4.0,
+	"suspension": 3.0, "swaybar": 1.5, "weight": 2.0, "steering": 3.0, "pads": 1.0, "brakes": 3.0, "tires": 1.0, "aero": 1.5 }
+
+static func stage(id: String) -> int:
+	return int(STAGE.get(id, 1))
+
+static func install_h(id: String) -> float:
+	return float(INSTALL_H.get(slot(id), 2.0))
+
+## How far the dyno lets you push this build: extra boost (fraction) and timing (steps of 2°).
+static func tune_range(installed: Dictionary, spec: Dictionary) -> Dictionary:
+	var turbo := not (spec.engine.get("turbo", {}) as Dictionary).is_empty()
+	var boost := 0.15 if turbo else 0.0
+	var timing := 3
+	for sl in installed:
+		var fx := effects(String(installed[sl]))
+		if turbo: boost += float(fx.get("tune_boost", 0.0))
+		timing += int(fx.get("tune_timing", 0))
+	return { "boost": boost, "timing": timing }
+
+## Knock risk for a tune: timing and boost push toward it, good fuel and forged parts hold it off.
+## 0 is safe; anything over 0 slowly eats the engine at full load.
+static func knock_risk(installed: Dictionary, tune: Dictionary) -> float:
+	var t := float(tune.get("timing", 0))
+	var b := float(tune.get("boost", 0.0))
+	var resist := 0.0
+	var forged := 0.0
+	for sl in installed:
+		var fx := effects(String(installed[sl]))
+		resist += float(fx.get("knock", 0.0))
+		forged += float(fx.get("tune_boost", 0.0)) if slot(String(installed[sl])) == "internals" else 0.0
+	return maxf(0.0, t * 0.09 + b * (1.4 - forged * 1.5) - 0.22 + resist)
 
 ## Parts that only make sense on some cars.
 static func fits(id: String, spec: Dictionary) -> bool:
@@ -137,7 +193,7 @@ static func in_slot(sl: String) -> Array:
 	return out
 
 ## The spec the sim drives, with every installed part applied. Never changes the original.
-static func apply(base: Dictionary, installed: Dictionary) -> Dictionary:
+static func apply(base: Dictionary, installed: Dictionary, tune := {}) -> Dictionary:
 	var s: Dictionary = base.duplicate(true)
 	var e: Dictionary = s.engine
 	var tq := 1.0
@@ -176,6 +232,17 @@ static func apply(base: Dictionary, installed: Dictionary) -> Dictionary:
 		if fx.has("compound"): s.tires.compound = String(fx.compound)
 		if fx.has("lsd"): s.lsd = float(fx.lsd)
 	if not (e.get("turbo", {}) as Dictionary).is_empty(): tq *= boost_only
+	# the dyno tune: timing adds a little everywhere, boost adds a lot (and spools a touch later)
+	if not tune.is_empty():
+		var rng_t := tune_range(installed, s)
+		var tb := clampf(float(tune.get("boost", 0.0)), 0.0, float(rng_t.boost))
+		var tt := clampi(int(tune.get("timing", 0)), -2, int(rng_t.timing))
+		tq *= 1.0 + 0.012 * tt
+		if tb > 0.0 and not (e.get("turbo", {}) as Dictionary).is_empty():
+			tq *= 1.0 + tb
+			e.turbo = (e.turbo as Dictionary).duplicate()
+			e.turbo.spool_rpm = float(e.turbo.spool_rpm) * (1.0 + tb * 0.3)
+		s.knock_risk = knock_risk(installed, { "boost": tb, "timing": tt })
 	# reshape the torque curve: low end below half the redline, top end above 60% of it
 	var red := float(e.redline_rpm)
 	var curve: Array = []

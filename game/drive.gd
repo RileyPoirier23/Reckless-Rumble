@@ -225,6 +225,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car.sim.assist = CarSim.Assist.STREET
 	for k in car.damage: car.damage[k] = float(entry.get("damage", {}).get(k, 0.0))
 	car.damage_bucket = -2
+	car.sim.set_wear(entry.get("wear", {}))
 	save.current = i
 	cam_rot = heading + PI / 2.0
 	cam.global_position = car.global_position
@@ -341,6 +342,7 @@ func _store_car() -> void:
 	save.garage[car_i].damage = car.damage.duplicate()
 	save.garage[car_i].paint = "#" + car.paint.to_html(false)
 	save.garage[car_i].odo_km = float(save.garage[car_i].get("odo_km", 0.0)) + car.sim.odometer_m / 1000.0
+	save.garage[car_i].wear = car.sim.wear_state()
 	car.sim.odometer_m = 0.0
 
 func _on_garage_pick(i: int) -> void:
@@ -371,13 +373,51 @@ func _deliveries(dt: float) -> void:
 		else:
 			left.append(o)
 	save.orders = left
+	# Gus finishing an install: the part goes on, and the car you're in gets it right away
+	for d in SaveGame.finish_installs(save):
+		var ci: int = d[0]
+		var spec_d := SaveGame.load_spec(String(save.garage[ci].id))
+		hud.post("GUS: \"THE %s IS IN THE %s. GO GIVE IT THE BEANS.\"" % [Parts.name_of(String(d[1])), String(spec_d.get("model", "CAR")).to_upper()], 7.0)
+		if ci == car_i and not garage.visible:
+			var at := car.sim.pos
+			var h := car.sim.heading
+			_spawn_car(car_i, at, h)
+			_teleport(at, h)
+			car.sim.set_world_velocity(Vector2.ZERO)
+		SaveGame.write(save)
 
 func _on_garage_repair(i: int) -> void:
+	if i == car_i: _store_car()
+	# the body's on the house; worn parts aren't
+	var w: Dictionary = save.garage[i].get("wear", {})
+	var turbo := not (SaveGame.car_spec(save.garage[i]).engine.get("turbo", {}) as Dictionary).is_empty()
+	var jobs: Array = []
+	var cost := 0
+	if float(w.get("pads", 10.0)) < 6.0:
+		jobs.append("PADS")
+		cost += 140
+	if float(w.get("fluid", 1.0)) < 0.8:
+		jobs.append("FLUID")
+		cost += 60
+	if float(w.get("clutch", 1.0)) < 0.7:
+		jobs.append("CLUTCH")
+		cost += 520
+	if turbo and float(w.get("turbo", 1.0)) < 0.7:
+		jobs.append("TURBO REBUILD")
+		cost += 780
+	if cost > 0:
+		if int(save.cash) >= cost:
+			save.cash = int(save.cash) - cost
+			save.garage[i].wear = {}
+			garage._say("GUS: \"%s. $%d. AND I FIXED THE DENTS FOR FREE.\"" % [", ".join(jobs), cost])
+		else:
+			garage._say("GUS: \"IT NEEDS %s. THAT'S $%d. COME BACK WITH MONEY. DENTS ARE FIXED.\"" % [", ".join(jobs), cost])
 	for k in save.garage[i].damage: save.garage[i].damage[k] = 0.0
 	if i == car_i:
 		for k in car.damage: car.damage[k] = 0.0
 		car.damage_bucket = -2
 		car.sim.reset_parts()
+		car.sim.set_wear(save.garage[i].get("wear", {}))       # unpaid wear stays worn
 	SaveGame.write(save)
 
 func _exit_tree() -> void:

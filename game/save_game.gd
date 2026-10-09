@@ -48,11 +48,30 @@ static func ensure(data: Dictionary) -> Dictionary:
 	for car in data.garage:
 		if not car.has("parts"): car.parts = {}             # slot -> part id
 		if not car.has("looks"): car.looks = {}
+		if not car.has("tune"): car.tune = {}               # the dyno tune: boost, timing
+		if not car.has("wear"): car.wear = {}               # clutch, turbo, pads, fluid (CarSim.wear_state)
+		if not car.has("installing"): car.installing = []   # [{ slot, part, done_h }] Gus is on it
 	return data
 
 ## The spec the sim drives for a car in the garage: its base spec with every part bolted on.
 static func car_spec(entry: Dictionary) -> Dictionary:
-	return Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}))
+	return Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}), entry.get("tune", {}))
+
+## Installs Gus has finished by now: they move from the bench onto the car. Returns
+## [[car index, part id], ...] for the reveal.
+static func finish_installs(data: Dictionary) -> Array:
+	var done: Array = []
+	for i in (data.garage as Array).size():
+		var car: Dictionary = data.garage[i]
+		var left: Array = []
+		for job in car.get("installing", []):
+			if float(data.get("clock_h", 0.0)) >= float(job.done_h):
+				car.parts[String(job.slot)] = String(job.part)
+				done.append([i, String(job.part)])
+			else:
+				left.append(job)
+		car.installing = left
+	return done
 
 ## How a car looks (for the side-view art): its own looks, plus what its parts show off.
 static func car_looks(entry: Dictionary) -> Dictionary:

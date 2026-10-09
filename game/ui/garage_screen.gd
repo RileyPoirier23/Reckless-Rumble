@@ -63,6 +63,7 @@ var site_row := 0
 var express := false
 # the dyno
 var dyno_t := -1.0
+var tune_row := 0
 var preview: ImageTexture
 var preview_key := ""
 var rng := RandomNumberGenerator.new()
@@ -120,8 +121,7 @@ func _process(dt: float) -> void:
 		"UPGRADES": _upgrades_input(dy, dx, go)
 		"LOOKS": _looks_input(dy, dx, go)
 		"ROCKAUTTO.CA": _site_input(dy, dx, go)
-		"DYNO":
-			if go: dyno_t = 0.0
+		"DYNO": _dyno_input(dy, dx, go)
 	queue_redraw()
 
 func _tab(d: int) -> void:
@@ -138,8 +138,8 @@ func _cars_input(dx: int, go: bool) -> void:
 		picked.emit(sel)
 		visible = false
 	if Input.is_action_just_pressed("horn") or Input.is_action_just_pressed("reset"):
-		repaired.emit(sel)
 		_say("GUS: \"GOOD AS NEW. GOOD AS IT WAS, ANYWAY.\"")
+		repaired.emit(sel)
 
 # ------------------------------------------------------------------ upgrades
 
@@ -174,6 +174,10 @@ func _upgrades_input(dy: int, dx: int, go: bool) -> void:
 		var want: String = ops[int(opt[sl])]
 		var have := String(_car().parts.get(sl, ""))
 		if want == have: return
+		for job in _car().get("installing", []):
+			if String(job.slot) == sl:
+				_say("GUS: \"I'M ALREADY IN THERE. ONE THING AT A TIME.\"")
+				return
 		var labour := maxi(40, int(Parts.price(want) * 0.1)) if want != "" else 40
 		if int(data.cash) < labour:
 			_say("GUS: \"LABOUR'S $%d. YOU'VE GOT $%d. I DON'T DO IOUS.\"" % [labour, int(data.cash)])
@@ -181,13 +185,26 @@ func _upgrades_input(dy: int, dx: int, go: bool) -> void:
 		data.cash = int(data.cash) - labour
 		if have != "": data.shelf.append(have)
 		if want != "":
+			# Gus takes the old one off now and the new one goes in on the clock
 			data.shelf.erase(want)
-			_car().parts[sl] = want
-			_say("GUS BOLTS ON THE %s. LABOUR: $%d." % [Parts.name_of(want), labour])
+			_car().parts.erase(sl)
+			var hrs := Parts.install_h(want)
+			_car().installing.append({ "slot": sl, "part": want, "done_h": float(data.get("clock_h", 0.0)) + hrs })
+			_say("GUS STARTS ON THE %s. ABOUT %s. LABOUR: $%d." % [Parts.name_of(want), _hours(hrs), labour])
 		else:
 			_car().parts.erase(sl)
 			_say("BACK TO STOCK. THE OLD PART GOES ON THE SHELF. LABOUR: $%d." % labour)
 		opt.clear()
+
+static func _hours(h: float) -> String:
+	if h < 1.0: return "%d MINUTES" % int(h * 60.0)
+	return "%.1f HOURS" % h if h < 10.0 else "%d HOURS" % int(h)
+
+## A part Gus is still putting in, in this slot (or {}).
+func _job(sl: String) -> Dictionary:
+	for job in _car().get("installing", []):
+		if String(job.slot) == sl: return job
+	return {}
 
 # ------------------------------------------------------------------ looks
 
@@ -322,7 +339,7 @@ func _draw() -> void:
 		"UPGRADES": hint = "{updown}: SLOT  {leftright}: PART  {ui_accept}: INSTALL  {ui_cancel}: CLOSE"
 		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY THE BODY SHOP  {ui_cancel}: CLOSE"
 		"ROCKAUTTO.CA": hint = "{leftright}: CATEGORY  {updown}: PART  {ui_accept}: ORDER  {ui_cancel}: CLOSE"
-		"DYNO": hint = "{ui_accept}: STRAP IT DOWN AND PULL  {ui_cancel}: CLOSE"
+		"DYNO": hint = "{updown}: BOOST/TIMING  {leftright}: TUNE  {ui_accept}: PULL  {ui_cancel}: CLOSE"
 	PixelFont.draw(self, Vector2(16, 344), Hints.fmt(hint), ASH)
 
 static func _money(n: int) -> String:
@@ -422,6 +439,12 @@ func _draw_upgrades() -> void:
 		var label := Parts.name_of(shown) if shown != "" else "STOCK"
 		if on and ops.size() > 1: label = "< " + label + " >"
 		var col := BONE if shown == inst else GREEN
+		var job := _job(sl)
+		if not job.is_empty() and not (on and opt.has(sl) and shown != inst):
+			label = "GUS: %s, %s LEFT" % [Parts.name_of(String(job.part)).substr(0, 22), _hours(maxf(0.0, float(job.done_h) - float(data.get("clock_h", 0.0))))]
+			col = Color("7ab8e0")
+		elif shown != "":
+			PixelFont.draw(self, Vector2(r.position.x + 74, y), "S%d" % Parts.stage(shown), [ASH, GREEN, GOLD, Color("e08a3a"), RED][Parts.stage(shown)])
 		PixelFont.draw(self, Vector2(r.position.x + 92, y), label.substr(0, 46), col)
 		var waiting := 0
 		for o in data.orders:
@@ -501,11 +524,27 @@ func _draw_site() -> void:
 		PixelFont.draw(self, Vector2(r.position.x + 8, oy + k * 9), "%s - %s" % [Parts.name_of(String(o.part)), _eta(maxf(0.1, float(o.arrives_h) - float(data.clock_h)))], Color("2a4a8a"))
 
 ## A dyno sheet: torque and power against rpm, this car against how it left the factory.
+## The dyno tune: up/down picks boost or timing, left/right turns it, accept does a pull.
+func _dyno_input(dy: int, dx: int, go: bool) -> void:
+	tune_row = clampi(tune_row + dy, 0, 1)
+	if dx != 0:
+		var rng_t := Parts.tune_range(_car().parts, _base_spec())
+		var t: Dictionary = _car().tune
+		if tune_row == 0:
+			if float(rng_t.boost) <= 0.0:
+				_say("GUS: \"NO TURBO, NO BOOST. THAT'S HOW AIR WORKS.\"")
+			else:
+				t.boost = clampf(snappedf(float(t.get("boost", 0.0)) + 0.05 * dx, 0.05), 0.0, float(rng_t.boost))
+		else:
+			t.timing = clampi(int(t.get("timing", 0)) + dx, -2, int(rng_t.timing))
+		dyno_t = -1.0
+	if go: dyno_t = 0.0
+
 func _draw_dyno() -> void:
 	var r := _panel()
 	var stock := _base_spec()
 	var cur := SaveGame.car_spec(_car())
-	var g := Rect2(r.position.x + 30, r.position.y + 20, r.size.x - 44, 170)
+	var g := Rect2(r.position.x + 30, r.position.y + 14, r.size.x - 44, 140)
 	draw_rect(g, Color("101012"))
 	for k in 6:
 		draw_line(Vector2(g.position.x, g.position.y + g.size.y * k / 5.0), Vector2(g.end.x, g.position.y + g.size.y * k / 5.0), Color(1, 1, 1, 0.06))
@@ -545,10 +584,25 @@ func _draw_dyno() -> void:
 	PixelFont.draw(self, Vector2(g.end.x - 110, g.position.y + 4), "FAINT = HOW IT CAME", ASH)
 	var pk := Parts.peaks(cur)
 	var pk0 := Parts.peaks(stock)
-	var y := g.end.y + 18
+	var y := g.end.y + 16
 	PixelFont.draw(self, Vector2(r.position.x + 10, y), "PEAK %d HP (%+d)   %d NM (%+d)" % [int(pk.x), int(pk.x - pk0.x), int(pk.y), int(pk.y - pk0.y)], BONE, 1)
 	var pf := Perf.estimate(cur)
 	PixelFont.draw(self, Vector2(r.position.x + 10, y + 12), "0-100 %.1f S   1/4 MILE %.1f S   TOP %d KM/H" % [pf.zero100, pf.quarter, int(pf.top_kmh)], BONE)
-	if dyno_t < 0.0: PixelFont.draw(self, Vector2(r.position.x + 10, y + 26), Hints.fmt("{ui_accept}: DO A PULL. GUS WILL STAND WELL BACK."), GOLD)
-	elif dyno_t < 3.0: PixelFont.draw(self, Vector2(r.position.x + 10, y + 26), "BRRRRRRRRAAAAAAAAAAAAAAHHHHH", RED)
-	else: PixelFont.draw(self, Vector2(r.position.x + 10, y + 26), "GUS: \"WELL. IT DIDN'T BLOW UP.\"", BONE)
+	# the tune
+	var rng_t := Parts.tune_range(_car().parts, stock)
+	var t: Dictionary = _car().tune
+	var risk := Parts.knock_risk(_car().parts, t)
+	var ty := y + 28
+	draw_rect(Rect2(r.position.x + 6, ty - 4, r.size.x - 12, 36), Color(1, 1, 1, 0.04))
+	PixelFont.draw(self, Vector2(r.position.x + 10, ty), "THE TUNE", GOLD)
+	for k in 2:
+		var on := tune_row == k
+		var val := ("+%d%% BOOST" % int(float(t.get("boost", 0.0)) * 100.0)) if k == 0 else ("%+d° TIMING" % (int(t.get("timing", 0)) * 2))
+		var lim := (" (MAX %d%%)" % int(float(rng_t.boost) * 100.0)) if k == 0 else (" (MAX %+d°)" % (int(rng_t.timing) * 2))
+		PixelFont.draw(self, Vector2(r.position.x + 70 + k * 130, ty), ("< %s >" % val if on else val) + lim, BONE if on else ASH)
+	var rl := "SAFE" if risk <= 0.0 else ("IT'LL PING ON HOT DAYS" if risk < 0.2 else ("IT WILL KNOCK. GUS LOOKS AWAY" if risk < 0.5 else "IT WILL EAT A PISTON"))
+	PixelFont.draw(self, Vector2(r.position.x + 10, ty + 12), "KNOCK: " + rl, GREEN if risk <= 0.0 else (GOLD if risk < 0.2 else RED))
+	var ly := ty + 40
+	if dyno_t < 0.0: PixelFont.draw(self, Vector2(r.position.x + 10, ly), Hints.fmt("{ui_accept}: DO A PULL. GUS WILL STAND WELL BACK."), GOLD)
+	elif dyno_t < 3.0: PixelFont.draw(self, Vector2(r.position.x + 10, ly), "BRRRRRRRRAAAAAAAAAAAAAAHHHHH", RED)
+	else: PixelFont.draw(self, Vector2(r.position.x + 10, ly), "GUS: \"WELL. IT DIDN'T BLOW UP.\"", BONE)
