@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="288" viewBox="0 0 768 288" shape-rendering="crispEdges">
+<defs>
+ <style>.o{stroke:#171b22;stroke-width:4;stroke-linejoin:miter}.p{fill:#a72b35}.s{fill:#741d29}.h{fill:#d35a5d}.g{fill:#273746}.gh{fill:#496379}.t{fill:#15171b}.r{fill:#aeb5bd}.dk{fill:#242a32}.w{fill:#e5e8ea}.br{fill:#a97632}.lbl{font:16px monospace;fill:#e8edf2;letter-spacing:2px}</style>
+ <g id="wheel"><circle class="t o" cx="0" cy="0" r="20"/><circle class="r" cx="0" cy="0" r="11"/><rect class="dk" x="-3" y="-10" width="6" height="20"/><rect class="dk" x="-10" y="-3" width="20" height="6"/></g>
+ <g id="deep"><circle class="t o" cx="0" cy="0" r="21"/><circle class="w" cx="0" cy="0" r="12"/><circle class="dk" cx="0" cy="0" r="5"/><rect class="dk" x="-2" y="-12" width="4" height="24"/><rect class="dk" x="-12" y="-2" width="24" height="4"/></g>
+</defs>
+<!-- STOCK -->
+<g transform="translate(0 0)">
+ <polygon class="s o" points="32,76 45,55 143,48 168,22 222,22 252,48 320,54 340,72 335,91 30,91"/>
+ <polygon class="p" points="40,69 53,58 151,55 174,29 218,29 243,52 312,58 328,70"/>
+ <polygon class="h" points="54,58 151,55 165,39 247,54 307,59 309,64 51,64"/>
+ <polygon class="g o" points="172,31 195,27 216,28 239,49 159,49"/>
+ <line class="o" x1="199" y1="27" x2="200" y2="49"/>
+ <rect class="dk" x="47" y="66" width="30" height="9"/><rect fill="#e6d8b2" x="308" y="60" width="17" height="10"/>
+ <use href="#wheel" x="93" y="84"/><use href="#wheel" x="277" y="84"/>
+ <text class="lbl" x="128" y="124">STOCK</text>
+</g>
+<!-- STREET -->
+<g transform="translate(384 0)">
+ <polygon class="s o" points="26,79 42,55 140,48 167,22 221,22 253,48 323,54 347,73 343,92 22,92"/>
+ <polygon class="p" points="36,70 51,58 149,55 174,29 217,29 244,52 314,58 334,72"/>
+ <polygon class="g o" points="172,31 195,27 216,28 239,49 159,49"/><line class="o" x1="199" y1="27" x2="200" y2="49"/>
+ <polygon class="dk o" points="20,83 70,83 75,91 20,91"/><rect class="dk o" x="116" y="84" width="121" height="9"/>
+ <polygon class="p o" points="52,50 112,50 99,43 61,43"/>
+ <rect fill="#7bd6e8" class="o" x="307" y="62" width="24" height="12"/>
+ <use href="#wheel" x="91" y="85"/><use href="#wheel" x="281" y="85"/>
+ <circle class="br" cx="91" cy="85" r="7"/><circle class="br" cx="281" cy="85" r="7"/>
+ <text class="lbl" x="129" y="124">STREET</text>
+</g>
+<!-- DRIFT -->
+<g transform="translate(192 144)">
+ <polygon class="s o" points="24,78 40,54 137,47 166,21 222,21 254,47 326,53 350,72 346,93 20,93"/>
+ <polygon fill="#395db5" points="35,70 50,57 146,54 173,28 217,28 245,51 316,57 337,71 331,84 35,84"/>
+ <polygon class="g o" points="171,30 195,26 216,27 240,48 158,48"/><line class="o" x1="199" y1="26" x2="200" y2="48"/>
+ <polygon class="dk o" points="15,82 72,82 76,92 15,92"/><rect class="dk o" x="113" y="84" width="127" height="10"/>
+ <polygon fill="#303741" class="o" points="230,22 242,7 247,7 252,21"/><rect fill="#303741" class="o" x="225" y="5" width="51" height="7"/>
+ <polygon fill="#cae4f6" points="50,57 81,54 170,84 133,84"/><polygon fill="#efb229" points="92,53 116,51 205,84 178,84"/>
+ <polygon class="p o" points="131,49 155,41 171,39 165,55"/>
+ <path d="M29 68h20M319 63h19" class="o" fill="none"/><rect fill="#f6d85b" x="316" y="58" width="17" height="10"/>
+ <use href="#deep" x="91" y="85"/><use href="#deep" x="282" y="85"/>
+ <rect fill="#d9d9d4" class="o" x="15" y="87" width="24" height="7"/>
+ <text class="lbl" x="133" y="124">DRIFT</text>
+</g>
+</svg>

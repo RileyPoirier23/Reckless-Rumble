@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="288" viewBox="0 0 768 288" shape-rendering="crispEdges">
+<defs>
+ <style>.o{stroke:#171b22;stroke-width:4;stroke-linejoin:miter}.p{fill:#31683f}.s{fill:#21492f}.h{fill:#4f8a59}.g{fill:#273746}.gh{fill:#496379}.t{fill:#15171b}.r{fill:#aeb5bd}.dk{fill:#242a32}.w{fill:#e5e8ea}.lbl{font:16px monospace;fill:#e8edf2;letter-spacing:2px}</style>
+ <g id="wheel"><circle class="t o" cx="0" cy="0" r="21"/><circle class="r" cx="0" cy="0" r="11"/><circle class="dk" cx="0" cy="0" r="4"/></g>
+ <g id="mud"><circle class="t o" cx="0" cy="0" r="27"/><rect class="dk" x="-29" y="-5" width="58" height="10"/><rect class="dk" x="-5" y="-29" width="10" height="58"/><circle fill="#2e343b" cx="0" cy="0" r="15"/><circle class="r" cx="0" cy="0" r="7"/></g>
+ <g id="street"><circle class="t o" cx="0" cy="0" r="20"/><circle fill="#d9dde1" cx="0" cy="0" r="14"/><path d="M0-13L4-3L13 0L4 3L0 13L-4 3L-13 0L-4-3Z" class="dk"/></g>
+</defs>
+<!-- STOCK -->
+<g>
+ <polygon class="s o" points="27,53 162,53 177,30 230,30 260,54 335,57 344,72 338,92 26,92"/>
+ <polygon class="p" points="36,59 163,59 181,36 225,36 252,59 326,62 334,72 328,84 36,84"/>
+ <polygon class="g o" points="184,37 224,37 248,56 174,56"/><line class="o" x1="211" y1="36" x2="211" y2="56"/>
+ <rect class="h" x="39" y="61" width="119" height="8"/><rect class="dk o" x="319" y="65" width="22" height="14"/>
+ <use href="#wheel" x="93" y="84"/><use href="#wheel" x="282" y="84"/>
+ <text class="lbl" x="129" y="124">STOCK</text>
+</g>
+<!-- OFFROAD -->
+<g transform="translate(384 0)">
+ <polygon class="s o" points="22,43 160,43 176,20 231,20 262,44 336,47 350,62 344,87 17,87"/>
+ <polygon class="p" points="33,50 163,50 182,27 225,27 253,50 327,54 339,64 331,78 31,78"/>
+ <polygon class="g o" points="185,28 225,28 249,47 175,47"/><line class="o" x1="212" y1="27" x2="212" y2="47"/>
+ <path d="M154 44V10H245V45M165 11V1M234 11V1" class="o" fill="none"/>
+ <rect fill="#f4c34e" class="o" x="158" y="0" width="14" height="9"/><rect fill="#f4c34e" class="o" x="228" y="0" width="14" height="9"/>
+ <polyline points="16,66 6,66 6,79 38,79" class="o" fill="none"/><polyline points="330,68 359,68 359,81 326,81" class="o" fill="none"/>
+ <circle class="t o" cx="129" cy="40" r="20"/>
+ <use href="#mud" x="90" y="79"/><use href="#mud" x="285" y="79"/>
+ <text class="lbl" x="119" y="124">OFFROAD</text>
+</g>
+<!-- LOW -->
+<g transform="translate(192 144)">
+ <polygon class="s o" points="25,61 160,61 177,38 229,38 259,61 338,64 347,79 340,94 22,94"/>
+ <polygon fill="#7a344f" points="35,67 163,67 182,45 224,45 251,67 329,70 337,80 331,88 34,88"/>
+ <polygon class="g o" points="185,46 224,46 247,64 175,64"/><line class="o" x1="211" y1="45" x2="211" y2="64"/>
+ <rect fill="#5b263c" x="38" y="69" width="121" height="8"/><rect class="dk o" x="321" y="73" width="23" height="13"/>
+ <rect fill="#7a344f" class="o" x="31" y="48" width="127" height="14"/>
+ <rect fill="#30343a" class="o" x="30" y="89" width="318" height="6"/>
+ <use href="#street" x="92" y="87"/><use href="#street" x="283" y="87"/>
+ <rect fill="#d7d9db" class="o" x="13" y="84" width="28" height="6"/><rect fill="#d7d9db" class="o" x="13" y="94" width="28" height="6"/>
+ <text class="lbl" x="145" y="124">LOW</text>
+</g>
+</svg>
