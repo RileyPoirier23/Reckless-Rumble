@@ -1,6 +1,6 @@
 ## The people who come back to the window.
 ##
-## The regulars (Jayden from the Mountain Tim's drive-thru, hockey dad Rob, Mrs. Doiron and her
+## The regulars (Jayden from the Mountain Tim Burtons drive-thru, hockey dad Rob, Mrs. Doiron and her
 ## cursed Cava-lame, Darrell and his trade-ins) come in on their own days, and what Leo stamped
 ## on them last time changes what they say and what they bring this time. Who they are and
 ## their visits live in data/story_customers.json ("regulars"). A visit's "after" picks what

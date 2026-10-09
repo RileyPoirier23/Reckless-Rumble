@@ -200,7 +200,7 @@ func _ask() -> void:
 	stamp_now(sc, "APPROVED")
 	check("approving a covered car is the right call", sc.result.correct and sc.result.citation == "")
 	sc.press()
-	# a mask, and a sting who doesn't know which Tim's
+	# a mask at the counter
 	var m := sc.rules.customer(24, "clean", { "plain": true })
 	m.mask = "PUMPKIN"
 	sc.day = 24

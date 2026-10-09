@@ -259,7 +259,7 @@ func _desk() -> void:
 	cm.mask = "GOALIE"
 	check("ASK about the mask: it comes off", CounterRules.answer(cm, "mask").get("unmask", false))
 	check("small talk is always on the list", CounterRules.standing_topics(_plain(r, 3), 3).has("local"))
-	check("the sting doesn't know which Tim's", CounterRules.STING_ASK.has(String(CounterRules.answer(r.sting(4), "local").line)))
+	check("the sting doesn't know which Tim Burtons", CounterRules.STING_ASK.has(String(CounterRules.answer(r.sting(4), "local").line)))
 	# 12. two free warnings a shift, then fines; police matters are never free
 	var bent := r.customer(9, "vin_mismatch")
 	var j := CounterRules.judge(bent, "APPROVED", 9, r.bolo)
@@ -520,6 +520,13 @@ func _regulars() -> void:
 	var real := false
 	for w in ["KIA ", "GOLF\"", "CARAVAN ", "CIVIC", "COROLLA", "ZAMBONI", "VINNY"]: if src.contains(w): real = true
 	check("the regulars drive parody cars only", not real)
+	# 23b. no real brands anywhere on the desk: cars, stores, chains, apps, coffee
+	var brands := RegEx.create_from_string("\\b(TIM'?S|TIMS|TIMBITS?|TIM HORTONS?|DOUBLE-DOUBLE|TIMMIES|HAILR|UBER|LYFT|KIJIJI|FACEBOOK|CRAIGSLIST|EBAY|ROCKAUTO|PICK-N-PULL|CO-OP|COSTCO|WALMART|SOBEYS|SUPERSTORE|IRVING|ESSO|STARBUCKS|DUNKIN|MCDONALD'?S|CANADIAN TIRE|HONDA|TOYOTA|FORD|CHEVROLET|CHEVY|NISSAN|SUBARU|VOLKSWAGEN|KIA|HYUNDAI|MAZDA|BMW|MERCEDES|AUDI|JEEP|GMC|BUICK|CADILLAC|CHRYSLER|PONTIAC|TESLA|VOLVO|CIVIC|COROLLA|CAMRY|CARAVAN|IMPALA|CAVALIER|GOLF|GULF|ZAMBONI|VINNY)\\b")
+	var hits: Array = []
+	for path in ["res://counter/rules.gd", "res://counter/counter_scene.gd", "res://counter/regulars.gd", "res://counter/desk_book.gd",
+			"res://counter/face.gd", "res://counter/desk_audio.gd", CounterRules.STORY_PATH]:
+		for m in brands.search_all(FileAccess.get_file_as_string(path).to_upper()): hits.append("%s: %s" % [String(path).get_file(), m.get_string()])
+	check("no real brands on the desk: TIM BURTONS, MARKETTHING and the parody cars only", hits.is_empty(), ", ".join(hits.slice(0, 6)))
 
 func _returns() -> void:
 	# 24. the people you turn away come back: on the day their file says, the same person in the same car,
