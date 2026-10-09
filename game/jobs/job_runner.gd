@@ -1,0 +1,373 @@
+## Runs the evening job you took off the board, inside the drive scene: Pizza Delirium runs,
+## tow calls in Toby's wrecker, the drive out to Drag Night (DragStrip takes over at the line),
+## and the Night Drive. Draws the markers on the ground and keeps the objective line up to date.
+class_name JobRunner
+extends Node2D
+
+signal ended(kind: String)
+
+var drive: Node
+var kind := ""                 # "" when idle
+var stage := ""
+var rng := RandomNumberGenerator.new()
+var t := 0.0
+var earned := 0
+var _prompt_t := 0.0
+
+# pizza
+var shop := {}
+var stops: Array = []          # { p, house, label }
+var stop_i := 0
+var limit := 0.0
+var clock := 0.0
+var condition := 1.0
+var _dmg_seen := 0.0
+var runs := 0
+
+# tow
+var target: TowTarget
+var tow_dest := {}
+var _boom := 0.0
+var _odo0 := 0.0
+var _mass_add := 0.0
+
+# night drive
+var _cruise_m := 0.0
+
+# drag
+var strip: DragStrip
+
+func setup(the_drive: Node) -> void:
+	drive = the_drive
+	z_index = 3050
+	z_as_relative = false
+	rng.seed = int(Time.get_ticks_usec())
+
+func active() -> bool:
+	return kind != ""
+
+func map() -> MapData:
+	return drive.world.map
+
+func car() -> PlayerCar:
+	return drive.car
+
+# ------------------------------------------------------------------ starting and stopping
+
+func start(k: String) -> void:
+	if active(): finish(false)
+	kind = k
+	t = 0.0
+	earned = 0
+	match k:
+		"pizza":
+			shop = Jobs.pizza_shop(map())
+			stage = "pickup"
+			runs = 0
+			drive._on_dest("PIZZA DELIRIUM", shop.p)
+			drive.hud.post("PIZZA DELIRIUM: \"YOU'RE LATE. YOU'RE NOT EVEN HERE YET AND YOU'RE LATE.\"", 5.0)
+		"tow":
+			if String(car().spec.get("id", "")) != "tow":
+				drive.job_swap_car("tow")
+				drive.hud.post("TOBY SWAPS YOU INTO THE WRECKER. \"DON'T TOUCH THE RADIO PRESETS.\"", 5.0)
+			_new_tow()
+		"drag":
+			stage = "drive"
+			drive._on_dest("AIRSTRIP 7", DragStrip.START + Vector2(-20, 0))
+			drive.hud.post("DRAG NIGHT. PULL ONTO RUNWAY 7 AND STOP AT THE LINE.", 5.0)
+		"cruise":
+			stage = "cruise"
+			_cruise_m = 0.0
+			drive.clear_route()
+			drive.hud.post("NIGHT DRIVE. NO JOBS. NO NOISE. JUST THE ROAD.", 5.0)
+	_objective()
+
+## End the job: paid out (done) or walked away from. Puts back whatever the job borrowed.
+func finish(done := true) -> void:
+	if kind == "": return
+	var k := kind
+	if target:
+		target.queue_free()
+		target = null
+	if _mass_add > 0.0:
+		car().sim.spec.mass = float(car().sim.spec.mass) - _mass_add
+		_mass_add = 0.0
+	if strip:
+		strip.close()
+		strip.queue_free()
+		strip = null
+	match k:
+		"pizza": drive.hud.post("SHIFT OVER. %d RUNS, $%d IN YOUR POCKET. YOU SMELL LIKE OREGANO." % [runs, earned], 6.0)
+		"tow": if not done: drive.hud.post("YOU LEAVE IT IN THE DITCH. SOMEBODY ELSE'S PROBLEM NOW.", 4.0)
+		"cruise": drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
+	if k == "tow" and String(car().spec.get("id", "")) == "tow": drive.job_restore_car()
+	kind = ""
+	stage = ""
+	drive.hud.objective = ""
+	drive.clear_route()
+	SaveGame.write(drive.save)
+	ended.emit(k)
+
+func pay(n: int) -> void:
+	earned += n
+	drive.save.cash = int(drive.save.get("cash", 0)) + n
+	SaveGame.write(drive.save)
+
+# ------------------------------------------------------------------ the frame
+
+func _process(dt: float) -> void:
+	queue_redraw()
+	if not active() or car() == null or car().dead: return
+	t += dt
+	match kind:
+		"pizza": _pizza(dt)
+		"tow": _tow(dt)
+		"drag": _drag(dt)
+		"cruise":
+			_cruise_m += car().sim.speed() * dt
+	_objective()
+
+func _objective() -> void:
+	var o := ""
+	match kind:
+		"pizza":
+			if stage == "pickup": o = "PIZZA DELIRIUM: PICK UP THE ORDER. STOP OUT FRONT."
+			elif stage == "deliver":
+				var left := limit - clock
+				o = "DELIVER TO %s (%d OF %d)   %s   PIZZA %d%%" % [stops[stop_i].label, stop_i + 1, stops.size(),
+					("%d:%02d" % [int(maxf(left, 0.0)) / 60, int(maxf(left, 0.0)) % 60]) if left >= 0.0 else "LATE %ds" % int(-left), int(condition * 100.0)]
+		"tow":
+			if stage == "find": o = "TOW CALL: A %s ON THE SHOULDER OF %s. HAZARDS ON." % [target.label, tow_dest.get("road", "THE ROAD")]
+			elif stage == "hook": o = "BACK UP TO IT. STOP. HOLD %s TO WORK THE BOOM." % Hints.key("use")
+			elif stage == "deliver": o = "TOW IT TO %s. EASY ON THE BRAKES: IT WEIGHS %d KG." % [tow_dest.name, int(target.mass)]
+		"drag":
+			if stage == "drive": o = "DRAG NIGHT: AIRSTRIP 7. STOP AT THE START LINE ON RUNWAY 7."
+		"cruise": o = ""
+	drive.hud.objective = o
+
+# ------------------------------------------------------------------ pizza
+
+func _pizza(dt: float) -> void:
+	var c := car()
+	if stage == "pickup":
+		if c.sim.pos.distance_to(shop.p) < 16.0 and c.sim.speed() < 2.0:
+			var n := 1 + rng.randi() % 3
+			stops = Jobs.addresses(map(), rng, shop.p, n)
+			if stops.is_empty():
+				drive.hud.post("NO ORDERS. THE OVEN'S BROKEN AGAIN. COME BACK LATER.", 4.0)
+				finish(false)
+				return
+			stop_i = 0
+			condition = 1.0
+			_dmg_seen = _damage_sum()
+			stage = "deliver"
+			drive.hud.post("%d PIZZA%s IN THE BAG. HOT. GO." % [stops.size(), "" if stops.size() == 1 else "S"], 4.0)
+			_next_stop()
+		return
+	if stage != "deliver": return
+	clock += dt
+	# hard cornering slides the toppings off; a hit squashes the box
+	var g := absf(c.sim.ay) / 9.81
+	if g > 0.7: condition = maxf(0.0, condition - (g - 0.7) * 0.7 * dt)
+	var dmg := _damage_sum()
+	if dmg > _dmg_seen + 0.01:
+		condition = maxf(0.0, condition - (dmg - _dmg_seen) * 2.0)
+		drive.hud.post("SOMETHING IN THE BACK WENT SPLAT.", 2.5)
+	_dmg_seen = dmg
+	var s: Dictionary = stops[stop_i]
+	if c.sim.pos.distance_to(s.p) < 14.0 and c.sim.speed() < 2.0:
+		var payd := Jobs.pizza_pay(clock - limit, limit * 0.33, condition)
+		pay(int(payd.total))
+		runs += 1
+		drive.hud.post("%s  +$%d (TIP $%d)" % [_customer(int(payd.tip)), int(payd.total), int(payd.tip)], 5.0)
+		stop_i += 1
+		if stop_i >= stops.size():
+			if Jobs.open_now("pizza", drive.sky.time_h):
+				stage = "pickup"
+				drive._on_dest("PIZZA DELIRIUM", shop.p)
+				drive.hud.post("BACK TO THE SHOP. MORE ORDERS ARE UP.", 3.0)
+			else:
+				finish(true)
+		else:
+			_next_stop()
+
+func _next_stop() -> void:
+	var s: Dictionary = stops[stop_i]
+	limit = Jobs.pizza_limit(_route_len(car().sim.pos, s.p))
+	clock = 0.0
+	drive._on_dest(String(s.label), s.p)
+
+func _customer(tip: int) -> String:
+	if tip >= 9: return ["\"THAT WAS FAST. ARE YOU OKAY?\"", "\"KEEP THE CHANGE. AND THE OTHER CHANGE.\"", "\"STILL BUBBLING. YOU'RE A HERO.\""][rng.randi() % 3]
+	if tip >= 5: return ["\"YEAH, THAT'S PIZZA.\"", "\"LITTLE COLD. IT'S FINE.\"", "\"YOU'RE THE GUY FROM THE GARAGE, EH?\""][rng.randi() % 3]
+	return ["\"THE CHEESE IS ON THE LID.\"", "\"THIRTY MINUTES. IT SAYS THIRTY MINUTES.\"", "\"DID YOU DRIVE THIS THROUGH A CAR WASH?\""][rng.randi() % 3]
+
+func _damage_sum() -> float:
+	var d: Dictionary = car().damage
+	return float(d.front) + float(d.rear) + float(d.left) + float(d.right)
+
+func _route_len(a: Vector2, b: Vector2) -> float:
+	var r: PackedVector2Array = map().route(a, b)
+	var n := 0.0
+	for i in range(1, r.size()): n += r[i - 1].distance_to(r[i])
+	return maxf(n, a.distance_to(b))
+
+# ------------------------------------------------------------------ tow calls
+
+func _new_tow() -> void:
+	var spot := Jobs.tow_spot(map(), rng, car().sim.pos)
+	if spot.is_empty():
+		drive.hud.post("NO CALLS. EVERYBODY'S DRIVING CAREFULLY FOR ONCE.", 4.0)
+		finish(false)
+		return
+	var style := String(map().zone_at(spot.p).get("style", "rural"))
+	var spec := CarCatalog.random_traffic(rng, style)
+	target = TowTarget.new()
+	drive.ysort.add_child(target)
+	target.setup(spec, spot.p, float(spot.heading) + (PI if rng.randf() < 0.5 else 0.0), rng)
+	if rng.randf() < 0.6:
+		tow_dest = { "name": "COVINGTON AUTO", "p": Jobs.road_point(map(), Jobs.COVINGTON), "road": String(spot.road) }
+	else:
+		tow_dest = { "name": "THE NORTHSIDE IMPOUND", "p": Jobs.road_point(map(), Jobs.IMPOUND), "road": String(spot.road) }
+	drive.world.warm(spot.p, Vector2(20, 12))
+	stage = "find"
+	drive._on_dest("TOW CALL", spot.road_p)
+	drive.hud.post("DISPATCH: \"%s, %s. OWNER SAYS IT 'JUST STOPPED'.\"" % [target.label, String(spot.road)], 5.0)
+
+func _tow(dt: float) -> void:
+	var c := car()
+	if target == null: return
+	if stage == "find":
+		if c.sim.pos.distance_to(target.pos) < 25.0: stage = "hook"
+		return
+	if stage == "hook":
+		# the boom is at the back of the wrecker: line it up with either end of the car
+		var hitch := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 0.6)
+		var near := minf(hitch.distance_to(target.end(1.0)), hitch.distance_to(target.end(-1.0)))
+		if near < 4.0 and c.sim.speed() < 1.0:
+			if Input.is_action_pressed("use"):
+				_boom += dt
+				drive.hud.post("WORKING THE BOOM... %d%%" % int(minf(_boom / 1.5, 1.0) * 100.0), 0.2)
+				if _boom >= 1.5:
+					target.hook(near == hitch.distance_to(target.end(1.0)))
+					_mass_add = target.mass * 0.6
+					c.sim.spec.mass = float(c.sim.spec.mass) + _mass_add
+					_odo0 = c.sim.odometer_m
+					stage = "deliver"
+					drive._on_dest(String(tow_dest.name), tow_dest.p)
+					drive.hud.post("HOOKED. CHAINS ON. IT'S RIDING ON YOUR BACK NOW.", 4.0)
+			else:
+				_boom = 0.0
+				drive.hud.post(Hints.fmt("HOLD {use}: WORK THE BOOM"), 0.2)
+		elif c.sim.pos.distance_to(target.pos) > 60.0:
+			stage = "find"
+		return
+	if stage == "deliver":
+		var hitch2 := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 0.6)
+		target.follow(hitch2)
+		if c.sim.pos.distance_to(tow_dest.p) < 18.0 and c.sim.speed() < 1.5:
+			var km := (c.sim.odometer_m - _odo0) / 1000.0
+			var n := Jobs.tow_pay(km, Jobs.is_night(drive.sky.time_h), Jobs.bad_weather(drive.sky.weather))
+			pay(n)
+			drive.hud.post("DROPPED AT %s. %.1f KM TOWED. +$%d" % [tow_dest.name, km, n], 6.0)
+			finish(true)
+
+# ------------------------------------------------------------------ drag night
+
+func _drag(_dt: float) -> void:
+	if strip: return
+	var c := car()
+	if DragStrip.RUNWAY.has_point(c.sim.pos) and c.sim.speed() < 2.0:
+		drive.hud.post(Hints.fmt("{use}: PULL UP TO THE LINE"), 0.2)
+		if Input.is_action_just_pressed("use"): open_strip()
+
+func open_strip() -> void:
+	strip = DragStrip.new()
+	drive.get_node("HudLayer").add_child(strip)
+	strip.setup(drive)
+	strip.closed.connect(_on_strip_closed)
+	drive.hud.objective = ""
+
+func _on_strip_closed(won: int) -> void:
+	earned += won
+	if strip:
+		strip.queue_free()
+		strip = null
+	finish(true)
+
+# ------------------------------------------------------------------ markers
+
+func _draw() -> void:
+	if not active(): return
+	var p := Vector2.INF
+	var r := 14.0
+	match kind:
+		"pizza": p = shop.p if stage == "pickup" else (stops[stop_i].p if stage == "deliver" and stop_i < stops.size() else Vector2.INF)
+		"tow":
+			if stage == "deliver": p = tow_dest.p
+			r = 18.0
+		"drag":
+			if stage == "drive" and strip == null: p = DragStrip.START
+	if p == Vector2.INF: return
+	var pulse := 0.5 + 0.5 * sin(t * 4.0)
+	draw_arc(p * CarArt.PX, r * CarArt.PX, 0.0, TAU, 48, Color(1.0, 0.75, 0.2, 0.35 + 0.3 * pulse), 4.0)
+	draw_arc(p * CarArt.PX, r * 0.6 * CarArt.PX, 0.0, TAU, 32, Color(1.0, 0.75, 0.2, 0.2), 2.0)
+
+
+## A broken-down car waiting on the shoulder with its hazards on; once hooked it rides behind
+## the wrecker on its back wheels, trailing like a trailer.
+class TowTarget extends Node2D:
+	var spec: Dictionary
+	var view: CarView
+	var pos := Vector2.ZERO
+	var heading := 0.0
+	var mass := 1300.0
+	var label := "CAR"
+	var hooked := false
+	var _rear := Vector2.ZERO
+	var _flip := 1.0              # hooked by the back end: it rides facing backwards
+
+	func setup(car_spec: Dictionary, at: Vector2, h: float, rng: RandomNumberGenerator) -> void:
+		spec = car_spec
+		pos = at
+		heading = h
+		mass = float(spec.get("mass", 1300.0))
+		label = "%s %s" % [String(spec.get("make", "")).to_upper(), String(spec.get("model", "")).to_upper()]
+		view = CarView.new()
+		var hit := { "front": rng.randf() * 0.7, "rear": rng.randf() * 0.3, "left": rng.randf() * 0.4, "right": rng.randf() * 0.4 }
+		view.art = CarArt.new(spec, Color(String(spec.get("paint", "#8a8e94"))), hit, rng.randi())
+		view.blink_left = true
+		view.blink_right = true
+		add_child(view)
+		_place()
+
+	## One end of the car: +1 the nose, -1 the tail.
+	func end(side: float) -> Vector2:
+		return pos + Vector2(cos(heading), sin(heading)) * float(spec.get("length", 4.5)) * 0.5 * side
+
+	func hook(by_nose: bool) -> void:
+		hooked = true
+		view.blink_left = false
+		view.blink_right = false
+		_flip = 1.0 if by_nose else -1.0
+		var dir := Vector2(cos(heading), sin(heading)) * _flip
+		_rear = pos - dir * float(spec.get("wheelbase", 2.6)) * 0.5
+
+	## Trailer kinematics: the lifted end sits on the hitch, the wheels on the ground follow it.
+	func follow(hitch: Vector2) -> void:
+		var l := float(spec.get("length", 4.5))
+		var reach := l * 0.5 + float(spec.get("wheelbase", 2.6)) * 0.5
+		var dir := (hitch - _rear)
+		if dir.length() < 0.01: return
+		dir = dir.normalized()
+		_rear = hitch - dir * reach
+		pos = hitch - dir * l * 0.5
+		heading = dir.angle() if _flip > 0.0 else dir.angle() + PI
+		_place()
+
+	func _place() -> void:
+		position = pos * CarArt.PX
+		view.heading = heading
+
+	func sort_point() -> Vector2:
+		return global_position

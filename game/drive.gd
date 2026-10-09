@@ -41,6 +41,8 @@ var blur_rect: ColorRect
 var _save_t := 30.0
 var death: DeathScreen
 var _dying := false
+var jobs: JobRunner
+var job_board: JobBoard
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
 func _ready() -> void:
@@ -144,6 +146,15 @@ void fragment() {
 	garage.repaired.connect(_on_garage_repair)
 	garage.closed.connect(_on_garage_closed)
 	get_node("HudLayer").add_child(garage)
+	job_board = JobBoard.new()
+	job_board.size = Vector2(640, 360)
+	job_board.visible = false
+	job_board.picked.connect(_on_job_picked)
+	job_board.quit_job.connect(func(): jobs.finish(false))
+	get_node("HudLayer").add_child(job_board)
+	jobs = JobRunner.new()
+	add_child(jobs)
+	jobs.setup(self)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
 	else:
@@ -157,6 +168,7 @@ void fragment() {
 	else:
 		hud.post("COLD START. LET IT WARM UP BEFORE YOU WRING IT OUT.", 6.0)
 		hud.post(Hints.fmt("{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."), 8.0)
+		hud.post(Hints.fmt("{jobs}: GIGS. PIZZA, TOW CALLS, DRAG NIGHT."), 8.0)
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -173,6 +185,10 @@ void fragment() {
 		var vd: Node = load("res://tests/veg_demo.gd").new()
 		vd.main = self
 		add_child(vd)
+	elif OS.get_cmdline_user_args().has("--jobs-demo"):
+		var jd: Node = load("res://tests/jobs_demo.gd").new()
+		jd.main = self
+		add_child(jd)
 	elif OS.get_cmdline_user_args().has("--crash-demo"):
 		var cd: Node = load("res://tests/crash_demo.gd").new()
 		cd.main = self
@@ -309,6 +325,9 @@ func _after_death() -> void:
 		# try the drive again from the start
 		StoryState.go(get_tree())
 		return
+	if jobs.active():
+		jobs.finish(false)
+		hud.post("THE JOB'S OFF. NOBODY TIPS A WRECK.", 4.0)
 	car.dead = false
 	car.respawn()
 	_teleport(car.start_pos, car.start_heading)
@@ -365,6 +384,29 @@ func _exit_tree() -> void:
 	if StoryState.active: return
 	_store_car()
 	SaveGame.write(save)
+
+func _on_job_picked(k: String) -> void:
+	jobs.start(k)
+
+## A job can put you in a different car (the tow calls take Toby's wrecker) and give yours back.
+func job_swap_car(id: String) -> void:
+	_store_car()
+	var at := car.sim.pos
+	var h := car.sim.heading
+	_spawn_story_car(id, at, h)
+	_teleport(at, h)
+
+func job_restore_car() -> void:
+	var at := car.sim.pos
+	var h := car.sim.heading
+	car_i = -1
+	_spawn_car(int(save.get("current", 0)), at, h)
+	_teleport(at, h)
+	hud.post("TOBY TAKES THE WRECKER BACK. YOUR OWN KEYS FEEL LIGHT.", 4.0)
+
+func clear_route() -> void:
+	dest = { "name": "", "p": Vector2.ZERO }
+	gps.set_route(PackedVector2Array(), "")
 
 func _on_dest(name: String, at: Vector2) -> void:
 	dest = { "name": name, "p": at }
@@ -529,7 +571,12 @@ func _teleport(at: Vector2, heading: float) -> void:
 	world.warm(at, Vector2(40, 25))
 
 func _inputs() -> void:
+	if car: car.locked = job_board.visible or (jobs.strip != null and jobs.strip.state in ["signin", "slip"])
 	if garage.visible or death.visible or car.dead: return
+	if job_board.visible: return
+	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null:
+		job_board.open(sky, save, jobs.kind)
+		return
 	# the garage: pull up to the bay doors and stop
 	if not StoryState.active and GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:
 		hud.post(Hints.fmt("{use}: THE GARAGE"), 0.15)

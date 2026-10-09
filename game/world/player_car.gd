@@ -129,6 +129,7 @@ var _hb_down := 0.0
 var blink := 0                    # -1 left, 1 right, 0 off
 var hazards := false
 var _blink_steer := 0.0
+var locked := false               # a menu is up: hands off, ease to a stop
 
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
 ## a little stability control). SIM gives you none; ARCADE gives you more.
@@ -187,12 +188,12 @@ func _lights(dt: float, st: float) -> void:
 
 func _physics_process(dt: float) -> void:
 	if dead: return
-	var ins := _inputs(dt)
+	var ins := _inputs(dt) if not locked else [0.0, 0.3 if sim.speed() > 0.5 else 0.0, 0.0, 0.0]
 	var th: float = ins[0]
 	var br: float = ins[1]
 	var st: float = ins[2]
 	var hb: float = ins[3]
-	_lights(dt, Controls.steer_axis())
+	if not locked: _lights(dt, Controls.steer_axis())
 	throttle_in = th
 	_hb_t = 0.0 if hb > 0.5 else _hb_t + dt
 	sim.surface = city.surface_at(sim.pos)

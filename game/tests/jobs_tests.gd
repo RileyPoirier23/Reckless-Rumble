@@ -1,0 +1,73 @@
+## Evening jobs: pay, hours, the bracket rules, and that every place a job sends you is a real
+## stretch of road you can route to.  godot --headless --path game -s tests/jobs_tests.gd
+extends SceneTree
+
+var fails := 0
+
+func check(name: String, ok: bool, detail := "") -> void:
+	print(("PASS  " if ok else "FAIL  ") + name + ("  (" + detail + ")" if detail != "" else ""))
+	if not ok: fails += 1
+
+func lane(dial: float, rt: float, et: float, red := false) -> Dictionary:
+	return { "dial": dial, "rt": rt, "et": et, "red": red }
+
+func _init() -> void:
+	# pay
+	var hot := Jobs.pizza_pay(-5.0, 30.0, 1.0)
+	var late := Jobs.pizza_pay(30.0, 30.0, 1.0)
+	var mush := Jobs.pizza_pay(0.0, 30.0, 0.0)
+	check("pizza: on time and perfect pays $16", int(hot.total) == 16, str(hot))
+	check("pizza: a full grace late is just the $2 tip", int(late.tip) == 2, str(late))
+	check("pizza: a wrecked pizza gets the minimum tip", int(mush.tip) == 2, str(mush))
+	check("pizza: longer routes get more time", Jobs.pizza_limit(2000.0) > Jobs.pizza_limit(500.0) + 100.0)
+	check("tow: $90 + $2.50/km + night + weather", Jobs.tow_pay(10.0, true, true) == 215, "%d" % Jobs.tow_pay(10.0, true, true))
+	# hours
+	check("pizza opens at five and shuts at eleven", Jobs.open_now("pizza", 17.5) and not Jobs.open_now("pizza", 23.5) and not Jobs.open_now("pizza", 12.0))
+	check("drag night runs past midnight", Jobs.open_now("drag", 1.0) and Jobs.open_now("drag", 22.0) and not Jobs.open_now("drag", 12.0))
+	check("tow calls never close", Jobs.open_now("tow", 3.0) and Jobs.open_now("tow", 15.0))
+	# bracket rules
+	var a := lane(9.50, 0.20, 9.55)
+	var b := lane(11.00, 0.30, 11.05)
+	check("handicap start: the closer run to the dial wins", int(Jobs.drag_winner(a, b).lane) == 0, str(Jobs.drag_winner(a, b)))
+	check("breaking out loses", int(Jobs.drag_winner(lane(9.5, 0.1, 9.40), lane(11.0, 0.5, 11.3)).lane) == 1)
+	check("a red light loses", int(Jobs.drag_winner(lane(9.5, -0.01, 9.5, true), lane(11.0, 0.9, 12.0)).lane) == 1)
+	check("both break out: the smaller breakout wins", int(Jobs.drag_winner(lane(9.5, 0.1, 9.40), lane(11.0, 0.1, 10.95)).lane) == 1)
+	var purse := Jobs.drag_purse(Jobs.LADDER.size() - 1)
+	check("the top of the ladder pays the most", int(purse.win) > int(Jobs.drag_purse(0).win) * 5, str(purse))
+	# the ladder's cars are real catalogue cars, getting quicker as you climb
+	var last := 99.0
+	var order_ok := true
+	for r in Jobs.LADDER:
+		if not CarCatalog.has(String(r.car)):
+			order_ok = false
+			continue
+		var e := float(Perf.estimate(CarCatalog.spec(String(r.car))).eighth)
+		if e > last + 0.3: order_ok = false
+		last = e
+	check("ladder cars exist and get quicker", order_ok)
+	var p := Perf.estimate(SaveGame.load_spec("silvio"))
+	check("perf has the eighth mile and the 60-foot", float(p.eighth) > 5.0 and float(p.sixty) > 1.0 and float(p.eighth) < float(p.quarter))
+	# places
+	var map := MapData.get_map()
+	var shop := Jobs.pizza_shop(map)
+	check("Pizza Delirium is on a road", not (shop.building as Dictionary).is_empty() and map.ground_at(shop.p) == "asphalt", str(shop.p))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var bad: Array = []
+	var n := 0
+	for i in 6:
+		for s in Jobs.addresses(map, rng, shop.p, 3):
+			n += 1
+			if map.ground_at(s.p) != "asphalt" or map.route(shop.p, s.p).size() < 2: bad.append(s.label)
+	check("pizza addresses are on roads and routable", n >= 12 and bad.is_empty(), "%d addresses, bad %s" % [n, str(bad)])
+	var bad_tow: Array = []
+	for i in 12:
+		var spot := Jobs.tow_spot(map, rng, Jobs.COVINGTON)
+		if spot.is_empty() or map.route(Jobs.COVINGTON, spot.road_p).size() < 2 or not map.ground_at(spot.road_p) in ["asphalt", "gravel"]:
+			bad_tow.append(spot.get("road", "none"))
+	check("tow calls are beside routable roads", bad_tow.is_empty(), str(bad_tow))
+	check("the tow drop-offs are on roads", map.ground_at(Jobs.road_point(map, Jobs.COVINGTON)) == "asphalt" and map.ground_at(Jobs.road_point(map, Jobs.IMPOUND)) == "asphalt")
+	check("runway 7 holds an eighth mile plus room to stop", DragStrip.RUNWAY.has_point(DragStrip.START) and DragStrip.RUNWAY.has_point(Vector2(DragStrip.LINE_X + DragStrip.EIGHTH + 100.0, 1016.0)))
+	check("the strip is paved", map.ground_at(DragStrip.START) == "asphalt" and map.ground_at(Vector2(DragStrip.LINE_X + DragStrip.EIGHTH, 1016.0)) == "asphalt")
+	print("\n%d failed" % fails)
+	quit(1 if fails > 0 else 0)

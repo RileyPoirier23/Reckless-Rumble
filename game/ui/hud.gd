@@ -105,7 +105,7 @@ func _draw() -> void:
 			Hints.fmt("SHIFT {shift}  AUTO/MANUAL {gearbox}  TOW HOME {reset}"),
 			Hints.fmt("BLINKERS {blinkers}  HAZARDS {hazards}"),
 			Hints.fmt("HIGH BEAMS {high_beams} (HOLD TO FLASH)  HORN {horn}"),
-			Hints.fmt("MAP {map}  USE (GARAGE) {use}"),
+			Hints.fmt("MAP {map}  GIGS {jobs}  USE {use}"),
 			Hints.fmt("HIDE THIS {help}  MENU {menu_back}"),
 		]
 		for i in lines.size():

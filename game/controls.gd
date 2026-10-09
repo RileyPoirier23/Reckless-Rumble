@@ -26,6 +26,7 @@ static func setup() -> void:
 		"high_beams": [KEY_B, JOY_BUTTON_DPAD_UP],
 		"reset": [KEY_R],
 		"map": [KEY_TAB, KEY_M, JOY_BUTTON_BACK],
+		"jobs": [KEY_J, JOY_BUTTON_RIGHT_STICK],
 		"help": [KEY_F1, JOY_BUTTON_START],
 		"inspect": [KEY_I, JOY_BUTTON_Y],
 		"click": [JOY_BUTTON_A],
