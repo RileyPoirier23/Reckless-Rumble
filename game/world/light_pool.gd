@@ -104,8 +104,8 @@ func animate(dt: float) -> void:
 		if t.has("sweep"): col = Color.from_hsv(fmod(_t * 0.12 + seed * 0.2, 1.0), 0.75, 1.0)
 		if t.has("rail"): e *= 1.0 if (int(_t * 2.0) + seed) % 2 == 0 else 0.0
 		if t.has("signal"):
-			# 22 s green, 3 s amber, 25 s red, offset per intersection
-			var ph := fmod(_t + seed * 7.0, 50.0)
-			col = Color(0.2, 1.0, 0.45) if ph < 22.0 else (Color(1.0, 0.7, 0.1) if ph < 25.0 else Color(1.0, 0.12, 0.1))
+			# the same cycle the traffic obeys (the main road's lights)
+			var st := Traffic.signal_state(Traffic.signal_offset(src.get("j", src.p)), 0)
+			col = Color(0.2, 1.0, 0.45) if st == "green" else (Color(1.0, 0.7, 0.1) if st == "amber" else Color(1.0, 0.12, 0.1))
 		l.color = col
 		l.energy = e

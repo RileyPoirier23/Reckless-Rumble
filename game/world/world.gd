@@ -283,7 +283,7 @@ class Chunk extends Node2D:
 	var signals: Array[Node2D] = []
 
 	func build() -> void:
-		for spec in [["ground", -30], ["water", -29], ["base", -28], ["road", -27], ["marks", -26], ["rail", -25], ["weather", -24], ["canopy", 4]]:
+		for spec in [["ground", -4000], ["water", -3999], ["base", -3998], ["road", -3997], ["marks", -3996], ["rail", -3995], ["weather", -3994], ["canopy", 3000]]:
 			var L := Layer.new()
 			L.chunk = self
 			L.kind = spec[0]

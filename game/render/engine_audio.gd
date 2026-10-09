@@ -13,6 +13,11 @@ var _lp := 0.0
 var _rng := RandomNumberGenerator.new()
 var _pb: AudioStreamGeneratorPlayback
 var throttle := 0.0
+var horn := false
+var _horn_a := 0.0
+var _horn_b := 0.0
+var _horn_env := 0.0
+var tick := 0.0               # blinker relay clicks (set to 1.0 for one click)
 
 func _ready() -> void:
 	var gen := AudioStreamGenerator.new()
@@ -47,5 +52,14 @@ func _process(_dt: float) -> void:
 		s += sin(_whistle * TAU) * 0.05 * sim.boost
 		_squeal = fmod(_squeal + (680.0 + _rng.randf() * 60.0) / RATE, 1.0)
 		s += sin(_squeal * TAU) * squeal_amp * 0.35 + (_rng.randf() - 0.5) * squeal_amp * 0.25
+		# the horn: two flat notes a third apart, like every old car's
+		_horn_env = move_toward(_horn_env, 1.0 if horn else 0.0, 1.0 / (RATE * 0.02))
+		if _horn_env > 0.0:
+			_horn_a = fmod(_horn_a + 415.0 / RATE, 1.0)
+			_horn_b = fmod(_horn_b + 520.0 / RATE, 1.0)
+			s += (signf(sin(_horn_a * TAU)) * 0.5 + signf(sin(_horn_b * TAU)) * 0.5) * 0.22 * _horn_env
+		if tick > 0.0:
+			s += (_rng.randf() - 0.5) * tick * 0.8
+			tick = maxf(0.0, tick - 1.0 / (RATE * 0.006))
 		_lp += (s - _lp) * 0.45
 		_pb.push_frame(Vector2(_lp, _lp) * 0.35)

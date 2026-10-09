@@ -37,10 +37,10 @@ const STREETS := ["MAIN ST", "ST GEORGE BLVD", "MOUNTAIN RD", "ELMWOOD DR", "HIG
 const CARS := [
 	{ "make": "HONDO", "model": "CIVIL", "len": 4.4, "wid": 1.7 },
 	{ "make": "TOYODA", "model": "COROLLY", "len": 4.5, "wid": 1.72 },
-	{ "make": "FORD", "model": "ESCAPED", "len": 4.4, "wid": 1.8 },
+	{ "make": "FJORD", "model": "ESCAPED", "len": 4.4, "wid": 1.8 },
 	{ "make": "DODGY", "model": "CHARJER", "len": 5.0, "wid": 1.9 },
 	{ "make": "CHEVROLAY", "model": "CAVA-LAME", "len": 4.6, "wid": 1.7 },
-	{ "make": "FORD", "model": "F-ONE-FIDDY", "len": 5.4, "wid": 2.0 },
+	{ "make": "FJORD", "model": "F-ONE-FIDDY", "len": 5.4, "wid": 2.0 },
 	{ "make": "SUBAROO", "model": "IMPREZZA", "len": 4.4, "wid": 1.74 },
 	{ "make": "VOLKSWAGON", "model": "GOLF", "len": 4.2, "wid": 1.78 },
 	{ "make": "DODGY", "model": "GRAND CARAVAN", "len": 5.1, "wid": 1.95 },

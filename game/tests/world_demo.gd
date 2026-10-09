@@ -22,6 +22,25 @@ const SHOTS := [
 	["airstrip_dawn", Vector2(6700, 1022), 0.0, "spring", 6.6, "fog", 2, false],
 	["map_screen", Vector2(5580, 1577), -1.57, "fall", 12.0, "clear", 0, true],
 ]
+const ROAD_SHOTS := [
+	["dt_intersection", Vector2(5970, 1445), 0.0],
+	["dt_main_mountain", Vector2(5950, 1540), 0.0],
+	["northend_grid", Vector2(5860, 1250), 0.0],
+	["rural_curve_106", Vector2(4800, 1765), 0.0],
+	["lutes_rd", Vector2(4550, 1450), 1.57],
+	["tch_mountain_interchange", Vector2(5180, 860), 0.0],
+	["tch_rural", Vector2(4000, 1400), 0.0],
+	["salisbury_center", Vector2(3440, 2130), 0.0],
+	["salisbury_bridge", Vector2(3440, 2230), 1.57],
+	["havelock_cross", Vector2(805, 2750), 0.0],
+	["gravel_backroad", Vector2(2300, 2000), 1.57],
+	["riverside_coverdale", Vector2(5800, 1786), 0.0],
+	["dieppe_wheeler", Vector2(6500, 1300), 0.0],
+	["causeway_end", Vector2(5700, 1600), 1.57],
+	["map_edge_106", Vector2(2880, 3260), 1.57],
+	["covington_corner", Vector2(5540, 1520), 0.0],
+]
+var shots: Array = SHOTS
 var i := -1
 var wait := 0.0
 
@@ -31,18 +50,22 @@ func _ready() -> void:
 	if k >= 0 and k + 1 < a.size(): out = a[k + 1]
 	DirAccess.make_dir_recursive_absolute(out)
 	main.hud.show_help = false
+	if a.has("--roads"):
+		shots = []
+		for r in ROAD_SHOTS: shots.append([r[0], r[1], r[2], "summer", 12.0, "clear", 0, false])
+		main.get_node("HudLayer").visible = false
 
 func _process(dt: float) -> void:
 	wait -= dt
 	if wait > 0.0: return
 	if i >= 0:
-		get_viewport().get_texture().get_image().save_png("%s/%02d_%s.png" % [out, i, SHOTS[i][0]])
+		get_viewport().get_texture().get_image().save_png("%s/%02d_%s.png" % [out, i, shots[i][0]])
 	i += 1
-	if i >= SHOTS.size():
+	if i >= shots.size():
 		print("WORLD DEMO DONE")
 		get_tree().quit()
 		return
-	var s: Array = SHOTS[i]
+	var s: Array = shots[i]
 	main.map_screen.visible = false
 	main._spawn_car(s[6], s[1], s[2])
 	main.sky.set_season(s[3])
@@ -59,6 +82,10 @@ func _process(dt: float) -> void:
 	if s[7]:
 		main._on_dest("HAVELOCK", Vector2(805, 2755))
 		main.map_screen.open()
-	elif i == 2 or i == 4:
+	elif shots == SHOTS and (i == 2 or i == 4):
 		main._on_dest("HAVELOCK", Vector2(805, 2755))
 	wait = 1.4
+	if shots != SHOTS:
+		main.zoom_mult = 0.5
+		main.cam.zoom = Vector2(0.5, 0.5)
+		wait = 2.5

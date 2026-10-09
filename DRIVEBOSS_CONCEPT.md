@@ -27,6 +27,11 @@ A 506Studios game, in the same creative family as **CAGE BOSS**: pixel art, R-ra
 | **Love interest** | None |
 | **Radio** | Built later, after the core game |
 | **Engine** | Godot 4 |
+| **Look** | 2D for now: sprite-stacked cars drawn by code, with a chase camera that turns with the car |
+| **Car names** | Never a real make or model. Parodies that get close (Fjord, Toyoda, Nissun, Dodgy...) |
+| **Modes** | The counter and the driving are separate modes for now. Once the story and missions are done they merge into one day: CLOCK IN at the counter, work the shift, CLOCK OUT, a cutscene, then you're in your car for the evening's driving and story |
+| **Controls** | No time, weather, season or car-switch buttons. The clock, the weather and the seasons run on their own, and you change cars at the garage |
+| **The player's avatar** | Created and named in the counter tutorial (see section 6). In the lore it's the old manager who ran the counter before Frank left the business to Leo in his will |
 
 ---
 
@@ -209,6 +214,17 @@ A day has three parts, and a week ends with bills, like CAGE BOSS.
 - **Family trust.**
 - **Stress.**
 - **Aries** (how she's doing, until Year 4). From Year 5: **days sober**.
+
+---
+
+## 5b. One day, start to finish (once the modes merge)
+
+1. **CLOCK IN** at Covington Auto: the counter shift (section 6).
+2. **CLOCK OUT:** a short cutscene: the lot at closing time, Gus locking up, a text from whoever needs Leo tonight.
+3. **The evening:** you're in your car. Story missions, side jobs, races, MarketThing meetups, or just driving.
+4. **Home:** park it in the garage. Sleep. The next day starts at the counter.
+
+The world keeps its own time the whole way through: the shift takes the morning, the evening has whatever weather the day brought, and the seasons turn every few days.
 
 ---
 
@@ -625,6 +641,30 @@ Because it's all code, everything gets the same pixel style and palette automati
 | **Google Play** | Free, extras as in-app purchases. A sideloaded APK from the website can't sell extras, so Android goes through the Play Store for this game |
 | **506clicks.ca / itch.io** | The free game, plus the supporter pack |
 | **Consoles** | Free, extras through each console's store, once approved |
+
+---
+
+## 17b. The USB job (one mission, and a fourth-wall joke)
+
+Somebody slips Leo a USB stick and a tip: a file on the old manager's computer will prove what happened to Frank.
+
+1. **The plug-in:** at the counter after closing, Leo plugs the USB into the work computer. A hacker-style file browser opens. It looks real because it is: it lists **the player's own folders** (Documents, Desktop, Downloads, Pictures) with real file and folder names, so the player searches their own computer for "the file".
+2. **The file:** it's in a folder the game itself created at install: `Documents/SuperHiddenSecretFolder/EncryptedFile`. Leo runs the decryptor (a little progress-bar minigame).
+3. **The punchline:** it opens in a Notepad parody: *"Thank you for playing my game! - 506Clicks"*. Over Leo's earbud, the person who gave him the USB: *"Thank you for playing my game? What a fucking geek."*
+4. **The cleanup:** the tip was false. The USB guy sends a script; Leo runs it and the (in-game) work computer fries: smoke, a dead fan, a very upset Gus the next morning.
+5. **The chase:** the person Leo was hacking shows up, and it turns into a car chase. That person is **the avatar the player created and named in the counter tutorial**, the old manager.
+
+**How the file browser treats the player's computer (house rules for this mission):**
+- It asks first, in plain words: *"This mission shows the names of files in your Documents, Desktop, Downloads and Pictures folders. Nothing is opened, changed, copied or sent anywhere. Skip it and you'll get a pretend computer instead."*
+- It only reads **names** (and sizes and dates), only from those folders, only on the player's machine. It never opens another file's contents, never writes anything except its own folder, and never sends anything over the network. Hidden and system folders are skipped.
+- Saying no, playing on a console, a phone or a Steam Deck in game mode, or a folder it can't read: it shows a convincing fake desktop instead, and the mission plays the same.
+- The game creates `Documents/SuperHiddenSecretFolder/EncryptedFile` on first launch (and the installer creates it too), so the file is always there to find. Uninstalling removes it.
+
+## 17c. The player's avatar
+
+In the counter tutorial, the game asks the player to make a character: a face (the CAGE BOSS portrait generator), a name and a car. The game says this is *"the avatar we'll use if we ever add online play"*. (There will be no online play. That's the joke.)
+
+In the story, that character is the **old manager**: the one who ran the counter before Frank left Covington Auto to Leo in his will. They show up in the paperwork, in Gus's grumbling, in the USB job, and at the end of it, in the car you chase.
 
 ---
 

@@ -80,7 +80,8 @@ func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	var ramp := Gradient.new()
 	ramp.colors = PackedColorArray([col, Color(col.r, col.g, col.b, 0.0)])
 	p.color_ramp = ramp
-	p.z_index = 2
+	p.z_index = 2500
+	p.z_as_relative = false
 	get_parent().add_child.call_deferred(p)
 	return p
 
@@ -108,14 +109,83 @@ func respawn() -> void:
 	sim.gear = 1
 	position = start_pos * PX
 	damage_bucket = -1
+	for k in damage: damage[k] = 0.0
 	hud.post("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
 
-func _physics_process(dt: float) -> void:
-	var th := Input.get_action_strength("throttle")
-	var br := Input.get_action_strength("brake")
-	var st := Input.get_axis("steer_left", "steer_right")
-	if absf(st) < 0.08: st = 0.0
+var impaired := 0.0               # 0 sober .. 1 hammered: lag, sway, overcorrection
+var _st_lag := 0.0
+var _drunk_t := 0.0
+var high_beams := false
+var beam := 0.0                   # 0 = low, 1 = high (fades between)
+var lights_on := false
+var _flash_t := 0.0
+var _hb_down := 0.0
+var blink := 0                    # -1 left, 1 right, 0 off
+var hazards := false
+var _blink_steer := 0.0
+
+## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
+## a little stability control). SIM gives you none; ARCADE gives you more.
+func _inputs(dt: float) -> Array:
+	var th := Controls.trigger("throttle")
+	var br := Controls.trigger("brake")
+	var st := Controls.steer_axis()
 	var hb := Input.get_action_strength("handbrake")
+	if impaired > 0.0:
+		# drunk: the wheel answers late, the car drifts, and you overcorrect
+		_drunk_t += dt
+		_st_lag += (st - _st_lag) * (1.0 - exp(-dt / (0.06 + 0.45 * impaired)))
+		st = _st_lag * (1.0 + 0.35 * impaired) + sin(_drunk_t * 0.9) * 0.16 * impaired + sin(_drunk_t * 2.3 + 1.0) * 0.06 * impaired
+		th = clampf(th * (1.0 + 0.4 * impaired * sin(_drunk_t * 1.7)), 0.0, 1.0)
+	if sim.assist != CarSim.Assist.SIM:
+		var v := sim.speed()
+		# traction control: back off the gas while the rears spin up
+		var spin := maxf(float(sim.wheel_slip[2]), float(sim.wheel_slip[3]))
+		var tc_limit := 2.5 if sim.assist == CarSim.Assist.STREET else 1.5
+		if spin > tc_limit and v > 1.5 and hb < 0.1:
+			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)
+		# stability: steer into a slide for you, and don't let the stick over-rotate at speed
+		var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
+		var help := 0.55 if sim.assist == CarSim.Assist.STREET else 0.9
+		if v > 4.0 and absf(beta) > 0.08 and hb < 0.1:
+			st = clampf(st + beta * help * 1.6, -1.0, 1.0)
+		st *= lerpf(1.0, 0.55 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(v / 35.0, 0.0, 1.0))
+	return [th, br, st, hb]
+
+func _lights(dt: float, st: float) -> void:
+	# high beams: tap to switch, hold to flash
+	if Input.is_action_just_pressed("high_beams"): _hb_down = 0.0
+	if Input.is_action_pressed("high_beams"): _hb_down += dt
+	if Input.is_action_just_released("high_beams"):
+		if _hb_down < 0.35: high_beams = not high_beams
+	var flashing := Input.is_action_pressed("high_beams") and _hb_down >= 0.35
+	var want := 1.0 if (high_beams or flashing) else 0.0
+	beam = move_toward(beam, want, dt * 5.0)
+	var on := lights_on or flashing
+	head_light.visible = on
+	head_light.texture_scale = lerpf(1.0, 1.75, beam)
+	head_light.energy = lerpf(1.25, 1.75, beam) * (0.0 if not on else 1.0)
+	head_light.offset = Vector2(lerpf(64.0, 120.0, beam), 0)
+	view.headlights = on
+	# blinkers: they cancel themselves when you straighten out after a turn
+	if Input.is_action_just_pressed("blink_left"): blink = 0 if blink == -1 else -1
+	if Input.is_action_just_pressed("blink_right"): blink = 0 if blink == 1 else 1
+	if Input.is_action_just_pressed("hazards"): hazards = not hazards
+	if blink != 0:
+		if signf(st) == float(blink) and absf(st) > 0.5: _blink_steer = 1.0
+		elif _blink_steer > 0.0 and absf(st) < 0.15:
+			blink = 0
+			_blink_steer = 0.0
+	view.blink_left = hazards or blink == -1
+	view.blink_right = hazards or blink == 1
+
+func _physics_process(dt: float) -> void:
+	var ins := _inputs(dt)
+	var th: float = ins[0]
+	var br: float = ins[1]
+	var st: float = ins[2]
+	var hb: float = ins[3]
+	_lights(dt, Controls.steer_axis())
 	throttle_in = th
 	sim.surface = city.surface_at(sim.pos)
 	var before := sim.pos
@@ -127,15 +197,25 @@ func _physics_process(dt: float) -> void:
 	if col:
 		var n := col.get_normal()
 		var vw := sim.world_velocity()
+		var other = col.get_collider()
 		var vn := -vw.dot(n)
+		if other is TrafficCar: vn = -(vw - other.velocity_vec()).dot(n)
 		if vn > 0.0:
 			var hit_dir := -n
 			var d := hit_dir.dot(sim.forward())
 			var where := "front" if d > 0.6 else ("rear" if d < -0.6 else "side")
 			sim.impact(vn, where)
-			vw += n * vn * 1.25
+			_take_damage(-n, vn, col.get_position() / PX)
+			if other is TrafficCar:
+				# two cars: share the hit by mass (theirs is a guess: about 1,500 kg)
+				var m1 := float(spec.mass)
+				var m2 := 1500.0
+				other.hit(-n * vn * (m1 / (m1 + m2)) * 1.6, col.get_position() / PX)
+				vw += n * vn * (m2 / (m1 + m2)) * 1.3
+			else:
+				vw += n * vn * 1.25
 			var tang := vw - n * vw.dot(n)
-			vw -= tang * 0.18
+			vw -= tang * (0.18 if not (other is TrafficCar) else 0.08)
 			sim.set_world_velocity(vw)
 			sim.yaw_rate *= 0.55
 			sim.w_wheel = sim.vx / float(spec.tires.radius) if absf(sim.vx) > 0.5 else sim.w_wheel
@@ -144,6 +224,32 @@ func _physics_process(dt: float) -> void:
 	sim.pos = position / PX
 	for m in sim.messages: hud.post(m)
 	_update_look(dt, br)
+
+var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
+var _scrape_t := 0.0
+
+## Where the hit landed decides what gets bent. Glancing hits along a wall scrape the paint;
+## a hard hit on a bumper can take it right off.
+func _take_damage(dir_world: Vector2, vn: float, at: Vector2) -> void:
+	if sim.assist == CarSim.Assist.ARCADE: return
+	var local := Vector2(dir_world.dot(sim.forward()), dir_world.dot(sim.right()))
+	var amt := clampf((vn - 1.5) / 14.0, 0.0, 1.0)
+	if vn < 1.5:
+		amt = 0.004                          # a scrape: paint, not metal
+	var zone := ""
+	if absf(local.x) > absf(local.y) * 1.3: zone = "front" if local.x > 0.0 else "rear"
+	else: zone = "right" if local.y > 0.0 else "left"
+	var before: float = damage[zone]
+	damage[zone] = minf(1.0, damage[zone] + amt)
+	# the bumper lets go
+	if (zone == "front" or zone == "rear") and before < 0.65 and damage[zone] >= 0.65:
+		var sgn := 1.0 if zone == "front" else -1.0
+		var p := sim.pos + sim.forward() * sgn * float(spec.length) * 0.5
+		Debris.spawn(get_parent(), p, sim.heading, sim.world_velocity() * 0.6 + sim.forward() * sgn * 2.0, "bumper", paint, float(spec.width))
+		hud.post("THERE GOES THE %s BUMPER" % ("FRONT" if zone == "front" else "REAR"), 3.0)
+	elif amt > 0.25 and randf() < 0.4:
+		Debris.spawn(get_parent(), at, sim.heading, sim.world_velocity() * 0.5, "hubcap" if randf() < 0.3 else "glass", paint)
+	if amt >= 0.02: damage_bucket = -2         # redraw the art now
 
 func _wheel_world(u: float, v: float) -> Vector2:
 	return position + (sim.forward() * u + sim.right() * v) * PX
@@ -156,10 +262,10 @@ func _update_look(dt: float, br: float) -> void:
 	view.reversing = sim.gear < 0
 	view.wheel_turn += sim.vx * dt * 3.0
 	# dents show up as the body takes damage
-	var bucket := int((1.0 - sim.body) * 10.0)
+	var bucket := int((damage.front + damage.rear + damage.left + damage.right) * 12.0)
 	if bucket != damage_bucket:
 		damage_bucket = bucket
-		view.art = CarArt.new(spec, paint, (1.0 - sim.body) * 0.9, 3)
+		view.art = CarArt.new(spec, paint, damage, 3)
 	# tire marks and smoke
 	var half_wb := float(spec.wheelbase) / 2.0
 	var half_tr := float(spec.track) / 2.0

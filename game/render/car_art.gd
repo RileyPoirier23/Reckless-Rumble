@@ -18,6 +18,10 @@ var slices: Array[ImageTexture] = []
 var brake_lights: Array[ImageTexture] = []     # same size as slices; only the lit pixels
 var reverse_lights: Array[ImageTexture] = []
 var head_lights: Array[ImageTexture] = []
+var blink_left: Array[ImageTexture] = []      # turn signals, lit pixels only
+var blink_right: Array[ImageTexture] = []
+const AMBER_OFF := Color("a8661a")
+const AMBER_LIT := Color("ffb02a")
 var size: Vector2i
 
 const TIRE := Color("141414")
@@ -35,8 +39,25 @@ var body := "coupe"      # coupe, hatch, sedan, tow
 const AMBER := Color("ffa020")
 const STEEL := Color("6a6e74")
 
-func _init(spec: Dictionary, paint: Color, damage := 0.0, seed := 1) -> void:
+## Damage by side: 0..1 each. A plain number still works (spread around the car).
+var dmg := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
+var bumper_front := true
+var bumper_rear := true
+var head_ok := [true, true]     # left, right
+var tail_ok := [true, true]
+const PRIMER := Color("8a8a84")
+
+func _init(spec: Dictionary, paint: Color, damage = 0.0, seed := 1) -> void:
 	body = String(spec.get("body", "coupe"))
+	if damage is Dictionary:
+		for k in dmg: dmg[k] = clampf(float(damage.get(k, 0.0)), 0.0, 1.0)
+	else:
+		for k in dmg: dmg[k] = clampf(float(damage), 0.0, 1.0) * 0.6
+	bumper_front = dmg.front < 0.65
+	bumper_rear = dmg.rear < 0.65
+	# a hard hit on one corner takes that side's lamps out
+	head_ok = [not (dmg.front > 0.45 and dmg.left >= dmg.right * 0.8), not (dmg.front > 0.45 and dmg.right > dmg.left * 0.8)]
+	tail_ok = [not (dmg.rear > 0.45 and dmg.left >= dmg.right * 0.8), not (dmg.rear > 0.45 and dmg.right > dmg.left * 0.8)]
 	length_px = int(round(float(spec.length) * PX))
 	width_px = int(round(float(spec.width) * PX))
 	if width_px % 2 == 1: width_px += 1
@@ -49,12 +70,19 @@ func _init(spec: Dictionary, paint: Color, damage := 0.0, seed := 1) -> void:
 		var brake := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
 		var rev := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
 		var head := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
-		_slice(img, brake, rev, head, z, paint, damage, rng)
+		_bl = Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
+		_br = Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
+		_slice(img, brake, rev, head, z, paint, 0.0, rng)
 		_outline(img)
 		slices.append(ImageTexture.create_from_image(img))
 		brake_lights.append(ImageTexture.create_from_image(brake))
 		reverse_lights.append(ImageTexture.create_from_image(rev))
 		head_lights.append(ImageTexture.create_from_image(head))
+		blink_left.append(ImageTexture.create_from_image(_bl))
+		blink_right.append(ImageTexture.create_from_image(_br))
+
+var _bl: Image
+var _br: Image
 
 ## centre-relative coordinates: u along the car (+ = front), v across (+ = right side)
 func _uv(x: int, y: int) -> Vector2:
@@ -68,7 +96,7 @@ static func _rounded(u: float, v: float, hl: float, hw: float, cr: float) -> boo
 		return Vector2(au - (hl - cr), av - (hw - cr)).length() <= cr
 	return true
 
-func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Color, damage: float, rng: RandomNumberGenerator) -> void:
+func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Color, _unused: float, rng: RandomNumberGenerator) -> void:
 	var hl := length_px / 2.0 / K
 	var hw := width_px / 2.0 / K
 	var wf := wheelbase_px / 2.0 / K       # front axle at +wf, rear at -wf
@@ -108,12 +136,18 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 						if u > hl - 1.6 and absf(v) < 2.2: c = TRIM                       # grille
 						if u > hl - 1.8 and absf(v) >= 2.6 and absf(v) <= hw - 0.6:     # headlights
 							c = HEAD * 0.85
-							head.set_pixel(x, y, HEAD)
+							if head_ok[0 if v < 0.0 else 1]: head.set_pixel(x, y, HEAD)
+							else: c = Color("2a2a2e")                                     # smashed
 						if u < -hl + 1.6 and absf(v) >= 2.4 and absf(v) <= hw - 0.4:    # taillights
 							c = TAIL
-							brake.set_pixel(x, y, TAIL_LIT)
+							if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
+							else: c = Color("3a1a1a")
 							if absf(v) < 3.6: rev.set_pixel(x, y, REV_LIT)
 						if u < -hl + 1.2 and absf(v) < 1.6: c = Color("d8d4c0") * 0.8   # plate
+						# turn signals at the four corners
+						if (u > hl - 2.2 and absf(v) > hw - 1.5) or (u < -hl + 1.8 and absf(v) > hw - 1.1):
+							c = AMBER_OFF
+							(_bl if v < 0.0 else _br).set_pixel(x, y, AMBER_LIT)
 						if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = bodyc * 0.82   # arch lip
 				6:
 					if _rounded(u, v, hl - 0.6, hw - 0.6, 3.0):
@@ -135,18 +169,38 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 					elif _rounded(u, v, hl - 1.0 - k * 2.0, hw - 1.0, 3.0) and zz == 7 and (u > front or u < back):
 						c = bodyc                                                          # hood and trunk top
 				10, 11:
-					var front2 := hl * 0.30 - 4.2
-					var back2 := -hl * 0.50 + 3.4
+					var front2 := hl * cab_f - 4.2
+					var back2 := hl * cab_b + 3.4
 					if u <= front2 and u >= back2 and absf(v) <= hw - 3.0 + (1 if zz == 10 else 0):
 						c = bodyc * (1.08 if zz == 11 else 1.0)
 						if zz == 11 and v < -hw + 4.5: c = bodyc * 1.25                     # roof highlight
-			if c.a > 0.0 and damage > 0.0 and c != TIRE and c != GLASS:
-				# dents and scrapes: more of them toward the corners
-				var corner := clampf((absf(u) - hl * 0.4) / (hl * 0.6), 0.0, 1.0)
-				if rng.randf() < damage * (0.15 + 0.6 * corner):
-					c = c * (0.55 + rng.randf() * 0.25)
-					c.a = 1.0
+			if c.a > 0.0 and c != TIRE:
+				c = _damaged(c, u, v, hl, hw, zz, rng)
 			if c.a > 0.0: img.set_pixel(x, y, c)
+
+## What the crash did to this pixel: dents (darker, crumpled) toward the side that got hit,
+## paint scraped to primer along the sides, a missing bumper, cracked glass.
+func _damaged(c: Color, u: float, v: float, hl: float, hw: float, zz: int, rng: RandomNumberGenerator) -> Color:
+	var f: float = clampf((u - hl * 0.35) / (hl * 0.65), 0.0, 1.0) * dmg.front
+	var r: float = clampf((-u - hl * 0.35) / (hl * 0.65), 0.0, 1.0) * dmg.rear
+	var l: float = clampf((-v - hw * 0.35) / (hw * 0.65), 0.0, 1.0) * dmg.left
+	var rt: float = clampf((v - hw * 0.35) / (hw * 0.65), 0.0, 1.0) * dmg.right
+	var hit := f + r + l + rt
+	if hit <= 0.0: return c
+	# no bumper: the crash bar shows (thin and dark), the rest is gone
+	if (not bumper_front and u > hl - 1.4 and zz <= 3) or (not bumper_rear and u < -hl + 1.4 and zz <= 3):
+		return Color(0, 0, 0, 0) if absf(v) > hw * 0.75 or zz == 3 else Color("1a1a1e")
+	if c == GLASS or c == GLASS_HI:
+		# cracks spider out from the impact
+		if rng.randf() < hit * 0.5: return Color("c8d0d8")
+		return c
+	# side swipes: long streaks of scraped paint, down to primer
+	if (l > 0.05 or rt > 0.05) and absf(v) > hw - 1.6 and int(u * 3.0 + v) % 3 == 0 and rng.randf() < (l + rt) * 1.6:
+		return c.lerp(PRIMER, 0.7)
+	if rng.randf() < hit * 0.8:
+		var k := 0.5 + rng.randf() * 0.3
+		return Color(c.r * k, c.g * k, c.b * k, 1.0)
+	return c
 
 ## A 1-px darker rim on every slice so the stack reads as a solid, outlined shape.
 func _outline(img: Image) -> void:

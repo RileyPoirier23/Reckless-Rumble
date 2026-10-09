@@ -43,6 +43,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/world_tests.gd | tee world.log
           grep -q "^0 failed" world.log
+      - name: Traffic soak test
+        working-directory: game
+        run: |
+          timeout 900 "$GODOT" --headless --path . -- --traffic-test | tee traffic.log
+          grep -q "^0 failed" traffic.log
       - name: Counter tests
         working-directory: game
         run: |
