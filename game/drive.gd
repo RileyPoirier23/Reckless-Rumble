@@ -43,6 +43,7 @@ var death: DeathScreen
 var _dying := false
 var jobs: JobRunner
 var job_board: JobBoard
+var market: MarketRunner
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
 func _ready() -> void:
@@ -155,6 +156,10 @@ void fragment() {
 	jobs = JobRunner.new()
 	add_child(jobs)
 	jobs.setup(self)
+	market = MarketRunner.new()
+	add_child(market)
+	market.setup(self)
+	job_board.meet.connect(market.start)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
 	else:
@@ -185,6 +190,10 @@ void fragment() {
 		var vd: Node = load("res://tests/veg_demo.gd").new()
 		vd.main = self
 		add_child(vd)
+	elif OS.get_cmdline_user_args().has("--market-demo"):
+		var md: Node = load("res://tests/market_demo.gd").new()
+		md.main = self
+		add_child(md)
 	elif OS.get_cmdline_user_args().has("--jobs-demo"):
 		var jd: Node = load("res://tests/jobs_demo.gd").new()
 		jd.main = self
@@ -405,6 +414,15 @@ func _on_garage_repair(i: int) -> void:
 	if turbo and float(w.get("turbo", 1.0)) < 0.7:
 		jobs.append("TURBO REBUILD")
 		cost += 780
+	if bool(w.get("gasket", false)):
+		jobs.append("HEAD GASKET")
+		cost += 900
+	if float(w.get("engine", 1.0)) < 0.7:
+		jobs.append("ENGINE REBUILD")
+		cost += 1500
+	if w.has("tread") and float(w.tread) < 3.0:
+		jobs.append("TIRES")
+		cost += 480
 	if cost > 0:
 		if int(save.cash) >= cost:
 			save.cash = int(save.cash) - cost
@@ -436,13 +454,13 @@ func job_swap_car(id: String) -> void:
 	_spawn_story_car(id, at, h)
 	_teleport(at, h)
 
-func job_restore_car() -> void:
+func job_restore_car(msg := "TOBY TAKES THE WRECKER BACK. YOUR OWN KEYS FEEL LIGHT.") -> void:
 	var at := car.sim.pos
 	var h := car.sim.heading
 	car_i = -1
 	_spawn_car(int(save.get("current", 0)), at, h)
 	_teleport(at, h)
-	hud.post("TOBY TAKES THE WRECKER BACK. YOUR OWN KEYS FEEL LIGHT.", 4.0)
+	hud.post(msg, 4.0)
 
 func clear_route() -> void:
 	dest = { "name": "", "p": Vector2.ZERO }
@@ -611,11 +629,11 @@ func _teleport(at: Vector2, heading: float) -> void:
 	world.warm(at, Vector2(40, 25))
 
 func _inputs() -> void:
-	if car: car.locked = job_board.visible or (jobs.strip != null and jobs.strip.state in ["signin", "slip"])
+	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"])
 	if garage.visible or death.visible or car.dead: return
-	if job_board.visible: return
-	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null:
-		job_board.open(sky, save, jobs.kind)
+	if job_board.visible or market.panel_open(): return
+	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
+		job_board.open(sky, save, jobs.kind, Market.places(world.map))
 		return
 	# the garage: pull up to the bay doors and stop
 	if not StoryState.active and GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:

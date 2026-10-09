@@ -540,13 +540,20 @@ func _warn(key: String, cond: bool, text: String) -> void:
 
 ## Wear state as the save keeps it, and back.
 func wear_state() -> Dictionary:
-	return { "clutch": clutch_cond, "turbo": turbo_cond, "pads": pads_mm, "fluid": fluid }
+	var tread := 0.0
+	for t in tires: tread += float(t.tread) / 4.0
+	return { "clutch": clutch_cond, "turbo": turbo_cond, "pads": pads_mm, "fluid": fluid,
+		"engine": engine_health, "gasket": head_gasket, "tread": tread }
 
 func set_wear(w: Dictionary) -> void:
 	clutch_cond = float(w.get("clutch", 1.0))
 	turbo_cond = float(w.get("turbo", 1.0))
 	pads_mm = float(w.get("pads", 10.0))
 	fluid = float(w.get("fluid", 1.0))
+	engine_health = minf(engine_health, float(w.get("engine", 1.0)))
+	if bool(w.get("gasket", false)): head_gasket = true
+	if w.has("tread"):
+		for t in tires: t.tread = minf(float(t.tread), float(w.tread))
 
 func arcade() -> bool:
 	return assist == Assist.ARCADE
