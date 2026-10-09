@@ -142,6 +142,7 @@ void fragment() {
 	garage.visible = false
 	garage.picked.connect(_on_garage_pick)
 	garage.repaired.connect(_on_garage_repair)
+	garage.closed.connect(_on_garage_closed)
 	get_node("HudLayer").add_child(garage)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
@@ -185,7 +186,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	if car: _store_car()
 	car_i = i
 	var entry: Dictionary = save.garage[i] if i < (save.garage as Array).size() else { "id": CARS[i % CARS.size()], "paint": "", "damage": {} }
-	var spec: Dictionary = SaveGame.load_spec(entry.id)
+	var spec: Dictionary = SaveGame.car_spec(entry)
 	if String(entry.get("paint", "")) != "": spec.paint = entry.paint
 	var old_v := Vector2.ZERO
 	if car:
@@ -331,6 +332,27 @@ func _on_garage_pick(i: int) -> void:
 	var spec: Dictionary = car.spec
 	hud.post("%s %s. GUS: \"KEYS ARE IN IT.\"" % [String(spec.make).to_upper(), String(spec.model).to_upper()], 3.0)
 
+## Back out of the garage: whatever Gus bolted on or the body shop did goes on the car.
+func _on_garage_closed() -> void:
+	if car_i >= 0:
+		var at := car.sim.pos
+		var h := car.sim.heading
+		_spawn_car(car_i, at, h)
+		_teleport(at, h)
+	SaveGame.write(save)
+
+## Orders from ROCKAUTTO.CA arrive on the game clock and wait on the bench.
+func _deliveries(dt: float) -> void:
+	save.clock_h = float(save.get("clock_h", 0.0)) + dt * sky.rate
+	var left: Array = []
+	for o in save.get("orders", []):
+		if float(save.clock_h) >= float(o.arrives_h):
+			save.shelf.append(o.part)
+			hud.post("GUS: \"A BOX CAME FOR YOU. %s. IT'S ON THE BENCH.\"" % Parts.name_of(String(o.part)), 6.0)
+		else:
+			left.append(o)
+	save.orders = left
+
 func _on_garage_repair(i: int) -> void:
 	for k in save.garage[i].damage: save.garage[i].damage[k] = 0.0
 	if i == car_i:
@@ -422,6 +444,7 @@ func _process(dt: float) -> void:
 	var r := Vector2(320, 180).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	if not StoryState.active: _deliveries(dt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
 		_save_t = 30.0

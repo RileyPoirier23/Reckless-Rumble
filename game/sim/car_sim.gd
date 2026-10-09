@@ -58,7 +58,7 @@ var tires: Array = []                 # FL, FR, RL, RR: { tread, temp, flat, loc
 
 # ---- the road under the car (set by the world every step)
 var surface := "dry"                  # dry, wet, snow, ice, gravel, leaves, grass, mud, water
-var compound := "summer"              # summer, winter
+var compound := "summer"              # summer, winter, allseason, sport, semislick, drag, offroad
 
 # ---- outputs for the renderer / HUD / tests
 var rpm := 0.0
@@ -71,10 +71,16 @@ const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.36, "ice": 0.12, "grave
 const COMPOUND := {
 	"summer": { "dry": 1.05, "wet": 0.95, "snow": 0.55, "ice": 0.55, "gravel": 0.9, "leaves": 0.95, "grass": 0.95, "mud": 0.85, "water": 1.0, "cold_below": 7.0, "opt": 85.0 },
 	"winter": { "dry": 0.88, "wet": 0.97, "snow": 1.3, "ice": 1.55, "gravel": 1.0, "leaves": 1.0, "grass": 1.0, "mud": 1.1, "water": 1.0, "cold_below": -30.0, "opt": 45.0 },
+	"allseason": { "dry": 0.98, "wet": 0.93, "snow": 0.85, "ice": 0.8, "gravel": 0.95, "leaves": 0.95, "grass": 0.97, "mud": 0.92, "water": 1.0, "cold_below": -5.0, "opt": 60.0 },
+	"sport": { "dry": 1.12, "wet": 0.92, "snow": 0.45, "ice": 0.45, "gravel": 0.88, "leaves": 0.9, "grass": 0.92, "mud": 0.8, "water": 0.95, "cold_below": 10.0, "opt": 90.0 },
+	"semislick": { "dry": 1.22, "wet": 0.7, "snow": 0.3, "ice": 0.35, "gravel": 0.78, "leaves": 0.7, "grass": 0.8, "mud": 0.6, "water": 0.7, "cold_below": 15.0, "opt": 95.0 },
+	"drag": { "dry": 1.08, "wet": 0.75, "snow": 0.35, "ice": 0.35, "gravel": 0.85, "leaves": 0.8, "grass": 0.9, "mud": 0.7, "water": 0.8, "cold_below": 12.0, "opt": 90.0, "launch": 1.3, "lateral": 0.85 },
+	"offroad": { "dry": 0.92, "wet": 0.9, "snow": 1.05, "ice": 0.75, "gravel": 1.18, "leaves": 1.1, "grass": 1.2, "mud": 1.4, "water": 1.0, "cold_below": -10.0, "opt": 55.0 },
 }
 
 func _init(car_spec: Dictionary) -> void:
 	spec = car_spec
+	compound = String(spec.tires.get("compound", "summer"))
 	reset_parts()
 
 func reset_parts() -> void:
@@ -165,7 +171,7 @@ func tire_mu(i: int) -> float:
 		mu *= 0.3 + 0.7 * tread                 # but tread is what clears water and snow
 	if t.tread <= 0.6: mu *= 0.75
 	if t.flat: mu *= 0.3
-	return mu
+	return mu * float(spec.get("grip", 1.0))
 
 static func pacejka(slip: float, b: float, c: float) -> float:
 	return sin(c * atan(b * slip))
@@ -246,12 +252,26 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# --- loads, with weight transfer from the last accelerations
 	var fz_f: float = m * G * b / L - m * ax * hcg / L
 	var fz_r: float = m * G * a / L + m * ax * hcg / L
+	# downforce from wings and splitters grows with the square of speed
+	var dfz := 0.5 * 1.2 * float(spec.get("cl", 0.0)) * vx * vx
+	fz_f += dfz * 0.45
+	fz_r += dfz * 0.55
 	fz_f = maxf(fz_f, m * G * 0.12)
 	fz_r = maxf(fz_r, m * G * 0.12)
 	var lat := clampf(m * ay * hcg / track, -0.9, 0.9) * 0.5    # left/right split
 	var mu_f := (tire_mu(0) * (fz_f * 0.5 - lat * 0.5) + tire_mu(1) * (fz_f * 0.5 + lat * 0.5)) / fz_f
 	var mu_r := (tire_mu(2) * (fz_r * 0.5 - lat * 0.5) + tire_mu(3) * (fz_r * 0.5 + lat * 0.5)) / fz_r
 	mu_r *= float(spec.get("rear_grip", 1.07))     # wider rears: road cars understeer at the limit
+	# a limited-slip diff keeps both driven wheels pushing out of a corner; drag radials hook
+	# straight and wash out sideways
+	var lsd_gain := 1.0 + 0.07 * (float(spec.get("lsd", 0.3)) - 0.3) * clampf(absf(ay) / 7.0, 0.0, 1.0) * throttle
+	var comp: Dictionary = COMPOUND[compound]
+	var dt_s := String(spec.get("drivetrain", "RWD"))
+	if dt_s == "FWD": mu_f *= lsd_gain
+	else: mu_r *= lsd_gain
+	if comp.has("lateral"):
+		mu_f *= float(comp.lateral)
+		mu_r *= float(comp.lateral)
 	# --- speeds at each axle
 	var avx := absf(vx)
 	var sgn := 1.0 if vx >= 0.0 else -1.0
@@ -263,8 +283,9 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fy_f := -mu_f * fz_f * pacejka(alpha_f, 10.0, 1.9)
 	var fy_r := -mu_r * fz_r * pacejka(alpha_r, 10.0, 1.9)
 	# --- brakes (fade when hot); burnout = line lock: front brake only
-	var fade_f := 1.0 - clampf((brake_c[0] - 450.0) / 600.0, 0.0, 0.55)
-	var fade_r := 1.0 - clampf((brake_c[1] - 450.0) / 600.0, 0.0, 0.55)
+	var fade_at: float = float(spec.brakes.get("fade_c", 450.0))
+	var fade_f := 1.0 - clampf((brake_c[0] - fade_at) / 600.0, 0.0, 0.55)
+	var fade_r := 1.0 - clampf((brake_c[1] - fade_at) / 600.0, 0.0, 0.55)
 	var tb: float = float(spec.brakes.max_torque) * brake
 	var bias: float = spec.brakes.bias
 	var line_lock := throttle > 0.6 and brake > 0.6 and avx < 2.0
@@ -309,7 +330,7 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# rear slip ratio and force
 	var slip_v := w_wheel * r - vx
 	var kappa := slip_v / maxf(avx, 4.0)
-	var f_cap_r := mu_r * fz_r
+	var f_cap_r := mu_r * fz_r * float(comp.get("launch", 1.0)) / float(comp.get("lateral", 1.0))
 	var fx_r := f_cap_r * pacejka(kappa, 12.0, 1.45)
 	# combined slip: a tire that's spinning or locked has little side grip left
 	fy_r /= 1.0 + 5.0 * kappa * kappa
@@ -420,7 +441,7 @@ func arcade() -> bool:
 
 func _hurt_engine(amount: float) -> void:
 	if arcade() or engine_blown: return
-	engine_health = maxf(0.0, engine_health - amount)
+	engine_health = maxf(0.0, engine_health - amount * float(spec.get("engine_wear", 1.0)))
 	if engine_health <= 0.0:
 		engine_blown = true
 		say("ENGINE BLOWN")
