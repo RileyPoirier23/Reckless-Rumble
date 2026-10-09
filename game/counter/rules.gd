@@ -813,7 +813,7 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 			var tr: Array = d.tread
 			var pd: Array = d.pads
 			var rows := [["VIN", d.vin, "vin", d.vin]]
-			if rule_active("door", day): rows.append(["DOOR VIN", d.door, "vin", d.door])
+			if rule_active("door", day): rows.append(["DOOR", d.door, "vin", d.door])
 			rows.append_array([["ODO", "%d KM" % d.odo, "odo", d.odo],
 				["TREAD", "FL %.1f FR %.1f RL %.1f RR %.1f" % [tr[0], tr[1], tr[2], tr[3]], "measure", { "kind": "tread", "v": tr }],
 				["PADS", "FRONT %.1f  REAR %.1f" % [pd[0], pd[1]], "measure", { "kind": "pads", "v": pd }],
@@ -833,20 +833,20 @@ static func doc_rows(c: Dictionary, id: String, day: int) -> Array:
 			["PRICE", "$%d" % int(d.price), "", null], ["SOLD", date_str(d.sold), "sold", d.sold]]
 		"permit": return [["PLATE", d.plate, "plate", d.plate], ["VIN", d.vin, "vin", d.vin],
 			["FROM", date_str(d.from), "start", d.from], ["TO", date_str(d.to), "expiry", d.to]]
-		"door_inv": return [["SHOP", d.shop, "", null], ["CAR VIN", d.vin, "vin", d.vin], ["NEW DOOR", d.door, "vin", d.door],
+		"door_inv": return [["SHOP", d.shop, "", null], ["CAR VIN", d.vin, "vin", d.vin], ["DOOR", d.door, "vin", d.door],
 			["DATE", date_str(d.date), "dated", d.date], ["AMOUNT", "$%d" % int(d.amount), "", null]]
 		"cert": return [["VIN", d.vin, "vin", d.vin], ["SIGNED", d.by, "", null], ["ISSUED", date_str(d.issued), "dated", d.issued]]
 	return []
 
 ## A door's VIN (on Gus's sheet or on the body shop's invoice), not the car's.
 static func _is_door(f: Dictionary) -> bool:
-	return f.get("key", "") == "vin" and String(f.get("row", "")) in ["DOOR VIN", "NEW DOOR"]
+	return f.get("key", "") == "vin" and String(f.get("row", "")) == "DOOR"
 
 ## What a fact should say if its paper is honest: the car itself is the truth for VINs and
 ## plates, the licence for the customer's name, the ownership for the owner's.
 static func _should_be(c: Dictionary, f: Dictionary) -> Variant:
 	match String(f.key):
-		"vin": return c.sheet.door if String(f.get("row", "")) == "NEW DOOR" else c.sheet.vin
+		"vin": return c.sheet.door if _is_door(f) and f.get("doc", "") == "door_inv" else c.sheet.vin
 		"plate": return c.car.plate
 		"name": return c.licence.name
 		"owner": return c.reg.owner

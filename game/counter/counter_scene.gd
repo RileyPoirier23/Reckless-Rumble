@@ -21,7 +21,7 @@ extends Node2D
 
 const BOOTH := Rect2(0, 0, 150, 360)
 const WINDOW := Rect2(150, 0, 320, 112)
-const LOT := Rect2(150, 0, 320, 26)
+const LOT := Rect2(150, 0, 320, 32)
 const DESK := Rect2(150, 112, 320, 196)
 const TRAY := Rect2(150, 308, 320, 52)
 const WALL := Rect2(470, 0, 170, 360)
@@ -174,7 +174,7 @@ func _ready() -> void:
 	rules = CounterRules.new(506 + int(Time.get_unix_time_from_system()) % 100000)
 	rules.make_bolo()
 	car_view = CarView.new()
-	car_view.position = Vector2(WINDOW.position.x + 160, 70)
+	car_view.position = Vector2(WINDOW.position.x + 160, 72)
 	car_view.scale = Vector2(1.5, 1.5)
 	add_child(car_view)
 	if StoryState.active and String(StoryState.current().get("type", "")) == "counter":
@@ -291,8 +291,8 @@ func next_customer() -> void:
 ## Where each paper lands when it's handed over.
 func _home(id: String, n: int) -> Vector2:
 	var spots := { "work": Vector2(156, 116), "reg": Vector2(306, 118), "licence": Vector2(158, 186), "insurance": Vector2(306, 194),
-		"glovebox": Vector2(306, 194), "sheet": Vector2(226, 232), "napkin": Vector2(380, 240), "history": Vector2(196, 150),
-		"old_reg": Vector2(290, 148), "cert": Vector2(176, 236), "letter": Vector2(374, 150) }
+		"glovebox": Vector2(306, 194), "sheet": Vector2(226, 222), "napkin": Vector2(380, 240), "history": Vector2(196, 150),
+		"old_reg": Vector2(290, 148), "cert": Vector2(176, 236), "letter": Vector2(346, 150) }
 	return spots.get(id, Vector2(212 + n * 6, 136 + n * 4))
 
 func stamp(s: String) -> void:
@@ -753,7 +753,7 @@ func _doc_size(id: String) -> Vector2:
 		"napkin": return Vector2(92, 18 + wrap_text(c.napkin, 20).size() * 8)
 		"work": return Vector2(DOC_W, 14 + 4 * 9 + 18)
 		"letter": return Vector2(118, 16 + (c.letter.get("lines", []) as Array).size() * 8)
-		"history": return Vector2(DOC_W + 8, 14 + _rows(id).size() * 9 + 4)
+		"history": return Vector2(DOC_W + 12, 14 + _rows(id).size() * 9 + 4)
 	return Vector2(DOC_W, 14 + _rows(id).size() * 9 + 4)
 
 func _row_x(id: String) -> float:
@@ -801,7 +801,7 @@ func _draw_doc(d: Dictionary) -> void:
 	PixelFont.draw(self, r.position + Vector2(4, 3), _title(d.id), PAPER_INK)
 	var rows := _rows(d.id)
 	var x0 := _row_x(d.id)
-	var lw := 44.0 if d.id == "history" else 32.0
+	var lw := 48.0 if d.id == "history" else 32.0
 	for i in rows.size():
 		var p: Vector2 = r.position + Vector2(x0, 14 + i * 9)
 		PixelFont.draw(self, p, rows[i][0], PAPER_DIM)
@@ -828,7 +828,8 @@ func _book_rows() -> Array:
 	var out: Array = []
 	if book == "notebook":
 		for n in DeskBook.notes:
-			out.append({ "key": "note", "val": n.id, "head": CounterRules.date_str(CounterRules.today(int(n.day))), "lines": wrap_text(String(n.text), 58) })
+			var d := CounterRules.today(int(n.day))
+			out.append({ "key": "note", "val": n.id, "head": "%s %d" % [CounterRules.MONTHS[d[1] - 1], d[2]], "lines": wrap_text(String(n.text), 62) })
 	else:
 		for r in DeskBook.log_rows(log_old):
 			out.append({ "key": "sticker", "val": int(r.no), "head": "%04d" % int(r.no),
@@ -844,12 +845,12 @@ func _book_layout() -> Array:
 	var fit: Array = []
 	var total := 0.0
 	for i in range(rows.size() - 1, -1, -1):
-		var h: float = (rows[i].lines as Array).size() * lh + 3.0
+		var h: float = (rows[i].lines as Array).size() * lh + (0.0 if book == "notebook" else 3.0)
 		if total + h > BOOK.size.y - 40: break
 		total += h
 		fit.push_front(rows[i])
 	for row in fit:
-		var h: float = (row.lines as Array).size() * lh + 3.0
+		var h: float = (row.lines as Array).size() * lh + (0.0 if book == "notebook" else 3.0)
 		out.append({ "r": Rect2(BOOK.position.x + 8, y, BOOK.size.x - 16, h - 2), "row": row })
 		y += h
 	return out
@@ -872,10 +873,10 @@ func _draw_book() -> void:
 	draw_rect(BOOK, paper)
 	draw_rect(BOOK, paper.darkened(0.4), false, 1.0)
 	if nb:
-		for i in 22: draw_rect(Rect2(BOOK.position.x + 2, BOOK.position.y + 24 + i * 8 + 7, BOOK.size.x - 4, 1), Color("b8c8d8"))
-		draw_rect(Rect2(BOOK.position.x + 30, BOOK.position.y, 1, BOOK.size.y), Color("d89090"))
+		for i in 19: draw_rect(Rect2(BOOK.position.x + 2, BOOK.position.y + 33 + i * 8, BOOK.size.x - 4, 1), Color("b8c8d8"))
+		draw_rect(Rect2(BOOK.position.x + 40, BOOK.position.y, 1, BOOK.size.y), Color("d89090"))
 		for i in 10: draw_circle(Vector2(BOOK.position.x + 6, BOOK.position.y + 14 + i * 18), 2.0, Color("2a2420"))
-		PixelFont.draw(self, BOOK.position + Vector2(36, 6), "LEO'S NOTEBOOK", Color("2a3a7a"), 2)
+		PixelFont.draw(self, BOOK.position + Vector2(46, 8), "LEO'S NOTEBOOK", Color("2a3a7a"), 2)
 	else:
 		draw_rect(Rect2(BOOK.position, Vector2(BOOK.size.x, 18)), Color("3a4a3a"))
 		PixelFont.draw(self, BOOK.position + Vector2(6, 6), "INSPECTION STICKERS - STATION 0117", BONE)
@@ -887,14 +888,14 @@ func _draw_book() -> void:
 	if lay.is_empty():
 		var empty := "NOTHING YET. GUS SAYS WRITE DOWN ANYTHING THAT DOESN'T SIT RIGHT. (INSPECT WHAT SOMEBODY SAYS, THEN THIS NOTEBOOK.)" if nb else "NO STICKERS ISSUED YET. APPROVE AN INSPECTION AND IT GOES IN HERE."
 		var ls := wrap_text(empty, 56)
-		for i in ls.size(): PixelFont.draw(self, BOOK.position + Vector2(36, 34 + i * 8), ls[i], PAPER_DIM)
+		for i in ls.size(): PixelFont.draw(self, BOOK.position + Vector2(46, 26 + i * 8), ls[i], PAPER_DIM)
 	for e in lay:
 		var row: Dictionary = e.row
 		var r: Rect2 = e.r
-		PixelFont.draw(self, r.position, String(row.head), Color("a8282a") if nb else PAPER_INK)
+		PixelFont.draw(self, r.position + Vector2(6 if nb else 0, 0), String(row.head), Color("a8282a") if nb else PAPER_INK)
 		var lines: Array = row.lines
-		for i in lines.size(): PixelFont.draw(self, r.position + Vector2(48 if nb else 26, i * 8), String(lines[i]), Color("2a3a7a") if nb else PAPER_INK)
-	var foot := Hints.fmt("{desk_cancel} CLOSE  {desk_tab_next} OTHER PAGES") if not nb and DeskBook.old_log else Hints.fmt("{desk_cancel} CLOSE")
+		for i in lines.size(): PixelFont.draw(self, r.position + Vector2(38 if nb else 26, i * 8), String(lines[i]), Color("2a3a7a") if nb else PAPER_INK)
+	var foot := Hints.fmt("{desk_cancel}: CLOSE  {desk_tab_next}: OTHER PAGES") if not nb and DeskBook.old_log else Hints.fmt("{desk_cancel}: CLOSE")
 	PixelFont.draw(self, Vector2(BOOK.position.x + 36, BOOK.end.y - 10), foot, PAPER_DIM)
 
 # ------------------------------------------------------------------ drawing
@@ -940,8 +941,8 @@ func _draw() -> void:
 		"revoked": _draw_revoked()
 	if tutorial and phase in ["counter", "stamping"] and served < TIPS.size():
 		var ls := wrap_text(Hints.fmt(TIPS[served]), 74)
-		_panel(Rect2(150, 26, 320, 6 + ls.size() * 8), 0.92)
-		for k in ls.size(): PixelFont.draw(self, Vector2(156, 29 + k * 8), ls[k], Color("c8c0a8"))
+		_panel(Rect2(150, 32, 320, 6 + ls.size() * 8), 0.92)
+		for k in ls.size(): PixelFont.draw(self, Vector2(156, 35 + k * 8), ls[k], Color("c8c0a8"))
 	if pad_cursor or demo: _draw_cursor()
 
 func _panel(r: Rect2, a := 0.9) -> void:
@@ -1008,7 +1009,7 @@ func _draw_booth() -> void:
 		if not (bub.clue as Dictionary).is_empty(): draw_rect(br.grow(1), Color(GOLD, 0.5 + 0.3 * sin(Time.get_ticks_msec() / 300.0)), false, 1.0)
 		var rows := _ask_rows()
 		if not rows.is_empty():
-			PixelFont.draw(self, Vector2(6, rows[0].r.position.y - 10), Hints.fmt("ASK  {desk_ask}"), GOLD)
+			PixelFont.draw(self, Vector2(6, rows[0].r.position.y - 10), Hints.fmt("{desk_ask}: ASK"), GOLD)
 			for row in rows:
 				var r: Rect2 = row.r
 				var done: bool = asked.has(row.topic)
@@ -1027,8 +1028,8 @@ func _draw_booth() -> void:
 		PixelFont.draw_centered(self, 75, 70, "CLOSED", ASH, 2)
 	if phase in ["idle", "counter", "stamping", "result"]:
 		PixelFont.draw(self, Vector2(6, 330), "SERVED %d   IN THE LOT %d" % [served, waiting.size()], ASH)
-	PixelFont.draw(self, Vector2(6, 342), Hints.fmt("{inspect} INSPECT  {desk_snap_next} NEXT THING") if Hints.pad else Hints.fmt("{desk_notebook} NOTEBOOK  {desk_log} LOG"), Color(ASH, 0.7))
-	PixelFont.draw(self, Vector2(6, 351), Hints.fmt("{menu_back} MENU"), Color(ASH, 0.6))
+	PixelFont.draw(self, Vector2(6, 342), Hints.fmt("{inspect}: INSPECT  {desk_snap_next}: NEXT THING") if Hints.pad else Hints.fmt("{desk_notebook}: NOTEBOOK  {desk_log}: LOG"), Color(ASH, 0.7))
+	PixelFont.draw(self, Vector2(6, 351), Hints.fmt("{menu_back}: MENU"), Color(ASH, 0.6))
 
 ## Halloween: whatever's over their face, drawn over the portrait at the portrait's 2x.
 func _draw_mask(kind: String) -> void:
@@ -1064,10 +1065,10 @@ func _draw_mask(kind: String) -> void:
 func _draw_window() -> void:
 	draw_rect(WINDOW, Color("6a6c70"))
 	# the bay: concrete, a drain, the lift posts, the window frame
-	draw_rect(Rect2(WINDOW.position + Vector2(0, 26), Vector2(WINDOW.size.x, 86)), Color("8a8a86"))
-	for i in 8: draw_rect(Rect2(WINDOW.position.x + i * 40 + 6, 28, 1, 82), Color("7e7e7a"))
-	draw_rect(Rect2(WINDOW.position.x + 60, 32, 6, 62), Color("c8a030"))
-	draw_rect(Rect2(WINDOW.position.x + 236, 32, 6, 62), Color("c8a030"))
+	draw_rect(Rect2(WINDOW.position + Vector2(0, 32), Vector2(WINDOW.size.x, 80)), Color("8a8a86"))
+	for i in 8: draw_rect(Rect2(WINDOW.position.x + i * 40 + 6, 34, 1, 76), Color("7e7e7a"))
+	draw_rect(Rect2(WINDOW.position.x + 60, 38, 6, 56), Color("c8a030"))
+	draw_rect(Rect2(WINDOW.position.x + 236, 38, 6, 56), Color("c8a030"))
 	_draw_lot()
 	if phase in ["counter", "stamping", "result"]:
 		var pr := _plate_rect()
@@ -1112,7 +1113,7 @@ func _draw_lot() -> void:
 func _queue_tex(w: Dictionary) -> ImageTexture:
 	var id: int = int(w.get("qid", 0))
 	if _qtex.has(id): return _qtex[id]
-	var qlen := clampi(int(float(w.car.len) * 6.6), 24, 38)
+	var qlen := clampi(int(float(w.car.len) * 8.0), 30, 46)
 	w._qlen = qlen
 	var img := PixCars.image(qlen, PixCars.body_of({ "body": w.car.get("side_body", "sedan") }), Color(w.car.paint))
 	var t := ImageTexture.create_from_image(img)
@@ -1220,7 +1221,7 @@ func _draw_board() -> void:
 		if not blk.has("rule"): col = PAPER_DIM
 		var ls: Array = blk.lines
 		for i in ls.size(): PixelFont.draw(self, blk.r.position + Vector2(1, i * 7), String(ls[i]), col)
-	if binder: PixelFont.draw(self, Vector2(BOARD.position.x + 4, BOARD.end.y - 9), Hints.fmt("{desk_tab_prev} {desk_tab_next} TURN THE TABS"), PAPER_DIM)
+	if binder: PixelFont.draw(self, Vector2(BOARD.position.x + 4, BOARD.end.y - 9), Hints.fmt("{desk_tab_prev}/{desk_tab_next}: TURN THE TABS"), PAPER_DIM)
 
 ## The shelf under the corkboard: Leo's notebook and the sticker log.
 func _draw_shelf() -> void:
@@ -1262,7 +1263,7 @@ func _draw_inspect() -> void:
 		if not pick_a.is_empty():
 			draw_rect(pick_a.r.grow(2), GOLD, false, 2.0)
 			draw_line(pick_a.r.get_center(), cur, Color(GOLD, 0.6), 1.0)
-		var tip := Hints.fmt("INSPECT: PICK SOMETHING  {desk_cancel} STOP") if pick_a.is_empty() else "COMPARE %s WITH...?" % pick_a.label
+		var tip := Hints.fmt("INSPECT: PICK SOMETHING  {desk_cancel}: STOP") if pick_a.is_empty() else "COMPARE %s WITH...?" % pick_a.label
 		if tip.length() > 74: tip = tip.substr(0, 71) + "...?"
 		var w := PixelFont.width(tip) + 10
 		_panel(Rect2(310 - w / 2.0, 113, w, 11))
@@ -1281,7 +1282,10 @@ func _draw_inspect() -> void:
 		draw_rect(Rect2(mid.x - w / 2.0, mid.y - 8, w, 16), col, false, 1.0)
 		PixelFont.draw_centered(self, mid.x, mid.y - 4, verdict.text, BONE, 2)
 		if verdict.good == false and not topics.is_empty() and phase == "counter":
-			PixelFont.draw_centered(self, mid.x, mid.y + 10, Hints.fmt("{desk_ask} ASK ABOUT IT"), GOLD)
+			var hint := Hints.fmt("{desk_ask}: ASK ABOUT IT")
+			var hw := PixelFont.width(hint) + 8
+			_panel(Rect2(mid.x - hw / 2.0, mid.y + 8, hw, 11), 0.95)
+			PixelFont.draw_centered(self, mid.x, mid.y + 11, hint, GOLD)
 
 func _brief_paras() -> Array:
 	if tutorial:
@@ -1316,7 +1320,7 @@ func _draw_brief() -> void:
 				y += 8
 	if story.is_empty() and fresh:
 		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF 4 >  {desk_tab_next}" % (week_pick + 1)), GOLD)
-	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click} OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
+	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:
 	var r := Rect2(164, 126, 292, 174)
@@ -1343,7 +1347,7 @@ func _draw_result() -> void:
 	if c.kind == "regular" and not good and result.citation == "":
 		PixelFont.draw(self, Vector2(174, y + 2), "THERE WAS NOTHING WRONG WITH THAT ONE.", ASH)
 	var last := clock >= CounterRules.SHIFT_LEN
-	PixelFont.draw_centered(self, 310, 288, Hints.fmt("{desk_click} CLOSE UP FOR THE DAY") if last else (Hints.fmt("{desk_click} NEXT!") if not waiting.is_empty() else Hints.fmt("{desk_click} BACK TO THE WINDOW")), Color(BONE, 0.7))
+	PixelFont.draw_centered(self, 310, 288, Hints.fmt("{desk_click}: CLOSE UP FOR THE DAY") if last else (Hints.fmt("{desk_click}: NEXT!") if not waiting.is_empty() else Hints.fmt("{desk_click}: BACK TO THE WINDOW")), Color(BONE, 0.7))
 
 func _draw_day_end() -> void:
 	var r := Rect2(110, 30, 420, 300)
@@ -1367,10 +1371,10 @@ func _draw_day_end() -> void:
 	PixelFont.draw(self, Vector2(136, y + 4), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
 	if not story.is_empty():
 		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
-		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click} CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
+		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
 	else:
 		var friday := posmod(day, 7) == 4 or day >= CounterRules.LAST_DAY
-		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click} PAY THE BILLS") if friday else Hints.fmt("{desk_click} GO HOME"), Color(BONE, 0.7))
+		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: PAY THE BILLS") if friday else Hints.fmt("{desk_click}: GO HOME"), Color(BONE, 0.7))
 
 func _draw_week_end() -> void:
 	var r := Rect2(80, 20, 480, 320)
@@ -1407,7 +1411,7 @@ func _draw_week_end() -> void:
 		y += 5
 	PixelFont.draw_centered(self, 320, 300, "%d CUSTOMERS. %d RIGHT CALLS. %d WARNINGS. %d CITATIONS." % [week.seen, week.correct, week.warnings, week.citations], ASH)
 	var nxt := "THE LICENCE" if DeskBook.revoked() else ("THE END OF THE MONTH" if day >= CounterRules.LAST_DAY else "NEXT WEEK")
-	PixelFont.draw_centered(self, 320, 318, Hints.fmt("{desk_click} " + nxt), Color(BONE, 0.7))
+	PixelFont.draw_centered(self, 320, 318, Hints.fmt("{desk_click}: " + nxt), Color(BONE, 0.7))
 
 func _draw_month_end() -> void:
 	_panel(Rect2(80, 40, 480, 280), 0.97)
@@ -1422,7 +1426,7 @@ func _draw_month_end() -> void:
 			PixelFont.draw(self, Vector2(100, y), l, BONE, 2)
 			y += 13
 		y += 6
-	PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_click} BACK TO THE MENU"), Color(BONE, 0.7))
+	PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_click}: BACK TO THE MENU"), Color(BONE, 0.7))
 
 ## The short fail ending: the Daily Clutch's front page.
 func _draw_revoked() -> void:
@@ -1438,7 +1442,7 @@ func _draw_revoked() -> void:
 	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS IN A MONTH. \"WE GAVE THE YOUNG MAN EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % DeskBook.citations, 70):
 		PixelFont.draw(self, Vector2(140, y), l, PAPER_INK)
 		y += 9
-	PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click} BACK TO THE MENU"), PAPER_DIM)
+	PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: BACK TO THE MENU"), PAPER_DIM)
 
 func _draw_cursor() -> void:
 	var p := cur.round()
