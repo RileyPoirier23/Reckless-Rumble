@@ -92,11 +92,13 @@ func _init() -> void:
 	var false_red := 0
 	var tried := 0
 	var note := ""
-	for day in 5:
+	#    (all of it as the desk draws it: every paper, every tab of the binder, after asking
+	#    every question there is, so the pockets and the masks are empty)
+	var stray := 0
+	for day in open_days():
 		for prob in CounterRules.PROBLEM_RULE.keys() + [""]:
 			if prob != "" and not CounterRules.rule_active(CounterRules.PROBLEM_RULE[prob], day): continue
-			if prob == "no_insurance": continue
-			for seed in 12:
+			for seed in (8 if day < 5 else 2):
 				var rr := CounterRules.new(seed * 7 + day * 101)
 				rr.make_bolo()
 				var cust := rr.customer(day, prob) if prob != "" else rr.customer(day, "")
@@ -105,23 +107,32 @@ func _init() -> void:
 				sc.rules = rr
 				sc.car_view = CarView.new()
 				sc.day = day
-				sc.line = [cust]
-				sc.idx = 0
+				sc.waiting = [cust]
 				sc.next_customer()
-				var fs := sc.fields()
-				var red := false
+				for t in CounterRules.TOPIC_LABEL: sc.ask(t)
+				var fs: Array = []
+				for ti in sc._tabs_today().size():
+					sc.tab = ti
+					for f in sc.fields(): if ti == 0 or f.key == "rule": fs.append(f)
+				var reds: Array = []
 				for a in fs.size():
 					for b in range(a + 1, fs.size()):
-						if sc.compare(fs[a], fs[b])[1] == false: red = true
+						var v := sc.compare(fs[a], fs[b])
+						if v[1] == false: reds.append(v[2])
 				tried += 1
-				if prob != "" and not red:
+				if prob != "" and not reds.has(prob) and not (prob == "no_insurance" and CounterRules.standing_topics(cust, day).has(prob)):
 					unprovable += 1
-					if note == "": note = "day %d %s" % [day, prob]
-				if prob == "" and red: false_red += 1
+					if note == "": note = "day %d %s -> %s" % [day, prob, reds]
+				if prob == "":
+					var base := String(cust.exception.get("problem", "-"))
+					for x in reds:
+						if x != base:
+							false_red += 1
+							if note == "": note = "day %d clean -> %s" % [day, reds]
 				sc.car_view.free()
 				sc.free()
-	check("inspect proves every problem", unprovable == 0, "%d/%d unprovable %s" % [unprovable, tried, note])
-	check("inspect shows no red on clean customers", false_red == 0, "%d" % false_red)
+	check("inspect proves every problem, from the desk as drawn", unprovable == 0, "%d/%d unprovable %s" % [unprovable, tried, note])
+	check("inspect shows no red on clean customers (but the discrepancy a proof covers)", false_red == 0 and stray == 0, "%d %s" % [false_red, note])
 	_desk()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
