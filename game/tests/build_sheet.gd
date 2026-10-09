@@ -16,7 +16,7 @@ func _init() -> void:
 		["STOCK", "pickup", green, { "rim": "steel", "year": 1988 }],
 		["STREET", "coupe", red, { "rim": "fivespoke", "rim_color": Color("a8783a"), "drop": 0.6, "spoiler": "ducktail", "kit": { "lip": true, "skirts": true }, "year": 1991 }],
 		["OFFROAD", "pickup", green, { "rim": "beadlock", "drop": -1.0, "rollbar": true, "lightbar": true, "spare": true, "bash": true, "year": 1988 }],
-		["DRIFT", "coupe", red, { "rim": "deepdish", "drop": 0.8, "spoiler": "gt", "fenders": "flared", "livery": "slash", "exhaust": "dual", "hood": "vented", "kit": { "lip": true }, "year": 1991 }],
+		["DRIFT", "coupe", red, { "rim": "deepdish", "drop": 0.8, "spoiler": "gt", "fenders": "flared", "livery": "slash", "exhaust": "side", "hood": "vented", "kit": { "lip": true }, "year": 1991 }],
 		["LOW", "pickup", green, { "rim": "fivespoke", "drop": 1.0, "bed": "tonneau", "smooth": true, "exhaust": "dual", "year": 1988 }],
 	]
 	for k in builds.size():

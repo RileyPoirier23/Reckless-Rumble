@@ -33,9 +33,9 @@ const BLACK_TRIM := Color("22262d")
 ## corner sharp; everything else is smoothed.
 const BODIES := {
 	"coupe": {
-		"shape": [[0.0, 0.075], [0.0, 0.15], [0.012, 0.184], [0.06, 0.2], [0.2, 0.206], [0.275, 0.214], [0.37, 0.27], [0.44, 0.296], [0.5, 0.3], [0.565, 0.295], [0.61, 0.279], [0.705, 0.212], [0.85, 0.196], [0.955, 0.18], [0.993, 0.162], [1.0, 0.13], [1.0, 0.08], [0.985, 0.055]],
-		"glass": [[0.296, 0.216], [0.375, 0.264], [0.44, 0.287], [0.5, 0.292], [0.56, 0.287], [0.6, 0.275], [0.688, 0.217]],
-		"pillar": [0.468], "doors": [0.405, 0.668], "belt": 0.206, "crease": 0.42, "wr": 0.19, "wf": 0.8, "wheel": 0.068, "lamp": "slim", "year": 1991,
+		"shape": [[0.0, 0.065], [0.0, 0.153], [0.012, 0.18], [0.03, 0.193], [0.06, 0.209], [0.15, 0.214], [0.18, 0.222], [0.235, 0.254], [0.294, 0.281], [0.353, 0.292], [0.4, 0.294], [0.5, 0.294], [0.53, 0.29], [0.56, 0.283], [0.618, 0.254], [0.676, 0.216], [0.72, 0.205], [0.8, 0.199], [0.88, 0.186], [0.94, 0.168], [0.975, 0.15], [0.995, 0.128], [1.0, 0.1], [1.0, 0.08], [0.985, 0.058]],
+		"glass": [[0.18, 0.212], [0.206, 0.23], [0.235, 0.247], [0.265, 0.261], [0.294, 0.272], [0.353, 0.282], [0.4, 0.285], [0.5, 0.285], [0.53, 0.282], [0.56, 0.275], [0.618, 0.247], [0.668, 0.21]],
+		"pillar": [0.29, 0.372], "doors": [0.372, 0.66], "belt": 0.207, "crease": 0.64, "wr": 0.233, "wf": 0.797, "wheel": 0.072, "lamp": "slim", "year": 1991,
 	},
 	"hatch": {
 		"shape": [[0.0, 0.08], [0.0, 0.2, 1], [0.012, 0.232], [0.06, 0.262], [0.14, 0.304], [0.25, 0.314], [0.55, 0.318], [0.6, 0.31], [0.7, 0.226], [0.88, 0.206], [0.98, 0.19], [1.0, 0.17], [1.0, 0.08], [0.985, 0.056]],
@@ -58,9 +58,9 @@ const BODIES := {
 		"pillar": [], "doors": [0.36, 0.64], "belt": 0.197, "crease": 0.38, "wr": 0.18, "wf": 0.79, "wheel": 0.07, "lamp": "round", "year": 1969,
 	},
 	"pickup": {
-		"shape": [[0.0, 0.1], [0.0, 0.27, 1], [0.012, 0.276], [0.43, 0.276, 1], [0.432, 0.392, 1], [0.448, 0.405], [0.6, 0.405], [0.62, 0.392], [0.69, 0.298], [0.94, 0.284], [0.99, 0.262], [1.0, 0.24], [1.0, 0.1], [0.985, 0.08]],
-		"glass": [[0.455, 0.302], [0.458, 0.39], [0.6, 0.393], [0.677, 0.302]],
-		"pillar": [0.535], "doors": [0.44, 0.67], "belt": 0.284, "crease": 0.36, "wr": 0.18, "wf": 0.8, "wheel": 0.078, "lamp": "square", "year": 1988, "bed": [0.012, 0.43],
+		"shape": [[0.0, 0.1], [0.0, 0.24, 1], [0.01, 0.249], [0.36, 0.249, 1], [0.362, 0.338, 1], [0.376, 0.352], [0.53, 0.352], [0.546, 0.343], [0.667, 0.25], [0.95, 0.233], [0.99, 0.222], [1.0, 0.205], [1.0, 0.1], [0.985, 0.088]],
+		"glass": [[0.405, 0.25], [0.405, 0.334], [0.53, 0.337], [0.552, 0.333], [0.655, 0.252]],
+		"pillar": [], "doors": [0.38, 0.655], "belt": 0.247, "crease": 0.37, "wr": 0.227, "wf": 0.796, "wheel": 0.072, "lamp": "square", "year": 1988, "bed": [0.012, 0.36],
 	},
 	"tow": {
 		"shape": [[0.0, 0.1], [0.0, 0.25, 1], [0.012, 0.256], [0.42, 0.256, 1], [0.424, 0.38, 1], [0.44, 0.393], [0.6, 0.393], [0.62, 0.38], [0.69, 0.286], [0.95, 0.27], [1.0, 0.246], [1.0, 0.1], [0.985, 0.08]],
@@ -286,18 +286,23 @@ static func _paint(p: Pix, x: int, y: int, len: int, body: String, paint: Color,
 		for xx in range(maxi(0, x - 4), mini(p.w, x + len + 5)):
 			if bm.get_px(xx, yy).a <= 0.0: continue
 			if gm.get_px(xx, yy).a > 0.0: continue                 # glass is painted later
+			# solid paint: the tops catch the light, a thin bright shoulder, a dark crease with
+			# the lower body a shade darker under it, and the rocker darkest
 			var top_edge := bm.get_px(xx, yy - 1).a <= 0.0
+			var near_top := top_edge or bm.get_px(xx, yy - u - 1).a <= 0.0
 			var c: Color = pal.base
 			if float(yy) < belt_y - 0.5:
-				c = pal.hi if top_edge else pal.base                # roof and pillars
+				c = pal.hi if top_edge else (pal.base.lerp(pal.hi, 0.5) if near_top else pal.base)   # roof, deck, hood tops
 			else:
 				var t := (float(yy) - belt_y) / maxf(1.0, sill_y - belt_y)
-				if top_edge or t < 0.07: c = pal.hi.lightened(0.12)  # the shoulder line, brightest
-				elif t < 0.3: c = pal.hi                             # the upper side catching the sky
-				elif yy == crease_y: c = pal.deep                   # the body crease
-				elif yy == crease_y + 1: c = pal.hi
-				elif t > 0.74: c = pal.sh
-				if t > 0.93: c = pal.deep
+				if top_edge: c = pal.hi
+				elif near_top: c = pal.base.lerp(pal.hi, 0.5)
+				elif t < 0.06: c = pal.base.lerp(pal.hi, 0.5)        # the shoulder
+				elif yy >= crease_y and yy < crease_y + u: c = pal.deep
+				elif yy >= crease_y + u and yy < crease_y + 2 * u: c = pal.base.lerp(pal.hi, 0.35)
+				elif yy > crease_y: c = pal.base.lerp(pal.sh, 0.45)
+				if t > 0.86: c = pal.sh
+				if t > 0.96: c = pal.deep
 			p.px(xx, yy, c)
 	# --- liveries and stripes
 	_livery(p, bm, x, len, belt_y, sill_y, mods)
@@ -323,9 +328,6 @@ static func _paint(p: Pix, x: int, y: int, len: int, body: String, paint: Color,
 		for yy in range(gy0, gy1 + 1):
 			if gm.get_px(px0, yy).a > 0.0:
 				for w2 in 2 * u: p.px(px0 + w2, yy, INK)
-	if len >= 120:
-		var hx := int(x + (float(b.doors[b.doors.size() - 1]) - 0.2) * len)
-		p.rect(hx, gy1 - int(len * 0.035), 3 * u, int(len * 0.03), Color(INK, 0.55))     # a headrest
 	if dmg.get("glass", false):
 		var cx := int(x + (float(b.glass[1][0]) + 0.05) * len)
 		var cy := int(belt_y - 0.05 * len)
@@ -334,22 +336,35 @@ static func _paint(p: Pix, x: int, y: int, len: int, body: String, paint: Color,
 			p.line(cx, cy, cx + int(cos(a) * len * 0.08), cy + int(sin(a) * len * 0.05), Color("c8d4e0"))
 	# --- doors and the rear quarter: crisp shut lines, a handle on each
 	var doors: Array = b.doors
-	for k in doors.size():
-		var dx := int(x + float(doors[k]) * len)
-		if dx < x + int(rear * 0.16 * len) + 2 or dx > x + int((1.0 - front * 0.2) * len) - 2: continue
-		for yy in range(int(belt_y) + 1, int(sill_y) - u):
-			if bm.get_px(dx, yy).a > 0.0 and gm.get_px(dx, yy).a <= 0.0: p.px(dx, yy, INK)
-		if k > 0:
-			var hw := maxi(3, int(len * 0.035))
-			var hx2 := dx - maxi(4, int(len * 0.06)) - hw
-			var hy := int(belt_y + (sill_y - belt_y) * 0.2)
-			p.rect(hx2, hy, hw, u + 1, INK)
-			p.hline(hx2, hy + u + 1, hw, pal.hi)
-	if not body in ["pickup", "tow"]:
-		var fx0 := int(x + 0.12 * len)
-		p.frame(fx0, int(belt_y) + 2 * u + 1, maxi(4, int(len * 0.035)), maxi(4, int(len * 0.03)), pal.deep)
+	var door_bot := int(sill_y) - 3 * u
+	var cr := 3 * u
+	for k in range(doors.size() - 1):
+		var d0 := int(x + float(doors[k]) * len)
+		var d1 := int(x + float(doors[k + 1]) * len)
+		if d0 < x + int(rear * 0.16 * len) + 2 or d1 > x + int((1.0 - front * 0.2) * len) - 2: continue
+		var edge: Array = []
+		for yy in range(int(belt_y) + 1, door_bot - cr):
+			edge.append(Vector2i(d0, yy))
+			edge.append(Vector2i(d1 - int(float(yy - int(belt_y)) * 0.12), yy))   # the front edge leans back a touch
+		for xx in range(d0 + cr, d1 - cr - int(float(door_bot - int(belt_y)) * 0.12)):
+			edge.append(Vector2i(xx, door_bot))
+		for a in 8:
+			var an := PI * 0.5 * float(a) / 7.0
+			edge.append(Vector2i(d0 + cr - int(round(cos(an) * cr)), door_bot - cr + int(round(sin(an) * cr))))
+			var fx := d1 - int(float(door_bot - int(belt_y)) * 0.12)
+			edge.append(Vector2i(fx - cr + int(round(cos(an) * cr)), door_bot - cr + int(round(sin(an) * cr))))
+		for e in edge:
+			if bm.get_px(e.x, e.y).a > 0.0 and gm.get_px(e.x, e.y).a <= 0.0: p.px(e.x, e.y, INK)
+		# the handle, up at the back of the door
+		var hw := maxi(4, int(len * 0.04))
+		var hx2 := d0 + maxi(3, int(len * 0.03))
+		var hy := int(belt_y + (sill_y - belt_y) * 0.2)
+		p.rect(hx2, hy, hw, u + 1, pal.sh)
+		p.hline(hx2, hy, hw, INK)
+		p.hline(hx2, hy + u + 1, hw, pal.hi)
 	# --- the mirror at the base of the A-pillar
-	var mx := int(glass[glass.size() - 1].x) - 2 * u
+	var gl_last: Array = (b.glass as Array)[(b.glass as Array).size() - 1]
+	var mx := int(x + float(gl_last[0]) * len) - 3 * u
 	var mw := maxi(4, int(len * 0.04))
 	var mh := maxi(3, int(len * 0.025))
 	p.rect(mx - mw + 2, int(belt_y) - mh, mw, mh, pal.base)
@@ -359,79 +374,114 @@ static func _paint(p: Pix, x: int, y: int, len: int, body: String, paint: Color,
 	# --- bumpers, lamps, grille
 	var nose := x + int((1.0 - front * 0.2) * len) - 1
 	var tail := x + int(rear * 0.16 * len)
-	var bump_y := int(y - 0.09 * len - lift)
-	var bh := maxi(3, int(len * 0.04))
+	var tall_bumper: bool = b.has("bed") or body in ["tow", "suv", "van"]
+	var bump_y := int(y - (0.133 if tall_bumper else 0.09) * len - lift)
+	var bh := maxi(3, int(len * (0.042 if tall_bumper else 0.04)))
 	var bumper := String(dmg.get("bumper", ""))
 	var chrome: bool = year < 1976 or (body in ["pickup", "tow"] and year < 2000 and not mods.get("smooth", false))
 	var rubber: bool = not chrome and year >= 1976 and year < 1992 and not body in ["coupe"]
 	var bash: bool = mods.get("bash", false)
 	for end in [0, 1]:
 		var bw := int(len * 0.075)
-		var bx0: int = tail - u if end == 0 else nose - bw - u
+		var bx0: int = tail - 2 * u if end == 0 else nose - bw + u
 		if end == 1 and (bumper == "gone" or bash): continue
 		if end == 1 and bumper == "hang":
 			p.line(nose - 6, bump_y, nose + 4, y - int(lift) - 1, BLACK_TRIM)
 			continue
 		if chrome or rubber:
-			var bc := CHROME if chrome else BLACK_TRIM
+			var bc := Color("a7aeb6") if chrome else BLACK_TRIM
 			p.rect(bx0, bump_y, bw + 2, bh, bc)
-			p.hline(bx0, bump_y, bw + 2, bc.lightened(0.3))
-			p.hline(bx0, bump_y + bh - 1, bw + 2, bc.darkened(0.35))
+			p.hline(bx0, bump_y, bw + 2, bc.lightened(0.45))
+			p.hline(bx0, bump_y + 1, bw + 2, bc.lightened(0.2))
+			p.hline(bx0, bump_y + bh - 1, bw + 2, bc.darkened(0.4))
 			p.frame(bx0 - 1, bump_y - 1, bw + 4, bh + 2, INK)
 		else:
 			p.hline(bx0 + (2 * u if end == 0 else -u), bump_y - u, bw, INK)        # the bumper seam
 	if front < 0.5 and not bash:
 		var gh := maxi(3, int(len * 0.03))
-		var iy := int(y - 0.105 * len - lift)
-		for xx in range(nose - int(len * 0.07), nose - int(len * 0.01)):    # the lower intake, on bodywork only
+		var iy := int(y - 0.078 * len - lift)
+		for xx in range(nose - int(len * 0.055), nose - int(len * 0.012)):    # the lower intake, on bodywork only
 			if bm.get_px(xx, iy - 1).a > 0.0: p.px(xx, iy - 1, pal.sh)
 			for yy in range(iy, iy + maxi(2, gh - u)):
 				if bm.get_px(xx, yy + u).a > 0.0: p.px(xx, yy, INK)
 	var lamp_y := int(belt_y + (sill_y - belt_y) * 0.1)
 	var lights_on: bool = dmg.get("lights", mods.get("lights_on", false))
 	if front < 0.4:
-		var lc := Color("fff6d2") if lights_on else Color("e6ebee")
-		var lw := maxi(4, int(len * 0.06))
+		var lc := Color("fff6d2") if lights_on else Color("d4dbe2")
+		var lw := maxi(5, int(len * 0.065))
+		var amber := Color("f0a020")
+		# lamps sit just under the body's own top line, so they follow the nose down
 		match String(b.lamp):
-			"slim":
-				p.rect(nose - lw - u, lamp_y, lw, 2 * u + 1, lc)
-				p.hline(nose - lw - u, lamp_y + 2 * u, lw, Color("f0a020"))
-				p.frame(nose - lw - u - 1, lamp_y - 1, lw + 2, 3 * u + 2, INK)
+			"slim", "angry":
+				var lh := 2 * u + 1 if b.lamp == "slim" else u + 1
+				var lx0 := nose - lw - u
+				var ly := _top(bm, nose - lw / 3) + u + 1
+				var last := lx0
+				for xx in range(lx0, nose):
+					if bm.get_px(xx + u, ly + lh).a <= 0.0 or bm.get_px(xx, ly - 1).a <= 0.0: break
+					var lens := amber if xx < lx0 + lw / 4 else lc
+					p.vline(xx, ly, lh, lens)
+					if xx > lx0 + lw / 4: p.px(xx, ly, lc.lightened(0.5))
+					p.px(xx, ly - 1, INK)
+					p.px(xx, ly + lh, INK)
+					last = xx
+				p.vline(lx0 - 1, ly - 1, lh + 2, INK)
+				p.vline(last + 1, ly - 1, lh + 2, INK)
+				lamp_y = ly
 			"square":
-				p.rect(nose - 4 * u, lamp_y - u, 3 * u, 5 * u, lc)
-				p.frame(nose - 4 * u - 1, lamp_y - u - 1, 3 * u + 2, 5 * u + 2, INK)
-			"angry":
-				p.rect(nose - lw - u, lamp_y - u, lw, u + 1, lc)
-				p.rect(nose - 4 * u, lamp_y, 3 * u, 2 * u, lc)
-				p.frame(nose - lw - u - 1, lamp_y - u - 1, lw + 2, 3 * u + 2, INK)
+				var sy := _top(bm, nose - 2 * u) + 2 * u
+				p.rect(nose - 4 * u, sy, 4 * u, 6 * u, lc)
+				p.rect(nose - 4 * u, sy + 4 * u, 4 * u, 2 * u, amber)
+				p.hline(nose - 4 * u, sy, 4 * u, Color.WHITE)
+				p.frame(nose - 4 * u - 1, sy - 1, 4 * u + 2, 6 * u + 2, CHROME if year < 1995 else INK)
+				lamp_y = sy + u
 			"round":
-				p.disc(nose - 2 * u, lamp_y + u, 2.0 * u, lc)
-				p.ring(nose - 2 * u, lamp_y + u, 2.5 * u, CHROME)
-		p.rect(nose - int(len * 0.09), lamp_y + 2 * u, 3 * u, 2 * u, Color("f0a020"))    # corner marker
-		p.frame(nose - int(len * 0.09) - 1, lamp_y + 2 * u - 1, 3 * u + 2, 2 * u + 2, INK)
+				var ry := _top(bm, nose - 2 * u) + 3 * u
+				p.disc(nose - 2 * u, ry, 2.0 * u, lc)
+				p.ring(nose - 2 * u, ry, 2.5 * u, CHROME)
+				lamp_y = ry - u
+		# the side marker, low on the front corner
+		var mkx := nose - int(len * 0.1)
+		var mky := lamp_y + 3 * u
+		if bm.get_px(mkx, mky + u).a > 0.0:
+			p.rect(mkx, mky, 3 * u, u + 1, amber)
+			p.hline(mkx, mky - 1, 3 * u, INK)
 		if lights_on: p.glow(nose + 4, lamp_y + u, 10.0 * u, Color("fff4c8"), 0.8)
 	else:
 		p.rect(nose - 2 * u, lamp_y, 3 * u, 3 * u, WELL)
 	if rear < 0.4:
-		var tw := maxi(4, int(len * 0.035))
-		var th := maxi(5, int(len * 0.05))
-		p.rect(tail + u, lamp_y - u, tw, th, Color("c42630"))
-		p.rect(tail + u, lamp_y - u + th - 2 * u, tw, 2 * u, Color("e88a22"))
-		p.px(tail + u + 1, lamp_y, Color("ff7a7a"))
-		p.frame(tail + u - 1, lamp_y - u - 1, tw + 2, th + 2, INK)
+		# on the rear face, under the deck (tall and narrow on a pickup's bed corner)
+		var tw := maxi(4, int(len * 0.03))
+		var th := maxi(5, int(len * (0.075 if b.has("bed") else 0.045)))
+		var ty2 := _top(bm, tail + u + tw / 2) + 2 * u
+		p.rect(tail + u, ty2, tw, th, Color("c42630"))
+		p.rect(tail + u, ty2 + th - 2 * u, tw, 2 * u, Color("e88a22"))
+		p.vline(tail + u + tw - u, ty2 + u, th - 3 * u, Color("ff7a7a"))
+		p.frame(tail + u - 1, ty2 - 1, tw + 2, th + 2, INK)
 	# --- exhaust
 	var ex := String(mods.get("exhaust", "single"))
-	var ey := int(y - 0.085 * len - lift)
+	# round tips peeking out under the body: a dark stub stock, chrome for the louder ones, and
+	# side exit pipes in front of the rear wheel
+	var tip_r := maxf(1.5, 1.6 * float(u))
 	if ex == "side":
-		var sx := int(wheels[1][1] - arch_r - 4 * u)
-		p.rect(sx, ey - u, 4 * u, 2 * u, CHROME)
-		p.frame(sx - 1, ey - u - 1, 4 * u + 2, 2 * u + 2, INK)
+		var sx := int(wheels[0][1] + arch_r) + 3 * u
+		for k in 2:
+			var tx2 := sx + k * int(tip_r * 2.0 + float(u))
+			var ty3 := _bottom(bm, tx2) + int(tip_r * 0.6)
+			p.disc(tx2, ty3, tip_r + 1.0, INK)
+			p.disc(tx2, ty3, tip_r, CHROME)
+			p.disc(tx2, ty3, tip_r * 0.5, Color("2a2e36"))
+	elif ex == "single":
+		var tx := tail + 3 * u
+		p.rect(tx, _bottom(bm, tx) + 1, 3 * u, u + 1, BLACK_TRIM)
 	else:
-		var tips := 2 if ex == "dual" else (3 if ex == "quad" else 1)
+		var tips := 2 if ex == "dual" else 3
 		for k in tips:
-			var tx := tail + 2 * u + k * 4 * u
-			p.rect(tx, ey, 3 * u, 2 * u, CHROME)
-			p.frame(tx - 1, ey - 1, 3 * u + 2, 2 * u + 2, INK)
+			var tx := tail + 3 * u + k * int(tip_r * 2.0 + float(u))
+			var ty3 := _bottom(bm, tx) + int(tip_r * 0.6)
+			p.disc(tx, ty3, tip_r + 1.0, INK)
+			p.disc(tx, ty3, tip_r, CHROME)
+			p.disc(tx, ty3, tip_r * 0.5, Color("2a2e36"))
 	# --- spoilers and wings
 	var spoiler := String(mods.get("spoiler", "none"))
 	if spoiler != "none" and not body in ["pickup", "tow", "van"]:
@@ -622,6 +672,12 @@ static func _default_rim(body: String, year: int) -> String:
 		"coupe": return "mesh" if year < 1996 else "fivespoke"
 	return "fivespoke"
 
+## The highest body pixel in a column (or -1).
+static func _top(bm: Pix, xx: int) -> int:
+	for yy in bm.h:
+		if bm.get_px(xx, yy).a > 0.0: return yy
+	return -1
+
 ## The lowest body pixel in a column (or -1).
 static func _bottom(bm: Pix, xx: int) -> int:
 	for yy in range(bm.h - 1, -1, -1):
@@ -651,8 +707,9 @@ static func _ink(p: Pix, bm: Pix, u := 1) -> void:
 				p.px(xx, yy, INK)
 				if u > 1 and bm.get_px(xx, yy + 1).a > 0.0: p.px(xx, yy - 1, INK)
 
-## One wheel, in the house style: an ink ring, rubber, a sidewall, the rim with its own ring.
-## mods.tire_kind: stock, mud (knobs round the edge), lowpro (thin sidewall).
+## One wheel, in the house style: an ink ring, thick rubber with a sidewall, then the rim: a
+## polished lip round the outside and the face inside it (lace mesh, spokes, a dish, steel).
+## mods.tire_kind: stock, mud (knobby blocks round the edge), lowpro (thin sidewall).
 static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false, mods := {}, spin := 0.0) -> void:
 	var ry := r * (0.82 if flat else 1.0)
 	var oy := int(r - ry)
@@ -660,83 +717,103 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 	p.ellipse(cx, cy + oy, r + 1.0, ry + 1.0, INK)
 	p.ellipse(cx, cy + oy, r, ry, TIRE)
 	if kind == "mud":
-		for k in 18:
-			var a := TAU * float(k) / 18.0 + spin * 0.5
-			var kx := cx + int(round(cos(a) * (r - 0.5)))
-			var ky := cy + oy + int(round(sin(a) * (ry - 0.5)))
-			p.rect(kx - 1, ky - 1, 2, 2, INK)
-		p.ring(cx, cy + oy, r * 0.86, SIDEWALL)
-	else:
-		p.ring(cx, cy + oy, r * 0.88, SIDEWALL)
-	for k in 6:
-		var a2 := PI + 0.5 + float(k) * 0.1
-		p.px(cx + int(cos(a2) * r * 0.94), cy + oy + int(sin(a2) * ry * 0.94), Color("3c414b"))
-	var size := clampf(float(mods.get("rim_size", 0.7 if kind != "lowpro" else 0.8)), 0.45, 0.84)
+		# chunky tread blocks standing proud of the round, and lugs on the shoulder
+		for k in 16:
+			var a := TAU * float(k) / 16.0 + spin * 0.5
+			var kx := cx + int(round(cos(a) * (r + 0.5)))
+			var ky := cy + oy + int(round(sin(a) * (ry + 0.5)))
+			p.rect(kx - 1, ky - 1, 3, 3, TIRE)
+			p.px(kx + int(round(cos(a) * 1.5)), ky + int(round(sin(a) * 1.5)), INK)
+			var a2 := a + TAU / 32.0
+			for t in range(int(r * 0.8), int(r * 0.92) + 1):
+				p.px(cx + int(round(cos(a2) * t)), cy + oy + int(round(sin(a2) * t * ry / r)), SIDEWALL)
+	p.ring(cx, cy + oy, r * 0.93, SIDEWALL)
+	for k in 9:                                                   # the sidewall catching the light
+		var a3 := PI + 0.35 + float(k) * 0.12
+		p.px(cx + int(cos(a3) * r * 0.86), cy + oy + int(sin(a3) * ry * 0.86), Color("454b56"))
+	var size := clampf(float(mods.get("rim_size", 0.66 if kind != "lowpro" else 0.78)), 0.45, 0.84)
 	if kind == "mud": size = minf(size, 0.56)
 	var rr := r * size
 	var rc: Color = mods.get("rim_color", Color("c9ced6") if rim != "beadlock" else Color("2a2e36"))
-	if rim == "deepdish" and not mods.has("rim_color"): rc = Color("eceef2")
-	var hi := rc.lightened(0.3)
-	var lo := rc.darkened(0.38)
-	p.disc(cx, cy, rr, Color("3a3e46"))                                  # brake disc
+	if rim == "deepdish" and not mods.has("rim_color"): rc = Color("dfe3e8")
+	var hi := rc.lightened(0.35)
+	var lo := rc.darkened(0.4)
+	var dark := Color("23272e")
+	p.disc(cx, cy, rr, dark)                                       # behind the spokes
 	var cal: Color = mods.get("caliper", Color("5a5e66"))
-	p.rect(cx - int(rr * 0.25), cy - int(rr * 0.95), maxi(2, int(rr * 0.5)), maxi(2, int(rr * 0.4)), cal)
+	p.rect(cx + int(rr * 0.2), cy - int(rr * 0.75), maxi(2, int(rr * 0.35)), maxi(3, int(rr * 0.6)), cal)
 	match rim:
 		"mesh":
-			p.disc(cx, cy, rr, rc.darkened(0.12))
-			for yy in range(-int(rr), int(rr) + 1):
-				for xx in range(-int(rr), int(rr) + 1):
-					if xx * xx + yy * yy >= (rr - 1.0) * (rr - 1.0): continue
-					var ux := xx + int(spin * 3.0)
-					if posmod(ux + yy, 4) == 0 or posmod(ux - yy, 4) == 0: p.px(cx + xx, cy + yy, hi if xx + yy < 0 else rc)
-					elif posmod(ux + yy, 4) == 2 and posmod(ux - yy, 4) == 2: p.px(cx + xx, cy + yy, lo)
-			p.ring(cx, cy, rr - 0.5, hi)
+			# a lace of crossing spokes inside a polished lip
+			for k in 14:
+				var a := TAU * float(k) / 14.0 + spin
+				for side in [-1.0, 1.0]:
+					var b2: float = a + side * 0.95
+					p.line(cx + int(round(cos(a) * rr * 0.28)), cy + int(round(sin(a) * rr * 0.28)), cx + int(round(cos(b2) * rr * 0.86)), cy + int(round(sin(b2) * rr * 0.86)), rc if cos(a - 2.4) < 0.0 else hi)
+			p.disc(cx, cy, rr * 0.3, rc)
 		"fivespoke", "tenspoke", "multispoke", "turbofan", "beadlock":
 			var n: int = { "fivespoke": 5, "tenspoke": 10, "multispoke": 14, "turbofan": 12, "beadlock": 6 }[rim]
-			if rim == "beadlock": p.disc(cx, cy, rr, rc.darkened(0.2))
-			var wdt := maxi(2, int(rr / 3.2)) if rim in ["fivespoke", "beadlock"] else maxi(1, int(rr / 7.0))
+			var w0 := rr * (0.42 if n <= 6 else (0.2 if n <= 10 else 0.13))
+			var w1 := rr * (0.26 if n <= 6 else (0.13 if n <= 10 else 0.09))
 			for k in n:
 				var a := TAU * float(k) / float(n) - PI / 2.0 + spin
-				var lit := cos(a + 0.8)
-				var c := hi if lit > 0.3 else (lo if lit < -0.3 else rc)
-				for t in range(int(rr * 0.28), int(rr) + 1):
-					for w2 in range(-wdt / 2, wdt - wdt / 2):
-						p.px(cx + int(round(cos(a) * t - sin(a) * w2)), cy + int(round(sin(a) * t + cos(a) * w2)), c)
-			p.ring(cx, cy, rr, rc)
-			p.ring(cx, cy, rr - 1.0, lo)
+				var d := Vector2(cos(a), sin(a))
+				var nn := Vector2(-d.y, d.x)
+				var c0 := Vector2(cx, cy)
+				var pts := PackedVector2Array([c0 + d * rr * 0.2 + nn * w0 * 0.5, c0 + d * rr * 0.9 + nn * w1 * 0.5, c0 + d * rr * 0.9 - nn * w1 * 0.5, c0 + d * rr * 0.2 - nn * w0 * 0.5])
+				var lit := cos(a + 2.3)
+				p.poly(pts, hi if lit > 0.35 else (lo if lit < -0.35 else rc))
+				if n <= 6:                                          # a crisp edge down one side of each spoke
+					p.line(int(pts[0].x), int(pts[0].y), int(pts[1].x), int(pts[1].y), hi.lightened(0.2) if lit > -0.2 else rc)
+			p.disc(cx, cy, rr * 0.3, rc)
 			if rim == "beadlock":
-				for k in 16:
-					var a3 := TAU * float(k) / 16.0
-					p.px(cx + int(cos(a3) * (rr - 0.5)), cy + int(sin(a3) * (rr - 0.5)), CHROME)
+				p.ring(cx, cy, rr * 0.92, Color("3a3e46"))
+				for k in 14:
+					var a4 := TAU * float(k) / 14.0 + spin
+					p.px(cx + int(round(cos(a4) * rr * 0.92)), cy + int(round(sin(a4) * rr * 0.92)), CHROME)
 		"deepdish":
-			p.disc(cx, cy, rr, Color("aeb4bc"))
-			p.ring(cx, cy, rr - 0.5, Color("f6f8fa"))
+			# a wide polished lip stepping down to a small face
+			p.disc(cx, cy, rr, Color("aab0b8"))
+			p.ring(cx, cy, rr - 0.5, Color("f4f6f8"))
+			p.ring(cx, cy, rr * 0.8, Color("8a9098"))
 			p.disc(cx, cy, rr * 0.62, rc)
 			for k in 8:
-				var a4 := TAU * float(k) / 8.0 + spin
-				p.line(cx, cy, cx + int(cos(a4) * rr * 0.6), cy + int(sin(a4) * rr * 0.6), rc.darkened(0.25))
-			p.ring(cx, cy, rr * 0.62, rc.darkened(0.3))
+				var a5 := TAU * float(k) / 8.0 + spin
+				p.line(cx + int(cos(a5) * rr * 0.18), cy + int(sin(a5) * rr * 0.18), cx + int(cos(a5) * rr * 0.6), cy + int(sin(a5) * rr * 0.6), rc.darkened(0.3))
+			p.ring(cx, cy, rr * 0.62, rc.darkened(0.35))
+			for k in 4:                                              # the lip's shine
+				var a6 := PI + 0.5 + float(k) * 0.14
+				p.px(cx + int(cos(a6) * rr * 0.9), cy + int(sin(a6) * rr * 0.9), Color.WHITE)
+		"steel":
+			# a painted steel wheel: dished face, round vent holes, a hub with lug nuts
+			p.disc(cx, cy, rr, rc.darkened(0.1))
+			p.ring(cx, cy, rr * 0.82, lo)
+			p.disc(cx, cy, rr * 0.75, rc)
+			for k in 6:
+				var a7 := TAU * float(k) / 6.0 + spin
+				p.disc(cx + int(round(cos(a7) * rr * 0.58)), cy + int(round(sin(a7) * rr * 0.58)), maxf(1.0, rr * 0.11), dark)
+			p.disc(cx, cy, rr * 0.34, hi)
+			p.ring(cx, cy, rr * 0.34, lo)
+			for k in 5:
+				var a8 := TAU * float(k) / 5.0 + spin
+				p.px(cx + int(round(cos(a8) * rr * 0.22)), cy + int(round(sin(a8) * rr * 0.22)), lo)
 		"dish":
 			p.disc(cx, cy, rr, rc)
 			p.disc(cx - 1, cy - 1, rr * 0.75, hi)
 			p.disc(cx, cy, rr * 0.6, rc.darkened(0.1))
 			for k in 5:
-				var a5 := TAU * float(k) / 5.0 + spin
-				p.disc(cx + int(cos(a5) * rr * 0.4), cy + int(sin(a5) * rr * 0.4), maxf(1.0, rr * 0.08), INK)
-		"steel":
-			p.disc(cx, cy, rr, Color("d4d6da"))
-			p.disc(cx + 1, cy + 1, rr * 0.72, Color("b4b8bc"))
-			p.ring(cx, cy, rr * 0.6, Color("868a90"))
-			for k in 6:
-				var a6 := TAU * float(k) / 6.0 + spin
-				p.disc(cx + int(cos(a6) * rr * 0.78), cy + int(sin(a6) * rr * 0.78), maxf(0.8, rr * 0.08), Color("6a6e74"))
+				var a9 := TAU * float(k) / 5.0 + spin
+				p.disc(cx + int(cos(a9) * rr * 0.4), cy + int(sin(a9) * rr * 0.4), maxf(1.0, rr * 0.08), INK)
 		_:
 			p.disc(cx, cy, rr, Color("c8ccd4"))
 			p.disc(cx - 1, cy - 1, rr * 0.7, Color("e8ecf0"))
 			p.ring(cx, cy, rr * 0.75, Color("8a8e96"))
+	if not rim in ["deepdish", "steel", "dish", "hubcap"]:
+		p.ring(cx, cy, rr - 0.5, hi)                                 # the polished lip
+		p.ring(cx, cy, rr - 1.5, rc)
 	p.ring(cx, cy, rr + 0.5, INK)
-	p.disc(cx, cy, maxf(1.2, rr * 0.2), lo)
-	p.px(cx - 1, cy - 1, hi)
+	p.disc(cx, cy, maxf(1.2, rr * 0.14), lo)
+	p.px(cx - 1, cy - 1, hi.lightened(0.3))
 
 static func loose_wheel(p: Pix, cx: int, cy: int, r: float, rim: String) -> void:
 	wheel(p, cx, cy, r, rim)
