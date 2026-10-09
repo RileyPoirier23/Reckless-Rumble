@@ -2,7 +2,7 @@
 
 Two slices of the game, picked from the title screen:
 
-- **The counter:** the first month of shifts at Covington Auto, Papers, Please style.
+- **The counter:** seven weeks of shifts at Covington Auto, Papers, Please style.
 - **The lot:** free drive from Covington Auto out to Salisbury and Havelock. Four cars (a 1991 Nissun Silvio: 2.0 turbo, rear-wheel drive), two blocks of Port Rumble around Covington Auto, four seasons, day and night. Everything you see is drawn by code; nothing is an image file.
 
 These are steps 1 and 2 of the build order in [the concept](../DRIVEBOSS_CONCEPT.md): find out if the driving and the counter are fun before anything else gets built on them.
