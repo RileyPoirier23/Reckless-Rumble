@@ -146,7 +146,7 @@ func _inputs(dt: float) -> Array:
 	if sim.assist != CarSim.Assist.SIM:
 		var v := sim.speed()
 		# traction control: back off the gas while the rears spin up
-		var spin := maxf(float(sim.wheel_slip[2]), float(sim.wheel_slip[3]))
+		var spin := sim.drive_slip()
 		var tc_limit := 2.5 if sim.assist == CarSim.Assist.STREET else 1.5
 		if spin > tc_limit and v > 1.5 and hb < 0.1:
 			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)

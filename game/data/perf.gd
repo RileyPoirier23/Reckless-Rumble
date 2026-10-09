@@ -28,7 +28,7 @@ static func estimate(spec: Dictionary) -> Dictionary:
 	var th := 0.6
 	while t < 40.0:
 		# a good launch: as much throttle as the tyres will take, no more
-		var slip := maxf(float(c.wheel_slip[2]), float(c.wheel_slip[3]))
+		var slip := c.drive_slip()
 		th = clampf(th + (3.0 * dt if slip < 1.2 else -8.0 * dt), 0.25, 1.0)
 		c.step(dt, th, 0.0, 0.0, 0.0)
 		t += dt
