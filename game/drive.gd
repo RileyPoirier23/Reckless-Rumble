@@ -1,4 +1,4 @@
-## DriveBoss driving prototype: one car, two blocks of Port Rumble, four seasons, day and night.
+## The lot: free drive in two blocks of Port Rumble, four seasons, day and night.
 extends Node2D
 
 const PX := CarArt.PX
@@ -16,7 +16,7 @@ var rain_fx: CPUParticles2D
 var night := false
 
 func _ready() -> void:
-	_input_map()
+	Controls.setup()
 	city = City.new()
 	add_child(city)
 	skids = Skids.new()
@@ -82,42 +82,6 @@ func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticle
 	cam.add_child(p) if cam else add_child(p)
 	return p
 
-func _input_map() -> void:
-	var map := {
-		"throttle": [KEY_W, KEY_UP, [JOY_AXIS_TRIGGER_RIGHT, 1.0]],
-		"brake": [KEY_S, KEY_DOWN, [JOY_AXIS_TRIGGER_LEFT, 1.0]],
-		"steer_left": [KEY_A, KEY_LEFT, [JOY_AXIS_LEFT_X, -1.0]],
-		"steer_right": [KEY_D, KEY_RIGHT, [JOY_AXIS_LEFT_X, 1.0]],
-		"handbrake": [KEY_SPACE, JOY_BUTTON_B],
-		"shift_up": [KEY_E, JOY_BUTTON_RIGHT_SHOULDER, JOY_BUTTON_A],
-		"shift_down": [KEY_Q, JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_X],
-		"gearbox": [KEY_G, JOY_BUTTON_Y],
-		"reset": [KEY_R, JOY_BUTTON_BACK],
-		"night": [KEY_N, JOY_BUTTON_DPAD_UP],
-		"season": [KEY_M, JOY_BUTTON_DPAD_RIGHT],
-		"tires": [KEY_T, JOY_BUTTON_DPAD_DOWN],
-		"assist": [KEY_P, JOY_BUTTON_DPAD_LEFT],
-		"help": [KEY_F1, JOY_BUTTON_START],
-	}
-	for action in map:
-		if not InputMap.has_action(action): InputMap.add_action(action, 0.12)
-		for b in map[action]:
-			var ev: InputEvent
-			if b is Array:
-				var j := InputEventJoypadMotion.new()
-				j.axis = b[0]
-				j.axis_value = b[1]
-				ev = j
-			elif action in ["handbrake", "shift_up", "shift_down", "gearbox", "reset", "night", "season", "tires", "assist", "help"] and b < 100:
-				var jb := InputEventJoypadButton.new()
-				jb.button_index = b
-				ev = jb
-			else:
-				var k := InputEventKey.new()
-				k.physical_keycode = b
-				ev = k
-			InputMap.action_add_event(action, ev)
-
 func _apply_season(s: String) -> void:
 	city.set_season(s)
 	car.sim.set_ambient(city.ambient())
@@ -168,6 +132,7 @@ func _process(dt: float) -> void:
 		hud.post("AUTOMATIC" if car.sim.auto_gearbox else "MANUAL: E/Q OR RB/LB TO SHIFT")
 	if Input.is_action_just_pressed("help"): hud.show_help = not hud.show_help
 	if Input.is_action_just_pressed("reset"): car.respawn()
+	if Input.is_action_just_pressed("menu_back"): get_tree().change_scene_to_file("res://title.tscn")
 	if not car.sim.auto_gearbox:
 		if Input.is_action_just_pressed("shift_up"): car.sim.shift(car.sim.gear + 1)
 		if Input.is_action_just_pressed("shift_down"): car.sim.shift(car.sim.gear - 1)

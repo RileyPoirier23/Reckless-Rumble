@@ -118,7 +118,7 @@ func _draw() -> void:
 			"NIGHT  N OR D-UP     SEASON  M OR D-RIGHT",
 			"TIRES SUMMER/WINTER  T OR D-DOWN",
 			"ASSISTS SIM/STREET/ARCADE  P OR D-LEFT",
-			"HIDE THIS  F1 OR START",
+			"HIDE THIS  F1 OR START     MENU  ESC",
 		]
 		for i in lines.size():
 			PixelFont.draw(self, Vector2(212, 271 + i * 11), lines[i], BONE if i < 6 else ASH)

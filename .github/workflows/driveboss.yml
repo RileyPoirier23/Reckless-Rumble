@@ -1,6 +1,6 @@
 name: DriveBoss build
 
-# Runs the driving-sim tests, then exports Windows, Linux and macOS builds of the prototype
+# Runs the driving-sim and counter tests, then exports Windows, Linux and macOS builds of the prototype
 # (Actions tab -> the run -> Artifacts).
 on:
   workflow_dispatch:
@@ -38,6 +38,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/run_tests.gd | tee test.log
           grep -q "^0 failed" test.log
+      - name: Counter tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/counter_tests.gd | tee counter.log
+          grep -q "^0 failed" counter.log
       - name: Export
         working-directory: game
         run: |
