@@ -329,6 +329,8 @@ class Autopilot extends Node:
 	var _stuck_t := 0.0                # pushing on the gas and going nowhere
 	var _back_t := 0.0                 # backing out of it
 	var _rg := 0.0                     # time spent getting out of reverse
+	var _blocked_t := 0.0              # sat behind a car that isn't moving
+	var _pass_t := 0.0                 # going round it
 
 	func _physics_process(dt: float) -> void:
 		var car: PlayerCar = drive.car
@@ -357,13 +359,23 @@ class Autopilot extends Node:
 				on = q
 		var look := clampf(5.0 + v * 0.9, 6.0, 18.0)
 		var aim := _along(route, best, on, look)
+		var gap := _gap_ahead(p, fwd)
+		# a car that's sat in front of us longer than any red light (broken down, parked, stuck
+		# in a jam that isn't going anywhere): go round it on the left, like anybody would
+		_blocked_t = _blocked_t + dt if gap < 12.0 and v < 0.5 else maxf(0.0, _blocked_t - dt)
+		if _blocked_t > 20.0:
+			_blocked_t = 0.0
+			_pass_t = 5.0
+		if _pass_t > 0.0:
+			_pass_t -= dt
+			aim += fwd.orthogonal() * 3.5
+			gap = INF
 		var err := wrapf(fwd.angle_to(aim - p), -PI, PI)
 		var steer := clampf(err * 2.2, -1.0, 1.0)
 		# how fast: the corner ahead, the car ahead, the junction ahead, the end
 		var want := 13.0
 		var bend := absf(wrapf(fwd.angle_to(_along(route, best, on, 22.0) - p), -PI, PI))
 		want = lerpf(want, 5.0, clampf(bend / 1.2, 0.0, 1.0))
-		var gap := _gap_ahead(p, fwd)
 		if gap < 30.0: want = minf(want, maxf(0.0, (gap - 7.0) * 0.7))
 		var to_end := p.distance_to(o.to)
 		if to_end < 45.0: want = minf(want, maxf(0.0, sqrt(2.0 * 2.5 * maxf(0.0, to_end - float(o.radius) * 0.4))))
