@@ -330,7 +330,7 @@ func _end() -> void:
 	if not rival.is_empty():
 		var e := CarCatalog.entry(String(rival.car))
 		var nm := "%s %s" % [String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
-		if won_pinks(): drive.hud.post("%s HANDS OVER THE KEYS TO THE %s. HIS HANDS ARE SHAKING." % [String(rival.name), nm], 7.0)
+		if won_pinks(): drive.hud.post("%s HANDS OVER THE KEYS TO THE %s. THE KEYS ARE SHAKING." % [String(rival.name), nm], 7.0)
 		else: drive.hud.post("%s TAKES YOUR KEYS. MARCO: \"THAT'S PINKS, BUD.\"" % String(rival.name), 7.0)
 	elif won > 0: drive.hud.post("YOU WIN. MARCO COUNTS OUT $%d LIKE IT HURTS HIM." % won, 6.0)
 	elif finish_t.has(-1): drive.hud.post("P%d. MARCO: \"THERE'S ALWAYS NEXT FRIDAY.\"" % place(), 5.0)
