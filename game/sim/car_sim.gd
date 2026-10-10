@@ -54,6 +54,9 @@ var engine_health := 1.0
 var engine_blown := false
 var valves_bent := false
 var head_gasket := false
+var axle_broken := false        # a reverse-to-drive slam too far: the CV axle, the driveshaft or the transfer case
+var slam_roll := -1.0           # tests: what the dice say for the next slam (-1 = roll them)
+var _slam_t := 0.0              # just shifted into drive rolling backwards: the next stab of gas is a slam
 var coolant_c := 15.0
 var oil_c := 15.0
 var coolant_level := 1.0
@@ -111,6 +114,7 @@ func reset_parts() -> void:
 	engine_blown = false
 	valves_bent = false
 	head_gasket = false
+	axle_broken = false
 	coolant_c = ambient_c
 	oil_c = ambient_c
 	coolant_level = 1.0
@@ -254,6 +258,7 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 		target = clampf(steer_in, -1.0, 1.0) * float(spec.steer_lock)
 		rate = 15.0
 	steer = move_toward(steer, target, rate * dt)
+	_slam(dt, throttle)
 	var h := dt / SUBSTEPS
 	for i in SUBSTEPS:
 		_substep(h, throttle, brake, handbrake)
@@ -275,6 +280,8 @@ func shift(to: int) -> void:
 		valves_bent = true
 		_hurt_engine(0.45 + clampf((forced - float(spec.engine.limiter_rpm) - 1800.0) / 6000.0, 0.0, 0.5))
 		say("VALVES BENT: money shift to %d rpm" % int(forced))
+	# into a forward gear while still rolling backwards: the next stab of gas is a slam
+	if to > 0 and gear <= 0 and vx < -1.0: _slam_t = 1.0
 	gear = to
 	since_shift = 0.0
 	shift_timer = float(spec.gearbox.shift_time)
@@ -340,21 +347,23 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var alpha_r := atan2(v_lat_r, den)
 	var fy_f := -mu_f * fz_f * pacejka(alpha_f, 10.0, 1.9)
 	var fy_r := -mu_r * fz_r * pacejka(alpha_r, 10.0, 1.9)
-	# --- brakes (fade when hot); burnout = line lock: front brake only
+	# --- brakes (fade when hot); burnout = line lock: front brake only, so the rears spin. Only on a
+	# rear-driver: a front-driver's line lock would hold the wheels that drive, and all-wheel drive
+	# turns all four (the brakes on any of them hold the lot)
 	var fade_at: float = float(spec.brakes.get("fade_c", 450.0)) * (0.7 + 0.3 * fluid)     # wet old fluid boils early
 	var fade_f := 1.0 - clampf((brake_c[0] - fade_at) / 600.0, 0.0, 0.55)
 	var fade_r := 1.0 - clampf((brake_c[1] - fade_at) / 600.0, 0.0, 0.55)
 	var pad_k := 1.0 if pads_mm > 2.0 else (0.55 if pads_mm > 0.0 else 0.3)              # metal on metal
 	var tb: float = float(spec.brakes.max_torque) * brake * pad_k
 	var bias: float = spec.brakes.bias
-	var line_lock := throttle > 0.6 and brake > 0.6 and avx < 2.0
+	var line_lock := throttle > 0.6 and brake > 0.6 and avx < 2.0 and String(spec.get("drivetrain", "RWD")) == "RWD"
 	var tb_f := tb * bias * fade_f * (1.5 if line_lock else 1.0)
 	var tb_r := 0.0 if line_lock else tb * (1.0 - bias) * fade_r
 	tb_r += 3000.0 * handbrake
 	# --- engine, clutch, driven wheels
 	var ie: float = spec.engine.inertia
 	var iw: float = spec.tires.driven_inertia
-	var gr := ratio(gear) if shift_timer <= 0.0 else 0.0
+	var gr := ratio(gear) if shift_timer <= 0.0 and not axle_broken else 0.0
 	var eff: float = spec.gearbox.efficiency
 	var limiter: float = spec.engine.limiter_rpm
 	var e_rpm := w_eng * RPM
@@ -407,12 +416,20 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fx_r := 0.0
 	# a driven tire shares one budget between pushing and cornering: wheelspin eats side grip
 	# (power oversteer on a rear-driver, power understeer on a front-driver)
+	# all-wheel drive: the centre diff decides how the push splits. Rear-biased (a drift build) lets
+	# the rear step out under power while the front pulls it straight; front-biased stays planted
+	var k_f := 1.0
+	var k_r := 1.0
+	if drive_front and drive_rear:
+		var split := awd_split()
+		k_f = clampf((1.0 - split) * 2.0, 0.25, 1.4)
+		k_r = clampf(split * 2.0, 0.25, 1.6)
 	if drive_rear:
-		var cr := _combined(kappa, alpha_r, f_cap_r)
+		var cr := _combined(kappa * k_r, alpha_r, f_cap_r)
 		fx_r = cr.x * launch_k
 		fy_r = cr.y
 	if drive_front:
-		var cf := _combined(kappa, alpha_f, f_cap_f)
+		var cf := _combined(kappa * k_f, alpha_f, f_cap_f)
 		fx_f = cf.x * launch_k
 		fy_f = cf.y
 	# brakes on the driven shaft; ABS (STREET and ARCADE) eases off before the wheels lock
@@ -619,7 +636,7 @@ func wear_state() -> Dictionary:
 	var tread := 0.0
 	for t in tires: tread += float(t.tread) / 4.0
 	return { "clutch": clutch_cond, "turbo": turbo_cond, "pads": pads_mm, "fluid": fluid,
-		"engine": engine_health, "gasket": head_gasket, "tread": tread, "fuel": fuel_frac(), "premium": premium }
+		"engine": engine_health, "gasket": head_gasket, "tread": tread, "fuel": fuel_frac(), "premium": premium, "axle": axle_broken }
 
 func set_wear(w: Dictionary) -> void:
 	clutch_cond = float(w.get("clutch", 1.0))
@@ -629,6 +646,7 @@ func set_wear(w: Dictionary) -> void:
 	engine_health = minf(engine_health, float(w.get("engine", 1.0)))
 	if engine_health <= 0.0: engine_blown = true          # it was blown when it went in the garage
 	if bool(w.get("gasket", false)): head_gasket = true
+	axle_broken = bool(w.get("axle", false))
 	if w.has("tread"):
 		for t in tires: t.tread = minf(float(t.tread), float(w.tread))
 	fuel_l = tank_l * clampf(float(w.get("fuel", 1.0)), 0.0, 1.0)
@@ -636,6 +654,48 @@ func set_wear(w: Dictionary) -> void:
 
 func arcade() -> bool:
 	return assist == Assist.ARCADE
+
+## An all-wheel-drive car's share of the push to the rear (the centre diff; 0.5 is even).
+func awd_split() -> float:
+	return clampf(float(spec.get("awd_split", 0.5)), 0.2, 0.85)
+
+## What breaks when a slam goes wrong, by drivetrain.
+static func axle_name(drivetrain: String) -> String:
+	match drivetrain:
+		"FWD": return "CV AXLE"
+		"AWD", "4WD": return "TRANSFER CASE"
+	return "DRIVESHAFT"
+
+## The chance a reverse-to-drive slam breaks something: faster backwards, more torque at the wheels
+## and a tired clutch (which grabs instead of slipping) all make it likelier. A gentle one is free.
+static func slam_risk(back_mps: float, wheel_nm: float, clutch: float) -> float:
+	if back_mps < 1.5: return 0.0
+	return clampf((back_mps - 1.5) * 0.09 * (wheel_nm / 3000.0) * (1.6 - 0.6 * clutch), 0.0, 0.85)
+
+## The reverse-to-drive slam: shift into drive rolling backwards and stab the gas. The driven wheels
+## have to stop and spin the other way, which is a burnout on a front-driver (the only one it's
+## got) and a hammer blow to the drivetrain. Hope your car can take it.
+func _slam(dt: float, throttle: float) -> void:
+	if _slam_t <= 0.0: return
+	_slam_t -= dt
+	if gear <= 0 or vx > -0.3:
+		_slam_t = 0.0
+		return
+	if throttle < 0.6: return
+	_slam_t = 0.0
+	var back := -vx
+	var wheel_nm := curve_torque(maxf(rpm, float(spec.engine.idle_rpm) * 2.0)) * power_mult() * absf(ratio(1))
+	if arcade():
+		say("REVERSE TO DRIVE: THE FRONT TIRES LIGHT UP")
+		return
+	clutch_cond = maxf(0.0, clutch_cond - 0.025 * back)
+	var roll := slam_roll if slam_roll >= 0.0 else randf()
+	slam_roll = -1.0
+	if roll < slam_risk(back, wheel_nm, clutch_cond):
+		axle_broken = true
+		say("%s SNAPPED: CLUNK. NO DRIVE. TOW IT HOME" % axle_name(String(spec.get("drivetrain", "RWD"))))
+	else:
+		say("REVERSE TO DRIVE AT %d KM/H: IT HELD. THIS TIME" % int(back * 3.6))
 
 func _hurt_engine(amount: float) -> void:
 	if arcade() or engine_blown: return

@@ -61,7 +61,7 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	view = CarView.new()
 	view.art = CarArt.new(spec, paint, 0.0, 1, CarArt.CAR_SCALE)
 	add_child(view)
-	for i in 2:
+	for i in 4:                    # rear left, rear right, front left, front right
 		var p := _particles(Color(0.85, 0.85, 0.88, 0.55), 1.2, 60)
 		smoke.append(p)
 	steam = _particles(Color(0.95, 0.97, 1.0, 0.5), 1.6, 30)
@@ -412,6 +412,10 @@ func _update_look(dt: float, br: float) -> void:
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + 10 + side, front, fs, mark_col)
+		# a front-driver's burnout (the reverse-to-drive slam) smokes the fronts
+		smoke[2 + side].global_position = front
+		smoke[2 + side].emitting = smoke_on and float(sim.wheel_slip[side]) > 4.5 and not sim.front_locked and sim.surface != "ice"
+		smoke[2 + side].color_ramp.colors[0] = smoke[side].color_ramp.colors[0]
 	var nose := _wheel_world(float(spec.length) * CarArt.CAR_SCALE * 0.45, 0.0)
 	steam.global_position = nose
 	steam.emitting = sim.coolant_c > 112.0 or sim.head_gasket

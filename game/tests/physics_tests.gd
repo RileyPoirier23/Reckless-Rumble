@@ -142,6 +142,86 @@ func _init() -> void:
 		run(bc, 0.3, 0.0, 0.0)
 		run(bc, 2.0, 1.0, 0.0)
 		check("%s: let go and press the gas again for drive" % d, bc.gear > 0 and bc.vx > 0.3, "gear %d, %.2f m/s" % [bc.gear, bc.vx])
+	# drivetrains: a rear-driver line-locks and smokes the rears; a front-driver's and an all-wheel
+	# car's brakes hold the wheels that drive, so no brake burnout; the front-driver's burnout is the
+	# reverse-to-drive slam, which can break the CV axle
+	var bo := {}
+	for d in ["RWD", "FWD", "AWD"]:
+		var c0 := car(d)
+		c0.auto_gearbox = true
+		run(c0, 2.0, 1.0, 1.0)
+		bo[d] = [c0.w_wheel * float(c0.spec.tires.radius), c0.vx]
+	check("RWD: gas and brake together is a burnout (the rears spin, the car stays put)", float(bo.RWD[0]) > 8.0 and absf(float(bo.RWD[1])) < 0.5, "wheels %.1f m/s, car %.2f" % [float(bo.RWD[0]), float(bo.RWD[1])])
+	check("FWD: gas and brake together does nothing but strain", absf(float(bo.FWD[0])) < 1.0 and absf(float(bo.FWD[1])) < 0.3, "wheels %.1f m/s, car %.2f" % [float(bo.FWD[0]), float(bo.FWD[1])])
+	check("AWD: the brakes hold all four", absf(float(bo.AWD[0])) < 1.0 and absf(float(bo.AWD[1])) < 0.3, "wheels %.1f m/s, car %.2f" % [float(bo.AWD[0]), float(bo.AWD[1])])
+	var slam := func(back_mps: float, roll: float) -> CarSim:
+		var c1 := car("FWD")
+		c1.auto_gearbox = true
+		c1.assist = CarSim.Assist.STREET
+		for i in 120 * 6:
+			if c1.vx < -back_mps: break
+			c1.step(1.0 / 120.0, 0.0, 1.0, 0.0, 0.0)        # in reverse the brake pedal is the gas
+		c1.shift(1)
+		c1.slam_roll = roll
+		return c1
+	var ok_slam: CarSim = slam.call(4.0, 0.99)
+	var clutch0 := ok_slam.clutch_cond
+	var front_spin := 0.0
+	for i in 120:
+		ok_slam.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+		front_spin = maxf(front_spin, float(ok_slam.wheel_slip[0]))
+	run(ok_slam, 2.0, 1.0)
+	check("FWD: reverse to drive and stab the gas: the fronts light up", front_spin > 6.0 and not ok_slam.axle_broken and ok_slam.clutch_cond < clutch0 and ok_slam.vx > 2.0,
+		"front slip %.1f m/s, clutch %.2f -> %.2f, then %.1f m/s" % [front_spin, clutch0, ok_slam.clutch_cond, ok_slam.vx])
+	var bad_slam: CarSim = slam.call(6.0, 0.0)
+	run(bad_slam, 0.5, 1.0)
+	var v_broke := bad_slam.vx
+	run(bad_slam, 2.0, 1.0)
+	check("FWD: a slam that goes wrong snaps the CV axle (no drive) and it stays broken till it's fixed",
+		bad_slam.axle_broken and bad_slam.vx < maxf(v_broke, 0.0) + 0.5 and bool(bad_slam.wear_state().axle) and CarSim.axle_name("FWD") == "CV AXLE",
+		"broken %s, %.1f -> %.1f m/s" % [bad_slam.axle_broken, v_broke, bad_slam.vx])
+	check("the slam's risk: free when gentle, worse faster, with more torque and a tired clutch",
+		CarSim.slam_risk(1.0, 3000.0, 1.0) == 0.0 and CarSim.slam_risk(6.0, 3000.0, 1.0) > CarSim.slam_risk(3.0, 3000.0, 1.0)
+		and CarSim.slam_risk(4.0, 6000.0, 1.0) > CarSim.slam_risk(4.0, 3000.0, 1.0) and CarSim.slam_risk(4.0, 3000.0, 0.2) > CarSim.slam_risk(4.0, 3000.0, 1.0),
+		"%.2f / %.2f" % [CarSim.slam_risk(3.0, 3000.0, 1.0), CarSim.slam_risk(6.0, 3000.0, 1.0)])
+	# donuts: full lock and full gas from a crawl, no aids: a rear-driver spins round, a front-driver ploughs
+	var donut := {}
+	for d in ["RWD", "FWD"]:
+		var c2 := car(d)
+		c2.assist = CarSim.Assist.SIM
+		c2.vx = 4.0
+		c2.w_wheel = c2.vx / float(c2.spec.tires.radius)
+		var spin_rate := 0.0
+		var side := 0.0
+		for i in 120 * 4:
+			c2.step(1.0 / 120.0, 1.0, 0.0, 1.0, 0.0)
+			if i > 120 * 2:
+				spin_rate += absf(c2.yaw_rate) / (120.0 * 2.0)
+				side = maxf(side, absf(c2.vy))
+		donut[d] = [spin_rate, side]
+	check("RWD: donuts (it rotates hard with the rear out)", float(donut.RWD[0]) > 1.0 and float(donut.RWD[1]) > 1.5, "yaw %.2f rad/s, slide %.1f m/s" % [float(donut.RWD[0]), float(donut.RWD[1])])
+	check("FWD: no donuts (it ploughs wide)", float(donut.FWD[1]) < float(donut.RWD[1]) * 0.6, "slide %.1f vs RWD %.1f m/s" % [float(donut.FWD[1]), float(donut.RWD[1])])
+	# all-wheel drift, on a built car (twice the torque): the same corner on the gas, a rear-biased
+	# centre diff slides, a front-biased one grips
+	var drift := {}
+	for split in [0.4, 0.8]:
+		var built := car("AWD")
+		var curve: Array = []
+		for pt in built.spec.engine.torque_curve: curve.append([pt[0], float(pt[1]) * 2.0])
+		built.spec.engine.torque_curve = curve
+		var c3 := rolling(built, 30.0)
+		c3.spec.awd_split = split
+		c3.assist = CarSim.Assist.SIM
+		c3.auto_gearbox = false
+		c3.gear = 2
+		c3.w_eng = c3.w_wheel * c3.ratio(2)
+		var beta := 0.0
+		for i in 120 * 2:
+			c3.step(1.0 / 120.0, 1.0, 0.0, 0.55, 0.0)
+			beta = maxf(beta, absf(atan2(c3.vy, maxf(absf(c3.vx), 1.0))))
+		drift[split] = beta
+	check("AWD: a rear-biased centre diff drifts, a front-biased one doesn't", float(drift[0.8]) > float(drift[0.4]) * 3.0 and float(drift[0.8]) > 0.3,
+		"slip angle %.2f rad at 20/80, %.2f at 60/40" % [float(drift[0.8]), float(drift[0.4])])
 	# fuel: cruising sips it, flat out gulps it, dry it doesn't go, premium keeps a hot tune from knocking
 	var cruise := rolling(car(), 90.0)
 	cruise.burn_fuel = true

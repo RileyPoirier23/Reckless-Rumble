@@ -8,20 +8,21 @@
 ## turbo ({spool_rpm, lag, no_boost}: bolts a turbo or blower on, or replaces it), inertia (x),
 ## clutch (+N·m), final (x), shift (x shift time), mass (+kg), cg (+m), rear_grip (+),
 ## grip (x), steer (+rad), brakes (x), fade (+°C), cda (+), cl (downforce coefficient),
-## compound (tyres), lsd (0 open .. 1 locked), drop (looks: ride height), wear (x engine wear).
+## compound (tyres), lsd (0 open .. 1 locked), awd_split (an AWD car's share to the rear), drop (looks:
+## ride height), wear (x engine wear).
 class_name Parts
 extends RefCounted
 
 const SLOTS := ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals", "clutch", "flywheel",
-	"final", "lsd", "suspension", "swaybar", "weight", "steering", "pads", "brakes", "tires", "aero"]
+	"final", "lsd", "centre", "suspension", "swaybar", "weight", "steering", "pads", "brakes", "tires", "aero"]
 
 const SLOT_NAMES := { "intake": "INTAKE", "exhaust": "EXHAUST", "headers": "HEADERS", "cams": "CAMSHAFTS", "ecu": "ECU / TUNE",
 	"induction": "TURBO / BLOWER", "intercooler": "INTERCOOLER", "fuel": "FUEL SYSTEM", "internals": "BOTTOM END", "clutch": "CLUTCH", "flywheel": "FLYWHEEL", "final": "FINAL DRIVE",
-	"lsd": "DIFFERENTIAL", "suspension": "SUSPENSION", "swaybar": "SWAY BARS", "weight": "WEIGHT", "steering": "STEERING",
+	"lsd": "DIFFERENTIAL", "centre": "CENTRE DIFF (AWD)", "suspension": "SUSPENSION", "swaybar": "SWAY BARS", "weight": "WEIGHT", "steering": "STEERING",
 	"pads": "BRAKE PADS", "brakes": "BRAKE KIT", "tires": "TIRES", "aero": "AERO" }
 
 const GROUPS := [["ENGINE", ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals"]],
-	["DRIVETRAIN", ["clutch", "flywheel", "final", "lsd"]],
+	["DRIVETRAIN", ["clutch", "flywheel", "final", "lsd", "centre"]],
 	["CHASSIS", ["suspension", "swaybar", "weight", "steering"]],
 	["BRAKES & TIRES", ["pads", "brakes", "tires"]],
 	["AERO", ["aero"]]]
@@ -68,6 +69,10 @@ const CATALOG := {
 	"lsd_kaaz": ["lsd", "KAAZ-ISH 1.5-WAY LSD", 1450, 5, { "lsd": 0.7 }, "BOTH WHEELS PUSH. FINALLY. A TEAM PLAYER."],
 	"lsd_osgiggle": ["lsd", "OS GIGGLE 2-WAY LSD", 2190, 6, { "lsd": 0.85 }, "CLUNKS IN PARKING LOTS. SINGS IN CORNERS."],
 	"lsd_welded": ["lsd", "WELDED DIFF (TOBY DID IT)", 90, 0, { "lsd": 1.0, "rear_grip": -0.03 }, "THE POOR MAN'S LSD. THE TIRES ARE THE ONES WHO ARE POOR."],
+	# ---------------------------------------------------------------- centre diff (all-wheel drive only)
+	"ctr_viscous": ["centre", "VISCOUS CENTRE, 60/40 FRONT", 690, 3, { "awd_split": 0.4 }, "PLANTED. SURE-FOOTED. WILL NOT DRIFT IF YOU BEG IT."],
+	"ctr_rally": ["centre", "RALLY CENTRE, 35/65 REAR", 1590, 5, { "awd_split": 0.65 }, "THE FRONT PULLS YOU OUT, THE BACK HANGS OUT. GRAVEL ROADS, BEWARE."],
+	"ctr_drift": ["centre", "DRIFT CENTRE, 20/80 REAR", 2390, 6, { "awd_split": 0.8 }, "MOSTLY REAR-WHEEL DRIVE, WITH A SAFETY NET YOU'LL FORGET IS THERE."],
 	# ---------------------------------------------------------------- chassis
 	"susp_springs": ["suspension", "EIBACHH LOWERING SPRINGS", 390, 2, { "cg": -0.03, "grip": 1.02, "drop": 0.5 }, "THIRTY MILLIMETRES CLOSER TO THE ROAD AND TO GOD."],
 	"susp_coilover": ["suspension", "TEENZ FLEX Z COILOVERS", 1290, 4, { "cg": -0.05, "grip": 1.05, "drop": 0.7 }, "ADJUSTABLE. YOU WON'T ADJUST THEM. NOBODY DOES."],
@@ -108,7 +113,7 @@ const STAGE := {
 	"ind_upgrade": 2, "ind_garrette": 3, "ind_greddy": 4, "ind_single": 4, "ind_whippled": 3, "ic_mishimotoh": 2,
 	"fuel_pump": 2, "fuel_e85": 3, "int_rods": 3, "int_built": 4,
 	"clutch_s1": 1, "clutch_s3": 3, "fly_light": 2, "final_short": 2, "final_long": 2,
-	"lsd_welded": 1, "lsd_kaaz": 2, "lsd_osgiggle": 3,
+	"lsd_welded": 1, "lsd_kaaz": 2, "lsd_osgiggle": 3, "ctr_viscous": 1, "ctr_rally": 2, "ctr_drift": 3,
 	"susp_springs": 1, "susp_coilover": 2, "susp_race": 3, "susp_air": 2, "susp_lift": 1, "sway_rear": 1, "sway_front": 2,
 	"wt_gut": 1, "wt_carbon": 3, "wt_full": 4, "steer_quick": 2, "steer_angle": 3,
 	"pads_hawke": 1, "pads_race": 3, "brk_brenbo": 3, "brk_wilwood": 4,
@@ -118,7 +123,7 @@ const STAGE := {
 
 ## Game hours for Gus to put a part in (the slots that share access share his time).
 const INSTALL_H := { "intake": 0.5, "exhaust": 1.5, "headers": 3.0, "cams": 6.0, "ecu": 1.0, "induction": 8.0,
-	"intercooler": 3.0, "fuel": 4.0, "internals": 14.0, "clutch": 5.0, "flywheel": 5.0, "final": 4.0, "lsd": 4.0,
+	"intercooler": 3.0, "fuel": 4.0, "internals": 14.0, "clutch": 5.0, "flywheel": 5.0, "final": 4.0, "lsd": 4.0, "centre": 5.0,
 	"suspension": 3.0, "swaybar": 1.5, "weight": 2.0, "steering": 3.0, "pads": 1.0, "brakes": 3.0, "tires": 1.0, "aero": 1.5 }
 
 static func stage(id: String) -> int:
@@ -173,6 +178,7 @@ static func fits(id: String, spec: Dictionary, installed := {}) -> bool:
 			if body in ["pickup", "tow", "van", "suv"] and id != "aero_lip": return false
 		"tires":
 			if id == "tire_at": return true
+	if String(p[0]) == "centre": return String(spec.get("drivetrain", "RWD")) in ["AWD", "4WD"]
 	if id == "susp_lift": return body in ["pickup", "tow", "suv", "wagon"]
 	if id == "susp_air": return not body in ["tow"]
 	return true
@@ -240,6 +246,7 @@ static func apply(base: Dictionary, installed: Dictionary, tune := {}) -> Dictio
 		if fx.has("cl"): s.cl = float(s.get("cl", 0.0)) + float(fx.cl)
 		if fx.has("compound"): s.tires.compound = String(fx.compound)
 		if fx.has("lsd"): s.lsd = float(fx.lsd)
+		if fx.has("awd_split"): s.awd_split = float(fx.awd_split)
 	if not (e.get("turbo", {}) as Dictionary).is_empty(): tq *= boost_only
 	# the dyno tune: timing adds a little everywhere, boost adds a lot (and spools a touch later)
 	if not tune.is_empty():

@@ -525,6 +525,9 @@ func _on_garage_repair(i: int) -> void:
 	if bool(w.get("gasket", false)):
 		jobs.append("HEAD GASKET")
 		cost += 900
+	if bool(w.get("axle", false)):
+		jobs.append(CarSim.axle_name(String(SaveGame.car_spec(save.garage[i]).get("drivetrain", "RWD"))))
+		cost += 380
 	if float(w.get("engine", 1.0)) < 0.7:
 		jobs.append("ENGINE REBUILD")
 		cost += 1500
@@ -728,6 +731,25 @@ func _tips(dt: float) -> void:
 		hud.notify(Hints.fmt(String(t[1])), "tip")
 		return
 
+## Gas and brake together at a standstill in a car that can't do a brake burnout: say so, once a
+## save, and what it can do instead.
+var _bo_t := 0.0
+func _burnout_tip(dt: float) -> void:
+	var dts := String(car.spec.get("drivetrain", "RWD"))
+	if dts == "RWD" or car.sim.speed() > 1.0 or Controls.trigger("throttle") < 0.6 or Controls.trigger("brake") < 0.6:
+		_bo_t = 0.0
+		return
+	_bo_t += dt
+	var key := "burnout_" + ("fwd" if dts == "FWD" else "awd")
+	var seen: Array = save.get("tips_seen", [])
+	if _bo_t < 1.2 or seen.has(key): return
+	seen.append(key)
+	save.tips_seen = seen
+	if dts == "FWD":
+		hud.notify(Hints.fmt("FRONT-WHEEL DRIVE: THE BRAKES HOLD THE WHEELS THAT DRIVE. NO BURNOUT. ROLL BACK IN REVERSE, {shift_up} INTO DRIVE AND STAB THE GAS. IF YOU TRUST YOUR CV AXLES."), "tip")
+	else:
+		hud.notify("ALL-WHEEL DRIVE: THE BRAKES HOLD ALL FOUR. NO BURNOUT. AWD IS FOR DRIFTING: A REAR-BIASED CENTRE DIFF LETS THE BACK STEP OUT.", "tip")
+
 ## Free roam picks up the calendar where the last session left it: the day (so Saturday's auction
 ## is still on Saturday), the hour and the season.
 func _restore_calendar() -> void:
@@ -767,6 +789,7 @@ func _process(dt: float) -> void:
 	dash.visible = not modal
 	gps.visible = not modal
 	_tips(dt)
+	_burnout_tip(dt)
 	_awards(dt)
 	# the chase cam: behind the car and turning with it, so up on the screen is always ahead.
 	# It swings round a little slower than the car, so you can see a slide happen.
@@ -944,6 +967,8 @@ func _inputs() -> void:
 	if not car.sim.auto_gearbox:
 		if Input.is_action_just_pressed("shift_up"): car.sim.shift(car.sim.gear + 1)
 		if Input.is_action_just_pressed("shift_down"): car.sim.shift(car.sim.gear - 1)
+	elif car.sim.gear < 0 and Input.is_action_just_pressed("shift_up"):
+		car.sim.shift(1)          # the lever from R to D, rolling or not (a front-driver's only burnout)
 
 
 ## Cloud shadows drifting over everything on a cloudy day.
