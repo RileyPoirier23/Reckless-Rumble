@@ -38,7 +38,8 @@ func _ready() -> void:
 	await _salvage()
 	await _meet()
 	await _auction()
-	var want := 11 if not OS.get_cmdline_user_args().has("--police-only") else 8
+	await _calendar()
+	var want := 12 if not OS.get_cmdline_user_args().has("--police-only") else 9
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -514,4 +515,25 @@ func _auction() -> void:
 	check("auction: walk away", not a.open() and not main.car.locked)
 	main.save.garage.remove_at(cars0)
 	SaveGame.write(main.save)
+	done += 1
+
+## Free roam keeps the calendar between sessions: the weekday the auction and the meet go by, the
+## hour and the season.
+func _calendar() -> void:
+	main.sky.day = 5
+	main.sky.time_h = 11.25
+	main.sky.set_season("winter")
+	main.sky._season_day = 2
+	main._keep_calendar()
+	var kept: Dictionary = (main.save.cal as Dictionary).duplicate()
+	main.sky.day = 0
+	main.sky.time_h = 17.5
+	main.sky.set_season("fall")
+	main.sky._season_day = 0
+	main._restore_calendar()
+	check("calendar: the day, the hour and the season come back", main.sky.day == 5 and absf(main.sky.time_h - 11.25) < 0.01 and main.sky.season == "winter" and main.sky._season_day == 2,
+		str(kept))
+	check("calendar: so a Saturday is still a Saturday", Auction.is_day(main.sky.day))
+	main.save.erase("cal")
+	main.sky.set_season("fall")
 	done += 1

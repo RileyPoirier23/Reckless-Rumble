@@ -50,6 +50,7 @@ var salvage: SalvageYard
 var auction: Auction
 var wildlife: Wildlife
 var hold_car := false          # a scene (or a test) has the car stopped
+var free_roam := true          # not a test, a demo or a story mission: the calendar carries over
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
 func _ready() -> void:
@@ -187,6 +188,9 @@ void fragment() {
 		if arg.ends_with("-test") or arg.ends_with("-demo"):
 			police.enabled = false
 			wildlife.enabled = false
+			free_roam = false
+	if StoryState.active: free_roam = false
+	if free_roam: _restore_calendar()
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
 		_start_mission(StoryMissions.MISSIONS[StoryState.current().mission])
 	else:
@@ -431,6 +435,7 @@ func _on_garage_closed() -> void:
 
 ## Orders from ROCKAUTTO.CA arrive on the game clock and wait on the bench.
 func _deliveries(dt: float) -> void:
+	if free_roam: _keep_calendar()
 	save.clock_h = float(save.get("clock_h", 0.0)) + dt * sky.rate
 	var left: Array = []
 	for o in save.get("orders", []):
@@ -578,6 +583,19 @@ func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticle
 		p.texture = ImageTexture.create_from_image(img)
 	cam.add_child(p)
 	return p
+
+## Free roam picks up the calendar where the last session left it: the day (so Saturday's auction
+## is still on Saturday), the hour and the season.
+func _restore_calendar() -> void:
+	var c: Dictionary = save.get("cal", {})
+	if c.is_empty(): return
+	sky.day = int(c.get("day", 0))
+	sky.set_season(String(c.get("season", "fall")))
+	sky._season_day = int(c.get("season_day", 0))
+	sky.time_h = float(c.get("time_h", 17.5))
+
+func _keep_calendar() -> void:
+	save.cal = { "day": sky.day, "time_h": sky.time_h, "season": sky.season, "season_day": sky._season_day }
 
 func _apply_season(s: String, reset := true) -> void:
 	if reset: sky.set_season(s)
