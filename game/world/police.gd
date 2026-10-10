@@ -78,6 +78,8 @@ static func fine(over_kmh: float, what: Array) -> int:
 	if what.has("fleeing"): f += 1000.0
 	if what.has("ramming"): f += 800.0
 	if what.has("stunting"): f += 400.0
+	if what.has("red_light"): f += 250.0
+	if what.has("stop_sign"): f += 110.0
 	return int(round(f / 5.0)) * 5
 
 ## Do they take the car? When the heat's high, or you raced, or you ran for a long time.
@@ -190,6 +192,23 @@ func _sees(k: AiCar, c: PlayerCar, d: float) -> bool:
 func pull_over(k: AiCar, why: String) -> void:
 	_light_up(k, why, 0.0)
 
+## Something you did at a junction (RoadFurniture: a red light, a stop sign). If a patrol car
+## can see you, they light you up for it; if they're already on you, it goes on the ticket.
+## Returns whether anybody saw.
+func report(why: String) -> bool:
+	if not enabled or StoryState.active: return false
+	var c: PlayerCar = drive.car
+	if c == null: return false
+	var spotter: AiCar = null
+	for k in cruisers:
+		if _sees(k, c, k.sim.pos.distance_to(c.sim.pos)): spotter = k
+	if spotter == null: return false
+	if state == "calm":
+		_light_up(spotter, why, maxf(0.0, _over_kmh(c)))
+	elif not offences.has(why):
+		offences.append(why)
+	return true
+
 func _light_up(k: AiCar, why: String, over: float) -> void:
 	state = "stop"
 	stop_t = 0.0
@@ -263,7 +282,8 @@ func _bust(c: PlayerCar) -> void:
 	var lines: Array = []
 	if top_over > 15.0: lines.append("%d IN A %d" % [int(top_over + _limit_here(c)), int(_limit_here(c))])
 	for o in offences:
-		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP", "ramming": "DAMAGE TO A POLICE VEHICLE", "stunting": "STUNT DRIVING" }[o])
+		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP FOR POLICE", "ramming": "DAMAGE TO A POLICE VEHICLE", "stunting": "STUNT DRIVING",
+			"red_light": "RUNNING A RED LIGHT", "stop_sign": "FAILING TO STOP AT A STOP SIGN" }.get(o, String(o).to_upper()))
 	var what := ", ".join(lines) if not lines.is_empty() else "BEING YOU, AT NIGHT, IN THAT"
 	drive.hud.post("CONSTABLE TREMBLAY: \"LICENCE AND REGISTRATION.\"", 4.0)
 	drive.hud.post("TICKET: %s. $%d." % [what, f], 7.0)

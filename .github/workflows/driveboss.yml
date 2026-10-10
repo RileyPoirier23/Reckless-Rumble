@@ -108,6 +108,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/awards_tests.gd | tee awards.log
           grep -q "^0 failed" awards.log
+      - name: Road furniture tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/furniture_tests.gd | tee furniture.log
+          grep -q "^0 failed" furniture.log
       - name: Export
         working-directory: game
         run: |

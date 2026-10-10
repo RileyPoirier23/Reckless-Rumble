@@ -34,6 +34,7 @@ var temper := 1.0            # some drive faster than others
 var turn_ahead := 0.0        # signed turn at the next node (rad), for the corridor and blinkers
 var stopped_at := -1         # the junction it has made its full stop at
 var entered := -1            # the junction it's crossing
+var entered_from := -1       # and the node it came into it from
 var wait_t := 0.0
 var last_rule := ""
 var lead_obj = null
@@ -183,22 +184,19 @@ func drive(dt: float) -> void:
 	var gap: float = lead[0]
 	var v_lead: float = lead[1]
 	if traffic.junctions.has(b) and entered != b and db < 50.0:
-		var stop_d := db - jr - 1.2
+		var stop_d := db - traffic.stop_line(b, a)
 		var rule := traffic.may_enter(self, b, a, c_next, stop_d)
 		last_rule = rule
-		if rule == "go" and traffic.junctions[b].inside.has(self): entered = b
-		if wait_t > 18.0 and rule == "stop" and traffic.junctions[b].control != "signal":
-			rule = "go"            # nobody waits forever at a four-way in Port Rumble
+		if rule == "go" and traffic.junctions[b].inside.has(self): _enter_box(b)
 		if rule == "stop":
 			if stop_d < gap:
 				gap = maxf(stop_d, 0.01)
 				v_lead = 0.0
 			if v < 0.4 and stop_d < 4.5 and stopped_at != b:
 				stopped_at = b
-				stop_time = Time.get_ticks_msec() / 1000.0
+				stop_time = Traffic.clock
 		elif db < jr + 2.0:
-			traffic.enter(self, b)
-			entered = b
+			_enter_box(b)
 	# --- the Intelligent Driver Model
 	var dv := v - v_lead
 	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(a_max * B_COMF)))
@@ -218,15 +216,30 @@ func drive(dt: float) -> void:
 		c_next = -1
 		s = (pos - map.g_pos[a]).dot((map.g_pos[b] - map.g_pos[a]).normalized())
 		stopped_at = -1
+		# turned round at a dead end and heading back into the junction it just crossed: that's a
+		# new crossing, with the rules and all
+		if entered == b: _leave_box()
 	if entered >= 0 and entered != b and pos.distance_to(map.g_pos[entered]) > float(traffic.junctions.get(entered, {}).get("radius", 6.0)) + 3.0:
-		traffic.leave(self, entered)
-		entered = -1
+		_leave_box()
 	# --- lights
 	var turning := db < 40.0 and absf(turn_ahead) > 0.5 and absf(turn_ahead) < 2.8
 	view.blink_left = turning and turn_ahead < 0.0
 	view.blink_right = turning and turn_ahead > 0.0
 	view.braking = acc < -0.8 or v < 0.2
 	_place()
+
+## Into junction `n`'s box (and out of the last one, however close the two junctions are: a
+## car still on a junction's list keeps everybody else at its stop signs waiting).
+func _enter_box(n: int) -> void:
+	if entered >= 0 and entered != n: traffic.leave(self, entered)
+	traffic.enter(self, n)
+	entered = n
+	entered_from = a
+
+func _leave_box() -> void:
+	if entered >= 0: traffic.leave(self, entered)
+	entered = -1
+	entered_from = -1
 
 ## The line it's about to drive, as points from where it is now: down its lane, round a
 ## smooth curve through the junction (from its lane in to the right lane out), and on.
@@ -265,9 +278,16 @@ func path_ahead(reach: float) -> PackedVector2Array:
 		if absf(den) > 0.05:
 			var t := (p2 - p0).cross(dout) / den
 			p1 = p0 + din * t
+		var ahead := false
 		for k in range(1, 7):
 			var u := float(k) / 6.0
-			out.append(p0.lerp(p1, u).lerp(p1.lerp(p2, u), u))
+			var q := p0.lerp(p1, u).lerp(p1.lerp(p2, u), u)
+			# partway round already: the bits of the curve behind it aren't ahead of it (aiming
+			# back at them sends it round in circles in the middle of the junction)
+			var tangent := (p1 - p0) * (1.0 - u) + (p2 - p1) * u
+			if not ahead and k < 6 and (q - pos).dot(tangent) <= 0.0: continue
+			ahead = true
+			out.append(q)
 		d = r_out + 3.0
 	else:
 		d = 1.5
@@ -311,9 +331,7 @@ func hit(dv: Vector2, at: Vector2) -> void:
 	spin += r.cross(dv) * 0.25 / maxf(length, 1.0)
 	state = "wrecked"
 	wreck_t = 0.0
-	if entered >= 0:
-		traffic.leave(self, entered)
-		entered = -1
+	_leave_box()
 	# where it got hit, in the car's own frame
 	var fwd := Vector2(cos(heading), sin(heading))
 	var local := Vector2(r.dot(fwd), r.dot(Vector2(-fwd.y, fwd.x)))

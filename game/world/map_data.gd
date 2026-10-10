@@ -720,7 +720,7 @@ func _street_lights() -> void:
 					var typ: String = z.light
 					if typ == "sodium" and rng.randf() < 0.08: typ = "sodium_flicker"
 					if typ == "sodium" and rng.randf() < 0.04: typ = "dead"
-					lights.append({ "p": lp, "type": typ, "seed": rng.randi() })
+					lights.append({ "p": lp, "type": typ, "seed": rng.randi(), "arm": -dir.orthogonal() * side })
 				side = -side
 				s += 34.0
 			acc = fmod(acc + L, 34.0)

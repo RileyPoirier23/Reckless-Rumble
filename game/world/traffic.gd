@@ -13,7 +13,7 @@ class_name Traffic
 extends Node2D
 
 const PX := CarArt.PX
-const CYCLE := 50.0                # signal cycle (s): main road 22 green, 3 amber; side road the rest
+const CYCLE := 50.0                # signal cycle (s): main road 22 green, 3 amber, 2 all red; side road 18, 3, 2
 const SPAWN_MIN := 110.0           # metres from the camera: never pop in where you can see
 const SPAWN_MAX := 240.0
 const DESPAWN := 320.0
@@ -53,6 +53,7 @@ var _spawn_t := 0.0
 var night := false
 var enabled := true
 var ignore_player := false
+static var clock := 0.0        # game seconds: what the signals cycle on (they stop when the game does)
 
 func setup(the_world: World, the_sky: WorldSky, the_ysort: Node2D, the_player: PlayerCar) -> void:
 	world = the_world
@@ -61,6 +62,14 @@ func setup(the_world: World, the_sky: WorldSky, the_ysort: Node2D, the_player: P
 	ysort = the_ysort
 	player = the_player
 	rng.seed = 2019
+	classify(map)
+
+## Which junction is controlled how (signals, all-way stops, priority): from the map alone, so the
+## road furniture and the tests can have it without a scene.
+func classify(the_map: MapData) -> void:
+	map = the_map
+	junctions = {}
+	_node_cells = {}
 	for i in map.roads.size(): map.roads[i]["idx"] = i
 	for n in map.g_pos.size():
 		var k := Vector2i(floori(map.g_pos[n].x / 64.0), floori(map.g_pos[n].y / 64.0))
@@ -88,6 +97,7 @@ func _junction(n: int) -> Dictionary:
 	var z := map.zone_at(map.g_pos[n])
 	var town: bool = z.id != ""
 	if big >= 2 and town and top < 5: control = "signal"
+	elif town and top == 4 and map.g_adj[n].size() >= 4: control = "signal"     # a full crossing on an arterial in town
 	elif majors.size() == roads.size():
 		# downtown and the village centres have four-way stops; elsewhere the street that runs
 		# east-west (or the longer one) is the through road and the other one stops
@@ -106,18 +116,64 @@ func _junction(n: int) -> Dictionary:
 	if control == "signal" and majors.size() > 1:
 		majors.sort()
 		majors = [majors[0]]            # the main road gets the long green
+	if control == "signal":
+		# a road that carries straight on from the main road's arm under another name (Main St
+		# into Salisbury Rd) gets the main road's green, never the cross street's
+		var main_dirs: Array[Vector2] = []
+		for e in map.g_adj[n]:
+			if majors.has(int(e[2].idx)): main_dirs.append((map.g_pos[e[0]] - map.g_pos[n]).normalized())
+		for e in map.g_adj[n]:
+			var i := int(e[2].idx)
+			if majors.has(i): continue
+			var arm := (map.g_pos[e[0]] - map.g_pos[n]).normalized()
+			for md in main_dirs:
+				if arm.dot(md) < -0.85:
+					majors.append(i)
+					break
+	# where each road's traffic waits: at the edge of the box, or further back where it comes in at
+	# a sharp angle to another road (waiting at the box there, its nose is in the other road's lanes)
+	var stops := {}
+	for e in map.g_adj[n]:
+		var ui := (map.g_pos[e[0]] - map.g_pos[n]).normalized()
+		var need := radius + 1.2
+		for f in map.g_adj[n]:
+			if f[0] == e[0]: continue
+			var th := absf(ui.angle_to((map.g_pos[f[0]] - map.g_pos[n]).normalized()))
+			if th < deg_to_rad(15.0) or th > deg_to_rad(75.0): continue
+			need = maxf(need, (float(f[2].w) / 2.0 + 0.3 + float(e[2].w) / 2.0 * cos(th)) / sin(th))
+		stops[e[0]] = minf(need, maxf(radius + 1.2, float(e[1]) * 0.6))
 	return { "control": control, "majors": majors, "radius": radius, "queue": [], "inside": [],
-		"offset": signal_offset(map.g_pos[n]) }
+		"offset": signal_offset(map.g_pos[n]), "stops": stops }
+
+## How far back from junction `n`'s middle the traffic coming in from node `from` waits.
+func stop_line(n: int, from: int) -> float:
+	var j: Dictionary = junctions.get(n, {})
+	return float(j.get("stops", {}).get(from, float(j.get("radius", 0.0)) + 1.2))
 
 static func signal_offset(p: Vector2) -> int:
 	return absi(int(roundf(p.x)) * 7 + int(roundf(p.y)) * 13) % int(CYCLE)
 
-## "green", "amber" or "red" for the main road (group 0) or the side roads (group 1).
+## "green", "amber" or "red" for the main road (group 0) or the side roads (group 1). The lights
+## run on the game clock (`clock`), the same one the drivers live by, and both ways are red for
+## two seconds between greens so whoever went through on the amber is out of the box.
 static func signal_state(offset: int, group: int) -> String:
-	var t := fmod(Time.get_ticks_msec() / 1000.0 + offset, CYCLE)
+	var t := fmod(clock + offset, CYCLE)
 	if group == 0:
 		return "green" if t < 22.0 else ("amber" if t < 25.0 else "red")
-	return "red" if t < 25.0 else ("green" if t < 47.0 else "amber")
+	return "green" if t >= 27.0 and t < 45.0 else ("amber" if t >= 45.0 and t < 48.0 else "red")
+
+## How long the light's been what it is now (so a red you went through a moment after it changed
+## isn't the same as one that had been red a while).
+static func signal_since(offset: int, group: int) -> float:
+	var t := fmod(clock + offset, CYCLE)
+	if group == 0:
+		if t < 22.0: return t
+		if t < 25.0: return t - 22.0
+		return t - 25.0
+	if t < 27.0: return t + (CYCLE - 48.0)          # red since 48 the cycle before
+	if t < 45.0: return t - 27.0
+	if t < 48.0: return t - 45.0
+	return t - 48.0
 
 # ------------------------------------------------------------------ paths
 
@@ -233,6 +289,7 @@ func _spawn(cam_m: Vector2) -> void:
 # ------------------------------------------------------------------ the frame
 
 func step(dt: float, cam_m: Vector2) -> void:
+	clock += dt
 	if not enabled: return
 	night = sky.lights_on(30)
 	# who's where (a 20 m grid), for finding the car ahead
@@ -316,24 +373,27 @@ func may_enter(car: TrafficCar, n: int, from: int, to: int, dist: float) -> Stri
 	if j.is_empty(): return "go"
 	var road: Dictionary = edge_road(from, n)
 	var major: bool = j.majors.has(int(road.get("idx", -1)))
-	# a driver who has sat there for 45 s with an empty box in front of them goes anyway
-	if car.wait_t > 45.0 and _box_empty(car, n, float(j.radius)) and _room_after(car, n, to):
-		enter(car, n)
-		return "go"
+	# a red light is a red light, however long you've sat at it: it'll go green
+	if String(j.control) == "signal":
+		var st := signal_state(int(j.offset), 0 if major else 1)
+		if st == "red" or (st == "amber" and dist >= car.v * car.v / (2.0 * 3.5)): return "stop"   # amber: stop if you can
 	# don't block the box: is there room on the far side?
 	if not _room_after(car, n, to): return "stop"
 	# turning left: oncoming traffic goes first (unless it's sitting there waving you through)
-	if car.turn_ahead < -0.5 and not _oncoming_clear(car, n, from) and car.wait_t < 12.0: return "stop"
+	if car.turn_ahead < -0.5 and not _oncoming_clear(car, n, from): return "stop"
+	# a driver who has sat there for 45 s with an empty box in front of them goes anyway (but
+	# doesn't pull out under a car on the main road)
+	if car.wait_t > 45.0 and _box_empty(car, n, float(j.radius)) and (String(j.control) != "priority" or major or _main_clear(car, n, j, 2.5)):
+		enter(car, n)
+		return "go"
 	match String(j.control):
 		"signal":
-			var st := signal_state(int(j.offset), 0 if major else 1)
-			if st == "green": return "go"
-			if st == "amber" and dist < car.v * car.v / (2.0 * 3.5): return "go"   # too close to stop
-			return "stop"
+			return "go"
 		"priority":
 			if major: return "go"
 			if car.stopped_at != n: return "stop"         # a full stop first
-			if _main_clear(car, n, j) or (car.wait_t > 15.0 and _box_empty(car, n, j.radius)):
+			# after a long wait a smaller gap will do (but never one the main road can't brake for)
+			if _main_clear(car, n, j, 6.0 if car.wait_t < 15.0 else 2.5):
 				enter(car, n)         # claim it now, before anyone else decides the same thing
 				return "go"
 			return "stop"
@@ -362,42 +422,58 @@ func _room_after(car: TrafficCar, n: int, to: int) -> bool:
 		if c.pos.distance_to(exit) < 2.5 and c.v < 1.0: return false
 	return true
 
-## Nobody coming the other way toward junction `n` soon (for a left turn across their lane).
+## Nobody coming the other way toward junction `n` soon (for a left turn across their lane),
+## and nobody from the other side still crossing it: a left turner coming the other way cuts
+## through the same middle. The longer you've waited, the smaller the gap you'll take, but
+## never one they'd have to stand on the brakes for.
 func _oncoming_clear(car: TrafficCar, n: int, from: int) -> bool:
 	var jp := map.g_pos[n]
 	var din := (jp - map.g_pos[from]).normalized()
+	var window := lerpf(3.5, 2.0, clampf((car.wait_t - 10.0) / 20.0, 0.0, 1.0))
 	for c in cars:
 		if c == car or c.state != "drive": continue
-		if c.b != n and not (c.a == n and c.s < 4.0): continue
-		var cd := (map.g_pos[c.b] - map.g_pos[c.a]).normalized() if c.b == n else Vector2.ZERO
-		if c.b == n and cd.dot(din) < -0.7:
-			var d := c.pos.distance_to(jp)
-			if d < 6.0 + c.v * 3.5 and not (c.v < 0.5 and c.last_rule == "stop"): return false
+		if c.entered == n and c.entered_from >= 0 and (jp - map.g_pos[c.entered_from]).normalized().dot(din) < -0.7: return false
+		var d := _dist_to(c, n)
+		if d == INF: continue
+		var cd := (jp - map.g_pos[c.a if c.b == n else c.b]).normalized()
+		if cd.dot(din) < -0.7:
+			if d < 6.0 + c.v * window and not (c.v < 0.5 and c.last_rule == "stop"): return false
 	return true
+
+## How far `c` has to drive to junction `n`: on the road into it, or on the one before that (the
+## block between two junctions can be shorter than a few seconds of driving). INF if neither.
+func _dist_to(c: TrafficCar, n: int) -> float:
+	if c.b == n: return c.pos.distance_to(map.g_pos[n])
+	if c.c_next == n: return c.pos.distance_to(map.g_pos[c.b]) + map.g_pos[c.b].distance_to(map.g_pos[n])
+	return INF
 
 ## Nobody (but `car`) in the middle of junction `n`.
 func _box_empty(car: TrafficCar, n: int, radius: float) -> bool:
 	var jp := map.g_pos[n]
 	for c in junctions.get(n, {}).get("inside", []):
-		if c != car and is_instance_valid(c): return false
+		# (somebody on the list but long gone down the road isn't in anybody's way)
+		if c != car and is_instance_valid(c) and c.pos.distance_to(jp) < radius + 15.0: return false
 	for c in cars:
 		if c != car and c.pos.distance_to(jp) < radius + 0.5: return false
 	if player and not ignore_player and player.sim.pos.distance_to(jp) < radius + 1.0: return false
 	return true
 
-func _main_clear(car: TrafficCar, n: int, j: Dictionary) -> bool:
+## Nothing on the main road due at junction `n` within `window` seconds (and the box empty).
+func _main_clear(car: TrafficCar, n: int, j: Dictionary, window := 6.0) -> bool:
 	var jp := map.g_pos[n]
 	if not _box_empty(car, n, j.radius): return false
 	for c in cars:
-		if c == car or c.b != n: continue
-		var r: Dictionary = edge_road(c.a, n)
+		if c == car: continue
+		var d := _dist_to(c, n)
+		if d == INF: continue
+		var r: Dictionary = edge_road(c.a if c.b == n else c.b, n)
 		if not j.majors.has(int(r.get("idx", -1))): continue
-		var d := c.pos.distance_to(jp)
-		if d < 8.0 + c.v * 6.0: return false               # less than ~6 s away
-	if player:
+		if d < 8.0 + c.v * window: return false
+	if player and not ignore_player:
 		var d := player.sim.pos.distance_to(jp)
 		var closing := -player.sim.world_velocity().dot((player.sim.pos - jp).normalized())
-		if d < 10.0 or (closing > 1.0 and d < closing * 4.0): return false
+		# parked at the corner, you're not coming (_box_empty minds you if you're in the box)
+		if (d < 10.0 and closing > 0.3) or (closing > 1.0 and d < closing * window * 0.67): return false
 	return true
 
 func enter(car: TrafficCar, n: int) -> void:

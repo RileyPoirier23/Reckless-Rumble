@@ -788,38 +788,19 @@ class Layer extends Node2D:
 	func _canopy(w: World) -> void:
 		var s := w.sky.season
 		var snow := w.sky.snow_cover > 0.25
-		# streetlight poles and signals (the light itself comes from the light pool)
+		# the high masts and the crossbucks (the streetlight poles, the signals and the signs are
+		# RoadFurniture's, which stands them up the right way however the camera turns)
 		for l in w._b_light.get(chunk.key, []):
 			var p: Vector2 = l.p * PX
 			match String(l.type):
-				"sodium", "sodium_flicker", "dead", "led", "lamp", "led_flood":
+				"led_flood":
 					draw_rect(Rect2(p + Vector2(-1, -2), Vector2(3, 3)), Color("2a2a2e"))
 					draw_rect(Rect2(p + Vector2(-3, -3), Vector2(7, 2)), Color("4a4a50"))
 				"highmast":
 					draw_rect(Rect2(p + Vector2(-6, -6), Vector2(12, 12)), Color("3a3a40"))
-				"signal":
-					draw_rect(Rect2(p + Vector2(-2, -2), Vector2(4, 4)), Color("2a2a2e"))
 				"rail":
 					draw_line(p + Vector2(-6, -6), p + Vector2(6, 6), Color("e8e8e0"), 2.0)
 					draw_line(p + Vector2(-6, 6), p + Vector2(6, -6), Color("e8e8e0"), 2.0)
-		# the yellow crossing diamonds at the wildlife stretches: a post, the sign up on it
-		for sg in w._b_sign.get(chunk.key, []):
-			var sp: Vector2 = sg.p * PX
-			var top := sp + CarView.screen_up * 26.0
-			draw_line(sp, top, Color("6a6e74"), 2.0)
-			var u := CarView.screen_up
-			var rt := u.orthogonal()
-			var dia := PackedVector2Array([top + u * 9.0, top + rt * 9.0, top - u * 9.0, top - rt * 9.0])
-			draw_colored_polygon(dia, Color("f2c21a"))
-			draw_polyline(dia + PackedVector2Array([dia[0]]), Color("1a1a1a"), 1.0)
-			# the animal on it, in black: a body, legs, a head (antlers or a big moose head)
-			var moose: bool = String(sg.kind) == "moose"
-			var bw := 7.0 if moose else 6.0
-			draw_line(top - rt * bw * 0.5 + u * 1.0, top + rt * bw * 0.5 + u * 1.0, Color.BLACK, 3.0)
-			for lx in [-0.35, 0.35]:
-				draw_line(top + rt * bw * lx, top + rt * bw * lx - u * 3.5, Color.BLACK, 1.0)
-			draw_line(top + rt * bw * 0.5 + u * 1.0, top + rt * (bw * 0.5 + 1.5) + u * (4.0 if moose else 3.5), Color.BLACK, 2.0)
-			if moose: draw_line(top + rt * (bw * 0.5 - 0.5) + u * 5.0, top + rt * (bw * 0.5 + 3.0) + u * 5.5, Color.BLACK, 1.0)
 		for t in chunk.trees:
 			var p: Vector2 = t[0] * PX
 			var r := int(float(t[2]) * PX)

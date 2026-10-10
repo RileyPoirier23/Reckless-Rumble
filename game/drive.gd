@@ -15,6 +15,7 @@ var cam: Camera2D
 var dark: CanvasModulate
 var lights: LightPool
 var traffic: Traffic
+var furniture: RoadFurniture
 var hud: Hud
 var dash: DashView
 var gps: GpsView
@@ -210,6 +211,9 @@ void fragment() {
 	traffic = Traffic.new()
 	add_child(traffic)
 	traffic.setup(world, sky, ysort, car)
+	furniture = RoadFurniture.new()
+	add_child(furniture)
+	furniture.setup(self)
 	world.warm(car.sim.pos, Vector2(40, 25))
 	hud.show_help = bool(GameSettings.get_v("ui", "controls_card"))   # F1 (or the pause menu) shows the controls
 	_apply_settings()
@@ -251,6 +255,10 @@ void fragment() {
 		var sd: Node = load("res://tests/salvage_demo.gd").new()
 		sd.main = self
 		add_child(sd)
+	elif OS.get_cmdline_user_args().has("--furniture-demo"):
+		var fd2: Node = load("res://tests/furniture_demo.gd").new()
+		fd2.main = self
+		add_child(fd2)
 	elif OS.get_cmdline_user_args().has("--pause-demo"):
 		var pd: Node = load("res://tests/pause_demo.gd").new()
 		pd.main = self
