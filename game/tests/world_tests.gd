@@ -116,6 +116,17 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- mud: slow going, but a rear-drive car on summer tires isn't stuck in it for good
+	var sp: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/silvio.json"))
+	var mc := CarSim.new(sp)
+	mc.set_ambient(10.0)
+	mc.surface = "mud"
+	var mt := 0.0
+	while mc.speed() < 2.0 and mt < 8.0:
+		mc.step(1.0 / 120.0, 0.6, 0.0, 0.0, 0.0)
+		mc.surface = "mud"
+		mt += 1.0 / 120.0
+	check("a rear-drive car crawls out of mud", mc.speed() >= 2.0, "%.1f m/s after %.1f s" % [mc.speed(), mt])
 	# ---- the emergency vehicles: drawn, and they get going (a fire truck's no rocket, but it moves)
 	for id in ["ambulance", "fire"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))

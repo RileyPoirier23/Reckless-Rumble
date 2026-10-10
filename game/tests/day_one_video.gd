@@ -328,6 +328,7 @@ class Autopilot extends Node:
 	var _log_t := 0.0
 	var _stuck_t := 0.0                # pushing on the gas and going nowhere
 	var _back_t := 0.0                 # backing out of it
+	var _rg := 0.0                     # time spent getting out of reverse
 
 	func _physics_process(dt: float) -> void:
 		var car: PlayerCar = drive.car
@@ -371,7 +372,7 @@ class Autopilot extends Node:
 		_log_t += dt
 		if _log_t > 5.0:
 			_log_t = 0.0
-			print("pilot: at %s  %.1f m/s  want %.1f  gap %.0f  stop %.1f  to go %.0f m  gear %d" % [str(p.round()), v, want, gap, stop, to_end, car.sim.gear])
+			print("pilot: at %s  %.1f m/s  want %.1f  gap %.0f  stop %.1f  to go %.0f m  gear %d  rpm %.0f  blown %s  surface %s  hit %s  dmg %s" % [str(p.round()), v, want, gap, stop, to_end, car.sim.gear, car.sim.rpm, car.sim.engine_blown, car.sim.surface, (car.last_hit.get_class() + ":" + str(car.last_hit.name)) if is_instance_valid(car.last_hit) else "-", str(car.damage)])
 		var th := 0.0
 		var br := 0.0
 		var hb := 0.0
@@ -382,10 +383,16 @@ class Autopilot extends Node:
 			th = 0.0
 			br = 0.25
 			hb = 1.0
-		# backing up by mistake: the gas finds drive again
+		# backing up by mistake: the gas finds drive again, but only a fresh press from a standstill
+		# does (in reverse the gas is the brake): feather it under a "press" to stop, then let go
+		# and press again
 		if car.sim.gear < 0 and want > 0.5 and _back_t <= 0.0:
-			th = 0.4
 			br = 0.0
+			_rg += dt
+			if v > 0.15:
+				th = 0.25
+				_rg = 0.0
+			else: th = 0.0 if fmod(_rg, 1.2) < 0.5 else 0.6     # (the keyboard gas eases off, so a long let-go)
 		# nosed into something: back off it (the brake reverses once stopped), wheel the other way
 		_stuck_t = _stuck_t + dt if th > 0.3 and v < 0.4 and want > 3.0 else 0.0
 		if _stuck_t > 2.5:

@@ -522,6 +522,9 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# --- aero and rolling
 	var drag := 0.5 * 1.2 * float(spec.cda) * vx * absf(vx)
 	var roll_k: float = { "grass": 0.09, "mud": 0.18, "water": 0.6, "snow": 0.03, "gravel": 0.022 }.get(surface, 0.013)
+	# mud sucks at you harder the faster you plough into it; at a crawl it lets go, so even a
+	# rear-drive car on summer tires, spinning, creeps out instead of sitting there for good
+	if surface == "mud": roll_k *= clampf(absf(vx) / 6.0, 0.25, 1.0)
 	var roll := roll_k * m * G * clampf(vx * 4.0, -1.0, 1.0)
 	# --- integrate the body
 	var fx := fx_r + fx_f * cos(steer) - fy_f * sin(steer) - drag - roll
