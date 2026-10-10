@@ -235,6 +235,11 @@ func _init() -> void:
 	var fri := 4
 	check("pink slips: Friday and Saturday, with the rep", Jobs.weekday(fri) == "FRIDAY" and Jobs.pinks_tonight(fri, 6) and Jobs.pinks_tonight(fri + 1, 9) and not Jobs.pinks_tonight(fri, 5) and not Jobs.pinks_tonight(fri + 2, 9))
 	check("rep: a win's one, pinks two, a loss nothing, a no-show costs one", StreetRace.rep_after(3, true, 1, false) == 4 and StreetRace.rep_after(3, true, 1, true) == 5 and StreetRace.rep_after(3, true, 3, false) == 3 and StreetRace.rep_after(3, false, 4, false) == 2 and StreetRace.rep_after(0, false, 4, false) == 0)
+	# best in show at the meet starts the street record with rep and nothing else
+	var st_meet := { "rep": 2 }
+	StreetRace.tally(st_meet, true, true, 1, false)
+	StreetRace.tally(st_meet, false, true, 3, false)
+	check("a street record the meet started still counts races", int(st_meet.races) == 2 and int(st_meet.wins) == 1 and int(st_meet.rep) == 3, str(st_meet))
 	var rv_ok := true
 	var hpt: Array = []
 	for i in StreetRace.RIVALS.size():
