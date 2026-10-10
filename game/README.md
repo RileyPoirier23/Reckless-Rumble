@@ -174,6 +174,10 @@ The game has its own pixel mouse pointer: an arrow, a pointing finger over what 
 
 Drag the papers around with the mouse; with the arrow keys and Space; or with the left stick and A on a controller (D-pad left/right jumps the cursor to the next thing). B or Backspace cancels; Esc or Back returns to the menu.
 
+## Text
+
+All the game's text is drawn in Cagebook, the pixel font made for CAGE BOSS, brought over (`render/pixel_font.gd`). Small text uses its 3x5 face, proportional, so M, N and W get the width they need to read. Anything drawn bigger (dialogue, titles, the speedo's numbers) uses its 5x7 face at the size closest to what it always was, and never wider, so no panel moves. Text wraps by measured width, not by counting letters. Signs and posters painted into the cutscene sets keep the old fixed-width letters when the new ones wouldn't fit the sign.
+
 ## Controls (the lot)
 
 The camera sits behind the car and turns with it, so up is always ahead. Time, weather and seasons run on their own (a day is 24 minutes, a season about 4 days), and you change cars in the garage.

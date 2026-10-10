@@ -111,7 +111,7 @@ func _init() -> void:
 		if PixelFont.width(String(r[0]), sc) > 620: wide += String(r[0]) + "; "
 	for ln in Hud.wrap_lines(EndCredits.VERSE, 98) + ["I LOVE YOU MEMERE, I'LL KEEP MAKING YOU PROUD", "AUGUST 20TH 1953  -  OCTOBER 7TH 2026", "GRANDMOTHER, SISTER, WIFE AND MOTHER."]:
 		if 214 + PixelFont.width(String(ln)) > 632: wide += String(ln) + "; "
-	check("the credits: her photo's there and nothing runs off the screen", EndCredits.load_photo() != null and wide == "" and PixelFont.G.has(";"), wide)
+	check("the credits: her photo's there and nothing runs off the screen", EndCredits.load_photo() != null and wide == "" and PixelFont.has_glyph(";"), wide)
 	StoryState.step = 0
 	# nobody in a cutscene stands in a car (parked behind them, in front of them, or wrecked),
 	# and no two cars in a set sit in each other (one wreck's cars only touch where they folded)

@@ -53,7 +53,15 @@ func _init() -> void:
 	# the info column at its fullest stays above the road
 	var col: Array = L.info(L.OBJ_MAX_LINES, L.SUB_MAX_LINES, true)
 	check("objective + subtitle + prompt fit the info column", (col[2] as Rect2).end.y <= L.INFO_BOTTOM, "bottom %.0f" % (col[2] as Rect2).end.y)
-	check("subtitle and objective lines fit the column's width", PixelFont.width("W".repeat(L.SUB_CHARS)) <= L.INFO_W - 12 and PixelFont.width("W".repeat(L.OBJ_CHARS)) <= L.INFO_W - 10)
+	# the widest letters there are, wrapped the way the HUD wraps them
+	var ws := ""
+	for i in 40: ws += "WMWM MWW " if i % 2 == 0 else "MOW WWMWM "
+	var too_wide := 0
+	for ln in Hud.wrap_lines(ws.strip_edges(), L.SUB_CHARS):
+		if PixelFont.width(ln) > L.INFO_W - 12: too_wide += 1
+	for ln in Hud.wrap_lines(ws.strip_edges(), L.OBJ_CHARS):
+		if PixelFont.width(ln) > L.INFO_W - 10: too_wide += 1
+	check("subtitle and objective lines fit the column's width", too_wide == 0 and PixelFont.width(Hud.clip(ws, L.SUB_CHARS)) <= L.INFO_W - 12, "%d too wide" % too_wide)
 	# the left column at its fullest: the race order (four cars), the grid card (three rivals)
 	var order_end := 38.0 + 24.0 + 9.0 * 4.0
 	var grid_end := 102.0 + 22.0 + 3.0 * 26.0

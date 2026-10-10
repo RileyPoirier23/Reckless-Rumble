@@ -2171,15 +2171,6 @@ func _draw_cursor() -> void:
 	draw_colored_polygon(PackedVector2Array([p, p + Vector2(0, 10), p + Vector2(3, 7), p + Vector2(7, 7)]), INK)
 	draw_colored_polygon(PackedVector2Array([p + Vector2(1, 2), p + Vector2(1, 8), p + Vector2(3, 6), p + Vector2(5, 6)]), col)
 
-## Word-wraps to `n` characters a line.
+## Word-wraps to what `n` characters of the old fixed-width font took up (the HUD's wrap).
 static func wrap_text(text: String, n: int) -> Array[String]:
-	var out: Array[String] = []
-	var cur_line := ""
-	for word in text.split(" "):
-		if cur_line == "": cur_line = word
-		elif cur_line.length() + 1 + word.length() <= n: cur_line += " " + word
-		else:
-			out.append(cur_line)
-			cur_line = word
-	if cur_line != "": out.append(cur_line)
-	return out
+	return Hud.wrap_lines(text, n)

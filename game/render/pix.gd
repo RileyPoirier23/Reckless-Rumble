@@ -307,16 +307,19 @@ func shadow(cx: int, cy: int, rx: float, ry: float, strength := 0.55) -> void:
 				var c := get_px(x, cy + dy)
 				if c.a > 0.0: img.set_pixel(x, cy + dy, c.darkened(0.45))
 
-## Tiny 3x5 text painted into the image (signs, posters, labels).
+## Tiny text painted into the image (signs, posters, labels), in the game's small face. The sets
+## were laid out for the old fixed-width letters, so a label that would come out wider than that
+## (an M or a W too many) is painted in the old ones instead and never runs off its sign.
 func text(x: int, y: int, s: String, c: Color) -> void:
 	var cx := x
+	var old := PixelFont.width(s) > s.length() * 4 - 1
 	for ch in s.to_upper():
-		var rows: Array = PixelFont.G.get(ch, PixelFont.G["?"])
-		for ry in 5:
-			var bits: int = rows[ry]
-			for rx in 3:
-				if bits & (4 >> rx): px(cx + rx, y + ry, c)
-		cx += 4
+		var g := PixelFont.old_glyph(ch) if old else PixelFont.small_glyph(ch)
+		var rows: Array = g[1]
+		for ry in rows.size():
+			for run: Array in rows[ry]:
+				for rx in range(int(run[0]), int(run[1])): px(cx + rx, y + ry, c)
+		cx += int(g[0]) + 1
 
 static func text_w(s: String) -> int:
-	return s.length() * 4 - 1
+	return mini(PixelFont.width(s), s.length() * 4 - 1)

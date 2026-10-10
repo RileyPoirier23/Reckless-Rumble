@@ -160,7 +160,7 @@ func sub_lines() -> Array[String]:
 	var ls := wrap_lines(s, HudLayout.SUB_CHARS)
 	if ls.size() > HudLayout.SUB_MAX_LINES:
 		ls = ls.slice(0, HudLayout.SUB_MAX_LINES)
-		ls[ls.size() - 1] = ls[ls.size() - 1].substr(0, HudLayout.SUB_CHARS - 3) + "..."
+		ls[ls.size() - 1] = clip(ls[ls.size() - 1], HudLayout.SUB_CHARS)
 	return ls
 
 func obj_lines() -> Array[String]:
@@ -365,12 +365,22 @@ func _bar(p: Vector2, label: String, frac: float, col_: Color, value: String) ->
 	draw_rect(Rect2(p.x + 28, p.y, 40 * clampf(frac, 0, 1), 5), col_)
 	PixelFont.draw(self, Vector2(p.x + 72, p.y), value, BONE)
 
+## `text` cut short with "..." to fit in what `n` old fixed-width characters took up.
+static func clip(text: String, n: int) -> String:
+	var max_w := n * 4 - 1
+	var t := text
+	while t.length() > 0 and PixelFont.width(t + "...") > max_w: t = t.substr(0, t.length() - 1)
+	return t.strip_edges() + "..."
+
+## Word-wraps `text` into lines no wider than `n` characters of the old fixed-width font took up
+## (n * 4 - 1 px): measured in pixels, since the letters aren't all one width any more.
 static func wrap_lines(text: String, n: int) -> Array[String]:
 	var out: Array[String] = []
 	var cur := ""
+	var max_w := n * 4 - 1
 	for word in text.split(" "):
 		if cur == "": cur = word
-		elif cur.length() + 1 + word.length() <= n: cur += " " + word
+		elif PixelFont.width(cur + " " + word) <= max_w: cur += " " + word
 		else:
 			out.append(cur)
 			cur = word
