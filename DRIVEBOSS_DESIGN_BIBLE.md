@@ -929,7 +929,7 @@ Every slider shows the dyno delta and a **risk meter in plain words** (SAFE / SP
 
 | Job | Unlocks | When | Vehicle | Pay | How it plays |
 |---|---|---|---|---|---|
-| **Tow calls** | Ch1 (Toby's Night Shift) | Any time; twice as many in snow and freezing rain | Toby's wrecker | $90 + $2.50/km towed, +$40 at night, +$60 in bad weather | Wrecked traffic cars already sit with their hazards on; drive to one (or a ditch), line up within 3 m, stop, work the boom, tow it to Covington Auto or the Northside impound with the extra weight. A towed car can show up at the counter next morning as a repair job |
+| **Tow calls** | Ch1 (Toby's Night Shift) | Any time; twice as many in snow and freezing rain | Toby's wrecker | $90 + $2.50/km towed, +$40 at night, +$60 in bad weather | Wrecked traffic cars already sit with their hazards on; drive to one (or a ditch), line up within 3 m, stop, work the boom, tow it to Covington Auto or the Northside impound with the extra weight. The wrecker's amber light bar comes on when you hook up, and the hydraulics button switches it on and off any time (the TOW switch on the dash shows it). A towed car can show up at the counter next morning as a repair job |
 | **Repo** | Ch2 | Night | Wrecker | $250 to $600 | The owner may come out and chase you (a traffic car turned pursuer) |
 | **Pizza Delirium** | Prologue | 17:00 to 23:00 | Any | $6 a delivery + tip = $2 + $8 x max(0, 1 - minutes late / 10) x pizza condition | Pizza condition drops with lateral g over 0.7. Thirty minutes or it's free |
 | **Parts runs** | Ch1 | Evenings | Any | $25 to $60 | Rumble Auto Parts or the Fundy depot to another garage |

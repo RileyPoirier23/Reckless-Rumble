@@ -2,7 +2,7 @@
 ## - analog90:  white-on-black needles, orange backlight at night (Silvio, 1991)
 ## - digital80: a glowing VFD bar-graph dash, the 1986 idea of the future (Supreem)
 ## - tft:       a modern screen with rings and a big digital speed (Charjer, 2015)
-## - truck:     big chrome-ringed gauges, oil pressure, volts, the tow lights (the wrecker)
+## - truck:     big chrome-ringed gauges, oil pressure, volts, the light bar's switch (the wrecker)
 class_name DashView
 extends Control
 
@@ -15,6 +15,7 @@ const GOLD := Color("d9a441")
 var sim: CarSim
 var style := "analog90"
 var lit := false          # backlight on (headlights on)
+var beacons := false      # the wrecker's light bar is on
 
 func _process(_dt: float) -> void:
 	queue_redraw()
@@ -170,7 +171,7 @@ func _truck() -> void:
 	draw_rect(Rect2(93, 330, 36, 9), Color("e8e4dc"))
 	PixelFont.draw(self, Vector2(95, 332), "%06d" % (int(sim.odometer_m / 1000.0) + 388120), INK)
 	# four small gauges: tach, oil pressure, volts, temp; plus fuel
-	var small := [[Vector2(36, 286), sim.rpm / 6000.0, "RPM"], [Vector2(36, 332), clampf(0.3 + sim.rpm / 9000.0, 0, 1) * (0.0 if sim.engine_blown else 1.0), "OIL"],
+	var small := [[Vector2(36, 286), sim.rpm / 6000.0, "RPM"], [Vector2(36, 332), clampf(sim.oil_psi / 80.0, 0, 1), "OIL"],
 		[Vector2(186, 286), 0.55 + sin(Time.get_ticks_msec() / 4000.0) * 0.02, "VOLTS"], [Vector2(186, 332), clampf((sim.coolant_c - 40.0) / 90.0, 0, 1), "TEMP"]]
 	for g in small:
 		draw_circle(g[0], 21, chrome.darkened(0.2))
@@ -178,6 +179,7 @@ func _truck() -> void:
 		PixelFont.draw_centered(self, g[0].x, g[0].y + 6, g[2], Color(ink, 0.7))
 	draw_rect(Rect2(64, 268, 22, 9), Color("08080a"))
 	PixelFont.draw_centered(self, 75, 270, _gear(), ink)
-	# the tow lights switch (it's always on; Toby never turns it off)
-	draw_rect(Rect2(140, 268, 30, 9), Color("ffa020") if int(Time.get_ticks_msec() / 400) % 2 == 0 else Color("5a3a10"))
-	PixelFont.draw_centered(self, 155, 270, "TOW", INK)
+	# the light bar's switch: lit and flashing when it's on, dark when it's off
+	var flash := beacons and int(Time.get_ticks_msec() / 400) % 2 == 0
+	draw_rect(Rect2(140, 268, 30, 9), Color("ffa020") if flash else (Color("8a5a18") if beacons else Color("2a2418")))
+	PixelFont.draw_centered(self, 155, 270, "TOW", INK if beacons else Color("6a6458"))

@@ -48,6 +48,12 @@ func open() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_quiet = Engine.get_process_frames()
 
+## Straight to the wheel: its tab, with the calibration already going (the "wheel found" offer).
+func open_wheel() -> void:
+	open()
+	tab = TABS.find("WHEEL")
+	_start_wizard()
+
 func close() -> void:
 	GameSettings.save_file()
 	visible = false
@@ -141,6 +147,7 @@ func value_text(r: Dictionary) -> String:
 		"toggle": return _t(bool(GameSettings.get_v(String(r.sec), String(r.key))))
 		"device":
 			var nm := String(GameSettings.get_v("wheel", "name"))
+			if Wheel.needs_setup(): return (Input.get_joy_name(Wheel.device) + " (FOUND)").to_upper().substr(0, 40)
 			return nm.to_upper().substr(0, 40) if nm != "" else "NONE PICKED"
 		"action": return ">"
 		"live": return ""
@@ -272,15 +279,33 @@ func _finish_bind(en: Array) -> void:
 
 # ------------------------------------------------------------------ the wheel wizard
 
-const WIZ_STEPS := ["rest", "left", "right", "gas", "brake", "done"]
+const WIZ_STEPS := ["wake", "rest", "left", "right", "gas", "brake", "up", "down", "done"]
 const WIZ_TEXT := {
+	"wake": "PRESS THE GAS AND THE BRAKE ONCE EACH AND TURN THE WHEEL A LITTLE (SO THEY WAKE UP). LET GO, THEN PRESS A BUTTON ON THE WHEEL.",
 	"rest": "HANDS OFF THE WHEEL, FEET OFF THE PEDALS. HOLD STILL...",
-	"left": "TURN THE WHEEL ALL THE WAY LEFT AND HOLD IT. THEN ACCEPT.",
-	"right": "NOW ALL THE WAY RIGHT AND HOLD IT. THEN ACCEPT.",
-	"gas": "LET GO. PRESS THE GAS ALL THE WAY DOWN AND HOLD IT. THEN ACCEPT.",
-	"brake": "LET GO OF THE GAS. PRESS THE BRAKE ALL THE WAY DOWN. THEN ACCEPT.",
-	"done": "DONE. ACCEPT TO SAVE, AND DRIVE.",
+	"left": "TURN THE WHEEL ALL THE WAY LEFT, HOLD IT, AND PRESS ANY BUTTON ON THE WHEEL.",
+	"right": "NOW ALL THE WAY RIGHT, HOLD IT, AND PRESS A BUTTON.",
+	"gas": "LET GO. PUSH THE GAS ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON.",
+	"brake": "LET GO OF THE GAS. PUSH THE BRAKE ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON.",
+	"up": "PULL THE RIGHT PADDLE: THAT SHIFTS UP. NO PADDLES? PRESS %s.",
+	"down": "NOW THE LEFT PADDLE: THAT SHIFTS DOWN. NO PADDLES? PRESS %s.",
+	"done": "DONE. PRESS A BUTTON TO SAVE IT, AND DRIVE.",
 }
+
+## The wizard's words for a step, with the keyboard/controller button filled in.
+static func wiz_text(step: String) -> String:
+	var t := String(WIZ_TEXT[step])
+	return t % Hints.fmt("{ui_accept}") if t.contains("%s") else t
+
+## A button on the wheel pressed since last frame (-1 if none). `held` is last frame's buttons.
+static func wheel_press(dev: int, held: Array) -> int:
+	var hit := -1
+	if held.size() != JOY_BUTTON_MAX: held.resize(JOY_BUTTON_MAX)
+	for b in JOY_BUTTON_MAX:
+		var down := Input.is_joy_button_pressed(dev, b as JoyButton)
+		if down and not bool(held[b]) and hit < 0: hit = b
+		held[b] = down
+	return hit
 
 func _wiz_device() -> int:
 	Wheel.resolve()
@@ -295,22 +320,32 @@ func _start_wizard() -> void:
 	if d < 0:
 		note = "PLUG THE WHEEL IN FIRST."
 		return
-	GameSettings.set_v("wheel", "name", Input.get_joy_name(d))
-	GameSettings.set_v("wheel", "guid", Input.get_joy_guid(d))
-	wiz = { "dev": d, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [] }
+	# watch the wheel and anything else that could be its pedals (a pedal set on its own plug),
+	# but not a regular controller
+	var devs: Array[int] = [d]
+	for o in Wheel.connected():
+		if o != d and (Wheel.looks_like_rig(o) or not Input.is_joy_known(o)): devs.append(o)
+	wiz = { "dev": d, "devs": devs, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [], "held": [], "up": -1, "down": -1 }
+	wheel_press(d, wiz.held)        # whatever's held as it starts doesn't count
 
-static func _axes(d: int) -> Array:
+## Every watched device's axes, one after another (device k's axis i is at k * JOY_AXIS_MAX + i).
+static func _axes(devs: Array) -> Array:
 	var out: Array = []
-	for i in JOY_AXIS_MAX: out.append(Input.get_joy_axis(d, i as JoyAxis))
+	for d in devs:
+		for i in JOY_AXIS_MAX: out.append(Input.get_joy_axis(int(d), i as JoyAxis))
 	return out
 
 func _wizard(dt: float) -> void:
 	var step: String = WIZ_STEPS[int(wiz.step)]
+	var wb := wheel_press(int(wiz.dev), wiz.held)
 	if Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("pause"):
 		wiz = {}
 		note = "CALIBRATION CANCELLED. NOTHING CHANGED."
 		return
-	var now := _axes(int(wiz.dev))
+	var now := _axes(wiz.devs)
+	if step == "wake":
+		if wb >= 0 or Input.is_action_just_pressed("ui_accept"): wiz.step = 1
+		return
 	if step == "rest":
 		wiz.t = float(wiz.t) + dt
 		if (wiz.sum as Array).is_empty(): wiz.sum = now.duplicate()
@@ -321,16 +356,36 @@ func _wizard(dt: float) -> void:
 			var rest: Array = []
 			for v in wiz.sum: rest.append(float(v) / float(wiz.n))
 			wiz.rest = rest
-			wiz.step = 1
+			wiz.step = WIZ_STEPS.find("left")
 		return
-	if not Input.is_action_just_pressed("ui_accept"): return
+	# a button on the wheel goes on to the next step (so you never have to let go), as does accept
+	if wb < 0 and not Input.is_action_just_pressed("ui_accept"): return
+	if step == "up" or step == "down":
+		wiz[step] = wb
+		wiz.step = int(wiz.step) + 1
+		return
 	if step == "done":
 		var res := Wizard.solve(wiz.rest, wiz.left, wiz.right, wiz.gas, wiz.brake)
+		# which device each axis was on: the wheel is whatever turned, the pedals whatever was pressed
+		var devs: Array = wiz.devs
+		var d := int(devs[int(res.steer_axis) / JOY_AXIS_MAX])
+		var pd := int(devs[int(res.gas_axis) / JOY_AXIS_MAX])
+		for k in ["steer_axis", "gas_axis", "brake_axis"]: res[k] = int(res[k]) % JOY_AXIS_MAX
+		GameSettings.set_v("wheel", "name", Input.get_joy_name(d))
+		GameSettings.set_v("wheel", "guid", Input.get_joy_guid(d))
+		GameSettings.set_v("wheel", "ids", Wheel.ids_of(d))
+		GameSettings.set_v("wheel", "pedals_name", Input.get_joy_name(pd) if pd != d else "")
+		GameSettings.set_v("wheel", "pedals_guid", Input.get_joy_guid(pd) if pd != d else "")
+		GameSettings.set_v("wheel", "pedals_ids", Wheel.ids_of(pd) if pd != d else "")
 		for k in res: GameSettings.set_v("wheel", k, res[k])
 		GameSettings.set_v("wheel", "enabled", true)
 		_changed("wheel")
+		for pair in [["shift_up", int(wiz.up)], ["shift_down", int(wiz.down)]]:
+			if int(pair[1]) >= 0: Controls.bind(String(pair[0]), "pad", ["joybtn", int(pair[1]), 0.0, d])
+		_changed("bindings")
+		var paddles := "" if int(wiz.up) < 0 else ", PADDLES ON BUTTONS %d AND %d" % [int(wiz.up), int(wiz.down)]
 		wiz = {}
-		note = "THE WHEEL'S SET UP. STEERING ON AXIS %d, GAS ON %d, BRAKE ON %d%s." % [int(res.steer_axis), int(res.gas_axis), int(res.brake_axis), " (ONE AXIS)" if res.combined else ""]
+		note = "THE WHEEL'S SET UP. STEERING ON AXIS %d, GAS ON %d, BRAKE ON %d%s%s%s." % [int(res.steer_axis), int(res.gas_axis), int(res.brake_axis), " (ONE AXIS)" if res.combined else "", " (THE PEDAL SET'S OWN PLUG)" if pd != d else "", paddles]
 		return
 	wiz[step] = now
 	wiz.step = int(wiz.step) + 1
@@ -435,15 +490,23 @@ func _draw_live(p: Vector2) -> void:
 func _draw_wizard() -> void:
 	var step: String = WIZ_STEPS[int(wiz.step)]
 	PixelFont.draw(self, Vector2(20, 50), "CALIBRATING: " + Input.get_joy_name(int(wiz.dev)).to_upper().substr(0, 50), GOLD)
-	for ln_i in Hud.wrap_lines(String(WIZ_TEXT[step]), 70).size():
-		PixelFont.draw(self, Vector2(20, 70 + ln_i * 14), Hud.wrap_lines(String(WIZ_TEXT[step]), 70)[ln_i], BONE, 2)
-	# every axis, live, so you can see which one is moving
-	var now := _axes(int(wiz.dev))
-	for i in now.size():
-		var y := 130.0 + i * 13.0
-		PixelFont.draw(self, Vector2(20, y), "AXIS %d" % i, ASH)
+	var wl := Hud.wrap_lines(wiz_text(step), 70)
+	for ln_i in wl.size():
+		PixelFont.draw(self, Vector2(20, 70 + ln_i * 14), wl[ln_i], BONE, 2)
+	# the axes, live, so you can see which one is moving (the ones that have said anything)
+	var devs: Array = wiz.devs
+	var now := _axes(devs)
+	var row_i := 0
+	for k in now.size():
+		var v := float(now[k])
+		if v == 0.0 or row_i >= 11: continue
+		var y := 130.0 + row_i * 13.0
+		row_i += 1
+		var lab := ("AXIS %d" % (k % JOY_AXIS_MAX)) if devs.size() == 1 else ("%d: AXIS %d" % [k / JOY_AXIS_MAX + 1, k % JOY_AXIS_MAX])
+		PixelFont.draw(self, Vector2(20, y), lab, ASH)
 		draw_rect(Rect2(80, y, 200, 6), Color(1, 1, 1, 0.08))
-		var v := float(now[i])
 		draw_rect(Rect2(180 + minf(v, 0.0) * 100, y, absf(v) * 100, 6), GOLD)
 		PixelFont.draw(self, Vector2(290, y), "%.2f" % v, BONE)
-	PixelFont.draw_centered(self, 320, HINT_Y, Hints.fmt("{ui_accept}: NEXT  {ui_cancel}: CANCEL"), ASH)
+	if devs.size() > 1:
+		for k in devs.size(): PixelFont.draw(self, Vector2(340, 130 + k * 10), "%d: %s" % [k + 1, Input.get_joy_name(int(devs[k])).to_upper().substr(0, 40)], ASH)
+	PixelFont.draw_centered(self, 320, HINT_Y, Hints.fmt("A WHEEL BUTTON OR {ui_accept}: NEXT  {ui_cancel}: CANCEL"), ASH)

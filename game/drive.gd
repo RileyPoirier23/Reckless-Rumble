@@ -226,7 +226,10 @@ void fragment() {
 	hud.show_help = bool(GameSettings.get_v("ui", "controls_card"))   # F1 (or the pause menu) shows the controls
 	_apply_settings()
 	var iw := get_node_or_null("/root/InputWatch")
-	if iw: iw.settings_changed.connect(_apply_settings)
+	if iw:
+		iw.settings_changed.connect(_apply_settings)
+		iw.wheel_found.connect(_wheel_found)
+	if Wheel.needs_setup(): _wheel_found.call_deferred(Input.get_joy_name(Wheel.device))
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -638,6 +641,11 @@ func _tip_used(key: String) -> void:
 		save.tips_seen = seen
 
 ## The settings the drive scene follows (Settings: difficulty, UI, graphics), at start and on change.
+## A wheel's plugged in that's never been set up: say where to set it up (it doesn't steer yet,
+## and it never runs a menu).
+func _wheel_found(nm: String) -> void:
+	hud.post("WHEEL FOUND: %s. SET IT UP: %s, THEN SET UP THE WHEEL." % [nm.to_upper().substr(0, 28), Hints.fmt("{pause}")], 7.0)
+
 func _apply_settings(_section := "") -> void:
 	hud.verbosity = GameSettings.chatter_level()
 	hud.show_diag = bool(GameSettings.get_v("ui", "scan_tool"))
@@ -707,6 +715,40 @@ func modal_open() -> bool:
 
 ## First-run tips, once a save: after a few seconds of plain driving (no job, no race, no chase),
 ## one at a time, and never one you've already used.
+## The GPS keeps up with you: take another road and it works out a new way from where you are
+## (like a real one, "rerouting"), and a place you picked off the map clears when you get there.
+var _gps_t := 0.0
+func _gps_upkeep(dt: float) -> void:
+	if String(dest.name) == "" or car == null: return
+	_gps_t += dt
+	if _gps_t < 1.0: return
+	_gps_t = 0.0
+	var p := car.sim.pos
+	# arrived (a place off the map; jobs and the story say when you've arrived themselves)
+	if free_roam and not StoryState.active and not jobs.active() and p.distance_to(dest.p) < 28.0 and car.sim.speed() < 6.0:
+		hud.notify("YOU'VE ARRIVED: %s." % String(dest.name), "status", 1, 3.0)
+		clear_route()
+		return
+	var r: PackedVector2Array = gps.route
+	if r.size() < 2: return
+	var off := INF
+	for i in r.size() - 1: off = minf(off, p.distance_to(Geometry2D.get_closest_point_to_segment(p, r[i], r[i + 1])))
+	# off the route, but on a road (off-road in a field there's no better way to give)
+	if off > 35.0 and not world.map.nearest_road(p, 20.0).is_empty():
+		gps.set_route(world.map.route(p, dest.p), String(dest.name))
+		hud.diag_event("GPS: REROUTING")
+
+## Free roam with nothing on: say what you can do, so there's always a next step on the screen.
+const IDLE_LINE := "FREE DRIVE. {jobs}: GIGS FOR MONEY. {map}: THE MAP. THE GARAGE IS AT COVINGTON AUTO."
+var _auto_obj := ""                 # the line this put up (it only ever replaces its own)
+func _idle_objective() -> void:
+	var want := ""
+	if free_roam and not StoryState.active and not jobs.active():
+		want = Hints.fmt(IDLE_LINE) if String(dest.name) == "" else "HEADING TO %s. THE GPS HAS THE WAY." % String(dest.name)
+	if hud.objective == "" or hud.objective == _auto_obj:
+		hud.objective = want
+		_auto_obj = want
+
 const TIPS := [
 	["map", "{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."],
 	["jobs", "{jobs}: GIGS. PIZZA, TOW CALLS, RIDES, RACES."],
@@ -751,6 +793,20 @@ func _burnout_tip(dt: float) -> void:
 	else:
 		hud.notify("ALL-WHEEL DRIVE: THE BRAKES HOLD ALL FOUR. NO BURNOUT. AWD IS FOR DRIFTING: A REAR-BIASED CENTRE DIFF LETS THE BACK STEP OUT.", "tip")
 
+## A burnout on the HUD: the seconds while it lasts, the time when it's done (a good one is remembered).
+func _burnout_count() -> void:
+	if car.burn_t > 1.0: hud.prompt("BURNOUT  %.1f S" % car.burn_t)
+	if car.burn_last > 0.0:
+		var secs := car.burn_last
+		car.burn_last = 0.0
+		if secs < 3.0: return
+		var best := float(save.get("burnout_best", 0.0))
+		if secs > best:
+			save.burnout_best = secs
+			hud.notify("BURNOUT: %.1f S. YOUR BEST. THE NEIGHBOURS HAVE OPINIONS." % secs, "status", 1, 4.0)
+		else:
+			hud.notify("BURNOUT: %.1f S (BEST %.1f)." % [secs, best], "status", 1, 3.0)
+
 ## Free roam picks up the calendar where the last session left it: the day (so Saturday's auction
 ## is still on Saturday), the hour and the season.
 func _restore_calendar() -> void:
@@ -790,7 +846,10 @@ func _process(dt: float) -> void:
 	dash.visible = not modal
 	gps.visible = not modal
 	_tips(dt)
+	_gps_upkeep(dt)
+	_idle_objective()
 	_burnout_tip(dt)
+	_burnout_count()
 	_awards(dt)
 	# the chase cam: behind the car and turning with it, so up on the screen is always ahead.
 	# It swings round a little slower than the car, so you can see a slide happen.
@@ -857,6 +916,7 @@ func _process(dt: float) -> void:
 		lights.refresh(cam.global_position, half_px)
 	lights.animate(dt)
 	dash.lit = night
+	dash.beacons = car.beacons
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
 	var wx := GameSettings.weather_amount()
@@ -900,7 +960,7 @@ func _process(dt: float) -> void:
 func _depth_sort(up: Vector2) -> void:
 	var c := cam.global_position
 	for n in ysort.get_children():
-		if not (n is Node2D): continue
+		if not (n is Node2D) or n.has_meta("no_sort"): continue        # (tire smoke keeps itself under its car)
 		var p: Vector2 = n.sort_point() if n.has_method("sort_point") else n.global_position
 		n.z_index = 1000 + clampi(int((p - c).dot(-up) / 2.0), -950, 950)
 
@@ -941,7 +1001,11 @@ func _inputs() -> void:
 	if Input.is_action_just_pressed("map"):
 		_tip_used("map")
 		if map_screen.visible: map_screen.visible = false
-		else: map_screen.open()
+		else:
+			# what you're meant to be doing goes on the map too
+			map_screen.current_name = String(dest.name)
+			map_screen.current_p = dest.p if String(dest.name) != "" else Vector2.INF
+			map_screen.open()
 	if map_screen.visible: return
 	if Input.is_action_just_pressed("gearbox"):
 		car.sim.auto_gearbox = not car.sim.auto_gearbox

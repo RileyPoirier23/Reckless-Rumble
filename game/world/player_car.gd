@@ -17,6 +17,9 @@ var shape_node: CollisionShape2D
 var smoke: Array[CPUParticles2D] = []
 var steam: CPUParticles2D
 var engine_smoke: CPUParticles2D
+var burn_cloud: CPUParticles2D    # a burnout's (or a donut's) cloud: big, slow, it hangs about
+var burn_t := 0.0                 # seconds into the burnout going on now
+var burn_last := 0.0              # how long the last one went, once it's over (the HUD reads it, then clears it)
 var smoke_on := true           # Settings > Graphics: tire smoke
 var hyd := 0                    # 1ton's hydraulics kit (0 none .. 3 four pumps)
 var stance := Vector2.ZERO      # 1ton's donk: [pixels up off the ground, front wheel scale]
@@ -60,10 +63,39 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	add_child(shape_node)
 	view = CarView.new()
 	view.art = CarArt.new(spec, paint, 0.0, 1, CarArt.CAR_SCALE)
+	view.light_bar = has_light_bar()
 	add_child(view)
 	for i in 4:                    # rear left, rear right, front left, front right
 		var p := _particles(Color(0.85, 0.85, 0.88, 0.55), 1.2, 60)
 		smoke.append(p)
+	var puff := _puff_tex()
+	for p in smoke:
+		# a jet off the tire that thickens and billows as it slows
+		p.texture = puff
+		p.direction = Vector2(1, 0)
+		p.spread = 28.0
+		p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+		p.emission_sphere_radius = 1.5
+		p.amount = 90
+		p.lifetime = 1.8
+		p.scale_amount_min = 0.5
+		p.scale_amount_max = 1.2
+		p.initial_velocity_min = 14.0
+		p.initial_velocity_max = 34.0
+		p.damping_min = 10.0
+		p.damping_max = 18.0
+		p.scale_amount_curve = _grow_curve()
+	burn_cloud = _particles(Color(0.84, 0.84, 0.87, 0.32), 4.0, 80)
+	burn_cloud.spread = 180.0
+	burn_cloud.initial_velocity_min = 12.0
+	burn_cloud.initial_velocity_max = 34.0
+	burn_cloud.gravity = Vector2(0, -2)
+	burn_cloud.texture = puff
+	burn_cloud.scale_amount_min = 1.6
+	burn_cloud.scale_amount_max = 3.6
+	burn_cloud.damping_min = 5.0
+	burn_cloud.damping_max = 9.0
+	burn_cloud.scale_amount_curve = _grow_curve()
 	steam = _particles(Color(0.95, 0.97, 1.0, 0.5), 1.6, 30)
 	engine_smoke = _particles(Color(0.12, 0.12, 0.14, 0.7), 2.0, 40)
 	head_light = PointLight2D.new()
@@ -83,7 +115,7 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 
 ## The smoke lives on the parent (so it stays where it was puffed out): it goes with the car.
 func _exit_tree() -> void:
-	for p in smoke + [steam, engine_smoke]:
+	for p in smoke + [steam, engine_smoke, burn_cloud]:
 		if is_instance_valid(p): p.queue_free()
 
 func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
@@ -106,6 +138,28 @@ func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	p.z_as_relative = false
 	get_parent().add_child.call_deferred(p)
 	return p
+
+static var _puff: ImageTexture
+
+## One puff of smoke: a 6-pixel round blob, solid in the middle and thin at the edge.
+static func _puff_tex() -> ImageTexture:
+	if _puff: return _puff
+	var rows := [".oOOo.", "oOOOOo", "OOOOOO", "OOOOOO", "oOOOOo", ".oOOo."]
+	var img := Image.create(6, 6, false, Image.FORMAT_RGBA8)
+	for y in 6:
+		for x in 6:
+			var ch := String(rows[y])[x]
+			img.set_pixel(x, y, Color(1, 1, 1, 1.0 if ch == "O" else (0.45 if ch == "o" else 0.0)))
+	_puff = ImageTexture.create_from_image(img)
+	return _puff
+
+## Smoke that swells as it goes: half size as it leaves the tire, full size as it fades.
+static func _grow_curve() -> Curve:
+	var c := Curve.new()
+	c.add_point(Vector2(0.0, 0.45))
+	c.add_point(Vector2(0.5, 0.85))
+	c.add_point(Vector2(1.0, 1.0))
+	return c
 
 ## The headlight beam: 160 px long from the bumper, out ahead of the car.
 static func _cone_tex() -> ImageTexture:
@@ -141,10 +195,12 @@ var _flash_t := 0.0
 var _hb_down := 0.0
 var blink := 0                    # -1 left, 1 right, 0 off
 var hazards := false
+var beacons := false              # the wrecker's light bar (the hydraulics button, on a car with no hydraulics)
 var _blink_steer := 0.0
 var locked := false               # a menu is up: hands off, ease to a stop
 var show_mode := false            # parked at the meet: out of gear, handbrake on, the gas just revs it
 var _in_show := false
+var show_off := false             # doing a donut or a handbrake slide on purpose: the aids step back
 
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
 ## a little stability control). SIM gives you none; ARCADE gives you more.
@@ -165,17 +221,20 @@ func _inputs(dt: float) -> Array:
 		th = clampf(th * (1.0 + 0.4 * impaired * sin(_drunk_t * 1.7)), 0.0, 1.0)
 	if sim.assist != CarSim.Assist.SIM:
 		var v := sim.speed()
+		# on purpose: full lock and the gas at a crawl (a donut), or a slide off the handbrake. The
+		# aids step back, the way you'd switch traction control off in a real car
+		show_off = sim.assist == CarSim.Assist.STREET and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or _hb_t < 2.0)
 		# traction control: back off the gas while the rears spin up
 		var spin := sim.drive_slip()
 		var tc_limit := 2.5 if sim.assist == CarSim.Assist.STREET else 1.5
-		if spin > tc_limit and v > 1.5 and hb < 0.1:
+		if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off:
 			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)
 		if not wheel:
 			# stability: steer into a slide for you, and don't let the stick over-rotate at speed
 			# (how much less lock at speed is a setting: Settings > Controls > SPEED STEERING)
 			var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
 			var help := 0.55 if sim.assist == CarSim.Assist.STREET else 0.9
-			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1:
+			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off:
 				st = clampf(st + beta * help * 1.6, -1.0, 1.0)
 			var at_speed := lerpf(1.0, 0.55 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(float(GameSettings.get_v("controls", "speed_steer")), 0.0, 1.5))
 			st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
@@ -202,6 +261,8 @@ func _lights(dt: float, st: float) -> void:
 	if hands and Input.is_action_just_pressed("blink_left"): blink = 0 if blink == -1 else -1
 	if hands and Input.is_action_just_pressed("blink_right"): blink = 0 if blink == 1 else 1
 	if hands and Input.is_action_just_pressed("hazards"): hazards = not hazards
+	if hands and view.light_bar and hyd == 0 and Input.is_action_just_pressed("hydraulics"): set_beacons(not beacons)
+	view.beacons = beacons
 	if blink != 0:
 		if signf(st) == float(blink) and absf(st) > 0.5: _blink_steer = 1.0
 		elif _blink_steer > 0.0 and absf(st) < 0.15:
@@ -209,6 +270,16 @@ func _lights(dt: float, st: float) -> void:
 			_blink_steer = 0.0
 	view.blink_left = hazards or blink == -1
 	view.blink_right = hazards or blink == 1
+
+## A wrecker has an amber light bar on the cab.
+func has_light_bar() -> bool:
+	return String(spec.get("body", "")) == "tow" or String(spec.get("id", "")) == "tow"
+
+## The light bar on or off (says so, unless it's somebody else's car).
+func set_beacons(on: bool) -> void:
+	if beacons == on or not has_light_bar(): return
+	beacons = on
+	if not quiet and hud: hud.notify("LIGHT BAR ON." if on else "LIGHT BAR OFF. JUST A TRUCK NOW.", "status", 1, 2.0)
 
 func _physics_process(dt: float) -> void:
 	if dead: return
@@ -400,22 +471,48 @@ func _update_look(dt: float, br: float) -> void:
 	var half_tr := float(spec.track) * CarArt.CAR_SCALE / 2.0
 	var snow := sim.surface in ["snow", "ice"]
 	var mark_col := Color(0.05, 0.05, 0.06) if not snow else Color(0.45, 0.48, 0.55)
+	# the smoke comes off the spinning tire itself, in its wheel well: it's thrown out the back of
+	# the tire (out the front, spinning backwards) and a little to the outside, and it's drawn under
+	# the body, so the car hides what's still under it and it billows out from the fenders
+	var tire_w := 0.12 * CarArt.CAR_SCALE
+	var smoke_z := z_index - 1
+	var thrown := sim.heading + (0.0 if sim.gear < 0 else PI)
 	for side in 2:
 		var v := -half_tr if side == 0 else half_tr
+		var out_v := v + (-tire_w if side == 0 else tire_w)
+		var outward := (0.4 if side == 0 else -0.4) * (-1.0 if sim.gear < 0 else 1.0)
+		var back := -0.3 if sim.gear >= 0 else 0.3
 		var rear := _wheel_world(-half_wb, v)
 		var slip: float = sim.wheel_slip[2 + side]
 		var s := clampf((slip - 2.0) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + side, rear, s, mark_col)
-		smoke[side].global_position = rear
+		smoke[side].global_position = _wheel_world(-half_wb + back, out_v)
+		smoke[side].global_rotation = thrown + outward
 		smoke[side].emitting = smoke_on and slip > 4.5 and sim.surface != "ice"
 		smoke[side].color_ramp.colors[0] = Color(0.88, 0.9, 0.95, 0.6) if snow else Color(0.85, 0.85, 0.88, 0.55)
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + 10 + side, front, fs, mark_col)
 		# a front-driver's burnout (the reverse-to-drive slam) smokes the fronts
-		smoke[2 + side].global_position = front
+		smoke[2 + side].global_position = _wheel_world(half_wb + back, out_v)
+		smoke[2 + side].global_rotation = thrown + outward
 		smoke[2 + side].emitting = smoke_on and float(sim.wheel_slip[side]) > 4.5 and not sim.front_locked and sim.surface != "ice"
 		smoke[2 + side].color_ramp.colors[0] = smoke[side].color_ramp.colors[0]
+	for p in smoke + [burn_cloud]:
+		p.set_meta("no_sort", true)
+		p.z_index = smoke_z
+		p.gravity = CarView.screen_up * 7.0           # it rises: up the screen, whichever way the camera's turned
+	# a burnout or a donut: the driven tires spinning hard and the car going nowhere fast. The
+	# smoke piles up round the car and the HUD counts it
+	var rear_slip := maxf(float(sim.wheel_slip[2]), float(sim.wheel_slip[3]))
+	var front_slip := 0.0 if sim.front_locked else maxf(float(sim.wheel_slip[0]), float(sim.wheel_slip[1]))
+	var burning := maxf(rear_slip, front_slip) > 7.0 and sim.speed() < 10.0 and sim.surface != "ice" and not dead
+	if burning: burn_t += dt
+	elif burn_t > 0.0:
+		burn_last = burn_t
+		burn_t = 0.0
+	burn_cloud.global_position = _wheel_world(-half_wb if rear_slip >= front_slip else half_wb, 0.0)
+	burn_cloud.emitting = smoke_on and burning and burn_t > 0.5
 	var nose := _wheel_world(float(spec.length) * CarArt.CAR_SCALE * 0.45, 0.0)
 	steam.global_position = nose
 	steam.emitting = sim.coolant_c > 112.0 or sim.head_gasket

@@ -59,6 +59,8 @@ var slam_roll := -1.0           # tests: what the dice say for the next slam (-1
 var _slam_t := 0.0              # just shifted into drive rolling backwards: the next stab of gas is a slam
 var coolant_c := 15.0
 var oil_c := 15.0
+var oil_psi := 0.0                    # oil pressure: what the pump makes, not what the tach says
+var _rad_k := -1.0                    # the radiator's size, worked out once from the engine (rad_size)
 var coolant_level := 1.0
 var radiator := 1.0
 var body := 1.0
@@ -117,6 +119,7 @@ func reset_parts() -> void:
 	axle_broken = false
 	coolant_c = ambient_c
 	oil_c = ambient_c
+	oil_psi = 0.0
 	coolant_level = 1.0
 	radiator = 1.0
 	body = 1.0
@@ -704,16 +707,35 @@ func _hurt_engine(amount: float) -> void:
 		engine_blown = true
 		say("ENGINE BLOWN")
 
+## How much heat the radiator sheds per degree over the air, per unit of airflow (W/K). Makers
+## size the cooling for the engine: a big V8 gets a big radiator and a big fan.
+func rad_size() -> float:
+	if _rad_k < 0.0:
+		var peak := 0.0
+		for p in spec.engine.torque_curve: peak = maxf(peak, float(p[1]) * float(p[0]) * TAU / 60.0)
+		_rad_k = maxf(820.0, peak * 0.0045)
+	return _rad_k
+
 ## Heat once per frame: coolant, oil, the head gasket, cold-engine wear, brake cooling.
+## Sized so a healthy engine runs 85-100°C driven hard, a long burnout or a sit in traffic with
+## the throttle pinned gets it hot, and it takes a holed radiator, no coolant or a blown head
+## gasket to really cook it.
 func _heat(dt: float, throttle: float) -> void:
 	var power := maxf(0.0, curve_torque(rpm) * throttle * power_mult()) * w_eng   # W at the crank
-	var q := (power * 0.95 + 2500.0 + w_eng * 6.0) if not engine_blown else 0.0
+	var q := (power * 0.5 + 2500.0 + w_eng * 6.0) if not engine_blown else 0.0     # about half goes into the coolant
 	var airflow := 0.2 + absf(vx) / 22.0
-	if coolant_c > 96.0: airflow += 0.55                                           # the fan
+	if coolant_c > 96.0: airflow += 0.8                                            # the fan
 	var stat := clampf((coolant_c - 82.0) / 10.0, 0.04, 1.0)                        # thermostat
-	var cool := 820.0 * airflow * radiator * coolant_level * stat * (coolant_c - ambient_c)
-	coolant_c += (q - cool) / 32000.0 * dt
+	var cool := rad_size() * airflow * radiator * coolant_level * stat * (coolant_c - ambient_c)
+	coolant_c += (q - cool) / 60000.0 * dt                                          # the block and the coolant in it
 	oil_c += ((coolant_c + rpm / 900.0) - oil_c) * 0.04 * dt
+	# oil pressure: the pump makes more with revs until the relief valve caps it (about 2500 rpm
+	# warm, sooner cold); thick cold oil reads high, thin hot oil low; worn bearings bleed it off
+	var visc := clampf(1.6 - (oil_c - 20.0) / 110.0, 0.7, 1.6)
+	var want := 0.0
+	if not engine_blown and rpm > 250.0:
+		want = minf(65.0, visc * (8.0 + rpm * 0.022)) * (0.45 + 0.55 * engine_health)
+	oil_psi += (want - oil_psi) * minf(1.0, dt * 2.0)
 	# a holed radiator leaks
 	if radiator < 0.85: coolant_level = maxf(0.05, coolant_level - (0.85 - radiator) * 0.004 * dt)
 	if coolant_c > 118.0 and not engine_blown:

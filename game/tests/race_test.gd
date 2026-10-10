@@ -438,7 +438,9 @@ func _meet() -> void:
 		check("meet: short the $%d and they turn you away" % CarMeet.ENTRY, broke.state == "turned_away" and int(main.save.cash) == CarMeet.ENTRY - 8 and not main.car.show_mode,
 			"%s, $%d" % [broke.state, int(main.save.cash)])
 		main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 120), 0.0)
-		await _wait(0.4)
+		for k in 20:                   # (up to 2 s: a busy machine runs slow frames)
+			await _wait(0.1)
+			if j.kind == "" and j.meet == null: break
 		check("meet: turned away, drive off and the night's over", j.kind == "" and j.meet == null)
 	j.finish(false)
 	main.save.cash = 1000

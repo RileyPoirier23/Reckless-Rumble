@@ -326,6 +326,8 @@ class Autopilot extends Node:
 	var _stopped_t := 0.0
 	var _cleared := {}                 # junctions already stopped at and gone through
 	var _log_t := 0.0
+	var _stuck_t := 0.0                # pushing on the gas and going nowhere
+	var _back_t := 0.0                 # backing out of it
 
 	func _physics_process(dt: float) -> void:
 		var car: PlayerCar = drive.car
@@ -340,27 +342,31 @@ class Autopilot extends Node:
 		if route.size() < 2 or o.is_empty():
 			_controls(0.0, 0.25, 0.0, 1.0)
 			return
-		# where along the route we are, and a point to aim at further on
+		# where along the route we are (the nearest point on it, not just the nearest corner: a
+		# corner still ahead of us mustn't be skipped), and a point to aim at further on
 		var best := 0
 		var bd := INF
-		for k in route.size():
-			var dd := route[k].distance_squared_to(p)
+		var on := p
+		for k in route.size() - 1:
+			var q := Geometry2D.get_closest_point_to_segment(p, route[k], route[k + 1])
+			var dd := q.distance_squared_to(p)
 			if dd < bd:
 				bd = dd
 				best = k
+				on = q
 		var look := clampf(5.0 + v * 0.9, 6.0, 18.0)
-		var aim := _along(route, best, p, look)
+		var aim := _along(route, best, on, look)
 		var err := wrapf(fwd.angle_to(aim - p), -PI, PI)
 		var steer := clampf(err * 2.2, -1.0, 1.0)
 		# how fast: the corner ahead, the car ahead, the junction ahead, the end
 		var want := 13.0
-		var bend := absf(wrapf(fwd.angle_to(_along(route, best, p, 22.0) - p), -PI, PI))
+		var bend := absf(wrapf(fwd.angle_to(_along(route, best, on, 22.0) - p), -PI, PI))
 		want = lerpf(want, 5.0, clampf(bend / 1.2, 0.0, 1.0))
 		var gap := _gap_ahead(p, fwd)
 		if gap < 30.0: want = minf(want, maxf(0.0, (gap - 7.0) * 0.7))
 		var to_end := p.distance_to(o.to)
 		if to_end < 45.0: want = minf(want, maxf(0.0, sqrt(2.0 * 2.5 * maxf(0.0, to_end - float(o.radius) * 0.4))))
-		var stop := _junction_stop(p, fwd, route, best, dt, v)
+		var stop := _junction_stop(on, fwd, route, best, dt, v)
 		if stop >= 0.0: want = minf(want, sqrt(2.0 * 3.0 * maxf(0.0, stop - 1.0)))
 		_log_t += dt
 		if _log_t > 5.0:
@@ -377,9 +383,18 @@ class Autopilot extends Node:
 			br = 0.25
 			hb = 1.0
 		# backing up by mistake: the gas finds drive again
-		if car.sim.gear < 0 and want > 0.5:
+		if car.sim.gear < 0 and want > 0.5 and _back_t <= 0.0:
 			th = 0.4
 			br = 0.0
+		# nosed into something: back off it (the brake reverses once stopped), wheel the other way
+		_stuck_t = _stuck_t + dt if th > 0.3 and v < 0.4 and want > 3.0 else 0.0
+		if _stuck_t > 2.5:
+			_stuck_t = 0.0
+			_back_t = 1.8
+		if _back_t > 0.0:
+			_back_t -= dt
+			_controls(0.0, 0.7, -steer, 0.0)
+			return
 		_controls(th, br, steer, hb)
 
 	## The point `ahead` metres on along the route from where we are.

@@ -253,20 +253,7 @@ var month := { "seen": 0, "correct": 0, "citations": 0, "earned": 0 }
 ## Register the desk's buttons (safe to call more than once).
 static func setup_actions() -> void:
 	Controls.setup()
-	for action in ACTIONS:
-		if InputMap.has_action(action): continue
-		InputMap.add_action(action, 0.5)
-		for b in ACTIONS[action]:
-			var ev: InputEvent
-			if b < 32:     # joypad buttons are 0..20; every key code is 32 or more
-				var jb := InputEventJoypadButton.new()
-				jb.button_index = b
-				ev = jb
-			else:
-				var k := InputEventKey.new()
-				k.physical_keycode = b
-				ev = k
-			InputMap.action_add_event(action, ev)
+	Controls.add_actions(ACTIONS)
 
 func _ready() -> void:
 	setup_actions()
@@ -830,12 +817,29 @@ func _input(e: InputEvent) -> void:
 		pad_cursor = false
 		if drag >= 0: _drag_to(cur)
 		_drawer_hover()
+		_pointer()
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		cur = get_global_mouse_position()
 		if e.pressed: press()
 		else: drag = -1
+		_pointer()
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_RIGHT and e.pressed:
 		_toggle_inspect()
+
+## The mouse pointer: a closed hand while a paper's being dragged, a finger over something to
+## press or pick up, the arrow otherwise.
+func _pointer() -> void:
+	var shape := Input.CURSOR_ARROW
+	if drag >= 0: shape = Input.CURSOR_DRAG
+	else:
+		for i in BUTTONS.size():
+			if _button_rect(i).has_point(cur): shape = Input.CURSOR_POINTING_HAND
+		if phase == "counter" and book == "" and not inspecting and _doc_at(cur) >= 0: shape = Input.CURSOR_POINTING_HAND
+		if inspecting and not field_at(cur).is_empty(): shape = Input.CURSOR_POINTING_HAND
+	Input.set_default_cursor_shape(shape)
+
+func _exit_tree() -> void:
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
 func _process(dt: float) -> void:
 	_move_cursor(dt)
@@ -868,7 +872,7 @@ func _process(dt: float) -> void:
 
 ## The left stick, or the arrow keys, push the cursor around (and whatever it's dragging).
 func _move_cursor(dt: float) -> void:
-	var stick := Vector2(Input.get_joy_axis(0, JOY_AXIS_LEFT_X), Input.get_joy_axis(0, JOY_AXIS_LEFT_Y))
+	var stick := Controls.stick()
 	var keys := Vector2(float(Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_LEFT)),
 		float(Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_UP)))
 	var move := Vector2.ZERO

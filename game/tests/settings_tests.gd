@@ -14,6 +14,7 @@ func _init() -> void:
 	_difficulty()
 	_bindings()
 	_wheel()
+	_wheel_only_drives()
 	_keyboard()
 	_steering()
 	_police()
@@ -95,7 +96,7 @@ func _bindings() -> void:
 	check("a cleared column has nothing in it", not _has_key("horn", KEY_H))
 	# what the settings screen shows for a binding
 	check("binding names read right", Controls.label(["key", KEY_SPACE, 0.0, -1]) == "SPACE" and Controls.label(["joyaxis", JOY_AXIS_TRIGGER_LEFT, 1.0, -1]) == "LT"
-		and Controls.label(["joybtn", JOY_BUTTON_A, 0.0, -1]) == "A" and Controls.label(["joybtn", 14, 0.0, 3]) == "BTN 14", Controls.label(["joybtn", 14, 0.0, 3]))
+		and Controls.label(["joybtn", JOY_BUTTON_A, 0.0, -1]) == "A" and Controls.label(["joybtn", 14, 0.0, 3]) == "WHEEL BTN 14", Controls.label(["joybtn", 14, 0.0, 3]))
 	# pressing something to bind it
 	var k := InputEventKey.new()
 	k.physical_keycode = KEY_K
@@ -165,6 +166,85 @@ func _wheel() -> void:
 	check("pedals on one axis", bool(one.combined) and int(one.gas_axis) == 1)
 	check("one axis: the gas reads", Wheel.pedal(-1.0, float(one.gas_rest), float(one.gas_full)) == 1.0 and Wheel.pedal(-1.0, float(one.brake_rest), float(one.brake_full)) == 0.0)
 	check("nothing's plugged in: no wheel", not Wheel.active())
+
+# ------------------------------------------------------------------ a wheel only drives
+
+## Does any of this action's controller events listen to this device?
+func _listens(action: String, dev: int) -> bool:
+	for e in InputMap.action_get_events(action):
+		if (e is InputEventJoypadButton or e is InputEventJoypadMotion) and (e.device == dev or e.device == -1): return true
+	return false
+
+func _wheel_only_drives() -> void:
+	GameSettings.reset("wheel")
+	Controls.reset_bindings()
+	# a G29, an Xbox pad, and a pedal set on its own plug, never set up
+	Wheel.test_pads = { 0: "Logitech G29 Driving Force Racing Wheel", 1: "Xbox Wireless Controller", 2: "Fanatec ClubSport Pedals V3" }
+	Wheel.resolve()
+	check("a wheel plugged in is found without setting it up", Wheel.device == 0 and Wheel.needs_setup() and not Wheel.active())
+	check("the pad isn't taken for a wheel; the pedal set is part of the rig", Wheel.pads() == [1] and Wheel.devices() == [0, 2], "%s %s" % [Wheel.pads(), Wheel.devices()])
+	check("a wheel known by its maker and model, a pedal set isn't a wheel", Wheel.wheel_name("USB Device", 0x046d, 0xc24f) and not Wheel.wheel_name("Fanatec ClubSport Pedals V3") and Wheel.wheel_name("Thrustmaster T300RS Racing wheel"))
+	check("a pedal that hasn't said anything yet reads as resting, not halfway", Wheel.axis(-1, 2, -1.0) == -1.0)
+	Controls.setup()
+	var bad := ""
+	for a in ["ui_up", "ui_down", "ui_left", "ui_right", "ui_accept", "ui_cancel", "pause", "throttle", "brake", "steer_left", "horn", "ui_tab_next"]:
+		if _listens(a, 0): bad += "%s hears the wheel; " % a
+		if _listens(a, 2): bad += "%s hears the pedals; " % a
+		if not _listens(a, 1): bad += "%s doesn't hear the pad; " % a
+	check("the menus and the buttons listen to the pad, never the wheel", bad == "", bad)
+	# the wheel's pedal resting at the end of its travel on the stick's axis doesn't scroll a menu
+	var pedal := InputEventJoypadMotion.new()
+	pedal.device = 0
+	pedal.axis = JOY_AXIS_LEFT_Y
+	pedal.axis_value = 1.0
+	var stick := pedal.duplicate() as InputEventJoypadMotion
+	stick.device = 1
+	check("a pedal on the wheel never moves a menu; the pad's stick does", not InputMap.event_is_action(pedal, "ui_down") and InputMap.event_is_action(stick, "ui_down"))
+	check("the stick and the rumble use the pad", Controls.active_pad() == 1)
+	CounterScene.setup_actions()
+	check("the counter's desk buttons hear the pad, not the wheel", _listens("desk_click", 1) and not _listens("desk_click", 0))
+	# a button on the wheel binds to the wheel, and keeps the pad's button beside it
+	var paddle := InputEventJoypadButton.new()
+	paddle.device = 0
+	paddle.button_index = 4 as JoyButton
+	paddle.pressed = true
+	var en := Controls.entry_of(paddle)
+	check("a wheel button binds to the wheel", int(en[3]) >= 0 and Controls.label(en) == "WHEEL BTN 4", str(en))
+	Controls.bind("shift_up", "pad", en)
+	var paddle_on := false
+	for e in InputMap.action_get_events("shift_up"):
+		if e is InputEventJoypadButton and e.device == 0 and (e as InputEventJoypadButton).button_index == 4: paddle_on = true
+	check("the paddle shifts up and RB still does", paddle_on and _listens("shift_up", 1))
+	# calibrated: it drives
+	GameSettings.set_v("wheel", "name", "Logitech G29 Driving Force Racing Wheel")
+	GameSettings.set_v("wheel", "enabled", true)
+	Wheel.resolve()
+	check("set up, it drives (and stops asking)", Wheel.active() and not Wheel.needs_setup())
+	# no wheel: a controller binding listens to any controller again
+	Wheel.test_pads = { 1: "Xbox Wireless Controller" }
+	Wheel.resolve()
+	Controls.apply_bindings()
+	check("unplugged: no wheel, any pad works", Wheel.device == -1 and not Wheel.active() and _listens("ui_down", 5))
+	Wheel.test_pads = {}
+	Wheel.resolve()
+	GameSettings.reset("wheel")
+	Controls.reset_bindings()
+	Controls.apply_bindings()
+	# the mouse pointer
+	var img := Cursor.image(Cursor.ARROW, 2)
+	check("the pointer is drawn at the window's scale", img.get_width() == 24 and img.get_height() == 36 and img.get_pixel(0, 0).is_equal_approx(Cursor.INK) and img.get_pixel(23, 35).a == 0.0)
+	check("pointer scale follows the window", Cursor.scale_for(Vector2i(1280, 720)) == 2 and Cursor.scale_for(Vector2i(1920, 1080)) == 3 and Cursor.scale_for(Vector2i(800, 600)) == 1)
+	var ok := true
+	for sh in [Cursor.ARROW, Cursor.POINT, Cursor.GRAB]:
+		for r in sh:
+			for ch in String(r):
+				if not ch in ["X", "O", "G", "S", "."]: ok = false
+	check("the pointers are only made of the palette", ok)
+	# the wizard's words fit
+	var wbad := ""
+	for st in SettingsScreen.WIZ_STEPS:
+		if Hud.wrap_lines(SettingsScreen.wiz_text(String(st)), 70).size() > 4: wbad += "%s runs long; " % st
+	check("the wheel set-up's words fit", wbad == "", wbad)
 
 # ------------------------------------------------------------------ the keyboard
 
@@ -275,7 +355,8 @@ func _layout() -> void:
 	for it in PauseMenu.ITEMS:
 		if PixelFont.width(String(it)) > PauseMenu.PANEL.size.x - 24: pm_bad += "%s too wide; " % it
 		if Hud.wrap_lines(String(PauseMenu.DESCS[it]), 56).size() > 2: pm_bad += "%s description runs over; " % it
-	var last_item_y := PauseMenu.PANEL.position.y + 34 + (PauseMenu.ITEMS.size() - 1) * 16 + 8
+	if Hud.wrap_lines(String(PauseMenu.DESCS["SET UP THE WHEEL"]), 56).size() > 2: pm_bad += "the wheel's set-up description runs over; "
+	var last_item_y := PauseMenu.PANEL.position.y + 34 + PauseMenu.ITEMS.size() * 16 + 8      # one more with a wheel to set up
 	if last_item_y > PauseMenu.PANEL.end.y - 24: pm_bad += "the items run into the description; "
 	var ls := PauseMenu.card_lines()
 	if PauseMenu.CARD.position.y + 28 + ls.size() * 12 > PauseMenu.CARD.end.y: pm_bad += "the card runs off its panel; "

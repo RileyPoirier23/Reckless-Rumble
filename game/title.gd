@@ -14,11 +14,15 @@ func _items() -> void:
 	if DemoBuild.on():
 		if DemoBuild.saved_step() > 0 and DemoBuild.saved_step() < DemoBuild.end_step():
 			ITEMS.append(["CONTINUE THE PROLOGUE", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
+		if Wheel.needs_setup():
+			ITEMS.append(["SET UP YOUR WHEEL", "FOUND: %s. TWENTY SECONDS: TURN IT, PRESS THE PEDALS, AND IT DRIVES." % Input.get_joy_name(Wheel.device).to_upper().substr(0, 32), "wheel_setup"])
 		ITEMS.append(["PLAY THE PROLOGUE", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE. THEN HIS FIRST DAY AT THE COUNTER.", "story:new"])
 		ITEMS.append(["SETTINGS", "CONTROLS AND REBINDING, A STEERING WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.", "settings"])
 		ITEMS.append(["CREDITS", "WHO MADE IT, WHO'S IN IT, AND WHO IT'S FOR.", "credits"])
 		ITEMS.append(["QUIT", "SEE YOU TOMORROW.", ""])
 		return
+	if Wheel.needs_setup():
+		ITEMS.append(["SET UP YOUR WHEEL", "FOUND: %s. TWENTY SECONDS: TURN IT, PRESS THE PEDALS, AND IT DRIVES. IT ONLY DRIVES: THE MENUS STAY ON THE KEYBOARD, MOUSE AND CONTROLLER." % Input.get_joy_name(Wheel.device).to_upper().substr(0, 32), "wheel_setup"])
 	if StoryState.has_save():
 		ITEMS.append(["CONTINUE THE STORY", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
 	ITEMS.append(["NEW STORY", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE.", "story:new"])
@@ -87,8 +91,11 @@ const ITEM_Y := 92.0
 const ITEM_PITCH := 24.0
 const DESC := Rect2(24, 272, 592, 26)
 
+## Item i's box. The items close up when there are more of them, so the last never reaches the
+## description box.
 func _item_rect(i: int) -> Rect2:
-	return Rect2(24, ITEM_Y + i * ITEM_PITCH, 300, 20)
+	var pitch := minf(ITEM_PITCH, floorf((DESC.position.y - 4.0 - ITEM_Y) / maxf(ITEMS.size(), 1)))
+	return Rect2(24, ITEM_Y + i * pitch, 300, minf(20.0, pitch - 2.0))
 
 func _input(e: InputEvent) -> void:
 	if (settings and settings.visible) or (wall and wall.visible): return
@@ -101,8 +108,17 @@ func _input(e: InputEvent) -> void:
 				sel = i
 				_go()
 
+var _wheel_offer := false
+
 func _process(dt: float) -> void:
 	t += dt
+	if Wheel.needs_setup() != _wheel_offer:
+		_wheel_offer = Wheel.needs_setup()
+		var was: String = ITEMS[sel][2] if sel < ITEMS.size() else ""
+		_items()
+		sel = 0
+		for i in ITEMS.size():
+			if ITEMS[i][2] == was: sel = i
 	if car: car.heading = t * 0.5
 	if (settings and settings.visible) or (wall and wall.visible):
 		queue_redraw()
@@ -117,6 +133,7 @@ func _go() -> void:
 	match target:
 		"": get_tree().quit()
 		"settings": settings.open()
+		"wheel_setup": settings.open_wheel()
 		"wall": wall.open()
 		"credits":
 			EndCredits.from_menu = true
@@ -157,7 +174,7 @@ func _draw() -> void:
 		var on := i == sel
 		draw_rect(r, Color(0.85, 0.64, 0.25, 0.18) if on else Color(0.08, 0.07, 0.1, 0.75))
 		if on: draw_rect(r, GOLD, false, 1.0)
-		PixelFont.draw(self, r.position + Vector2(8, 5), ("> " if on else "  ") + ITEMS[i][0], GOLD if on else BONE, 2)
+		PixelFont.draw(self, r.position + Vector2(8, floorf((r.size.y - 10.0) / 2.0)), ("> " if on else "  ") + ITEMS[i][0], GOLD if on else BONE, 2)
 	draw_rect(DESC, Color(0.08, 0.07, 0.1, 0.75))
 	var ls := Hud.wrap_lines(String(ITEMS[sel][1]), 146)
 	for k in mini(ls.size(), 2):

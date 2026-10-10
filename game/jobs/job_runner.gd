@@ -353,6 +353,7 @@ func _tow(dt: float) -> void:
 					stage = "deliver"
 					drive._on_dest(String(tow_dest.name), tow_dest.p)
 					drive.hud.post("HOOKED. CHAINS ON. IT'S RIDING ON YOUR BACK NOW.", 4.0)
+					c.set_beacons(true)
 			else:
 				_boom = 0.0
 				drive.hud.post(Hints.fmt("HOLD {use}: WORK THE BOOM"), 0.2)

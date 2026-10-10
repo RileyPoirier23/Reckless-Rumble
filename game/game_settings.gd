@@ -14,7 +14,7 @@ const DEFAULTS := {
 		"trigger_deadzone": 0.06, "kb_ramp": true, "vibration": 1.0, "prompts": "auto" },
 	# action -> [[kind, code, value, device], ...] where kind is key, joybtn or joyaxis; absent = defaults
 	"bindings": {},
-	"wheel": { "enabled": false, "guid": "", "name": "",
+	"wheel": { "enabled": false, "guid": "", "name": "", "ids": "", "pedals_guid": "", "pedals_name": "", "pedals_ids": "",
 		"steer_axis": 0, "steer_center": 0.0, "steer_min": -1.0, "steer_max": 1.0, "steer_sign": 1.0,
 		"gas_axis": 2, "gas_rest": -1.0, "gas_full": 1.0,
 		"brake_axis": 3, "brake_rest": -1.0, "brake_full": 1.0,

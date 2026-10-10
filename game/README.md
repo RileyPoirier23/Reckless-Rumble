@@ -28,6 +28,8 @@ Port Rumble (our Moncton) to Salisbury and Havelock, laid out from the real geog
   - A Tim Burtons on every corner.
 - **Country:** farms with barns and yard lights, spruce and maple woods, and fields that change colour with the seasons.
 
+**The big map** (TAB / M / BACK) lists every place you can drive to, coloured by what's there: the shop, gas, night spots, parts, sights. Pick one (the keys, or click it in the list or on the map) and the map shows the road there in blue, how far it is by road, about how long, and what the place is for; accept, or click it again, and the GPS takes you. Click anywhere else on the map to drop a pin and drive to that. Zoom from the whole region to the town to the streets round you with Q/E, the shoulder buttons or the mouse wheel. Wherever you're already headed is at the top of the list. The GPS reroutes when you take another road, says when you've arrived, and distances are in the same metres as the GPS. With nothing on, the objective line says what you can do: gigs, the map, the garage.
+
 The world streams in 64 m chunks around the camera, so it's all one drive with no loading.
 
 ## Time, weather and light
@@ -121,7 +123,7 @@ Each car has its own instrument cluster and its own GPS, with day and night look
 | 1991 Nissun Silvio (Leo's) | 90s analog needles, orange backlight at night | A cheap suction-cup TomTum |
 | 1986 Toyoda Supreem | 80s digital VFD bar graphs | Leo's cracked phone (loses signal in the country) |
 | 2015 Dodgy Charjer R/T | Modern screen with rings | Built-in dash screen, dark and red, tilted |
-| 2008 Fjord F-One-Fiddy wrecker (Toby's) | Big chrome truck gauges, tow lights | A rugged orange trucker unit, north-up |
+| 2008 Fjord F-One-Fiddy wrecker (Toby's) | Big chrome truck gauges, oil pressure, the light bar's switch | A rugged orange trucker unit, north-up |
 
 Open the map (Tab or Back on the controller), pick a place, and the GPS routes you there with turn arrows and the distance left.
 
@@ -167,6 +169,8 @@ The gauge, the wheel and the loupe say exactly what the two-pick comparison woul
 - **Scripted customers** come from `data/story_customers.json`: Dale Hatch the Wednesday after Thanksgiving, Darrell's trade-in a week later, the Familia's cars on Thursdays. A story step can bring its own (`"customers": [...]` on a counter step); stamps set story flags (`desk_<id>_<stamp>` plus the outcome's own), and so do notes (`desk_note_<id>`). The regulars live in the same file (`"regulars"`: who they are, their visits, an `after` branch for each stamp you might have given them last time, and their `"overtime"` visits, each with a season instead of a day); `DeskBook.last_file(id)` tells a story step what you stamped on anybody.
 - **Friday night** (or Thursday, before a holiday Friday): rent, Gus's pay, Aries's hockey and the Familia's cut all come due.
 
+The game has its own pixel mouse pointer: an arrow, a pointing finger over what you can press or pick up, and a closed hand while you drag a paper. On the road it gets out of the way when the mouse sits still.
+
 Drag the papers around with the mouse; with the arrow keys and Space; or with the left stick and A on a controller (D-pad left/right jumps the cursor to the next thing). B or Backspace cancels; Esc or Back returns to the menu.
 
 ## Controls (the lot)
@@ -196,7 +200,7 @@ Every one of these can be changed in **Settings > Controls** (from the title or 
 
 On the controller the stick has a response curve (small movements, small corrections), and the default STREET assists add traction control and a little stability control. Blinkers cancel themselves after the turn.
 
-**A steering wheel.** Plug it in, then **Settings > Wheel**: pick it, run CALIBRATE (hands off, full left, full right, the gas, the brake; it works out which axis is which and which way they run, and handles both pedals on one axis), set the wheel's rotation to match its own software, and turn on DRIVE WITH THE WHEEL. The rim turns the road wheels one for one (AUTO range gears it like a real car, about 14 to 1; or pick how many degrees give full lock), with no steering help in the way. Paddles, and an H-shifter's gears, bind on the same tab. There's no force feedback in the game: turn on your wheel's centring spring in its own software.
+**A steering wheel.** Plug it in and the game finds it (anything that calls itself a wheel: Logitech, Thrustmaster, Fanatec, Moza and the rest) and offers SET UP YOUR WHEEL on the title and in the pause menu. That runs the calibration straight away: you can confirm each step with any button on the wheel, so you never have to let go of it, and the last two steps catch the paddles. A wheel only drives: its rim, pedals and buttons never move a menu, the counter's cursor or the button prompts (menus stay on the keyboard, the mouse and a controller), and a controller plugged in beside it keeps working. Or do it by hand in **Settings > Wheel**: pick it, run CALIBRATE (hands off, full left, full right, the gas, the brake; it works out which axis is which and which way they run, and handles both pedals on one axis), set the wheel's rotation to match its own software, and turn on DRIVE WITH THE WHEEL. The rim turns the road wheels one for one (AUTO range gears it like a real car, about 14 to 1; or pick how many degrees give full lock), with no steering help in the way. Paddles, and an H-shifter's gears, bind on the same tab. There's no force feedback in the game: turn on your wheel's centring spring in its own software.
 
 **The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
 
@@ -211,7 +215,7 @@ On the controller the stick has a response curve (small movements, small correct
 **Frankie.** Leo has nobody; Frankie isn't his. A week after Bay 3, the kid who's been sitting on the curb outside Covington Auto every night at closing turns up inside: Frankie, thirteen, from down the street, whose mom works nights at the hospital. He can hear a low tire from the street. He holds the light for two hours without moving it, Leo tells him he can come back Saturday, and when he says his name Gus goes quiet: only one man ever called Leo's father Frankie, and that was Dale Hatch. It's just a name. By June he hasn't missed a Saturday, he's writing up brake jobs, and Gus has sewn his name on a Covington Auto shirt. From July 2020 on he's in the Employee of the Month photos, standing in front of Leo in that shirt, a bit taller every year.
 
 **Burnouts, donuts and drifting depend on which wheels drive:**
-- **Rear-wheel drive** is the burnout and donut car. Hold the gas and the brake together while stopped: the line lock holds the fronts and the rears spin. Full lock and full gas from a crawl (with the aids off) and it spins round on its rear tires.
+- **Rear-wheel drive** is the burnout and donut car. Hold the gas and the brake together while stopped: the line lock holds the fronts and the rears spin. Full lock and full gas from a crawl and it spins round on its rear tires (the STREET aids step back for that, and for a few seconds after a handbrake pull, the way you'd switch traction control off). The smoke jets out of the wheel wells and piles up round the car, and the HUD counts the seconds; your longest burnout is remembered.
 - **Front-wheel drive** can't do a brake burnout: the brakes hold the very wheels that drive. Its burnout is the reverse-to-drive slam: roll backwards in reverse, shift up into drive (in an automatic, SHIFT UP takes it from R to D) and stab the gas. The front tires light up, and the drivetrain takes a hammer blow. Faster backwards, more torque and a worn clutch make it likelier to snap the CV axle; then nothing drives until Gus replaces it ($380).
 - **All-wheel drive** can't brake-burnout either (the brakes hold all four), but it's the drift platform if you build it that way: the CENTRE DIFF slot in the garage (AWD cars only) takes a viscous 60/40 front-biased centre (planted, won't drift), a rally 35/65 or a drift 20/80. The rear-biased ones let the back step out under power while the front pulls you through. A rear-driver drifts too; it just spins easier.
 
@@ -221,7 +225,7 @@ On the controller the stick has a response curve (small movements, small correct
 
 - **Money shift:** in manual, drop into a low gear at speed and the wheels drag the engine past the limiter. The valves bend. Street assists block the worst of it.
 - **Cold engine:** every start is a cold start at the outside temperature. Rev it hard before the oil is warm and it wears.
-- **Overheating:** hit something head-on and the radiator gets holed. The coolant leaks, the temperature climbs, and the head gasket goes.
+- **Overheating:** each car's radiator is sized for its engine, so a healthy one runs 85-100°C even flat out on the highway; a long burnout or a sit in traffic warms it. Hit something head-on and the radiator gets holed: the coolant leaks, the temperature climbs, and the head gasket goes. The oil pressure gauge (the wrecker has one) reads the pump, not the tach: it climbs off idle and the relief valve holds it from about 2,500 rpm, higher with cold thick oil, lower with hot oil or a worn engine.
 - **Tires:** burnouts and slides eat tread (in millimetres, per tire) and heat the rubber. Run them to the cords and they blow out.
 - **Brakes:** they fade when they're hot. On Sim the fronts lock up (no ABS), and locked wheels don't steer.
 - **Seasons change the grip:**

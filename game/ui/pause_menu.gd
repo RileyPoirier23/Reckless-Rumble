@@ -17,6 +17,7 @@ const DESCS := {
 	"CONTROLS": "WHAT EVERY BUTTON DOES. CHANGE THEM IN SETTINGS.",
 	"EMPLOYEE OF THE MONTH": "THE WALL IN THE BREAK ROOM AT COVINGTON AUTO.",
 	"QUIT TO TITLE": "THE GAME'S SAVED FIRST.",
+	"SET UP THE WHEEL": "A WHEEL'S PLUGGED IN. TWENTY SECONDS: TURN IT, PRESS THE PEDALS, AND IT DRIVES.",
 }
 const PANEL := Rect2(200, 70, 240, 150)
 const CARD := Rect2(150, 40, 340, 270)
@@ -58,8 +59,11 @@ func close() -> void:
 	wall.visible = false
 	get_tree().paused = false
 
+## What's on the menu: the usual, and the wheel's setup while a wheel's plugged in that isn't.
 func items() -> Array:
-	return ITEMS.duplicate()
+	var out := ITEMS.duplicate()
+	if Wheel.needs_setup(): out.insert(1, "SET UP THE WHEEL")
+	return out
 
 func _process(_dt: float) -> void:
 	if not visible: return
@@ -74,15 +78,18 @@ func _process(_dt: float) -> void:
 	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("ui_cancel"):
 		close()
 		return
-	var n := ITEMS.size()
+	var its := items()
+	var n := its.size()
+	sel = mini(sel, n - 1)
 	if Input.is_action_just_pressed("ui_down"): sel = (sel + 1) % n
 	if Input.is_action_just_pressed("ui_up"): sel = (sel + n - 1) % n
-	if Input.is_action_just_pressed("ui_accept"): _pick(String(ITEMS[sel]))
+	if Input.is_action_just_pressed("ui_accept"): _pick(String(its[sel]))
 
 func _pick(item: String) -> void:
 	match item:
 		"RESUME": close()
 		"SETTINGS": settings.open()
+		"SET UP THE WHEEL": settings.open_wheel()
 		"CONTROLS": card = true
 		"EMPLOYEE OF THE MONTH": wall.open()
 		"QUIT TO TITLE":
@@ -112,12 +119,14 @@ func _draw() -> void:
 	draw_rect(PANEL, Color(0.05, 0.05, 0.07, 0.95))
 	draw_rect(PANEL, Color(GOLD, 0.7), false, 1.0)
 	PixelFont.draw_centered(self, PANEL.get_center().x, PANEL.position.y + 8, "PAUSED", GOLD, 2)
-	for i in ITEMS.size():
+	var its := items()
+	var pick := mini(sel, its.size() - 1)
+	for i in its.size():
 		var y := PANEL.position.y + 34 + i * 16
-		var on := i == sel
+		var on := i == pick
 		if on: draw_rect(Rect2(PANEL.position.x + 10, y - 3, PANEL.size.x - 20, 13), Color(0.85, 0.64, 0.25, 0.18))
-		PixelFont.draw_centered(self, PANEL.get_center().x, y, String(ITEMS[i]), GOLD if on else BONE)
-	var ls := Hud.wrap_lines(String(DESCS[ITEMS[sel]]), 56)
+		PixelFont.draw_centered(self, PANEL.get_center().x, y, String(its[i]), GOLD if on else BONE)
+	var ls := Hud.wrap_lines(String(DESCS[its[pick]]), 56)
 	for k in mini(ls.size(), 2):
 		PixelFont.draw_centered(self, PANEL.get_center().x, PANEL.end.y - 24 + k * 9, ls[k], ASH)
 	PixelFont.draw_centered(self, 320, 340, Hints.fmt("{updown}: PICK  {ui_accept}: SELECT  {pause}: RESUME"), ASH)

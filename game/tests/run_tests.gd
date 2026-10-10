@@ -81,6 +81,35 @@ func _init() -> void:
 	c = car("dry", 30.0)
 	run(c, 300.0, 0.0)
 	check("healthy car idles cool", c.coolant_c < 105.0 and not c.head_gasket, "coolant %d°C" % int(c.coolant_c))
+	# 6b. driven hard, a healthy engine stays in its range: three minutes flat out in summer
+	var hot := ""
+	for f in ["silvio", "charjer", "supreem", "tow"]:
+		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % f))
+		var hc := CarSim.new(spec)
+		hc.set_ambient(30.0)
+		hc.cold_start()
+		hc.coolant_c = 88.0
+		hc.oil_c = 90.0
+		var mx := 0.0
+		for i in 120 * 180:
+			hc.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+			mx = maxf(mx, hc.coolant_c)
+		if mx > 105.0 or hc.engine_health < 0.999: hot += "%s %d°C; " % [f, int(mx)]
+	check("flat out for three minutes, a healthy engine doesn't overheat", hot == "", hot)
+	# 6c. oil pressure: up with the revs off idle, then the relief valve holds it; it isn't the tach
+	c = car()
+	c.gear = 0
+	c.auto_gearbox = false
+	run(c, 3.0, 0.0)
+	var idle_psi := c.oil_psi
+	var psi := []
+	for r in [3000.0, 4500.0, 6000.0]:
+		for i in 240:
+			c.rpm = r
+			c.w_eng = r * TAU / 60.0
+			c._heat(1.0 / 120.0, 0.0)
+		psi.append(c.oil_psi)
+	check("oil pressure rises off idle, then holds steady while the revs climb", idle_psi > 12.0 and idle_psi < float(psi[0]) - 15.0 and absf(float(psi[2]) - float(psi[0])) < 3.0, "idle %d, 3000 %d, 4500 %d, 6000 %d psi" % [int(idle_psi), int(psi[0]), int(psi[1]), int(psi[2])])
 	# 7. revving a cold engine wears it
 	c = car("dry", -15.0)
 	c.cold_start()
