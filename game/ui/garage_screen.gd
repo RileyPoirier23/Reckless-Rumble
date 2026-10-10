@@ -418,8 +418,10 @@ static func _money(n: int) -> String:
 func _preview_box() -> void:
 	var r := Rect2(10, 28, 300, 160)
 	draw_rect(r, Color("2a2a30"))
-	draw_rect(Rect2(r.position.x, r.end.y - 40, r.size.x, 40), Color("4a4a48"))
-	draw_rect(Rect2(r.position.x, r.end.y - 41, r.size.x, 1), Color("c8a030"))
+	var top: bool = top_view and tabs()[tab] == "LOOKS"
+	if not top:
+		draw_rect(Rect2(r.position.x, r.end.y - 40, r.size.x, 40), Color("4a4a48"))
+		draw_rect(Rect2(r.position.x, r.end.y - 41, r.size.x, 1), Color("c8a030"))
 	var spec := _base_spec()
 	var shown := _shown_parts()
 	var looks := SaveGame.car_looks({ "parts": shown, "looks": trial if tab == 2 else _car().get("looks", {}), "custom": _custom_shown() })
@@ -436,10 +438,17 @@ func _preview_box() -> void:
 		preview = ImageTexture.create_from_image(PixCars.showroom(spec, len, Color(paint), looks, dmg))
 		preview_top = CarArt.new(spec, Color(paint), _car().damage, 5, 1.0, looks)
 		preview_big = null
-	if top_view and tabs()[tab] == "LOOKS":
-		# from above, big, turning slowly in the middle of the floor
-		if preview_big == null: preview_big = CarArt.new(spec, Color(paint), _car().damage, 5, 2.0, looks)
-		CarView.paint_stack(self, preview_big, r.get_center() + Vector2(0, 14), Time.get_ticks_msec() / 2400.0)
+	if top:
+		# from above, big, turning slowly on the shop's turntable: the car about as long as the
+		# panel is tall
+		var c := r.get_center() + Vector2(0, 6)
+		draw_circle(c, r.size.y * 0.43, Color("3a3a3c"))
+		draw_arc(c, r.size.y * 0.43, 0.0, TAU, 64, Color("5a5a58"), 2.0)
+		draw_arc(c, r.size.y * 0.28, 0.0, TAU, 48, Color("323234"), 1.0)
+		if preview_big == null:
+			var k := r.size.y * 0.8 / (float(spec.get("length", 4.5)) * CarArt.PX)
+			preview_big = CarArt.new(spec, Color(paint), _car().damage, 5, k, looks)
+		CarView.paint_stack(self, preview_big, c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5), Time.get_ticks_msec() / 2400.0)
 	else:
 		var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
 		draw_texture(preview, pos)

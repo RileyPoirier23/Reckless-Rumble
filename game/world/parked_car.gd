@@ -4,6 +4,8 @@
 class_name ParkedCar
 extends TrafficCar
 
+var box: Array = []          # its rectangle in ParkedCars.boxes: moved with it when it's shoved
+
 ## Parks it: `body` as CarCatalog.random_traffic gives it (its looks already dressed).
 func park(the_traffic: Traffic, body: Dictionary, at: Vector2, h: float) -> void:
 	traffic = the_traffic
@@ -48,4 +50,9 @@ func drive(dt: float) -> void:
 	view.headlights = false
 	view.braking = false
 	head_light.visible = false
-	if state == "parked" and wreck_t > 6.0: view.still = true
+	if state == "parked" and wreck_t > 6.0 and not view.still:
+		view.still = true
+		# where it ended up is where the next car parked round here has to keep clear of
+		if box.size() == 3:
+			box[0] = pos
+			box[1] = heading

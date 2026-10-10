@@ -33,9 +33,99 @@ func _init() -> void:
 	_wear_and_traffic()
 	_fleet()
 	_parked()
+	_knots()
+	_supercars_and_lamps()
 	_async()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
+
+## The wedges from above: drawn in from the doors to the nose, hips over a wider back track, the
+## Countach's wing a blade over its tail, the F40's slatted engine cover, the Testosterona's
+## strakes. And a headlamp is a lens one or two slices deep, a sunroof sits in a dark seal.
+func _supercars_and_lamps() -> void:
+	var narrow: Array = []
+	for id: String in ["lamberghini_coontash_1985", "ferraree_testosterona_1987", "ferraree_eff_forty_1990", "lotis_espree_1979", "pontiak_fieryo_1985"]:
+		var p := _plan(id)
+		var x_mid := 0
+		var x_front := 0
+		for x in p.sx:
+			if p.ux[x] <= 0.5: x_mid = x
+			if p.ux[x] <= 0.88: x_front = x
+		if p.hw[x_front] > p.hw[x_mid] * 0.9: narrow.append(id)
+	check("a wedge is drawn in toward its nose from the doors", narrow.is_empty(), str(narrow))
+	var c := _plan("lamberghini_coontash_1985")
+	var rear_y := 0.0
+	var front_y := 0.0
+	for w: Array in c.wheels:
+		if w[4]: front_y = maxf(front_y, absf(float(w[1]) - c.cy))
+		else: rear_y = maxf(rear_y, absf(float(w[1]) - c.cy))
+	check("a mid-engined car's back wheels sit wider than its front ones", rear_y > front_y, "%.1f / %.1f" % [rear_y, front_y])
+	var blade := 0
+	for i in c.m2.size(): if c.h2[i] >= 0 and (c.m2[i] & 255) == CarArt.M_TRIM: blade += 1
+	check("the Countach's wing has a dark trailing edge over its tail", blade > 4, "%d px" % blade)
+	var slats := 0
+	var f40 := _plan("ferraree_eff_forty_1990")
+	for i in f40.m0.size(): if f40.h0[i] >= 0 and (f40.m0[i] & 255) == CarArt.M_TRIM: slats += 1
+	var plain := 0
+	var nsx := _plan("acurra_en_ess_eks_1991")
+	for i in nsx.m0.size(): if nsx.h0[i] >= 0 and (nsx.m0[i] & 255) == CarArt.M_TRIM: plain += 1
+	check("an F40's engine cover is slatted, more than a plain one's pair of vents", slats > plain + 20, "%d / %d" % [slats, plain])
+	var ribs := {}
+	for id3: String in ["ferraree_testosterona_1987", "lamberghini_diabloh_1995"]:
+		var p3 := _plan(id3)
+		var n := 0
+		for i in p3.m0.size():
+			var m := p3.m0[i]
+			if p3.h0[i] >= 0 and (m & 255) == CarArt.M_PAINT and ((m >> 8) & 15) == 0 and ((m >> 12) & 15) == CarArt.R_BODY: n += 1
+		ribs[id3] = n
+	check("strakes down a Testosterona's flanks show from above", int(ribs.ferraree_testosterona_1987) > int(ribs.lamberghini_diabloh_1995) + 6, str(ribs))
+	var tall: Array = []
+	for id2: String in ["toyoda_camree_2015", "hondo_accordion_2004", "nissun_alteema_2007", "chryslur_three_hunnert_see_2009", "silvio"]:
+		var p2 := _plan(id2)
+		var lo := 999
+		var hi := -1
+		for i in p2.m0.size():
+			if p2.h0[i] >= 0 and (p2.m0[i] & 255) == CarArt.M_HEAD:
+				lo = mini(lo, p2.h0[i])
+				hi = maxi(hi, p2.h0[i])
+		if hi < 0 or hi - lo > 1: tall.append("%s %d..%d" % [id2, lo, hi])
+	check("a headlamp's lens is one or two slices deep, not a stack up the corner", tall.is_empty(), str(tall))
+	var seal := []
+	for mods: Dictionary in [{ "roof": "sunroof" }, {}]:
+		var sr := _plan("hondo_civil_ess_eye_1999", mods)
+		var n2 := 0
+		for i in sr.m0.size(): if sr.h0[i] >= 0 and (sr.m0[i] & 255) == CarArt.M_TRIM and ((sr.m0[i] >> 8) & 15) == 0: n2 += 1
+		seal.append(n2)
+	check("a sunroof sits in a dark seal", int(seal[0]) > int(seal[1]) + 8, str(seal))
+
+## The knots where the map's roads bunch up: lights a few metres apart run in step, a street laid
+## over the main road isn't driven down, a car waiting at a stop sign keeps its nose out of the
+## junction next door, nobody's sent up a dead-end stub to turn round in the road.
+func _knots() -> void:
+	var map := MapData.get_map()
+	var tr := Traffic.new()
+	tr.classify(map)
+	var out_of_step: Array = []
+	for n: int in tr.junctions:
+		if String(tr.junctions[n].control) != "signal": continue
+		for e in map.g_adj[n]:
+			var m: int = e[0]
+			if not tr.junctions.has(m) or String(tr.junctions[m].control) != "signal" or float(e[1]) > 25.0: continue
+			if tr.junctions[n].majors.has(int(e[2].idx)) and tr.junctions[m].majors.has(int(e[2].idx)) and int(tr.junctions[n].offset) != int(tr.junctions[m].offset): out_of_step.append([n, m])
+	check("lights a few metres apart on the same main road run in step", out_of_step.is_empty(), str(out_of_step))
+	check("John St where it runs on top of Main St is nobody's route", tr.shadowed.has(Vector2i(795, 48)) and tr.shadowed.size() < 10, str(tr.shadowed.keys()))
+	check("waiting on John St at King St, the nose is out of Main St's junction", tr.stop_line(795, 792) > 10.0, "%.1f" % tr.stop_line(795, 792))
+	var car := TrafficCar.new()
+	car.rng.seed = 5
+	var picks := {}
+	for i in 400:
+		var c := tr.next_node(792, 795, car)
+		picks[c] = int(picks.get(c, 0)) + 1
+	check("from John St at King St, hardly anybody goes down the John St stretch on top of Main St", int(picks.get(48, 0)) < 12, str(picks))
+	var stub := 0
+	for i in 400: if tr.next_node(52, 51, car) == 342: stub += 1
+	check("hardly anybody turns up the bridge's dead-end stub", stub < 12, "%d of 400" % stub)
+	car.free()
 
 ## Every catalogue car, the fleet and a trailer draw: an atlas of slices, lamps, a wheel stack.
 func _every_car() -> void:
@@ -288,6 +378,16 @@ func _parked() -> void:
 	check("no parked car out in a lane", in_lane.is_empty(), str(in_lane.slice(0, 3)))
 	check("none in a junction", near_junction.is_empty(), str(near_junction.slice(0, 3)))
 	check("no driveway car inside a house", in_house.is_empty(), str(in_house.slice(0, 3)))
+	# nor under a house's roof: the roof's drawn lifted up the screen off its footprint
+	var under_roof: Array = []
+	for k2 in pc.spots:
+		for sp2: Dictionary in pc.spots[k2]:
+			if String(sp2.kind) != "driveway": continue
+			var car := Rect2((sp2.p as Vector2) - Vector2(1.2, 2.9), Vector2(2.4, 5.8))
+			for b2 in map.buildings:
+				var r2: Rect2 = b2.r
+				if r2.grow_individual(0.0, ParkedCars.ROOF_LIFT, 0.0, 0.0).intersects(car) and r2.get_center().distance_to(car.get_center()) < 40.0: under_roof.append(sp2.p)
+	check("no driveway car under the roof of a house beside it", under_roof.is_empty(), str(under_roof.slice(0, 3)))
 	var mall := { "kind": "stall", "lot": "mall", "style": "commercial" }
 	var drive_way := { "kind": "driveway", "style": "residential" }
 	check("the mall's lot empties at night, the driveways fill up", pc.odds(mall, 13.0) > pc.odds(mall, 2.0) * 5.0 and pc.odds(drive_way, 23.0) > pc.odds(drive_way, 13.0))

@@ -48,6 +48,7 @@ var parked: Array = []         # the parked cars near you (ParkedCars): the race
 var hush := Rect2()            # a street race is on in here: Marco's crew has the side streets blocked
 var junctions := {}                 # node -> { control, major_roads, radius, queue, offset }
 var _node_cells := {}               # Vector2i -> Array of node ids (64 m cells)
+var shadowed := {}                  # Vector2i(a, b) -> true: a stretch of road laid over another one
 var _grid := {}                     # per frame: Vector2i (20 m) -> Array of cars
 var rng := RandomNumberGenerator.new()
 var _spawn_t := 0.0
@@ -76,7 +77,75 @@ func classify(the_map: MapData) -> void:
 		var k := Vector2i(floori(map.g_pos[n].x / 64.0), floori(map.g_pos[n].y / 64.0))
 		if not _node_cells.has(k): _node_cells[k] = []
 		_node_cells[k].append(n)
+	for n in map.g_pos.size():
 		if map.g_adj[n].size() >= 3: junctions[n] = _junction(n)
+	_coordinate_signals()
+	_shadows()
+
+## Lights a few metres apart (one crossing, really, where the map's roads meet in a knot) run in
+## step: the road that runs on through both gets its green at both at once, so nobody's caught
+## at a red between them with their tail across the last one. Where a knot of three can't all
+## line up, the bigger roads win, and nobody's routed the way that's left out of step.
+func _coordinate_signals() -> void:
+	var links: Array = []
+	for n: int in junctions:
+		if String(junctions[n].control) != "signal": continue
+		for e in map.g_adj[n]:
+			var m: int = e[0]
+			if m <= n or not junctions.has(m) or String(junctions[m].control) != "signal" or float(e[1]) > 25.0: continue
+			var gn := 0 if junctions[n].majors.has(int(e[2].idx)) else 1
+			var gm := 0 if junctions[m].majors.has(int(e[2].idx)) else 1
+			links.append([n, m, gn, gm, 0 if gn + gm == 0 else (1 if gn == gm else 2), float(e[1]), int(MapData.CLS[e[2].cls].rank)])
+	# (the bigger road first: through traffic on an arterial outweighs a side street's turn)
+	links.sort_custom(func(x: Array, y: Array) -> bool:
+		if x[6] != y[6]: return x[6] > y[6]
+		return x[4] < y[4] if x[4] != y[4] else x[5] < y[5])
+	var placed := {}
+	for l: Array in links:
+		var a: int = l[0]
+		var b: int = l[1]
+		if placed.has(a) and placed.has(b): continue
+		# the green for the linking road starts at the same moment at both ends
+		var start := [0, 27]
+		if placed.has(b):
+			junctions[a].offset = posmod(int(junctions[b].offset) + start[l[2]] - start[l[3]], int(CYCLE))
+		else:
+			junctions[b].offset = posmod(int(junctions[a].offset) + start[l[3]] - start[l[2]], int(CYCLE))
+		placed[a] = true
+		placed[b] = true
+
+## Stretches of road the map lays right on top of another road (a street that runs on a few
+## metres alongside the main road into the same junction): two lanes of traffic can't share
+## that, so nobody's routed down the lesser one unless it's the only way on.
+func _shadows() -> void:
+	shadowed = {}
+	for a in map.g_pos.size():
+		for e in map.g_adj[a]:
+			var b: int = e[0]
+			if b < a: continue
+			var A := map.g_pos[a]
+			var B := map.g_pos[b]
+			var d := (B - A).normalized()
+			var rank := int(MapData.CLS[e[2].cls].rank)
+			var under := 0
+			for f: float in [0.25, 0.5, 0.75]:
+				var q := A.lerp(B, f)
+				for m: int in _near_nodes(q, 0.0, 70.0):
+					var hit := false
+					for g in map.g_adj[m]:
+						var k: int = g[0]
+						if int(g[2].idx) == int(e[2].idx) or int(MapData.CLS[g[2].cls].rank) < rank: continue
+						var M := map.g_pos[m]
+						var Kp := map.g_pos[k]
+						if absf((Kp - M).normalized().dot(d)) > 0.95 and MapData.seg_dist(q, M, Kp) < float(e[2].w) * 0.5:
+							hit = true
+							break
+					if hit:
+						under += 1
+						break
+			if under == 3:
+				shadowed[Vector2i(a, b)] = true
+				shadowed[Vector2i(b, a)] = true
 
 # ------------------------------------------------------------------ the rules of the road
 
@@ -137,12 +206,30 @@ func _junction(n: int) -> Dictionary:
 	for e in map.g_adj[n]:
 		var ui := (map.g_pos[e[0]] - map.g_pos[n]).normalized()
 		var need := radius + 1.2
+		var cap := 0.6
 		for f in map.g_adj[n]:
 			if f[0] == e[0]: continue
 			var th := absf(ui.angle_to((map.g_pos[f[0]] - map.g_pos[n]).normalized()))
-			if th < deg_to_rad(15.0) or th > deg_to_rad(75.0): continue
+			# (a ramp laid in alongside the highway it joins waits back where it's off the
+			# highway's lanes, however far back up the ramp that is)
+			var merge := String(e[2].cls) == "ramp" and String(f[2].cls) == "highway" and th >= deg_to_rad(5.0)
+			if (th < deg_to_rad(15.0) and not merge) or th > deg_to_rad(75.0): continue
+			if merge and th < deg_to_rad(15.0): cap = 0.85
 			need = maxf(need, (float(f[2].w) / 2.0 + 0.3 + float(e[2].w) / 2.0 * cos(th)) / sin(th))
-		stops[e[0]] = minf(need, maxf(radius + 1.2, float(e[1]) * 0.6))
+		stops[e[0]] = minf(need, maxf(radius + 1.2, float(e[1]) * cap))
+		# and back out of the way of another junction a few metres off to the side (two streets
+		# that meet a main road a car's length apart): the nose waits clear of its box too
+		for m: int in _near_nodes(map.g_pos[n], 1.0, 20.0):
+			if m == e[0] or map.g_adj[m].size() < 3: continue
+			var to_m := map.g_pos[m] - map.g_pos[n]
+			if absf(ui.angle_to(to_m)) < 0.5: continue
+			var rm := 4.0
+			for f in map.g_adj[m]: rm = maxf(rm, float(f[2].w) / 2.0 + 2.0)
+			var along := to_m.dot(ui)
+			var off := absf(to_m.cross(ui))
+			if off < rm + 1.0:
+				var back := along + sqrt((rm + 1.0) * (rm + 1.0) - off * off) + 1.0
+				if back < float(e[1]) * 0.8: stops[e[0]] = maxf(float(stops[e[0]]), back)
 	# how far out a car leaving is still in the way: where two roads meet at a sharp angle their
 	# lanes lie over each other well past the box
 	var clear := radius
@@ -209,6 +296,12 @@ func lane_point(a: int, b: int, s: float, lane: float) -> Vector2:
 func next_node(a: int, b: int, car: TrafficCar) -> int:
 	var opts: Array = []
 	var din := (map.g_pos[b] - map.g_pos[a]).normalized()
+	var lanes_in: Array = LANE[edge_road(a, b).cls]
+	# where two roads fork at a shallow angle, the one bearing right is the outer lane's and the
+	# one bearing left the inner lane's (or the two lanes swap across each other in the fork)
+	var straightest := INF
+	for e in map.g_adj[b]:
+		if e[0] != a: straightest = minf(straightest, absf(din.angle_to((map.g_pos[e[0]] - map.g_pos[b]).normalized())))
 	for e in map.g_adj[b]:
 		if e[0] == a: continue
 		var r: Dictionary = e[2]
@@ -216,12 +309,21 @@ func next_node(a: int, b: int, car: TrafficCar) -> int:
 		# prefer staying on bigger roads and going roughly straight; nobody wants the gravel
 		var w := 1.0 + maxf(0.0, din.dot(dout)) * 2.0 + float(MapData.CLS[r.cls].rank) * 0.3
 		var turn := din.angle_to(dout)
-		var lanes_in: Array = LANE[edge_road(a, b).cls]
 		if lanes_in.size() > 1:
 			if car.lane_i == 0 and turn > 0.5: continue          # inner lane: no right turns
 			if car.lane_i == 1 and turn < -0.5: continue         # outer lane: no left turns
+			if absf(turn) > straightest + 0.05 and absf(turn) < 0.6 and (turn > 0.0) == (car.lane_i == 0): continue
 		if r.cls == "gravel": w *= 0.3
 		if car.highway_only and r.cls != "highway": continue
+		# a bus or a truck turning swings its tail across the corner: it goes straight when it can
+		if car.big and absf(turn) > 0.6: w *= 0.25
+		# a stub that ends a few metres on is no place to go (you'd only turn round in the road),
+		# nor a street laid over the main road beside it, nor a hairpin back into a junction a
+		# couple of metres off (the knots where the map's roads meet in a bunch)
+		if map.g_adj[e[0]].size() == 1 and float(e[1]) < 60.0: w *= 0.02
+		if shadowed.has(Vector2i(b, int(e[0]))): w *= 0.01
+		if absf(turn) > 2.0 or (absf(turn) > 0.6 and float(e[1]) < 9.0 and map.g_adj[e[0]].size() >= 3): w *= 0.1
+		if not _in_step(a, b, int(e[0])): w *= 0.05
 		opts.append([e[0], w, int(MapData.CLS[r.cls].rank)])
 	if opts.is_empty(): return a
 	# where three junctions sit a few metres apart (a diagonal road across the grid), don't go
@@ -271,8 +373,13 @@ func _spawn(cam_m: Vector2) -> void:
 	var fwd := _heading_of_player()
 	# out on the open road, moving: half of them come out just past the edge of the screen up the
 	# road you're on, so there's somebody to pass and somebody coming the other way
-	if fwd != Vector2.ZERO and rng.randf() < 0.5 and _spawn_ahead(cam_m, fwd): return
-	var nodes := _near_nodes(cam_m, SPAWN_MIN, SPAWN_MAX)
+	if fwd != Vector2.ZERO and rng.randf() < 0.5:
+		for k in 3:
+			if _spawn_ahead(cam_m, fwd): return
+	# (on the move, from just off the screen; sat still, further out, where they've had time to
+	# sort themselves out by the time they get to you)
+	var near := _spawn_min() if fwd != Vector2.ZERO else SPAWN_MIN
+	var nodes := _near_nodes(cam_m, near, SPAWN_MAX)
 	if nodes.is_empty(): return
 	# when you're on the move, most of them come out up ahead, where you'll meet them
 	if fwd != Vector2.ZERO:
@@ -286,7 +393,7 @@ func _spawn(cam_m: Vector2) -> void:
 		var b: int = e[0]
 		var road: Dictionary = e[2]
 		var L := map.g_pos[a].distance_to(map.g_pos[b])
-		if L < 6.0: continue
+		if L < 6.0 or shadowed.has(Vector2i(a, b)): continue
 		var lanes: Array = LANE[road.cls]
 		var lane: float = lanes[rng.randi() % lanes.size()]
 		# not in a junction or its queue, and well clear of every other car
@@ -295,14 +402,23 @@ func _spawn(cam_m: Vector2) -> void:
 		if L < ja + jb + 2.0: continue
 		var s := ja + rng.randf() * (L - ja - jb)
 		var p := lane_point(a, b, s, lane)
-		if p.distance_to(cam_m) < SPAWN_MIN * 0.9 or hush.has_point(p): continue
+		if p.distance_to(cam_m) < near * 0.9 or hush.has_point(p): continue
 		if _place_car(a, b, s, lane, road, p): return
 
-## A car on the road you're on (or the one coming at you down it), 70 to 160 m up ahead: just
-## out of sight, close enough to meet. False if there's no stretch of open road there.
+## How near the camera a car can turn up: just past the corners of the screen (in close in town,
+## further out at speed or with the camera pulled back), never nearer than 60 m nor further than
+## SPAWN_MIN.
+func _spawn_min() -> float:
+	if CarView.view_radius <= 0.0: return SPAWN_MIN
+	return clampf(CarView.view_radius / PX + 30.0, 60.0, SPAWN_MIN)
+
+## A car on the road you're on (or the one coming at you down it), 70 to 160 m up ahead (on a
+## town street, from just off the screen): out of sight, close enough to meet. False if there's
+## no stretch of open road there.
 func _spawn_ahead(cam_m: Vector2, fwd: Vector2) -> bool:
 	var rd := map.nearest_road(cam_m, 14.0)
-	if rd.is_empty() or not String(rd.road.cls) in ["highway", "rural", "arterial"]: return false
+	if rd.is_empty() or not String(rd.road.cls) in ["highway", "rural", "arterial", "street"]: return false
+	var near := _spawn_min() if String(rd.road.cls) == "street" else 70.0
 	# the graph edge you're driving along
 	var best := []
 	var best_d := 14.0
@@ -322,7 +438,7 @@ func _spawn_ahead(cam_m: Vector2, fwd: Vector2) -> bool:
 	var against := rng.randf() < 0.45
 	var A2 := map.g_pos[a]
 	var L := A2.distance_to(map.g_pos[b])
-	var s := (cam_m - A2).dot((map.g_pos[b] - A2).normalized()) + rng.randf_range(70.0, 160.0)
+	var s := (cam_m - A2).dot((map.g_pos[b] - A2).normalized()) + rng.randf_range(near, 160.0)
 	if against:
 		# coming the other way down the same road
 		var t := a
@@ -346,11 +462,15 @@ func _place_car(a: int, b: int, s: float, lane: float, road: Dictionary, p: Vect
 	car.traffic = self
 	car.rng.seed = rng.randi()
 	var fleet := _fleet_pick(String(road.cls), String(z.get("style", "")) if String(z.get("id", "")) != "" else "rural", car.rng)
-	# a semi needs the length of its trailer clear behind it too
+	# a semi needs the length of its trailer clear behind it too; a car in the next lane over or
+	# coming the other way only needs to be clear of it
 	var room := 30.0 + (24.0 if _fleet_has(fleet, "tractor") else 0.0)
+	var along := (map.g_pos[b] - map.g_pos[a]).normalized()
 	var clear := true
 	for c in cars:
-		if c.pos.distance_to(p) < room or (c.trailer != null and c.trailer_centre.distance_to(p) < room): clear = false
+		var rel := c.pos - p
+		var r2 := room if absf(rel.cross(along)) < 2.0 and Vector2.from_angle(c.heading).dot(along) > 0.0 else 14.0
+		if rel.length() < r2 or (c.trailer != null and c.trailer_centre.distance_to(p) < room): clear = false
 	if player and player.sim.pos.distance_to(p) < room: clear = false
 	if not clear:
 		car.free()
@@ -496,9 +616,11 @@ func step(dt: float, cam_m: Vector2) -> void:
 			c.queue_free()
 			cars.remove_at(i)
 	_spawn_t -= dt
-	if _spawn_t <= 0.0 and cars.size() < _target_count(cam_m):
+	var want := _target_count(cam_m)
+	if _spawn_t <= 0.0 and cars.size() < want:
 		_spawn_t = 0.25
-		_spawn(cam_m)
+		# well short (you've just come into town, or off the highway onto it): a few at a time
+		for k in (3 if cars.size() < want * 0.6 else 1): _spawn(cam_m)
 	for c in cars: c.drive(dt)
 
 ## Which way you're going, if you're going anywhere much (zero when you're stopped or crawling).
@@ -525,8 +647,9 @@ func leader(car: TrafficCar, reach: float) -> Array:
 		for x in range(k0.x, k1.x + 1):
 			for o in _grid.get(Vector2i(x, y), []):
 				if o == car: continue
-				# two cars each waiting on the other: the older one goes
-				if o.lead_obj == car and car.get_instance_id() < o.get_instance_id() and o.state == "drive": continue
+				# two cars each waiting on the other: the older one goes (but nobody drives on into
+				# a car that's still moving, whoever it thinks is in its way)
+				if o.lead_obj == car and car.get_instance_id() < o.get_instance_id() and o.state == "drive" and car.v < 1.0 and o.v < 1.0: continue
 				_consider(car, path, o.pos, o.velocity_vec(), o.length, o.width, best, o)
 				if o.trailer != null: _consider(car, path, o.trailer_centre, o.velocity_vec(), o.trailer_len, o.width, best, o)
 	if player and not ignore_player:
@@ -548,11 +671,12 @@ func _consider(car: TrafficCar, path: PackedVector2Array, p: Vector2, vel: Vecto
 		if L < 0.01: continue
 		var t := clampf((p - a).dot(seg) / (L * L), 0.0, 1.0)
 		var q := a + seg * t
-		if p.distance_to(q) < (owid + car.width) * 0.5 + 0.4:
+		var off := p.distance_to(q)
+		if off < (owid + car.width) * 0.5 + 0.4:
 			var dir := seg / L
 			# oncoming traffic passing in its own lane brushes our corner-cut path; ignore it
-			# unless it's really in the way
-			if vel.dot(dir) < -1.0 and along + L * t > 8.0: return
+			# unless it's really in the way (square in our lane, coming at us)
+			if vel.dot(dir) < -1.0 and along + L * t > 8.0 and off > (owid + car.width) * 0.5 - 0.8: return
 			# coming straight at us in our lane counts; crossing or going away counts too
 			var gap := along + L * t - (car.length + olen) * 0.5
 			if gap < best[0]:
@@ -576,15 +700,24 @@ func may_enter(car: TrafficCar, n: int, from: int, to: int, dist: float) -> Stri
 	# a red light is a red light, however long you've sat at it: it'll go green
 	if String(j.control) == "signal":
 		var st := signal_state(int(j.offset), 0 if major else 1)
-		if st == "red" or (st == "amber" and dist >= car.v * car.v / (2.0 * 3.5)): return "stop"   # amber: stop if you can
+		if st == "red" or (st == "amber" and dist >= car.v * car.v / (2.0 * 3.5)):   # amber: stop if you can
+			# ("amber": it's only just changed, and a car that can't stop for it now goes on through)
+			return _stop(car, "amber" if st == "amber" or signal_since(int(j.offset), 0 if major else 1) < 1.5 else "light")
 		# green, but somebody who came in the other way is still getting across: let them clear it
-		if _crossing(car, n, j, major): return "stop"
+		if _crossing(car, n, j, major): return _stop(car, "crossing")
+	# whoever is already crossing (or too close to stop) where we'd cross goes first, whatever
+	# the sign or the light says: a left turner still finishing, the last one through on the amber
+	var other: TrafficCar = _conflict(car, n, from, dist)
+	if other != null: return _stop(car, "wide" if other.big else "conflict")
 	# don't block the box: is there room on the far side?
-	if not _room_after(car, n, to): return "stop"
+	if not _room_after(car, n, to): return _stop(car, "room")
 	# a block too short to wait in: go only when the next junction will take you straight through
-	if not _through_next(car, n, to): return "stop"
+	if not _through_next(car, n, to): return _stop(car, "block")
+	# a bus or a truck turning swings across the road it's turning into: not while somebody's
+	# waiting at the line there (at a light they'd never move; there it waits its turn)
+	if car.big and absf(car.turn_ahead) > 0.5 and String(j.control) != "signal" and car.wait_t < 30.0 and _waiting_on(car, n, to): return _stop(car, "swing")
 	# turning left: oncoming traffic goes first (unless it's sitting there waving you through)
-	if car.turn_ahead < -0.5 and not _oncoming_clear(car, n, from): return "stop"
+	if car.turn_ahead < -0.5 and not _oncoming_clear(car, n, from, dist): return _stop(car, "oncoming")
 	# a driver who has sat there for 45 s with an empty box in front of them goes anyway (but
 	# doesn't pull out under a car on the main road)
 	if car.wait_t > 45.0 and _box_empty(car, n, float(j.radius)) and (String(j.control) != "priority" or major or _main_clear(car, n, j, 2.5)):
@@ -600,24 +733,29 @@ func may_enter(car: TrafficCar, n: int, from: int, to: int, dist: float) -> Stri
 			return "go"
 		"priority":
 			if major: return "go"
-			if car.stopped_at != n: return "stop"         # a full stop first
+			if car.stopped_at != n: return _stop(car, "full stop")         # a full stop first
 			# after a long wait a smaller gap will do (but never one the main road can't brake for)
 			if _main_clear(car, n, j, 6.0 if car.wait_t < 15.0 else 2.5):
 				enter(car, n)         # claim it now, before anyone else decides the same thing
 				return "go"
-			return "stop"
+			return _stop(car, "main road")
 		"allway":
-			if car.stopped_at != n: return "stop"
+			if car.stopped_at != n: return _stop(car, "full stop")
 			if car.wait_t > 6.0 and _box_empty(car, n, j.radius):   # everybody waved
 				enter(car, n)
 				return "go"
 			# first to stop goes first, once the box is empty
-			if not _box_empty(car, n, j.radius): return "stop"
+			if not _box_empty(car, n, j.radius): return _stop(car, "box")
 			for c in cars:
-				if c != car and c.stopped_at == n and c.b == n and c.stop_time < car.stop_time: return "stop"
+				if c != car and c.stopped_at == n and c.b == n and c.stop_time < car.stop_time: return _stop(car, "turn")
 			enter(car, n)
 			return "go"
 	return "go"
+
+## "stop", noting why on the car (the soak test prints it when somebody's stuck).
+static func _stop(car: TrafficCar, why: String) -> String:
+	car.why = why
+	return "stop"
 
 func _room_after(car: TrafficCar, n: int, to: int) -> bool:
 	var r2 := edge_road(n, to)
@@ -638,12 +776,12 @@ func _room_after(car: TrafficCar, n: int, to: int) -> bool:
 func _crossing(car: TrafficCar, n: int, j: Dictionary, major: bool) -> bool:
 	var jp := map.g_pos[n]
 	for c in j.inside:
-		if c == car or not is_instance_valid(c) or c.entered != n or c.entered_from < 0: continue
-		var their: bool = j.majors.has(int(edge_road(c.entered_from, n).get("idx", -1)))
+		if c == car or not is_instance_valid(c) or not c.boxes.has(n): continue
+		var their: bool = j.majors.has(int(edge_road(int(c.boxes[n]), n).get("idx", -1)))
 		if their != major and c.pos.distance_to(jp) < float(j.get("clear", j.radius)) + 3.0: return true
 	# and the last one through on the amber, not in the box yet but not stopping either
 	for c in cars:
-		if c == car or c.b != n or c.entered == n or c.last_rule != "go" or c.v < 2.0: continue
+		if c == car or c.b != n or c.boxes.has(n) or c.last_rule != "go" or c.v < 2.0: continue
 		var theirs: bool = j.majors.has(int(edge_road(c.a, n).get("idx", -1)))
 		if theirs != major and c.pos.distance_to(jp) < stop_line(n, c.a) + c.v * 1.5: return true
 	return false
@@ -659,25 +797,51 @@ func _through_next(car: TrafficCar, n: int, to: int) -> bool:
 	for c in cars:
 		if c != car and c.a == n and c.b == to: return false
 	# (two lights whose greens hardly overlap, a stop sign that never clears: after a while you
-	# go and wait in the block anyway)
-	if car.wait_t > 25.0: return true
+	# go and wait in the block anyway, if there's a block to wait in and not just the middle of
+	# this junction or the next one)
+	if car.wait_t > 25.0 and L - stop_line(to, n) - float(junctions[n].radius) > -2.0 or car.wait_t > 50.0: return true
 	var major: bool = jt.majors.has(int(edge_road(n, to).get("idx", -1)))
 	if String(jt.control) == "signal":
-		return signal_left(int(jt.offset), 0 if major else 1) > 2.0 + (L + float(jt.radius) + car.length) / maxf(car.v, 6.0)
+		# (from a standstill it's slower across than the speed limit says)
+		var d := L + float(jt.radius) + car.length
+		return signal_left(int(jt.offset), 0 if major else 1) > 2.0 + (sqrt(car.v * car.v + 2.0 * car.a_max * d) - car.v) / car.a_max
 	# a stop sign at the end of the block: only once it looks like you'll be straight through it
-	return _box_empty(car, to, float(jt.radius)) and (major and String(jt.control) == "priority" or _main_clear(car, to, jt, 6.0))
+	# (from a standstill here, across this junction and that one, before the main road gets there)
+	var across := L + float(junctions[n].radius) + float(jt.radius) * 2.0 + car.length
+	var t_clear := (sqrt(car.v * car.v + 2.0 * car.a_max * across) - car.v) / car.a_max
+	return _box_empty(car, to, float(jt.radius)) and (major and String(jt.control) == "priority" or _main_clear(car, to, jt, maxf(6.0, t_clear + 1.0)))
+
+## Going from `a` through signal `b` to signal `c` a few metres on is fine if c's green for that
+## road comes on with b's (a knot of lights that can't all line up leaves some ways out of step:
+## you'd sit at the second red with your tail across the first junction).
+func _in_step(a: int, b: int, c: int) -> bool:
+	var jb: Dictionary = junctions.get(b, {})
+	var jc: Dictionary = junctions.get(c, {})
+	if String(jb.get("control", "")) != "signal" or String(jc.get("control", "")) != "signal": return true
+	var L := map.g_pos[b].distance_to(map.g_pos[c])
+	if L - stop_line(c, b) - float(jb.radius) > 6.0: return true
+	var start := [0.0, 27.0]
+	var gb := 0 if jb.majors.has(int(edge_road(a, b).get("idx", -1))) else 1
+	var gc := 0 if jc.majors.has(int(edge_road(b, c).get("idx", -1))) else 1
+	var lag := fposmod((start[gc] - float(jc.offset)) - (start[gb] - float(jb.offset)), CYCLE)
+	return lag < 6.0 or lag > CYCLE - 6.0
 
 ## Nobody coming the other way toward junction `n` soon (for a left turn across their lane),
 ## and nobody from the other side still crossing it: a left turner coming the other way cuts
 ## through the same middle. The longer you've waited, the smaller the gap you'll take, but
 ## never one they'd have to stand on the brakes for.
-func _oncoming_clear(car: TrafficCar, n: int, from: int) -> bool:
+func _oncoming_clear(car: TrafficCar, n: int, from: int, dist := 0.0) -> bool:
 	var jp := map.g_pos[n]
 	var din := (jp - map.g_pos[from]).normalized()
-	var window := lerpf(3.5, 2.0, clampf((car.wait_t - 10.0) / 20.0, 0.0, 1.0))
+	var keen := clampf((car.wait_t - 10.0) / 20.0, 0.0, 1.0)
+	# from a standstill it takes a while to get across a wide junction: long enough that they
+	# can't get there first
+	var across := float(junctions[n].radius) * 2.0 + car.length + maxf(dist, 0.0)
+	var t_clear := (sqrt(car.v * car.v + 2.0 * car.a_max * across) - car.v) / car.a_max
+	var window := maxf(lerpf(3.5, 2.0, keen), t_clear * lerpf(1.0, 0.8, keen))
 	for c in cars:
 		if c == car or c.state != "drive": continue
-		if c.entered == n and c.entered_from >= 0 and (jp - map.g_pos[c.entered_from]).normalized().dot(din) < -0.7: return false
+		if c.boxes.has(n) and (jp - map.g_pos[int(c.boxes[n])]).normalized().dot(din) < -0.7: return false
 		var d := _dist_to(c, n)
 		if d == INF: continue
 		var near_n: bool = c.b == n or c.c_next == n
@@ -685,6 +849,68 @@ func _oncoming_clear(car: TrafficCar, n: int, from: int) -> bool:
 		if cd.dot(din) < -0.7:
 			if d < 6.0 + c.v * window and not (c.v < 0.5 and c.last_rule == "stop"): return false
 	return true
+
+## Somebody whose line through junction `n` crosses (or merges into) the one `car` would take,
+## who is in the box already or too close and too quick to stop before it (null if nobody).
+## Somebody from the same road and lane is just ahead (the leader minds them), and somebody sat
+## in the box waiting on `car` itself doesn't count (one of the two has to go).
+func _conflict(car: TrafficCar, n: int, from: int, dist: float) -> TrafficCar:
+	var j: Dictionary = junctions[n]
+	var jp := map.g_pos[n]
+	var r := float(j.get("clear", j.radius)) + 2.0
+	var who: Array = []
+	for c in cars:
+		if c == car or c.state != "drive" or c.pos.distance_squared_to(jp) > 70.0 * 70.0: continue
+		if c.boxes.has(n):
+			# (in from the same road in the same lane: just ahead of us, the leader minds them; in
+			# the lane beside us, a bus swinging out of it still counts)
+			if int(c.boxes[n]) == from and c.lane_i == car.lane_i or c.pos.distance_to(jp) > r + c.length * 0.5: continue
+			if c.v < 0.3 and c.lead_obj == car: continue
+			# (both sat there waiting on the other: whoever's waited longest goes; the car in front
+			# still stops it if they're really in its way)
+			if c.v < 0.3 and c.last_rule == "stop" and car.v < 0.3 and car.wait_t > 10.0 \
+				and (car.wait_t > c.wait_t + 5.0 or car.wait_t > c.wait_t - 5.0 and car.get_instance_id() < c.get_instance_id()): continue
+			who.append(c)
+		elif c.b == n and c.a != from:
+			var to_line := c.pos.distance_to(jp) - stop_line(n, c.a)
+			# over its line already (off a link shorter than the line's set back), or coming too
+			# quick to stop short of it
+			# (two of those both sat waiting on each other: the older one goes)
+			if to_line < -0.5 and not (c.v < 0.3 and c.last_rule == "stop" and c.get_instance_id() > car.get_instance_id()) \
+				or c.last_rule == "go" and c.v > 2.0 and to_line < c.v * c.v / (2.0 * 3.5) + c.v * 0.3 + 1.0: who.append(c)
+	if who.is_empty(): return null
+	var mine := _in_box(car.path_ahead(car.pos.distance_to(jp) + r + 6.0), jp, r)
+	if mine.size() < 2: return null
+	for c: TrafficCar in who:
+		var theirs := _in_box(c.path_ahead(c.pos.distance_to(jp) + r + 6.0), jp, r)
+		# (a bus's ends swing well wide of the line its middle drives)
+		var swing := maxf(0.0, maxf(car.length, c.length) * 0.5 - 3.0) * 0.5
+		if theirs.size() >= 2 and _paths_meet(mine, theirs, (car.width + c.width) * 0.5 + 0.3 + swing): return c
+	return null
+
+## The part of a path inside the circle `r` round `jp` (and a point either side).
+static func _in_box(path: PackedVector2Array, jp: Vector2, r: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in path.size():
+		if path[i].distance_to(jp) < r:
+			if out.is_empty() and i > 0: out.append(path[i - 1])
+			out.append(path[i])
+		elif not out.is_empty():
+			out.append(path[i])
+			break
+	return out
+
+## Two polylines cross, or come within `tol` metres of each other somewhere (but two lanes
+## running past each other the opposite way only count where they actually cross).
+static func _paths_meet(p: PackedVector2Array, q: PackedVector2Array, tol: float) -> bool:
+	for i in p.size() - 1:
+		for k in q.size() - 1:
+			if Geometry2D.segment_intersects_segment(p[i], p[i + 1], q[k], q[k + 1]) != null: return true
+			if (p[i + 1] - p[i]).normalized().dot((q[k + 1] - q[k]).normalized()) < -0.85: continue
+			var d := minf(minf(p[i].distance_to(Geometry2D.get_closest_point_to_segment(p[i], q[k], q[k + 1])), p[i + 1].distance_to(Geometry2D.get_closest_point_to_segment(p[i + 1], q[k], q[k + 1]))),
+				minf(q[k].distance_to(Geometry2D.get_closest_point_to_segment(q[k], p[i], p[i + 1])), q[k + 1].distance_to(Geometry2D.get_closest_point_to_segment(q[k + 1], p[i], p[i + 1]))))
+			if d < tol: return true
+	return false
 
 ## How far `c` has to drive to junction `n`: on the road into it, or on the one before that (the
 ## block between two junctions can be shorter than a few seconds of driving), or further out on a
@@ -701,6 +927,13 @@ func _dist_to(c: TrafficCar, n: int) -> float:
 	for e in map.g_adj[n]:
 		if int(e[2].idx) == ri: return d * 1.08
 	return INF
+
+## Somebody coming into junction `n` down the road `car` is turning onto, near the line.
+func _waiting_on(car: TrafficCar, n: int, to: int) -> bool:
+	var reach := stop_line(n, to) + 8.0
+	for c in cars:
+		if c != car and c.a == to and c.b == n and c.pos.distance_to(map.g_pos[n]) < reach: return true
+	return false
 
 ## Nobody (but `car`) in the middle of junction `n`.
 func _box_empty(car: TrafficCar, n: int, radius: float) -> bool:

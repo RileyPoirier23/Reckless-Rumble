@@ -21,6 +21,7 @@ const BAY := 7.6                  # a curb bay's length, m
 const BAY_DEEP := 2.3             # and how far it's cut into the sidewalk
 ## The longest car (catalogue metres, before CAR_SCALE) each kind of spot takes.
 const FITS := { "curb": 5.6, "stall": 5.6, "driveway": 5.4, "semi": 99.0 }
+const ROOF_LIFT := 3.0            # how far up the screen a house's roof sits off its footprint, m
 
 var drive: Node
 var map: MapData
@@ -149,7 +150,9 @@ func _near_furniture(p: Vector2) -> bool:
 		if (it.p as Vector2).distance_to(p) < 4.5: return true
 	return false
 
-## A driveway beside each house that has room for one, the car nose out toward the street.
+## A driveway beside each house that has room for one, the car nose out toward the street: a
+## metre and a half off the wall, and nowhere a house's roof (lifted the height of its walls toward
+## the top of the screen) would hang over it.
 func _driveways() -> void:
 	var near := {}
 	for bd in map.buildings:
@@ -164,7 +167,7 @@ func _driveways() -> void:
 		var up := not map.road_at(Vector2(r.get_center().x, r.position.y - 9.0), 2.0).is_empty()
 		var down := not map.road_at(Vector2(r.get_center().x, r.end.y + 9.0), 2.0).is_empty()
 		if up == down: continue
-		var x := r.end.x + 0.4 + car.x / 2.0
+		var x := r.end.x + 1.4 + car.x / 2.0
 		var y := r.position.y + car.y / 2.0 - 2.4 if up else r.end.y - car.y / 2.0 + 2.4
 		var spot := Rect2(Vector2(x, y) - car / 2.0, car)
 		var ok := true
@@ -172,7 +175,7 @@ func _driveways() -> void:
 		for dy in range(-1, 2):
 			for dx in range(-1, 2):
 				for o: Rect2 in near.get(k2 + Vector2i(dx, dy), []):
-					if o.intersects(spot): ok = false
+					if o.grow_individual(0.6, 0.6 + ROOF_LIFT, 0.6, 0.6).intersects(spot): ok = false
 		if not ok or not map.road_at(spot.get_center(), 0.5).is_empty(): continue
 		var z := map.zone_at(spot.get_center())
 		_add(spot.get_center(), -PI / 2.0 if up else PI / 2.0, "driveway", String(z.get("style", "residential")))
@@ -264,6 +267,7 @@ func _fill(k: Vector2i) -> int:
 		var c := ParkedCar.new()
 		c.rng.seed = r.randi()
 		c.park(traffic, body, sp.p, float(pk[2]))
+		c.box = pk[4]
 		drive.ysort.add_child(c)
 		traffic.parked.append(c)
 		out.append(c)
@@ -273,7 +277,7 @@ func _fill(k: Vector2i) -> int:
 	queue_redraw()
 	return maxi(1, out.size())
 
-## Who's parked in a cell at this hour of this day: [spot, body, heading, its dice] for each car,
+## Who's parked in a cell at this hour of this day: [spot, body, heading, its dice, its box] for each car,
 ## each one a car that fits its spot and clear of every car already parked around it (`every`
 ## fills every spot whatever the hour: the tests).
 func pick(k: Vector2i, hour: float, day: int, every := false) -> Array:
@@ -299,7 +303,7 @@ func pick(k: Vector2i, hour: float, day: int, every := false) -> Array:
 		if _touches(box, k): continue
 		if not boxes.has(k): boxes[k] = []
 		boxes[k].append(box)
-		out.append([sp, body, h, r])
+		out.append([sp, body, h, r, box])
 	return out
 
 ## Whether a body fits a kind of spot: short enough for it, and not a box truck or a bus.
@@ -344,24 +348,48 @@ func clear() -> void:
 	queue_redraw()
 
 ## The concrete under the driveway cars, out to the sidewalk; the curb bays near the camera,
-## asphalt cut into the sidewalk with a painted tick at each end.
+## asphalt cut into the sidewalk with a painted tick at each end. All of it goes down in three
+## calls (every bay's asphalt, every pad, every tick), not a few per bay.
 func _draw() -> void:
 	var snow: float = drive.sky.snow_cover
 	var col := Color("8e8a82").lerp(Color("dfe3e8"), clampf(snow * 1.2, 0.0, 1.0))
-	var tex: Texture2D = drive.world.asphalt
 	var tint: Color = drive.world.asphalt_tint()
 	var tick := Color(0.92, 0.92, 0.88, 0.8 * (1.0 - clampf(snow * 1.5, 0.0, 1.0)))
+	var asphalt := _quads()
+	var ticks := PackedVector2Array()
 	for k in live:
 		for b: Array in bays.get(k, []):
-			draw_set_transform((b[0] as Vector2) * PX, float(b[1]), Vector2.ONE)
+			var c: Vector2 = (b[0] as Vector2) * PX
+			var u := Vector2.from_angle(float(b[1]))
 			var half := Vector2(BAY, float(b[2])) * PX / 2.0
-			draw_texture_rect(tex, Rect2(-half, half * 2.0), true, tint)
+			_quad(asphalt, c, u, half, tint)
 			for e: float in [-1.0, 1.0]:
-				draw_rect(Rect2(Vector2(e * half.x - 1.0, -half.y), Vector2(2.0, half.y * 2.0)), tick)
+				var t := c + u * e * half.x
+				ticks.append_array([t - u.orthogonal() * half.y, t + u.orthogonal() * half.y])
+	var pad := _quads()
 	for k in pads:
 		for pd: Array in pads[k]:
-			var c: Vector2 = pd[0]
-			var h: float = pd[1]
-			draw_set_transform(c * PX, h, Vector2.ONE)
-			draw_rect(Rect2(Vector2(-4.2, -1.6) * PX, Vector2(9.4, 3.2) * PX), col)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			var u2 := Vector2.from_angle(float(pd[1]))
+			# (the slab runs from 4.2 m behind the spot to 5.2 m ahead of it)
+			_quad(pad, (pd[0] as Vector2) * PX + u2 * 0.5 * PX, u2, Vector2(4.7, 1.6) * PX, col)
+	var ci := get_canvas_item()
+	if not asphalt.pts.is_empty():
+		RenderingServer.canvas_item_add_triangle_array(ci, asphalt.idx, asphalt.pts, asphalt.cols, asphalt.uvs, PackedInt32Array(), PackedFloat32Array(), drive.world.asphalt.get_rid())
+	if not pad.pts.is_empty():
+		RenderingServer.canvas_item_add_triangle_array(ci, pad.idx, pad.pts, pad.cols)
+	if not ticks.is_empty(): draw_multiline(ticks, tick, 2.0)
+
+static func _quads() -> Dictionary:
+	return { "pts": PackedVector2Array(), "uvs": PackedVector2Array(), "cols": PackedColorArray(), "idx": PackedInt32Array() }
+
+## A rectangle (centre `c`, along `u`, half size `half`, px) onto a triangle list, its texture
+## laid the way the roads' is (by where it is in the world, so the asphalt runs on unbroken).
+static func _quad(q: Dictionary, c: Vector2, u: Vector2, half: Vector2, col: Color) -> void:
+	var v := u.orthogonal()
+	var n: int = q.pts.size()
+	for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+		var p := c + u * corner.x * half.x + v * corner.y * half.y
+		q.pts.append(p)
+		q.uvs.append(p / 64.0)
+		q.cols.append(col)
+	q.idx.append_array([n, n + 1, n + 2, n, n + 2, n + 3])

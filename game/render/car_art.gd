@@ -55,6 +55,7 @@ const GLASS_HI := Color("3b5068")
 const TRIM := Color("1d1b20")
 const UNDER := Color("100e12")
 const HEAD := Color("f4ecc2")
+const HEAD_RIM := Color("4a463e")
 const TAIL := Color("9a1c1c")
 const TAIL_LIT := Color("ff3b2e")
 const REV_LIT := Color("f4f4f0")
@@ -359,6 +360,7 @@ class _Shaper:
 		_lamps()
 		_mirrors()
 		_aero()
+		_supercar()
 		_roof()
 		_fleet_roof()
 		_bed_and_box()
@@ -484,8 +486,9 @@ class _Shaper:
 		match nose:
 			"blunt": rn *= 0.4
 			"wedge":
-				# a doorstop: the front third drawn in to a point
-				tn = 0.34
+				# a doorstop: drawn in all the way from the doors to a point (the front third about
+				# three quarters of the car's width)
+				tn = 0.3
 				rn = 0.1
 		if fam in ["sports", "mid", "rear", "roadster"]:
 			tn = maxf(tn, 0.09)
@@ -519,15 +522,19 @@ class _Shaper:
 		if String(mods.get("fenders", "stock")) == "flared": hip = maxf(hip, 2.2)
 		var dually := art.has("dually")
 		var ra := float(d.tire_r) * float(p.lpx) * 1.3
+		# the engine behind the seats: the back track wider and the hips over it fat
+		var mid := fam in ["mid", "wedge"]
+		var hip_r := hip + (1.4 + clampf((float(spec.get("width", 1.8)) - 1.8) * 12.0, 0.0, 1.6) if mid else 0.0)
+		var wedge_from := 0.42 if nose == "wedge" else wf - 0.08
 		for x in p.sx:
 			var u: float = p.ux[x]
 			if zt[x] < 0.0:
 				p.hw[x] = 0.0
 				continue
 			var w := half
-			var fwd := clampf((u - (wf - 0.08)) / maxf(0.05, 1.0 - wf + 0.08), 0.0, 1.0)
+			var fwd := clampf((u - wedge_from) / maxf(0.05, 1.0 - wedge_from), 0.0, 1.0)
 			var back := clampf(((wr + 0.08) - u) / maxf(0.05, wr + 0.08), 0.0, 1.0)
-			w *= 1.0 - tn * pow(fwd, 1.6) - tt * pow(back, 1.6)
+			w *= 1.0 - tn * pow(fwd, 1.6 if nose != "wedge" else 1.1) - tt * pow(back, 1.6)
 			var dn := (float(x_nose) + 1.0 - float(x))
 			var dt := (float(x) - float(x_tail))
 			if dn < rn: w = minf(w, w - rn + sqrt(maxf(0.0, rn * rn - (rn - dn) * (rn - dn))))
@@ -536,7 +543,7 @@ class _Shaper:
 			for wu: float in [wf, wr]:
 				var dx := absf(float(x) - X(wu))
 				if dx < ra:
-					var bump := hip * cos(dx / ra * PI * 0.5)
+					var bump := (hip_r if wu == wr else hip) * cos(dx / ra * PI * 0.5)
 					if dually and wu == wr: bump = maxf(bump, 3.5 * clampf((ra - dx) / 2.0, 0.0, 1.0))
 					w += bump
 			# a side that took a hit caves in, in folds
@@ -599,9 +606,11 @@ class _Shaper:
 					for dv: float in [0.0, -float(p.tire_w) - 1.0]:
 						p.wheels.append([float(xs[0]) + ax + r * 1.1, p.cy + s2 * (vc + dv), r, p.tire_w, false, s2])
 			xs = []
+		# (a mid-engined car's back wheels sit out under its fat hips)
+		var vc_r := vc + (1.0 if fam in ["mid", "wedge"] else 0.0)
 		for i in xs.size():
 			for s: float in [-1.0, 1.0]:
-				p.wheels.append([float(xs[i]), p.cy + s * vc, r, p.tire_w, i == 1, s])
+				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, p.tire_w, i == 1, s])
 				if art.has("dually") and i == 0:
 					p.wheels.append([float(xs[i]), p.cy + s * (vc - p.tire_w - 1.0), r, p.tire_w, false, s])
 				if art.has("tractor") and i == 0:
@@ -1033,6 +1042,8 @@ class _Shaper:
 		var tail_kind := String(d.get("tail_lamp", "swept"))
 		var tlpx := maxf(2.0, float(d.get("tail_len", 0.0)) * float(p.lpx) * 0.6)
 		var grille := String(d.get("grille", "none"))
+		var heads: Array[int] = []             # the headlamp pixels, sorted out by height below
+		var was: Array[int] = []               # and what they were before
 		for x in p.sx:
 			var dn := float(x_nose) - float(x)
 			var dt := float(x) - float(x_tail)
@@ -1047,12 +1058,22 @@ class _Shaper:
 				if dn < 1.0 and grille != "none" and _grille_at(grille, vn): p.m0[i] = CarArt.M_GRILLE
 				# headlamps: on the hood's front corners, in the maker's shape
 				if dn <= hpx * 1.7 and head != "none":
-					if _head_at(head, dn, vn, hpx): p.m0[i] = CarArt.M_HEAD | side
+					if _head_at(head, dn, vn, hpx):
+						heads.append(i)
+						was.append(p.m0[i])
+						p.m0[i] = CarArt.M_HEAD | side
 					elif head == "popup" and vn > 0.6 and vn < 0.9 and absf(dn - 3.0) < 0.6: p.m0[i] = _paint(2, CarArt.R_HOOD)
 					# turn signals at the outer corners
 					if dn < 2.0 and vn >= 0.9: p.m0[i] = CarArt.M_AMBER | side
 				# tail lamps on the deck's back corners (the ones you see from above), big enough to read
 				if dt <= tlpx + 3.0 and _tail_at(tail_kind, dt, vn, tlpx): p.m0[i] = CarArt.M_TAIL | side
+		# a headlamp is a lens set in the top of the corner, one or two slices deep: the bits of
+		# the shape that run down the rounded corner below that stay paint (stacked up the corner
+		# they read as a smear sticking up past the hood when the car's side-on)
+		var lamp_z := 0
+		for i: int in heads: lamp_z = maxi(lamp_z, p.h0[i])
+		for k in heads.size():
+			if p.h0[heads[k]] < lamp_z - 1 and (p.m0[heads[k]] & 255) == CarArt.M_HEAD: p.m0[heads[k]] = was[k]
 
 		# the lamps' slices (the faces carry them too): from the bumper's top to the hood
 		p.lz0 = maxi(0, int(minf(p.z_nose.x, p.z_tail.x)) - 1)
@@ -1184,6 +1205,12 @@ class _Shaper:
 				var chord := 3 if not gt else 5
 				var lift := 3 if spoiler != "whale" else 1
 				if gt: lift = 5
+				# a supercar's own wing stands up on its posts, the whole width of the tail
+				var proud := spoiler == "factory_wing" and String(d.cls) == "exotic"
+				if proud:
+					# (up on its posts, but no higher than the roof: it's still a low car)
+					chord = 4
+					lift = clampi(int(p.roof_z) - 2 - deck_z, 2, 5)
 				var x0 := x_tail + (0 if gt else 1)
 				var zw := deck_z + lift
 				var mat := _paint(4, CarArt.R_DECK) if not gt else CarArt.M_TRIM | (2 << 8)
@@ -1192,10 +1219,11 @@ class _Shaper:
 					for y in p.sy:
 						var av := absf(float(y) + 0.5 - p.cy)
 						var i := p.idx(x, y)
-						if av < wx - 0.5:
+						if av < wx - 0.5 or proud and av < wx + 0.5:
 							p.b2[i] = zw
 							p.h2[i] = zw + (1 if x == x0 + chord / 2 else 0)
-							p.m2[i] = mat
+							# (its trailing edge dark, so it reads as a blade over the deck, not more deck)
+							p.m2[i] = mat if x != x0 or not proud else CarArt.M_TRIM | (1 << 8)
 						# the uprights
 						if absf(av - wx * 0.55) < 0.6 and x == x0 + chord / 2:
 							p.b2[i] = maxi(0, deck_z)
@@ -1244,6 +1272,30 @@ class _Shaper:
 					p.h0[i4] += 2 if not front else 1
 					p.m0[i4] = (CarArt.M_TRIM if front else _paint(5 if av3 < p.hw[x] * 0.12 else 3, CarArt.R_SCOOP))
 
+	## A supercar's own details from above: the engine cover behind the seats (louvred slats, or a
+	## pair of vents), the strakes down the doors, NACA ducts in the hood.
+	func _supercar() -> void:
+		if not fam in ["mid", "wedge"] and String(d.cls) != "exotic": return
+		var louvers := art.has("louvers")
+		var x_r := int(round(X(float(d.roof_r)))) - 1
+		var x_c := int(round(X(float(d.cowl_x))))
+		for x in range(x_tail + 2, x_nose):
+			var u: float = p.ux[x]
+			for y in p.sy:
+				var i := p.idx(x, y)
+				if p.h0[i] < 0 or (p.m0[i] & 255) != CarArt.M_PAINT: continue
+				var vn := absf(float(y) + 0.5 - p.cy) / maxf(1.0, p.hw[x])
+				# the engine cover: slats across it, or two vents either side of its spine
+				if fam in ["mid", "wedge"] and x < x_r - 1 and x > x_tail + 2:
+					if louvers and vn < 0.62 and x % 2 == 0: p.m0[i] = CarArt.M_TRIM | (1 << 8)
+					elif not louvers and vn > 0.18 and vn < 0.5 and (x - x_tail) % 3 == 0 and x < x_r - 3: p.m0[i] = CarArt.M_TRIM
+				# strakes: ribs down the doors and over the hips
+				if String(d.get("side_vent", "")) == "strakes" and vn > 0.84 and u > float(d.wr) + 0.04 and u < 0.6 and x % 2 == 0:
+					p.m0[i] = _paint(0, CarArt.R_BODY)
+				# NACA ducts: a pair of little dark scoops sunk in the hood
+				if String(d.cls) == "exotic" and int(d.year) >= 1984 and absf(vn - 0.32) < 0.09 and x > x_c + 2 and x <= x_c + 4:
+					p.m0[i] = CarArt.M_TRIM
+
 	## What's on the roof: a sunroof or T-tops, vinyl, a rack, a light bar, a sign, a beacon.
 	func _roof() -> void:
 		if String(d.rear) in ["open", "pickup"] and fam != "pickup": return
@@ -1264,10 +1316,17 @@ class _Shaper:
 				var v := float(y) + 0.5 - p.cy
 				var av := absf(v)
 				var mid_u := (float(d.roof_f) + float(d.roof_r)) * 0.5
-				if glass_roof and absf(u - mid_u) * float(p.lpx) < (float(d.roof_f) - float(d.roof_r)) * float(p.lpx) * 0.32:
+				var half_len := (float(d.roof_f) - float(d.roof_r)) * float(p.lpx) * 0.32
+				var along := absf(u - mid_u) * float(p.lpx)
+				if glass_roof and along < half_len:
 					if ttops:
 						if av > p.gr * 0.14 and av < p.gr * 0.82: p.m0[i] = CarArt.M_GLASS | (1 << 8)
 					elif av < p.gr * 0.6: p.m0[i] = CarArt.M_GLASS | (2 << 8)
+					# a sunroof sits in a thin black seal, not straight in the paint (on a white or a
+					# pearl roof the glass's own light edge reads as a sticker)
+					elif av < p.gr * 0.6 + 1.0: p.m0[i] = CarArt.M_TRIM
+				elif glass_roof and not ttops and along < half_len + 1.0 and av < p.gr * 0.6 + 1.0:
+					p.m0[i] = CarArt.M_TRIM
 				elif vinyl:
 					p.m0[i] = CarArt.M_TRIM | (3 << 8) | (1 << 16)
 		var rack: bool = roof_mod == "rack" or (roof_mod == "stock" and art.has("rack")) or mods.get("ladder", false) or art.has("ladder")
@@ -2067,7 +2126,9 @@ class _Painter:
 		var c := _top_colour(m, x, y)
 		# the rim of every top (where the next pixel over drops away) gets an ink line
 		var rim: int = p.nmin4[i]
-		if rim < 0: c = c.darkened(0.42)
+		# (a headlamp's edge is one dark bezel all the way round, whichever way the car's turned)
+		if (m & 255) == CarArt.M_HEAD and (rim < 0 or rim < top - 1): c = CarArt.HEAD_RIM
+		elif rim < 0: c = c.darkened(0.42)
 		elif rim < top - 3 and (m & 255) != CarArt.M_GLASS: c = c.darkened(0.2)
 		var row := y * aw + x
 		buf[row + top * p.sx] = c.to_abgr32()
@@ -2409,10 +2470,14 @@ class _Painter:
 			return _paint_c(2, CarArt.R_BODY, x, y, 0.3)
 		if fleet == "trailer": return _paint_c(3, CarArt.R_BODY, x, y, 0.6)
 		var lamp_lo := lerpf(bump_top, hood_z, 0.35)
-		if zz >= lamp_lo and zz < hood_z - 0.5 and vn > 0.55 and vn < 0.93 and not popup:
+		# the lamps in the nose: a band two or three slices deep under the hood's edge, in a dark
+		# bezel (any deeper and, side-on, the stack of them stands up past the hood)
+		var head_lo := maxf(lamp_lo, hood_z - 3.0)
+		if zz >= head_lo and zz < hood_z - 0.5 and vn > 0.55 and vn < 0.93 and not popup:
 			var lit: bool = art.head_ok[0 if v < 0.0 else 1]
 			if lit: _lamp(2, x, y, z, CarArt.HEAD)
-			return CarArt.HEAD.darkened(0.08) if lit else Color("2a2a2e")
+			if not lit: return Color("2a2a2e")
+			return CarArt.HEAD_RIM if vn < 0.6 or vn > 0.89 or zz < head_lo + 0.5 else CarArt.HEAD.darkened(0.08)
 		if vn >= 0.9 and zz >= lamp_lo - 1.0 and zz < hood_z:
 			_lamp(3 if v < 0.0 else 4, x, y, z, CarArt.AMBER_LIT)
 			return CarArt.AMBER_OFF

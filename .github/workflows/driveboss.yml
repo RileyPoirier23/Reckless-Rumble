@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Godot and export templates
@@ -45,8 +45,10 @@ jobs:
           grep -q "^0 failed" world.log
       - name: Traffic soak test
         working-directory: game
+        # every spot under three traffic seeds: fixed frames make each run repeatable, the seeds
+        # make it more than the one run
         run: |
-          timeout 900 "$GODOT" --headless --fixed-fps 60 --path . -- --traffic-test | tee traffic.log
+          timeout 1800 "$GODOT" --headless --fixed-fps 60 --path . -- --traffic-test --seeds 1,2,3 | tee traffic.log
           grep -q "^0 failed" traffic.log
       - name: Street race and police test
         working-directory: game

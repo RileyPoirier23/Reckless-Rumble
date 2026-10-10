@@ -22,6 +22,7 @@ var head_light: PointLight2D
 var a := 0                   # on the edge from node a to node b
 var b := 0
 var c_next := -1             # where it goes after b
+var c_after := -1            # and after that, picked early when b to c_next is only a few metres
 var s := 0.0
 var lane_i := 0
 var pos := Vector2.ZERO      # metres
@@ -33,10 +34,12 @@ var width := 1.8
 var temper := 1.0            # some drive faster than others
 var turn_ahead := 0.0        # signed turn at the next node (rad), for the corridor and blinkers
 var stopped_at := -1         # the junction it has made its full stop at
-var entered := -1            # the junction it's crossing
+var entered := -1            # the junction it's crossing (the latest, if it's in two at once)
 var entered_from := -1       # and the node it came into it from
+var boxes := {}              # every junction it's still in the way in -> the node it came in from
 var wait_t := 0.0
 var last_rule := ""
+var why := ""                # what it's stopped for, when it is
 var lead_obj = null
 var stop_time := 0.0
 var _path := PackedVector2Array()
@@ -206,7 +209,13 @@ func drive(dt: float) -> void:
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
-	if c_next < 0: c_next = traffic.next_node(a, b, self)
+	if c_next < 0:
+		c_next = c_after if c_after >= 0 and traffic.map.g_adj[b].any(func(e: Array) -> bool: return int(e[0]) == c_after) else traffic.next_node(a, b, self)
+		c_after = -1
+		# a dead end out of sight: it's pulled into a driveway, as far as anybody can tell
+		if c_next == a and map.g_adj[b].size() == 1 and traffic.player and pos.distance_to(traffic.player.sim.pos) > Traffic.SPAWN_MIN * 0.8:
+			gone = true
+			return
 	var din := (B - A).normalized()
 	var dout := (map.g_pos[c_next] - B).normalized() if c_next != b else -din
 	turn_ahead = din.angle_to(dout) if c_next != a or map.g_adj[b].size() == 1 else PI
@@ -236,24 +245,48 @@ func drive(dt: float) -> void:
 	if bend > 0.25:
 		var v_turn := lerpf(v0, 5.0, clampf(bend / 1.5, 0.0, 1.0))
 		v0 = minf(v0, sqrt(v_turn * v_turn + 2.0 * B_COMF * maxf(0.0, db - jr)))
+	# a junction a few metres past this one (a stub between two, a short block): its corner and
+	# its stop sign are as good as this one's, so slow for them from here
+	if c_next != a and c_next != b and map.g_adj[c_next].size() >= 2:
+		var L2 := B.distance_to(map.g_pos[c_next])
+		if L2 < 30.0:
+			if c_after < 0: c_after = traffic.next_node(b, c_next, self)
+			var d2 := (map.g_pos[c_after] - map.g_pos[c_next]).normalized()
+			var bend2 := absf(dout.angle_to(d2)) if c_after != b else PI
+			var j2: Dictionary = traffic.junctions.get(c_next, {})
+			if bend2 > 0.25:
+				var v_turn2 := lerpf(v0, 5.0, clampf(bend2 / 1.5, 0.0, 1.0))
+				v0 = minf(v0, sqrt(v_turn2 * v_turn2 + 2.0 * B_COMF * maxf(0.0, db + L2 - float(j2.get("radius", 0.0)))))
+			if not j2.is_empty() and (String(j2.control) == "allway" or String(j2.control) == "priority" and not j2.majors.has(int(traffic.edge_road(b, c_next).get("idx", -1)))):
+				v0 = minf(v0, 3.0 + sqrt(2.0 * B_COMF * maxf(0.0, db + L2 - traffic.stop_line(c_next, b))))
 	# --- what's ahead: the car in front, or a stop line it has to obey
 	var lead := traffic.leader(self, 60.0)
 	lead_obj = lead[2]
 	var gap: float = lead[0]
 	var v_lead: float = lead[1]
-	if traffic.junctions.has(b) and entered != b and db < 50.0:
-		var stop_d := db - traffic.stop_line(b, a)
+	if traffic.junctions.has(b) and not boxes.has(b) and (db < 50.0 or db < traffic.stop_line(b, a) + 25.0):
+		# (a bus waits with its nose at the line, not its middle out in the junction)
+		var stop_d := db - traffic.stop_line(b, a) - maxf(0.0, length * 0.5 - 3.0)
 		var rule := traffic.may_enter(self, b, a, c_next, stop_d)
+		# too close and too quick to stop for it now (the light's just changed, the gap's just
+		# closed): it's committed, and whoever it's in the way of sees it in the box and waits
+		# (and one already over the line when the light changes is in the junction: it carries on;
+		# a light that's been red a while is different: whoever's still coming stands on the brakes)
+		if rule == "stop" and why in ["amber", "room", "oncoming"] and (v > 2.0 and stop_d < v * v / (2.0 * 5.0) or why == "amber" and stop_d < -0.5 and v > 0.3):
+			rule = "go"
 		last_rule = rule
 		if rule == "go" and traffic.junctions[b].inside.has(self): _enter_box(b)
 		if rule == "stop":
+			# a bus or a truck swinging round the corner in front: wait well back from the line
+			if why == "wide": stop_d -= 5.0
 			if stop_d < gap:
 				gap = maxf(stop_d, 0.01)
 				v_lead = 0.0
 			if v < 0.4 and stop_d < 4.5 and stopped_at != b:
 				stopped_at = b
 				stop_time = Traffic.clock
-		elif db < jr + 2.0:
+		elif db < jr + 2.0 or stop_d < 0.0:
+			# over the line on a go: it's crossing now, whatever the light does next
 			_enter_box(b)
 	# --- the Intelligent Driver Model
 	var dv := v - v_lead
@@ -269,8 +302,14 @@ func drive(dt: float) -> void:
 	# on to the next road: at the end of this one, or once it's round the corner onto the next
 	# (only once it's well along this road: on a stub a few metres long, "round the corner" can
 	# be true the moment it gets onto it)
-	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and s > L * 0.5 and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5
+	# (and only once it's let into the junction and pointing most of the way down the new road: a
+	# right turner's own lane is already on the far side of the corner, metres short of the line;
+	# round a hairpin off a stub that's how it knows, however far along the stub it got)
+	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and (s > L * 0.5 or absf(turn_ahead) > 1.2) and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5 \
+		and absf(angle_difference(heading, dout.angle())) < 0.7 and (boxes.has(b) or not traffic.junctions.has(b))
 	if s >= L - 0.2 or past_corner:
+		# (round a tight corner it can be onto the next road before it was ever in the box)
+		if traffic.junctions.has(b) and not boxes.has(b): _enter_box(b)
 		a = b
 		b = c_next
 		c_next = -1
@@ -278,10 +317,10 @@ func drive(dt: float) -> void:
 		stopped_at = -1
 		# turned round at a dead end and heading back into the junction it just crossed: that's a
 		# new crossing, with the rules and all
-		if entered == b: _leave_box()
-	var jx: Dictionary = traffic.junctions.get(entered, {}) if entered >= 0 else {}
-	if entered >= 0 and entered != b and pos.distance_to(map.g_pos[entered]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0:
-		_leave_box()
+		if boxes.has(b): _leave_box(b)
+	for n: int in boxes.keys():
+		var jx: Dictionary = traffic.junctions.get(n, {})
+		if n != b and pos.distance_to(map.g_pos[n]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0 + maxf(0.0, length * 0.5 - 3.0): _leave_box(n)
 	# --- lights
 	var turning := db < 40.0 and absf(turn_ahead) > 0.5 and absf(turn_ahead) < 2.8
 	view.blink_left = turning and turn_ahead < 0.0
@@ -289,18 +328,26 @@ func drive(dt: float) -> void:
 	view.braking = acc < -0.8 or v < 0.2
 	_place()
 
-## Into junction `n`'s box (and out of the last one, however close the two junctions are: a
-## car still on a junction's list keeps everybody else at its stop signs waiting).
+## Into junction `n`'s box. It stays on the last one's list too until it's clear of it: where two
+## junctions are a few metres apart it's in both at once, and a car on a junction's list keeps
+## everybody crossing its way waiting.
 func _enter_box(n: int) -> void:
-	if entered >= 0 and entered != n: traffic.leave(self, entered)
 	traffic.enter(self, n)
+	boxes[n] = a
 	entered = n
 	entered_from = a
 
-func _leave_box() -> void:
-	if entered >= 0: traffic.leave(self, entered)
-	entered = -1
-	entered_from = -1
+## Out of junction `n`'s box (or every one it's in, with no `n`).
+func _leave_box(n := -1) -> void:
+	for k: int in (boxes.keys() if n < 0 else [n]):
+		traffic.leave(self, k)
+		boxes.erase(k)
+	if n < 0 or n == entered:
+		entered = -1
+		entered_from = -1
+		for k: int in boxes:
+			entered = k
+			entered_from = int(boxes[k])
 
 ## The line it's about to drive, as points from where it is now: down its lane, round a
 ## smooth curve through the junction (from its lane in to the right lane out), and on.
