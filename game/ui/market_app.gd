@@ -171,11 +171,41 @@ func _photo(l: Dictionary) -> ImageTexture:
 		for y in 10:
 			for x in 14:
 				out.set_pixel(out.get_width() - 30 + x + y / 3, 8 + y, Color(1, 1, 0.9, 0.5).blend(out.get_pixel(out.get_width() - 30 + x + y / 3, 8 + y)))
-	if rng.randf() < 0.3:
-		out.fill_rect(Rect2i(0, out.get_height() - 24, 16, 24), Color("c89878"))          # a thumb
+	if rng.randf() < 0.3: _thumb(out, rng)
 	var tex := ImageTexture.create_from_image(out)
 	_photos[key] = tex
 	return tex
+
+## A thumb over the corner of the lens: out of focus, so it's soft at the edges, lit from the
+## flash side, with the nail catching the light near its tip.
+static func _thumb(out: Image, rng: RandomNumberGenerator) -> void:
+	var h := out.get_height()
+	var cx := 3.0
+	var cy := float(h) + 3.0
+	var rx := 13.0
+	var ry := 22.0
+	var skin := Color("d0a080").lerp(Color("7a4a32"), rng.randf() * 0.7)
+	for y in range(maxi(0, int(cy - ry) - 3), h):
+		for x in range(0, mini(out.get_width(), int(cx + rx) + 4)):
+			var dx := (float(x) - cx) / rx
+			var dy := (float(y) - cy) / ry
+			var e := sqrt(dx * dx + dy * dy)
+			if e > 1.18: continue
+			var lit := clampf(0.55 + dx * 0.35 - dy * 0.25, 0.0, 1.0)
+			var c := skin.darkened(0.35).lerp(skin.lightened(0.18), lit).darkened(clampf((e - 0.7) * 0.8, 0.0, 0.3))
+			var a := clampf((1.18 - e) / 0.32, 0.0, 1.0)
+			out.set_pixel(x, y, out.get_pixel(x, y).lerp(c, a))
+	var nx := cx + rx * 0.3
+	var ny := cy - ry * 0.74
+	for y in range(int(ny - 4.0), int(ny + 4.0)):
+		for x in range(int(nx - 5.0), int(nx + 5.0)):
+			if y < 0 or y >= h or x < 0: continue
+			var ex := (float(x) - nx) / 4.6
+			var ey := (float(y) - ny) / 3.4
+			if ex * ex + ey * ey > 1.0: continue
+			var nc := skin.lightened(0.3).lerp(Color("f2dcd0"), 0.35)
+			if ey < -0.25 and ex > -0.3: nc = Color("fbefe8")
+			out.set_pixel(x, y, out.get_pixel(x, y).lerp(nc, 0.8))
 
 func draw_app(ci: CanvasItem, r: Rect2) -> void:
 	var ls := listings()

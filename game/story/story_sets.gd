@@ -8,12 +8,19 @@ extends RefCounted
 const AW := 320
 const AH := 180
 const INK := Color("120e14")
+const FEET_Y := 128                 # the cast stand with their feet on this line (set px)
 
 static var _cache := {}
+## Where the vehicles stand in each set: { rect (set px), wreck } each, so nobody in a cutscene
+## stands in one and no two cars sit in each other (unless they're one wreck, on purpose).
+static var vehicles := {}
+static var _painting := ""
 
 static func texture(name: String) -> ImageTexture:
 	if _cache.has(name): return _cache[name]
 	var p := Pix.new(AW, AH, name.hash())
+	_painting = name
+	vehicles[name] = []
 	match name:
 		"party": _party(p)
 		"airstrip": _airstrip(p)
@@ -27,6 +34,14 @@ static func texture(name: String) -> ImageTexture:
 	var t := p.texture()
 	_cache[name] = t
 	return t
+
+## The vehicles in a set: { rect, wreck } for each.
+static func vehicles_in(name: String) -> Array:
+	texture(name)
+	return vehicles.get(name, [])
+
+static func _vehicle(r: Rect2, wreck := "") -> void:
+	(vehicles[_painting] as Array).append({ "rect": r, "wreck": wreck })
 
 ## Draw the set (2x) and its moving parts. Kept for callers that just want a backdrop.
 static func draw(ci: CanvasItem, name: String, t: float) -> void:
@@ -121,9 +136,21 @@ static func _tire_stack(p: Pix, x: int, y: int, n: int) -> void:
 		p.ellipse(x, ty - 1, 5.0, 1.5, Color("0b0a0c"))
 		p.hline(x - 9, ty + 2, 4, Color("3a383e"))
 
-## A catalogue car drawn as itself, scaled for how deep into the set it stands (1 = right up front).
-static func _car(p: Pix, x: int, y: int, id: String, depth: float, paint: Color, dmg := {}, flip := false, mods := {}) -> void:
+## A catalogue car drawn as itself, scaled for how deep into the set it stands (1 = right up
+## front), and where it stands remembered. Cars with the same `wreck` name are one crash and are
+## allowed to be in each other.
+static func _car(p: Pix, x: int, y: int, id: String, depth: float, paint: Color, dmg := {}, flip := false, mods := {}, wreck := "") -> void:
 	var len := PixCars.length_px(float(CarCatalog.entry(id).get("length", 4.6)), depth)
+	# where it stands: the car itself, not its smoke, its shadow or the glow off its lamps
+	var bare := dmg.duplicate()
+	bare.erase("smoke")
+	bare.erase("lights")
+	var pm := mods.duplicate()
+	pm.shadow = false
+	var probe := Pix.new(AW, AH, 1)
+	PixCars.draw_car(probe, x, y, len, { "id": id }, paint, bare, flip, 0.0, pm)
+	var r := probe.img.get_used_rect()
+	if r.size != Vector2i.ZERO: _vehicle(Rect2(r), wreck)
 	PixCars.draw_car(p, x, y, len, { "id": id }, paint, dmg, flip, 0.0, mods)
 
 static func _drum(p: Pix, x: int, y: int, c: Color) -> void:
@@ -232,16 +259,16 @@ static func _airstrip(p: Pix) -> void:
 	for x in range(0, AW, 24): p.vline(x, 60, 24, Color("5a5e68"))
 	p.line(40, 66, 30, 84, Color("6a6e78"))
 	p.line(76, 66, 88, 82, Color("6a6e78"))
-	# the ring of the Familia's cars, headlights on (beams in the haze)
-	var ring := [[0, 98, "lexis_ell_ess_four_hunnert_1990", Color("2a2a2e")], [222, 98, "nissun_skylion_gee_tee_arr_1991", Color("e8e4dc")],
-		[84, 94, "jepp_grand_cherokay_2006", Color("6a2a4a")], [168, 94, "pontiak_fireburd_trans_ammo_1979", Color("d8a03a")]]
+	# the ring of the Familia's cars, headlights on (beams in the haze), behind the wreck and clear
+	# of everybody
+	var ring := [[30, 95, "lexis_ell_ess_four_hunnert_1990", Color("2a2a2e"), false], [116, 94, "pontiak_fireburd_trans_ammo_1979", Color("d8a03a"), true]]
 	for c in ring:
-		_car(p, int(c[0]), int(c[1]), String(c[2]), 0.5, c[3], { "lights": true }, int(c[0]) > 150)
-	p.beam(76, 88, 170, 80, 130, Color("fff4c8"), 0.25)
-	p.beam(228, 88, 140, 82, 130, Color("fff4c8"), 0.25)
+		_car(p, int(c[0]), int(c[1]), String(c[2]), 0.45, c[3], { "lights": true }, bool(c[4]))
+	p.beam(110, 86, 210, 80, 130, Color("fff4c8"), 0.25)
+	p.beam(116, 86, 20, 82, 130, Color("fff4c8"), 0.25)
 	# the wreck: Dad's Supreem, parked inside Mia's Eclipsed
-	_car(p, 128, 126, "mitsubishy_eclipsed_1995", 0.66, Color("3a6aa8"), { "rear": 0.9, "glass": true, "bumper": "gone" }, true, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" })
-	_car(p, 36, 128, "supreem", 0.66, Color("d8d4c8"), { "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" })
+	_car(p, 108, 126, "mitsubishy_eclipsed_1995", 0.56, Color("3a6aa8"), { "rear": 0.9, "glass": true, "bumper": "gone" }, true, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" }, "the wreck")
+	_car(p, 30, 128, "supreem", 0.56, Color("d8d4c8"), { "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" }, false, {}, "the wreck")
 	# Mia's turbo, on the ground, where turbos don't go
 	p.disc(204, 140, 5.0, Color("8a8a90"))
 	p.ring(204, 140, 5.0, Color("4a4a50"))
@@ -521,6 +548,7 @@ static func _bay(p: Pix) -> void:
 	p.disc(216, 146, 8.0, Color("17151a"))                                    # the wheels peek out
 	p.disc(300, 146, 8.0, Color("17151a"))
 	p.rect(196, 150, 124, 2, Color(0, 0, 0, 0.4))
+	_vehicle(Rect2(196, 104, 124, 48))                                        # (the Charjer)
 	# fluorescent tubes, one of them on its way out
 	for x in [40, 180]:
 		p.rect(x, 2, 70, 3, Color("f0f4f0"))

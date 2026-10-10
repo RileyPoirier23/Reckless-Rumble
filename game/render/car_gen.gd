@@ -618,7 +618,7 @@ static func _modern(g: Dictionary, f: Dictionary, fam: String, L: float, r: Rand
 					g.c_w = 0.18
 				g.tail_x = 0.0
 				g.tail_mid = 0.62
-	elif fam in ["suv", "offroad", "pickup"] and year >= 1995 and String(g.cab) != "ute" and String(g.cab) != "cabover":
+	elif fam in ["suv", "offroad", "pickup"] and year >= 1995 and String(g.cab) != "ute" and String(g.cab) != "cabover" and not g.tub:
 		var cross := cls == "crossover"
 		var big := L > 5.05
 		var hd: bool = cls in ["hd_pickup", "work_truck"] or f.body == "tow"
@@ -1180,7 +1180,9 @@ static func _rear_line(d: Dictionary) -> Array:
 					pts.append([float(d.dlo_r), float(d.belt_r), 0.006])
 					pts.append([float(d.a_bot), float(d.belt_f), 0.006])
 			_:
-				pts.append([float(d.roof_r) * 0.6, h - 0.012, 0.012 * s + 0.004])
+				# a wagon's roof drops a touch to the tailgate; a high-roof van's stays flat
+				var drop := 0.012 if h <= float(d.cab_top) + 0.01 else 0.0
+				pts.append([float(d.roof_r) * 0.6, h - drop, 0.012 * s + 0.004])
 	return pts
 
 ## Where a Jepp's door opening is cut into the tub: [rear edge, front edge, bottom], fractions.
@@ -2260,15 +2262,24 @@ class _Car:
 				for k in 3:
 					p.line(vx - k * 3 * u, vy, vx - k * 3 * u - 2 * u, vy + int(lf * 0.03), CarGen.WELL)
 			"scoop_side":
-				# a C-shaped scoop on the quarter panel, ahead of the rear wheel
-				var sx2 := int(ra.x + arch_r * 1.1)
+				# a scoop on the quarter panel ahead of the rear wheel: a raised body-coloured
+				# blade, tapering back, with its dark mouth facing forward
+				var sx2 := int(ra.x + arch_r * 1.05)
 				var sy2 := int(Y(float(d.belt_r)) + (rock - Y(float(d.belt_r))) * 0.22)
-				var sw2 := maxi(3, int(lf * 0.045))
-				var sh2 := maxi(3, int((rock - Y(float(d.belt_r))) * 0.38))
-				p.rect(sx2, sy2, sw2, sh2, CarGen.WELL)
-				p.hline(sx2, sy2 - 1, sw2 + u, (pal.hi as Color))
-				p.vline(sx2 + sw2, sy2, sh2, (pal.lt as Color))
-				p.frame(sx2 - 1, sy2 - 1, sw2 + 1, sh2 + 2, CarGen.INK)
+				var sw2 := maxi(4, int(lf * 0.055))
+				var sh2 := maxi(3, int((rock - Y(float(d.belt_r))) * 0.3))
+				var mw := maxi(1, sw2 / 4)
+				for k in sw2:
+					var t := float(k) / float(sw2 - 1)
+					var hh := maxi(1, int(lerpf(float(sh2) * 0.3, float(sh2), t)))
+					var y0 := sy2 + (sh2 - hh) / 2
+					p.px(sx2 + k, y0 - 1, CarGen.INK)
+					p.px(sx2 + k, y0 + hh, CarGen.INK)
+					for yy in range(y0, y0 + hh):
+						var c: Color = (pal.hi as Color) if yy == y0 else ((pal.base as Color) if yy < y0 + hh - 1 else (pal.sh as Color))
+						if k >= sw2 - mw and yy > y0: c = CarGen.WELL
+						p.px(sx2 + k, yy, c)
+				p.vline(sx2 + sw2, sy2, sh2, CarGen.INK)
 			"portholes_roof":
 				var phx := int(X(float(d.dlo_r))) - int(lf * 0.035)
 				var phy := int(Y(float(d.glass_top))) + int(lf * 0.025)
@@ -3484,7 +3495,7 @@ class _Car:
 	## A Jepp's flares: flat-topped trapezoids standing proud of the tub, black plastic from the
 	## late eighties on and body colour before, each with a lit top and a dark underside.
 	func _trap_flares() -> void:
-		var plastic := year >= 1987
+		var plastic: bool = year >= 1987 and d.make != "Hummor"
 		var c_top := Color("5a606a") if plastic else (pal.hi as Color)
 		var c_face := Color("30353d") if plastic else (pal.lt as Color)
 		var c_low := Color("1c2026") if plastic else (pal.mid as Color)
@@ -4008,9 +4019,9 @@ const ICONS := {
 		"deck": 0.48, "bl_rake": 68.0, "c_top": 0.08, "c_bot": -0.3, "crown": 0.03, "soft": 0.85, "head": "swept", "tail_lamp": "racetrack",
 		"rim_style": "fivespoke", "rim_frac": 0.72, "crease": 0.5, "art": { "spoiler": true } },
 	# --- pony cars and muscle
-	"fjord_mustank_1966": { "H": 1.3, "hood_h": 0.75, "cowl_rise": 0.10, "cowl_d": 2.0, "rake": 50.0, "deck": 0.58, "tail_h": 0.88, "bl_rake": 54.0,
+	"fjord_mustank_1966": { "top": [[0.0, 0.5, 0.04], [0.02, 0.86, 0.04, "tail"], [0.62, 0.92, 0.06, "deck"], [1.2, 1.26, 0.08, "roof_r"], [1.75, 1.3, 0.3], [2.18, 1.27, 0.08, "roof_f"], [2.65, 0.94, 0.05, "cowl"], [4.45, 0.86, 0.06, "hood"], [4.61, 0.66, 0.04, "nose"]], "H": 1.3, "hood_h": 0.75, "cowl_rise": 0.10, "cowl_d": 2.0, "rake": 50.0, "deck": 0.58, "tail_h": 0.88, "bl_rake": 54.0,
 		"kick": 0.03, "soft": 0.45, "side_vent": "scoop_side", "head": "round", "tail_lamp": "bar", "hardtop": true, "rim_style": "steel", "wall": "none" },
-	"fjord_mustank_fastback_1969": { "rear": "fast", "H": 1.29, "hood_h": 0.75, "cowl_rise": 0.09, "cowl_d": 2.1, "rake": 54.0, "tail_h": 0.9,
+	"fjord_mustank_fastback_1969": { "top": [[0.0, 0.52, 0.04], [0.02, 0.9, 0.04], [0.3, 0.95, 0.08, "tail"], [1.55, 1.25, 0.15, "roof_r"], [2.0, 1.29, 0.3], [2.25, 1.26, 0.08, "roof_f"], [2.72, 0.97, 0.05, "cowl"], [4.6, 0.88, 0.06, "hood"], [4.8, 0.68, 0.04, "nose"]], "rear": "fast", "H": 1.29, "hood_h": 0.75, "cowl_rise": 0.09, "cowl_d": 2.1, "rake": 54.0, "tail_h": 0.9,
 		"bl_rake": 75.0, "c_bot": -0.5, "kick": 0.03, "soft": 0.4, "side_vent": "scoop_side", "head": "quad", "tail_lamp": "bar", "hardtop": true,
 		"rim_style": "fivespoke", "wall": "letters", "stripe_kind": "side" },
 	"fjord_mustank_1988": { "rear": "fast", "H": 1.32, "hood_h": 0.72, "cowl_rise": 0.18, "cowl_d": 1.85, "rake": 58.0, "tail_h": 0.95, "bl_rake": 68.0,
@@ -4025,7 +4036,7 @@ const ICONS := {
 		"c_bot": -0.3, "soft": 0.25, "nose": "wedge", "nose_drop": 0.12, "head": "rect", "tail_lamp": "wrap", "bumper": "body", "rim_style": "fivespoke" },
 	"chevrolay_camareo_1998": { "rear": "fast", "H": 1.3, "hood_h": 0.58, "cowl_rise": 0.3, "cowl_d": 2.1, "rake": 68.0, "tail_h": 0.98, "bl_rake": 76.0,
 		"c_bot": -0.3, "soft": 0.9, "nose": "wedge", "nose_drop": 0.12, "nose_round": 0.14, "head": "flush", "tail_lamp": "wrap", "rim_style": "fivespoke" },
-	"chevrolay_camareo_ess_ess_2016": { "H": 1.35, "hood_h": 0.86, "cowl_rise": 0.2, "cowl_d": 2.0, "rake": 64.0, "belt_up": 0.04,
+	"chevrolay_camareo_ess_ess_2016": { "top": [[0.0, 0.62, 0.06], [0.04, 1.06, 0.06, "tail"], [0.75, 1.1, 0.12, "deck"], [1.45, 1.32, 0.2, "roof_r"], [1.95, 1.35, 0.3], [2.25, 1.32, 0.12, "roof_f"], [2.9, 1.07, 0.1, "cowl"], [4.55, 0.92, 0.12, "hood"], [4.78, 0.78, 0.06, "nose"]], "H": 1.35, "hood_h": 0.86, "cowl_rise": 0.2, "cowl_d": 2.0, "rake": 64.0, "belt_up": 0.04,
 		"deck": 0.5, "tail_h": 1.05, "bl_rake": 70.0, "c_bot": -0.3, "kick": 0.05, "soft": 0.85, "head": "swept", "tail_lamp": "block",
 		"rim_style": "fivespoke", "rim_frac": 0.72 },
 	"chevrolay_shovelle_ess_ess_1970": { "H": 1.33, "hood_h": 0.75, "cowl_rise": 0.10, "cowl_d": 2.15, "rake": 54.0, "deck": 0.78, "tail_h": 0.92,
@@ -4040,7 +4051,7 @@ const ICONS := {
 		"c_bot": -0.28, "soft": 0.3, "nose": "wedge", "nose_drop": 0.12, "tail_lamp": "wrap", "rim_style": "mesh", "bumper": "body" },
 	"buickk_grand_nashunal_1987": { "H": 1.38, "hood_h": 0.8, "cowl_rise": 0.16, "cowl_d": 2.15, "rake": 54.0, "deck": 0.72, "tail_h": 0.97, "bl_rake": 38.0,
 		"c_top": 0.22, "soft": 0.12, "head": "rect", "tail_lamp": "block", "bumper": "rubber", "rim_style": "fivespoke", "trim": ["moulding"] },
-	"dodgy_charjer_1969": { "rear": "fast", "H": 1.34, "hood_h": 0.75, "cowl_rise": 0.10, "cowl_d": 2.25, "rake": 55.0, "tail_h": 0.92, "bl_rake": 70.0,
+	"dodgy_charjer_1969": { "top": [[0.0, 0.52, 0.04], [0.02, 0.92, 0.04, "tail"], [0.7, 0.97, 0.08, "deck"], [1.35, 1.3, 0.15, "roof_r"], [2.0, 1.34, 0.4], [2.52, 1.31, 0.08, "roof_f"], [3.05, 0.98, 0.05, "cowl"], [5.15, 0.9, 0.06, "hood"], [5.3, 0.7, 0.04, "nose"]], "rear": "notch", "H": 1.34, "hood_h": 0.75, "cowl_rise": 0.10, "cowl_d": 2.25, "rake": 55.0, "tail_h": 0.92, "bl_rake": 70.0,
 		"c_top": 0.08, "c_bot": -0.38, "kick": 0.07, "soft": 0.45, "head": "hidden", "tail_lamp": "bar", "hardtop": true, "rim_style": "steel",
 		"wall": "letters", "stripe_kind": "tail" },
 	"dodgy_challenjer_1970": { "H": 1.29, "hood_h": 0.75, "cowl_rise": 0.09, "cowl_d": 2.1, "rake": 54.0, "deck": 0.6, "tail_h": 0.92, "bl_rake": 64.0,
@@ -4070,52 +4081,52 @@ const ICONS := {
 	"chequer_marathone_1978": { "H": 1.6, "hood_h": 0.92, "cowl_rise": 0.1, "cowl_d": 1.95, "rake": 32.0, "deck": 0.8, "tail_h": 0.98, "bl_rake": 30.0,
 		"soft": 0.45, "crown": 0.03, "head": "quad", "bumper": "chrome5", "rim_style": "hubcap" },
 	# --- sports cars, then and now
-	"chevrolay_corvet_1963": { "rear": "fast", "H": 1.26, "hood_h": 0.66, "cowl_rise": 0.2, "cowl_d": 2.15, "rake": 58.0, "tail_h": 0.8, "bl_rake": 76.0,
+	"chevrolay_corvet_1963": { "top": [[0.0, 0.48, 0.06], [0.05, 0.78, 0.1], [0.5, 0.86, 0.2, "tail"], [1.5, 1.2, 0.25, "roof_r"], [1.85, 1.26, 0.25], [2.05, 1.24, 0.1, "roof_f"], [2.45, 0.98, 0.06, "cowl"], [3.6, 0.85, 0.35], [4.3, 0.7, 0.15, "hood"], [4.45, 0.52, 0.06, "nose"]], "rear": "fast", "H": 1.26, "hood_h": 0.66, "cowl_rise": 0.2, "cowl_d": 2.15, "rake": 58.0, "tail_h": 0.8, "bl_rake": 76.0,
 		"c_bot": -0.35, "kick": 0.05, "soft": 0.7, "nose": "wedge", "head": "hidden", "tail_lamp": "round", "side_vent": "vent", "rim_style": "dish", "wall": "white" },
-	"chevrolay_corvet_1979": { "rear": "fast", "H": 1.21, "hood_h": 0.6, "cowl_rise": 0.3, "cowl_d": 2.4, "rake": 64.0, "tail_h": 0.92, "bl_rake": 70.0,
+	"chevrolay_corvet_1979": { "top": [[0.0, 0.5, 0.06], [0.03, 0.88, 0.06, "tail"], [0.7, 0.93, 0.25], [1.25, 1.0, 0.2], [1.6, 1.18, 0.15, "roof_r"], [1.95, 1.21, 0.2], [2.15, 1.18, 0.08, "roof_f"], [2.55, 0.92, 0.06, "cowl"], [3.6, 0.88, 0.35], [4.4, 0.7, 0.2, "hood"], [4.7, 0.5, 0.06, "nose"]], "rear": "fast", "H": 1.21, "hood_h": 0.6, "cowl_rise": 0.3, "cowl_d": 2.4, "rake": 64.0, "tail_h": 0.92, "bl_rake": 70.0,
 		"c_bot": -0.22, "kick": 0.08, "soft": 0.8, "nose": "wedge", "nose_drop": 0.1, "head": "popup", "tail_lamp": "round", "side_vent": "vent",
 		"rim_style": "fivespoke", "wall": "letters", "bumper": "body" },
 	"chevrolay_corvet_1997": { "head": "popup", "tail_lamp": "round" },
-	"deloreon_dmz_twelve_1981": { "rear": "notch", "H": 1.14, "hood_h": 0.6, "cowl_rise": 0.26, "cowl_d": 1.55, "rake": 64.0, "deck": 0.45, "tail_h": 0.92,
+	"deloreon_dmz_twelve_1981": { "top": [[0.0, 0.5, 0.02], [0.02, 0.92, 0.02, "tail"], [0.42, 0.95, 0.02, "deck"], [1.45, 1.13, 0.03, "roof_r"], [2.25, 1.14, 0.03, "roof_f"], [2.72, 0.93, 0.02, "cowl"], [4.15, 0.7, 0.02, "hood"], [4.27, 0.55, 0.02, "nose"]], "rear": "notch", "H": 1.14, "hood_h": 0.6, "cowl_rise": 0.26, "cowl_d": 1.55, "rake": 64.0, "deck": 0.45, "tail_h": 0.92,
 		"bl_rake": 78.0, "c_top": 0.06, "c_bot": -0.08, "soft": 0.06, "nose": "wedge", "nose_drop": 0.14, "head": "rect", "tail_lamp": "block",
 		"bumper": "rubber", "rim_style": "turbofan", "trim": ["moulding"], "art": { "louvers": true } },
-	"fjord_gt_fourty_ish_2005": { "H": 1.12, "hood_h": 0.64, "cowl_rise": 0.2, "cowl_d": 1.72, "rake": 64.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 80.0,
+	"fjord_gt_fourty_ish_2005": { "top": [[0.0, 0.55, 0.06], [0.03, 0.97, 0.05, "tail"], [0.7, 1.0, 0.3], [1.3, 1.03, 0.2, "deck"], [1.7, 1.1, 0.3, "roof_r"], [2.2, 1.12, 0.4], [2.45, 1.09, 0.2, "roof_f"], [3.0, 0.82, 0.12, "cowl"], [3.6, 0.78, 0.3], [4.45, 0.62, 0.12, "hood"], [4.64, 0.45, 0.06, "nose"]], "H": 1.12, "hood_h": 0.64, "cowl_rise": 0.2, "cowl_d": 1.72, "rake": 64.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 80.0,
 		"soft": 1.0, "nose": "round", "head": "jewel", "tail_lamp": "round", "rim_style": "tenspoke", "art": { "louvers": true, "stripes": true } },
-	"porch_neuner_1973": { "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "head": "round", "tail_lamp": "bar", "bumper": "chrome", "rim_style": "fivespoke" },
-	"porch_neuner_turbo_1986": { "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "kick": 0.06, "head": "round", "tail_lamp": "bar", "bumper": "body", "rim_style": "fivespoke", "flare": "bulge",
+	"porch_neuner_1973": { "top": [[0.0, 0.5, 0.12], [0.05, 0.7, 0.12, "tail"], [0.45, 0.86, 0.3], [1.15, 1.18, 0.3, "roof_r"], [1.75, 1.29, 0.45], [2.05, 1.26, 0.2, "roof_f"], [2.6, 0.95, 0.1, "cowl"], [3.3, 0.82, 0.4], [3.85, 0.79, 0.15], [4.08, 0.62, 0.1, "hood"], [4.15, 0.48, 0.06, "nose"]], "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "head": "round", "tail_lamp": "bar", "bumper": "chrome", "rim_style": "fivespoke" },
+	"porch_neuner_turbo_1986": { "top": [[0.0, 0.5, 0.12], [0.05, 0.72, 0.12, "tail"], [0.5, 0.88, 0.3], [1.22, 1.18, 0.3, "roof_r"], [1.85, 1.28, 0.45], [2.15, 1.25, 0.2, "roof_f"], [2.72, 0.95, 0.1, "cowl"], [3.4, 0.83, 0.4], [3.98, 0.8, 0.15], [4.22, 0.62, 0.1, "hood"], [4.29, 0.48, 0.06, "nose"]], "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "kick": 0.06, "head": "round", "tail_lamp": "bar", "bumper": "body", "rim_style": "fivespoke", "flare": "bulge",
 		"wing_kind": "whale", "tire": 1.04 },
-	"ferraree_testosterona_1987": { "H": 1.13, "hood_h": 0.6, "cowl_rise": 0.2, "cowl_d": 1.5, "rake": 66.0, "deck": 1.0, "tail_h": 0.98, "bl_rake": 82.0,
+	"ferraree_testosterona_1987": { "top": [[0.0, 0.5, 0.02], [0.02, 0.98, 0.03, "tail"], [1.05, 1.0, 0.04, "deck"], [1.8, 1.11, 0.06, "roof_r"], [2.3, 1.13, 0.1], [2.5, 1.11, 0.04, "roof_f"], [3.0, 0.9, 0.03, "cowl"], [4.3, 0.68, 0.05, "hood"], [4.49, 0.52, 0.03, "nose"]], "H": 1.13, "hood_h": 0.6, "cowl_rise": 0.2, "cowl_d": 1.5, "rake": 66.0, "deck": 1.0, "tail_h": 0.98, "bl_rake": 82.0,
 		"c_bot": -0.05, "soft": 0.15, "head": "popup", "tail_lamp": "block", "rim_style": "fivespoke" },
-	"ferraree_eff_forty_1990": { "H": 1.12, "hood_h": 0.58, "cowl_rise": 0.22, "cowl_d": 1.5, "rake": 66.0, "deck": 0.9, "tail_h": 1.0, "bl_rake": 80.0,
+	"ferraree_eff_forty_1990": { "top": [[0.0, 0.5, 0.02], [0.02, 1.0, 0.02, "tail"], [0.9, 1.02, 0.08, "deck"], [1.55, 1.1, 0.1, "roof_r"], [2.1, 1.12, 0.2], [2.4, 1.09, 0.06, "roof_f"], [2.85, 0.88, 0.04, "cowl"], [4.15, 0.66, 0.08, "hood"], [4.36, 0.5, 0.04, "nose"]], "H": 1.12, "hood_h": 0.58, "cowl_rise": 0.22, "cowl_d": 1.5, "rake": 66.0, "deck": 0.9, "tail_h": 1.0, "bl_rake": 80.0,
 		"soft": 0.4, "head": "popup", "tail_lamp": "round", "wing_kind": "deck", "rim_style": "fivespoke", "art": { "louvers": true } },
 	"ferraree_three_oh_ate_1984": { "soft": 0.5, "head": "popup", "tail_lamp": "round", "rim_style": "fivespoke" },
 	"ferraree_two_fifty_gee_tee_oh_no_1962": { "H": 1.2, "hood_h": 0.62, "cowl_rise": 0.2, "cowl_d": 2.0, "rake": 56.0, "tail_h": 0.88, "bl_rake": 70.0,
 		"soft": 1.2, "side_vent": "vent", "head": "round", "tail_lamp": "round", "rim_style": "wire", "art": { "spoiler": true } },
-	"lamberghini_coontash_1985": { "H": 1.07, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.3, "rake": 72.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 84.0,
+	"lamberghini_coontash_1985": { "top": [[0.0, 0.5, 0.02], [0.02, 0.98, 0.02, "tail"], [0.95, 1.0, 0.02, "deck"], [1.6, 1.06, 0.04, "roof_r"], [2.25, 1.07, 0.04, "roof_f"], [2.85, 0.88, 0.02, "cowl"], [3.95, 0.66, 0.02, "hood"], [4.14, 0.5, 0.02, "nose"]], "H": 1.07, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.3, "rake": 72.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 84.0,
 		"c_top": 0.04, "c_bot": -0.04, "soft": 0.04, "nose_drop": 0.2, "nose_round": 0.32, "nose_lean": 0.05, "arch": "square", "head": "popup", "tail_lamp": "block",
 		"rim_style": "steel", "rim_color": "c8ccd4" },
 	"lamberghini_diabloh_1995": { "soft": 0.7, "rake": 70.0 },
-	"lamberghini_meeura_1968": { "H": 1.06, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.55, "rake": 64.0, "deck": 0.95, "tail_h": 0.92, "bl_rake": 82.0,
+	"lamberghini_meeura_1968": { "top": [[0.0, 0.5, 0.06], [0.03, 0.88, 0.06, "tail"], [0.6, 0.92, 0.3], [1.3, 0.97, 0.3, "deck"], [1.85, 1.03, 0.3, "roof_r"], [2.25, 1.06, 0.3], [2.55, 1.03, 0.15, "roof_f"], [3.0, 0.8, 0.12, "cowl"], [3.45, 0.76, 0.3], [4.15, 0.62, 0.2, "hood"], [4.36, 0.42, 0.08, "nose"]], "H": 1.06, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.55, "rake": 64.0, "deck": 0.95, "tail_h": 0.92, "bl_rake": 82.0,
 		"soft": 1.4, "head": "round", "tail_lamp": "block", "rim_style": "steel", "art": { "louvers": true } },
-	"jagwire_ee_typo_1965": { "H": 1.22, "hood_h": 0.64, "cowl_rise": 0.2, "cowl_d": 2.3, "rake": 58.0, "tail_h": 0.8, "bl_rake": 72.0, "soft": 1.6,
+	"jagwire_ee_typo_1965": { "top": [[0.0, 0.48, 0.08], [0.05, 0.76, 0.12], [0.4, 0.86, 0.2, "tail"], [1.2, 1.17, 0.3, "roof_r"], [1.6, 1.22, 0.3], [1.85, 1.19, 0.12, "roof_f"], [2.2, 0.98, 0.06, "cowl"], [3.3, 0.9, 0.4], [4.2, 0.72, 0.3, "hood"], [4.45, 0.5, 0.1, "nose"]], "H": 1.22, "hood_h": 0.64, "cowl_rise": 0.2, "cowl_d": 2.3, "rake": 58.0, "tail_h": 0.8, "bl_rake": 72.0, "soft": 1.6,
 		"nose_round": 0.25, "nose_drop": 0.2, "head": "round", "tail_lamp": "round", "bumper": "chrome", "rim_style": "wire" },
-	"aston_martian_double_bee_five_1964": { "rear": "fast", "H": 1.34, "hood_h": 0.74, "cowl_rise": 0.14, "cowl_d": 2.05, "rake": 52.0, "tail_h": 0.88,
+	"aston_martian_double_bee_five_1964": { "top": [[0.0, 0.5, 0.06], [0.04, 0.86, 0.08], [0.45, 0.94, 0.2, "tail"], [1.2, 1.26, 0.25, "roof_r"], [1.8, 1.34, 0.35], [2.1, 1.31, 0.1, "roof_f"], [2.55, 1.02, 0.06, "cowl"], [3.7, 0.92, 0.35], [4.4, 0.78, 0.2, "hood"], [4.57, 0.58, 0.08, "nose"]], "rear": "fast", "H": 1.34, "hood_h": 0.74, "cowl_rise": 0.14, "cowl_d": 2.05, "rake": 52.0, "tail_h": 0.88,
 		"bl_rake": 64.0, "soft": 1.0, "side_vent": "vent", "head": "round", "tail_lamp": "bar", "rim_style": "wire" },
-	"mercedez_gullwinger_1955": { "rear": "fast", "H": 1.3, "hood_h": 0.76, "cowl_rise": 0.14, "cowl_d": 2.0, "rake": 46.0, "tail_h": 0.82, "bl_rake": 64.0,
+	"mercedez_gullwinger_1955": { "top": [[0.0, 0.5, 0.12], [0.06, 0.78, 0.2], [0.7, 0.98, 0.4, "tail"], [1.3, 1.22, 0.3, "roof_r"], [1.85, 1.3, 0.45], [2.2, 1.26, 0.2, "roof_f"], [2.62, 0.98, 0.12, "cowl"], [3.6, 0.89, 0.5], [4.3, 0.72, 0.25, "hood"], [4.52, 0.48, 0.1, "nose"]], "rear": "fast", "H": 1.3, "hood_h": 0.76, "cowl_rise": 0.14, "cowl_d": 2.0, "rake": 46.0, "tail_h": 0.82, "bl_rake": 64.0,
 		"soft": 1.5, "side_vent": "vent", "head": "round", "rim_style": "hubcap", "trim": ["arch_chrome"] },
 	"austen_healthy_frog_eyed_spryte_1959": { "head": "frog", "rim_style": "steel" },
-	"bugattee_veyrun_2008": { "soft": 1.0, "art": { "twotone": true } },
+	"bugattee_veyrun_2008": { "top": [[0.0, 0.5, 0.1], [0.05, 0.92, 0.12, "tail"], [0.55, 0.98, 0.3], [1.0, 1.03, 0.2, "deck"], [1.55, 1.18, 0.25, "roof_r"], [2.1, 1.21, 0.4], [2.45, 1.17, 0.2, "roof_f"], [3.05, 0.86, 0.15, "cowl"], [3.7, 0.74, 0.35], [4.3, 0.6, 0.15, "hood"], [4.46, 0.45, 0.08, "nose"]], "soft": 1.0, "art": { "twotone": true } },
 	"maclarence_eff_won_1994": { "soft": 0.9, "art": { "roofscoop": true } },
 	"acurra_en_ess_eks_1991": { "H": 1.17, "hood_h": 0.62, "cowl_rise": 0.2, "cowl_d": 1.6, "rake": 66.0, "deck": 0.9, "tail_h": 1.0, "bl_rake": 78.0,
 		"soft": 0.7, "head": "popup", "tail_lamp": "wrap", "rim_style": "multispoke", "art": { "blackroof": true } },
 	# --- the JDM heroes
-	"toyoda_supreem_twin_turbo_1995": { "rear": "fast", "H": 1.27, "hood_h": 0.64, "cowl_rise": 0.22, "cowl_d": 1.95, "rake": 64.0, "tail_h": 1.0,
+	"toyoda_supreem_twin_turbo_1995": { "top": [[0.0, 0.55, 0.1], [0.05, 0.98, 0.1, "tail"], [0.5, 1.04, 0.25], [1.25, 1.24, 0.25, "roof_r"], [1.85, 1.27, 0.5], [2.22, 1.22, 0.2, "roof_f"], [2.7, 0.94, 0.12, "cowl"], [3.9, 0.8, 0.4], [4.42, 0.66, 0.12, "hood"], [4.52, 0.5, 0.08, "nose"]], "rear": "fast", "H": 1.27, "hood_h": 0.64, "cowl_rise": 0.22, "cowl_d": 1.95, "rake": 64.0, "tail_h": 1.0,
 		"bl_rake": 70.0, "c_bot": -0.25, "soft": 1.2, "head": "jewel", "tail_lamp": "round", "rim_style": "fivespoke", "trim": [] },
-	"nissun_skylion_gee_tee_arr_1991": { "H": 1.34, "hood_h": 0.74, "cowl_rise": 0.17, "cowl_d": 1.82, "rake": 60.0, "deck": 0.55, "tail_h": 1.0,
+	"nissun_skylion_gee_tee_arr_1991": { "top": [[0.0, 0.52, 0.03], [0.02, 1.0, 0.03, "tail"], [0.6, 1.03, 0.04, "deck"], [1.2, 1.31, 0.06, "roof_r"], [1.9, 1.34, 0.1], [2.05, 1.32, 0.05, "roof_f"], [2.75, 0.93, 0.04, "cowl"], [4.4, 0.77, 0.06, "hood"], [4.55, 0.57, 0.03, "nose"]], "H": 1.34, "hood_h": 0.74, "cowl_rise": 0.17, "cowl_d": 1.82, "rake": 60.0, "deck": 0.55, "tail_h": 1.0,
 		"bl_rake": 60.0, "soft": 0.45, "flare": "bulge", "head": "flush", "tail_lamp": "round", "rim_style": "tenspoke", "trim": [] },
 	"nissun_two_forty_ess_x_1993": { "H": 1.29, "hood_h": 0.64, "cowl_rise": 0.21, "cowl_d": 1.74, "rake": 60.0, "tail_h": 0.93, "deck": 0.62,
 		"bl_rake": 60.0, "soft": 0.9, "head": "popup", "tail_lamp": "wrap" },
-	"mazduh_roto_seven_1993": { "rear": "fast", "H": 1.23, "hood_h": 0.58, "cowl_rise": 0.22, "cowl_d": 1.7, "rake": 64.0, "tail_h": 0.95, "bl_rake": 72.0,
+	"mazduh_roto_seven_1993": { "top": [[0.0, 0.58, 0.1], [0.04, 0.93, 0.08, "tail"], [0.3, 0.98, 0.2], [1.2, 1.2, 0.3, "roof_r"], [1.75, 1.23, 0.4], [2.05, 1.18, 0.2, "roof_f"], [2.55, 0.9, 0.1, "cowl"], [3.1, 0.83, 0.3], [3.75, 0.78, 0.3], [4.2, 0.6, 0.12, "hood"], [4.29, 0.48, 0.06, "nose"]], "rear": "fast", "H": 1.23, "hood_h": 0.58, "cowl_rise": 0.22, "cowl_d": 1.7, "rake": 64.0, "tail_h": 0.95, "bl_rake": 72.0,
 		"kick": 0.06, "soft": 1.5, "head": "popup", "tail_lamp": "round", "rim_style": "fivespoke" },
 	"mazduh_roto_seven_1985": { "rear": "fast", "H": 1.26, "hood_h": 0.6, "cowl_rise": 0.22, "cowl_d": 1.65, "rake": 62.0, "tail_h": 0.88, "bl_rake": 72.0,
 		"soft": 0.4, "tail_lamp": "wrap", "rim_style": "turbofan" },
@@ -4124,7 +4135,7 @@ const ICONS := {
 	"acurra_in_tegruh_1994": { "rear": "fast", "head": "quad", "tail_lamp": "wrap", "rim_style": "fivespoke" },
 	"mitsubishy_lanser_evolushun_2008": { "nose_lean": -0.06, "flare": "box", "rim_style": "tenspoke", "side_vent": "vent" },
 	"subaroo_imprezza_wrecks_2004": { "rim_style": "fivespoke", "rim_color": "c8a040" },
-	"datsum_two_forty_zed_1972": { "rear": "fast", "H": 1.29, "hood_h": 0.66, "cowl_rise": 0.18, "cowl_d": 1.95, "rake": 56.0, "tail_h": 0.86,
+	"datsum_two_forty_zed_1972": { "top": [[0.0, 0.5, 0.05], [0.03, 0.86, 0.05], [0.35, 0.9, 0.1, "tail"], [1.3, 1.22, 0.2, "roof_r"], [1.7, 1.29, 0.25], [1.92, 1.26, 0.08, "roof_f"], [2.3, 0.96, 0.05, "cowl"], [3.4, 0.86, 0.3], [4.0, 0.74, 0.15, "hood"], [4.14, 0.56, 0.05, "nose"]], "rear": "fast", "H": 1.29, "hood_h": 0.66, "cowl_rise": 0.18, "cowl_d": 1.95, "rake": 56.0, "tail_h": 0.86,
 		"bl_rake": 72.0, "soft": 0.8, "head": "round", "tail_lamp": "bar", "bumper": "chrome", "rim_style": "dish" },
 	"nissun_three_hundred_zed_x_1990": { "rear": "fast", "H": 1.25, "hood_h": 0.6, "cowl_rise": 0.22, "cowl_d": 1.72, "rake": 66.0, "tail_h": 0.98,
 		"bl_rake": 72.0, "soft": 0.9, "head": "flush", "tail_lamp": "wrap" },
@@ -4136,24 +4147,24 @@ const ICONS := {
 	"awdi_kwattro_1983": { "soft": 0.12, "flare": "box", "head": "rect" },
 	"beemer_werke_emm_dreier_1990": { "H": 1.37, "hood_h": 0.72, "cowl_rise": 0.17, "cowl_d": 1.6, "rake": 56.0, "deck": 0.55, "tail_h": 1.0,
 		"bl_rake": 52.0, "soft": 0.15, "nose_lean": -0.04, "flare": "box", "head": "quad", "tail_lamp": "block", "rim_style": "mesh", "bumper": "strip" },
-	"volkswagon_golph_gee_tee_eye_1985": { "H": 1.4, "hood_h": 0.72, "cowl_rise": 0.18, "cowl_d": 1.2, "rake": 54.0, "tail_h": 0.9, "bl_rake": 28.0,
+	"volkswagon_golph_gee_tee_eye_1985": { "top": [[0.0, 0.5, 0.04], [0.03, 0.9, 0.04, "tail"], [0.25, 1.36, 0.08, "roof_r"], [2.0, 1.4, 0.15], [2.15, 1.37, 0.06, "roof_f"], [2.8, 0.92, 0.05, "cowl"], [3.85, 0.74, 0.08, "hood"], [3.99, 0.56, 0.04, "nose"]], "H": 1.4, "hood_h": 0.72, "cowl_rise": 0.18, "cowl_d": 1.2, "rake": 54.0, "tail_h": 0.9, "bl_rake": 28.0,
 		"soft": 0.2, "c_top": 0.24, "c_bot": 0.12, "doors": 2, "head": "round", "tail_lamp": "block", "bumper": "rubber", "rim_style": "tenspoke" },
-	"volvoh_brick_1989": { "soft": 0.06, "rake": 52.0 },
-	"minni_cupper_1965": { "H": 1.35, "rear": "notch", "hood_h": 0.8, "cowl_rise": 0.12, "cowl_d": 0.95, "rake": 32.0, "deck": 0.32, "tail_h": 0.84,
+	"volvoh_brick_1989": { "top": [[0.0, 0.5, 0.03], [0.02, 1.38, 0.04], [0.15, 1.42, 0.03, "roof_r"], [2.2, 1.42, 0.04], [2.32, 1.4, 0.03, "roof_f"], [2.95, 0.92, 0.03, "cowl"], [4.68, 0.76, 0.03, "hood"], [4.79, 0.58, 0.02, "nose"]], "soft": 0.06, "rake": 52.0 },
+	"minni_cupper_1965": { "top": [[0.0, 0.45, 0.06], [0.02, 0.82, 0.08, "tail"], [0.32, 0.86, 0.04, "deck"], [0.45, 1.3, 0.08, "roof_r"], [1.75, 1.35, 0.12], [1.9, 1.32, 0.06, "roof_f"], [2.15, 0.93, 0.06, "cowl"], [2.85, 0.8, 0.12, "hood"], [3.05, 0.58, 0.06, "nose"]], "H": 1.35, "rear": "notch", "hood_h": 0.8, "cowl_rise": 0.12, "cowl_d": 0.95, "rake": 32.0, "deck": 0.32, "tail_h": 0.84,
 		"bl_rake": 22.0, "c_top": 0.08, "c_bot": 0.02, "soft": 0.6, "ff": 0.5, "head": "round", "tail_lamp": "block", "bumper": "chrome", "rim_style": "steel" },
-	"volkswagon_beetel_1967": { "H": 1.5, "rear": "fast", "hood_h": 0.74, "cowl_rise": 0.26, "cowl_d": 1.45, "rake": 32.0, "tail_h": 0.62, "bl_rake": 52.0,
+	"volkswagon_beetel_1967": { "top": [[0.0, 0.42, 0.1], [0.06, 0.6, 0.12, "tail"], [0.45, 0.85, 0.3], [1.15, 1.3, 0.4, "roof_r"], [1.85, 1.5, 0.6], [2.3, 1.42, 0.25, "roof_f"], [2.62, 1.0, 0.1, "cowl"], [3.35, 0.88, 0.3], [3.72, 0.85, 0.1], [3.95, 0.66, 0.15, "hood"], [4.07, 0.5, 0.08, "nose"]], "H": 1.5, "rear": "fast", "hood_h": 0.74, "cowl_rise": 0.26, "cowl_d": 1.45, "rake": 32.0, "tail_h": 0.62, "bl_rake": 52.0,
 		"clear": 0.3, "crown": 0.12, "soft": 3.0, "c_top": 0.08, "c_bot": -0.04, "head": "round", "tail_lamp": "round", "bumper": "chrome",
 		"brow_d": 0.36, "brow_h": 0.82, "fenders": "separate", "rim_style": "dish", "wall": "none" },
-	"citrowen_deux_chevals_1975": { "H": 1.6, "rear": "fast", "hood_h": 0.78, "cowl_rise": 0.2, "cowl_d": 1.2, "rake": 28.0, "tail_h": 0.66,
+	"citrowen_deux_chevals_1975": { "top": [[0.0, 0.5, 0.06], [0.08, 0.7, 0.15, "tail"], [0.7, 1.35, 0.4, "roof_r"], [1.6, 1.6, 0.6], [2.25, 1.55, 0.25, "roof_f"], [2.6, 1.02, 0.1, "cowl"], [3.4, 0.86, 0.3], [3.7, 0.72, 0.12, "hood"], [3.83, 0.55, 0.05, "nose"]], "H": 1.6, "rear": "fast", "hood_h": 0.78, "cowl_rise": 0.2, "cowl_d": 1.2, "rake": 28.0, "tail_h": 0.66,
 		"bl_rake": 40.0, "clear": 0.32, "crown": 0.1, "soft": 2.0, "doors": 4, "head": "round", "fenders": "separate", "rim_style": "steel" },
-	"citrowen_goddess_1970": { "rear": "fast", "H": 1.47, "hood_h": 0.66, "cowl_rise": 0.26, "cowl_d": 1.72, "rake": 56.0, "tail_h": 0.86, "bl_rake": 62.0,
+	"citrowen_goddess_1970": { "top": [[0.0, 0.48, 0.08], [0.1, 0.78, 0.2, "tail"], [0.95, 1.05, 0.3, "deck"], [1.35, 1.38, 0.2, "roof_r"], [2.3, 1.47, 0.4], [2.5, 1.44, 0.15, "roof_f"], [3.15, 0.98, 0.15, "cowl"], [4.2, 0.8, 0.4], [4.72, 0.62, 0.2, "hood"], [4.87, 0.45, 0.06, "nose"]], "rear": "notch", "H": 1.47, "hood_h": 0.66, "cowl_rise": 0.26, "cowl_d": 1.72, "rake": 56.0, "tail_h": 0.86, "bl_rake": 62.0,
 		"soft": 1.5, "nose_round": 0.2, "skirt": true, "head": "round", "tail_lamp": "round", "rim_style": "hubcap" },
 	# --- trucks, 4x4s and vans everybody knows
-	"fjord_broncho_1970": { "H": 1.77, "hood_h": 1.02, "cowl_rise": 0.04, "cowl_d": 1.35, "rake": 16.0, "soft": 0.1, "arch": "square", "ff": 0.5,
+	"fjord_broncho_1970": { "H": 1.77, "hood_h": 1.02, "cowl_rise": 0.04, "cowl_d": 1.35, "rake": 16.0, "soft": 0.1, "ff": 0.5,
 		"nose_drop": 0.4, "head": "round", "bumper": "chrome", "rim_style": "steel", "wall": "letters" },
-	"jepp_see_jay_five_1972": { "H": 1.72, "hood_h": 0.98, "cowl_rise": 0.04, "cowl_d": 1.3, "rake": 8.0, "soft": 0.05, "arch": "flat", "ff": 0.5,
+	"jepp_see_jay_five_1972": { "H": 1.72, "hood_h": 0.98, "cowl_rise": 0.04, "cowl_d": 1.3, "rake": 8.0, "soft": 0.05, "ff": 0.5,
 		"nose_drop": 0.42, "head": "round", "rim_style": "steel", "wall": "letters" },
-	"jepp_wranglur_1995": { "H": 1.75, "hood_h": 1.0, "cowl_rise": 0.05, "cowl_d": 1.35, "rake": 22.0, "soft": 0.08, "arch": "flat", "head": "rect",
+	"jepp_wranglur_1995": { "H": 1.75, "hood_h": 1.0, "cowl_rise": 0.05, "cowl_d": 1.35, "rake": 22.0, "soft": 0.08, "head": "rect",
 		"rim_style": "fivespoke", "wall": "letters" },
 	"jepp_cherokay_1999": { "H": 1.64, "hood_h": 0.95, "cowl_rise": 0.1, "cowl_d": 1.3, "rake": 52.0, "rear_d": 0.0, "d_w": 0.12, "soft": 0.06,
 		"arch": "square", "head": "rect", "tail_lamp": "tall", "trim": ["cladding"], "rim_style": "tenspoke" },
@@ -4164,9 +4175,9 @@ const ICONS := {
 	"mercedez_gee_waggen_2012": { "H": 1.95, "hood_h": 1.12, "cowl_rise": 0.06, "cowl_d": 1.6, "rake": 12.0, "soft": 0.05, "arch": "flat", "flare": "box",
 		"head": "round", "tail_lamp": "tall", "bumper": "body", "rim_style": "fivespoke", "art": { "spare": true } },
 	"landrova_defendur_1997": { "H": 1.97, "hood_h": 1.08, "cowl_rise": 0.06, "cowl_d": 1.3, "rake": 10.0, "soft": 0.05, "arch": "square", "head": "round", "bumper": "steel" },
-	"hummor_aitch_won_1996": { "H": 1.9, "clear": 0.42, "hood_h": 1.05, "cowl_rise": 0.22, "cowl_d": 1.85, "rake": 18.0, "rear_d": 0.25, "soft": 0.04,
-		"arch": "square", "head": "round", "rim_style": "beadlock", "tire": 1.1 },
-	"volkswagon_hippie_buss_1972": { "H": 1.95, "hood_h": 0.95, "cowl_rise": 0.06, "cowl_d": 0.12, "rake": 16.0, "rear_d": 0.12, "soft": 1.6, "crown": 0.06,
+	"hummor_aitch_won_1996": { "top": [[0.0, 0.55, 0.04], [0.0, 1.3, 0.04, "tail"], [0.35, 1.88, 0.05, "roof_r"], [2.45, 1.9, 0.05], [2.7, 1.86, 0.04, "roof_f"], [2.95, 1.35, 0.04, "cowl"], [4.45, 1.12, 0.06, "hood"], [4.7, 0.95, 0.04, "nose"]], "H": 1.9, "clear": 0.42, "hood_h": 1.05, "cowl_rise": 0.22, "cowl_d": 1.85, "rake": 18.0, "rear_d": 0.25, "soft": 0.04,
+		"arch": "trap", "flare": "trap", "head": "round", "rim_style": "beadlock", "tire": 1.1 },
+	"volkswagon_hippie_buss_1972": { "top": [[0.0, 0.5, 0.15], [0.0, 1.6, 0.25], [0.2, 1.95, 0.25, "roof_r"], [4.05, 1.95, 0.3], [4.35, 1.8, 0.2, "roof_f"], [4.45, 1.05, 0.15, "cowl"], [4.47, 0.95, 0.1, "hood"], [4.5, 0.6, 0.15, "nose"]], "H": 1.95, "hood_h": 0.95, "cowl_rise": 0.06, "cowl_d": 0.12, "rake": 16.0, "rear_d": 0.12, "soft": 1.6, "crown": 0.06,
 		"nose_drop": 0.55, "nose_round": 0.25, "head": "round", "bumper": "chrome", "rim_style": "hubcap" },
 	"dodgy_sprintur_2008": { "H": 2.6 },
 	"fjord_transitory_2016": { "H": 2.5 },
@@ -4180,5 +4191,40 @@ const ICONS := {
 	"beemer_werke_isette_1958": { "H": 1.34, "rear": "fast", "hood_h": 0.6, "cowl_rise": 0.3, "cowl_d": 0.35, "rake": 38.0, "tail_h": 0.62,
 		"bl_rake": 52.0, "crown": 0.1, "soft": 2.5, "c_top": 0.06, "c_bot": -0.02, "head": "round", "bumper": "chrome" },
 	"cadillak_fleetwould_hearse_1985": { "H": 1.64, "rear_d": 0.08, "art": { "hearse": true, "vinyl": true } },
+	# --- the sedans on the road all day, each with its maker's cue: where the roof peaks, how
+	# fast the C-pillar falls, how high and short the deck sits, a kink in the glass
+	"toyoda_corolly_2017": { "deck": 0.78, "deck_rise": 0.03, "tail_h": 1.1, "bl_rake": 62.0, "peak": 0.62, "crown": 0.04, "nose_drop": 0.15, "kick": 0.08 },
+	"toyoda_corolly_2003": { "H": 1.49, "deck": 0.85, "tail_h": 1.06, "bl_rake": 52.0, "rake": 56.0, "peak": 0.5, "crown": 0.025, "kick": 0.03, "c_w": 0.12 },
+	"hondo_civil_2008": { "cowl_d": 1.25, "rake": 66.0, "peak": 0.42, "crown": 0.06, "deck": 0.62, "deck_rise": 0.03, "bl_rake": 64.0, "kick": 0.06 },
+	"hyundie_elantruh_2013": { "peak": 0.55, "crown": 0.06, "kick": 0.11, "c_w": 0.24, "bl_rake": 70.0, "deck": 0.55, "deck_rise": 0.04 },
+	"toyoda_camree_2015": { "deck": 0.95, "bl_rake": 58.0, "peak": 0.5, "crown": 0.04, "kick": 0.05, "c_w": 0.16 },
+	"toyoda_camree_1997": { "deck": 0.98, "bl_rake": 50.0, "crown": 0.02, "kick": 0.02, "c_top": 0.14 },
+	"chevrolay_maliboo_2016": { "H": 1.46, "deck": 0.58, "bl_rake": 71.0, "c_w": 0.26, "peak": 0.45, "crown": 0.05, "kick": 0.07 },
+	"chevrolay_crews_2014": { "peak": 0.66, "crown": 0.05, "deck": 0.6, "deck_rise": 0.04, "tail_h": 1.1, "kick": 0.08 },
+	"fjord_fussion_2013": { "cowl_d": 1.6, "bl_rake": 72.0, "c_w": 0.24, "deck": 0.55, "peak": 0.48, "nose_drop": 0.08, "nose_round": 0.04, "hood_h": 0.88 },
+	"nissun_sentruh_2016": { "deck": 0.7, "peak": 0.56, "crown": 0.05, "bl_rake": 64.0 },
+	"nissun_alteema_2007": { "deck": 0.75, "peak": 0.5, "crown": 0.065, "kick": 0.06, "bl_rake": 63.0 },
+	"fjord_fokus_2008": { "H": 1.5, "rake": 57.0, "deck": 0.78, "bl_rake": 55.0, "crown": 0.03, "peak": 0.55 },
+	"hondo_accordion_2004": { "kick": 0.1, "deck": 0.82, "deck_rise": 0.02, "peak": 0.5, "crown": 0.04 },
+	"kiah_fortay_2015": { "bl_rake": 68.0, "c_w": 0.22, "peak": 0.5, "deck": 0.6 },
+	"chevrolay_impaler_2008": { "arc": false, "bl_rake": 44.0, "deck": 1.02, "c_top": 0.15, "tail_h": 1.08, "kick": 0.03 },
+	"chevrolay_cava_lame_2002": { "deck": 0.85, "crown": 0.03, "peak": 0.52, "bl_rake": 56.0 },
+	"merkury_grand_marquee_2003": { "arc": false, "bl_rake": 38.0, "deck": 1.12, "c_top": 0.16, "cowl_d": 1.95, "kick": 0.0, "crown": 0.012 },
+	"mercedez_ess_klassy_2005": { "peak": 0.48, "crown": 0.075, "deck": 0.98, "deck_rise": 0.03, "cowl_d": 1.85, "kick": 0.04, "c_w": 0.2 },
+	"awdi_ayy_four_2004": { "crown": 0.03, "peak": 0.56, "deck": 0.86, "bl_rake": 58.0, "nose_drop": 0.09, "c_w": 0.14 },
+	"beemer_werke_emm_funf_2006": { "cowl_d": 1.85, "kink": 0.13, "deck": 0.95, "deck_rise": 0.05, "peak": 0.5, "crown": 0.04 },
+	"mercedez_one_ninety_eee_1989": { "deck": 0.86, "tail_h": 1.0, "bl_rake": 48.0, "c_top": 0.12, "crown": 0.012, "soft": 0.25 },
+	"kiah_stingur_2018": { "rear": "fast", "tail_h": 1.05, "bl_rake": 74.0, "cowl_d": 1.75, "peak": 0.5, "crown": 0.05, "c_bot": -0.3 },
+	"hyundie_tiburron_2003": { "rear": "fast", "bl_rake": 72.0, "peak": 0.45, "crown": 0.05, "c_bot": -0.28 },
+	# --- drawn by hand from the top line down, like a signature face
+	"daihatsoo_kopen_2003": { "H": 1.25, "rear": "notch", "soft": 1.4, "head": "round", "tail_lamp": "round", "rim_style": "fivespoke", "doors": 2, "top": [[0.0, 0.5, 0.1], [0.04, 0.85, 0.12, "tail"], [0.35, 0.93, 0.2], [0.6, 0.96, 0.15, "deck"], [1.0, 1.2, 0.25, "roof_r"], [1.35, 1.25, 0.25], [1.6, 1.21, 0.15, "roof_f"], [2.1, 0.88, 0.1, "cowl"], [2.8, 0.78, 0.3], [3.3, 0.66, 0.12, "hood"], [3.4, 0.5, 0.08, "nose"]] },
+	"subaroo_three_sixty_1968": { "H": 1.34, "rear": "fast", "soft": 2.5, "head": "round", "tail_lamp": "round", "rim_style": "hubcap", "doors": 2, "top": [[0.0, 0.45, 0.15], [0.08, 0.72, 0.2, "tail"], [0.45, 1.05, 0.3, "roof_r"], [1.1, 1.34, 0.5], [1.55, 1.3, 0.3, "roof_f"], [2.15, 0.88, 0.25, "cowl"], [2.7, 0.7, 0.3], [2.95, 0.55, 0.12, "hood"], [3.0, 0.4, 0.08, "nose"]] },
+	"volkswagon_karma_ghiaa_1969": { "H": 1.33, "rear": "notch", "soft": 1.8, "head": "round", "tail_lamp": "round", "bumper": "chrome", "rim_style": "dish", "doors": 2, "top": [[0.0, 0.5, 0.12], [0.06, 0.74, 0.15, "tail"], [0.65, 0.93, 0.3, "deck"], [1.2, 1.25, 0.3, "roof_r"], [1.85, 1.33, 0.5], [2.25, 1.28, 0.2, "roof_f"], [2.8, 0.9, 0.12, "cowl"], [3.45, 0.8, 0.35], [3.95, 0.66, 0.2, "hood"], [4.14, 0.45, 0.1, "nose"]] },
+	"porch_speedstur_1957": { "H": 1.22, "soft": 2.0, "head": "round", "tail_lamp": "round", "bumper": "chrome", "rim_style": "steel", "rim_color": "c8ccd4", "top": [[0.0, 0.48, 0.12], [0.07, 0.68, 0.2, "tail"], [0.7, 0.9, 0.4], [1.25, 0.94, 0.2], [1.4, 0.9, 0.05], [2.15, 0.88, 0.05, "cowl"], [3.2, 0.8, 0.4], [3.75, 0.68, 0.25, "hood"], [3.95, 0.45, 0.1, "nose"]] },
+	"tesler_model_ess_2015": { "H": 1.45, "rear": "fast", "soft": 1.0, "head": "swept", "tail_lamp": "wrap", "rim_style": "multispoke", "rim_frac": 0.74, "handle": "flush", "trim": [], "top": [[0.0, 0.62, 0.08], [0.06, 1.03, 0.08], [0.4, 1.06, 0.15, "tail"], [1.7, 1.38, 0.5, "roof_r"], [2.4, 1.45, 0.6], [2.75, 1.41, 0.3, "roof_f"], [3.4, 1.0, 0.15, "cowl"], [4.35, 0.86, 0.4], [4.85, 0.74, 0.15, "hood"], [4.97, 0.56, 0.08, "nose"]] },
+	"jagwire_ess_typo_2001": { "H": 1.44, "rear": "notch", "soft": 1.3, "head": "round", "tail_lamp": "wrap", "rim_style": "multispoke", "trim": ["rocker_chrome"], "top": [[0.0, 0.55, 0.12], [0.07, 0.98, 0.15, "tail"], [0.85, 1.03, 0.3, "deck"], [1.55, 1.36, 0.4, "roof_r"], [2.3, 1.44, 0.7], [2.8, 1.38, 0.3, "roof_f"], [3.35, 0.99, 0.15, "cowl"], [4.3, 0.86, 0.45], [4.75, 0.74, 0.2, "hood"], [4.88, 0.55, 0.1, "nose"]] },
+	"toyoda_eff_jay_crusher_2008": { "H": 1.83, "rear": "box", "soft": 0.3, "head": "round", "tail_lamp": "tall", "rim_style": "fivespoke", "art": { "twotone": true, "spare": true }, "top": [[0.0, 0.45, 0.05], [0.02, 1.8, 0.08], [0.25, 1.83, 0.1, "roof_r"], [1.95, 1.82, 0.1], [2.35, 1.8, 0.06, "roof_f"], [2.55, 1.24, 0.06, "cowl"], [4.55, 1.16, 0.1, "hood"], [4.67, 0.95, 0.04, "nose"]] },
+	"jepp_wranglur_unlimitless_2014": { "H": 1.8, "soft": 0.3, "head": "round", "tail_lamp": "tall", "rim_style": "fivespoke", "top": [[0.0, 0.55, 0.03], [0.0, 1.76, 0.04], [0.1, 1.8, 0.03, "roof_r"], [2.25, 1.8, 0.04], [2.4, 1.78, 0.03, "roof_f"], [2.95, 1.22, 0.03, "cowl"], [4.55, 1.12, 0.04, "hood"], [4.7, 0.92, 0.03, "nose"]] },
+	"chevrolay_corvet_zee_oh_sicks_2015": { "H": 1.23, "rear": "fast", "soft": 0.5, "head": "swept", "tail_lamp": "block", "rim_style": "multispoke", "rim_frac": 0.76, "side_vent": "vent", "art": { "spoiler": true }, "top": [[0.0, 0.55, 0.04], [0.02, 1.0, 0.04], [0.35, 1.02, 0.08, "tail"], [1.35, 1.2, 0.15, "roof_r"], [1.75, 1.23, 0.3], [2.05, 1.2, 0.1, "roof_f"], [2.6, 0.92, 0.06, "cowl"], [3.6, 0.81, 0.3], [4.4, 0.62, 0.1, "hood"], [4.5, 0.48, 0.04, "nose"]] },
 	"aston_martian_lagonduh_1980": { "hood_h": 0.62, "cowl_rise": 0.26, "rake": 64.0, "deck": 0.95, "bl_rake": 64.0, "soft": 0.04, "nose": "wedge" },
 }

@@ -82,6 +82,37 @@ func _init() -> void:
 			var m := family.search(txt)
 			if m: hit += "%s: %s; " % [id, m.get_string()]
 	check("Frankie: nobody's partner, nobody's son", hit == "" and not StoryScript.CAST.has("SHAY"), hit)
+	# nobody in a cutscene stands in a car (parked behind them, in front of them, or wrecked),
+	# and no two cars in a set sit in each other unless they're the same wreck
+	var hits := ""
+	var stacked := ""
+	for id in StoryScript.SCENES:
+		var sc: Dictionary = StoryScript.SCENES[id]
+		var scene_sets := [String(sc.set)]
+		for ln in sc.lines:
+			if String(ln[0]) == "set": scene_sets.append(String(ln[1]))
+		for c in sc.get("cast", []):
+			var poses := [String(c[3])]
+			for ln in sc.lines:
+				if String(ln[0]) == "pose" and String(ln[1]) == String(c[0]): poses.append(String(ln[2]))
+			for pose in poses:
+				var img := PixPeople.sprite(String(c[0]), String(pose), 0).get_image()
+				var u := img.get_used_rect()
+				var left := int(c[1]) - img.get_width() / 2 + (u.position.x if int(c[2]) > 0 else img.get_width() - u.end.x)
+				var body := Rect2(left, StorySets.FEET_Y - img.get_height() + u.position.y, u.size.x, u.size.y)
+				for st in scene_sets:
+					for v in StorySets.vehicles_in(String(st)):
+						var o := body.intersection(v.rect)
+						if o.size.x > 1 and o.size.y > 1: hits += "%s: %s (%s) in a car in %s; " % [id, String(c[0]), pose, st]
+	for st in ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay"]:
+		var vs := StorySets.vehicles_in(st)
+		for a in vs.size():
+			for b in range(a + 1, vs.size()):
+				if String(vs[a].wreck) != "" and vs[a].wreck == vs[b].wreck: continue
+				var o: Rect2 = (vs[a].rect as Rect2).intersection(vs[b].rect)
+				if o.size.x > 1 and o.size.y > 1: stacked += "%s: cars %d and %d; " % [st, a, b]
+	check("cutscenes: nobody stands in a car", hits == "", hits)
+	check("cutscenes: no two cars sit in each other (apart from the wreck)", stacked == "", stacked)
 	# prompts follow the device
 	Controls.setup()
 	Hints.pad = false

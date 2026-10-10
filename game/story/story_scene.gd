@@ -159,7 +159,7 @@ func _people(speaker: String, talking: bool) -> void:
 		if is_speaker and talking: bob = -2.0 * absf(sin(t * 9.0))
 		elif fmod(t + float(k) * 0.9, 3.2) < 0.35: bob = -2.0           # breathing
 		var x := float(c.x) * 2.0
-		var y := 128.0 * 2.0 - 128.0 + bob
+		var y := StorySets.FEET_Y * 2.0 - 128.0 + bob
 		# a soft shadow on the floor
 		draw_rect(Rect2(x - 16, 254, 32, 4), Color(0, 0, 0, 0.28))
 		var mod := Color(1, 1, 1) if (is_speaker or speaker == "*" or not cast.has(speaker)) else Color(0.78, 0.78, 0.82)

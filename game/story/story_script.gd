@@ -48,7 +48,7 @@ const SCENES := {
 		["choice", [["\"I'm always good to drive.\"", "cocky"], ["\"...Yeah.\"", "quiet"], ["\"Mikey. Look at me. I'm a professional.\"", "joke"]]],
 		["MIKEY", "...Text me when you're home. Use words. Not just the eggplant."],
 	]},
-	"the_meet": { "set": "airstrip", "cast": [["MIA", 34, 1, "hips"], ["LEO", 216, -1, "stand"], ["DOM", 252, -1, "crossed"], ["SAL", 292, -1, "pockets"]], "lines": [
+	"the_meet": { "set": "airstrip", "cast": [["MIA", 14, 1, "hips"], ["LEO", 216, -1, "stand"], ["DOM", 252, -1, "crossed"], ["SAL", 292, -1, "pockets"]], "lines": [
 		["*", "AIRSTRIP 7. FRIDAY NIGHT. THE FAMILIA'S MEET."],
 		["*", "TWENTY CARS IN A CIRCLE. HEADLIGHTS ON. ONE OF THEM IS NOW INSIDE ANOTHER ONE."],
 		["MIA", "That's my car. That WAS my car. Dom. DOM. He parked in my car."],
@@ -97,7 +97,7 @@ const SCENES := {
 		["pose", "GUS", "point"],
 		["GUS", "Don't touch the mug."],
 	]},
-	"clock_out_1": { "set": "lot_dusk", "cast": [["GUS", 92, 1, "crossed"], ["LEO", 150, -1, "pockets"]], "lines": [
+	"clock_out_1": { "set": "lot_dusk", "cast": [["GUS", 128, 1, "crossed"], ["LEO", 184, -1, "pockets"]], "lines": [
 		["*", "CLOCK OUT. 6:02 P.M."],
 		["GUS", "Not bad. Not good. Not bad. Your father's first day he passed a car with no brakes, so you're ahead of him."],
 		["LEO", "Dad passed a car with no brakes?"],
@@ -149,7 +149,7 @@ const SCENES := {
 		["*", "SHE GOES TO BED. LEO SITS IN THE DARK FOR A WHILE. THE SILVIO TICKS AS IT COOLS DOWN IN THE BAY BELOW."],
 	]},
 	# ------------------------------------------------------------------ chapter 1
-	"clock_out_2": { "set": "lot_dusk_charjer", "cast": [["LEO", 118, 1, "stand"], ["MIA", 176, -1, "hips"]], "lines": [
+	"clock_out_2": { "set": "lot_dusk_charjer", "cast": [["LEO", 128, 1, "stand"], ["MIA", 186, -1, "hips"]], "lines": [
 		["*", "CLOCK OUT. A BLACK DODGY CHARJER IS IDLING ACROSS THE STREET. IT HAS BEEN IDLING ACROSS THE STREET FOR AN HOUR."],
 		["MIA", "Leo. Walk with me."],
 		["pose", "MIA", "crossed"],
@@ -173,7 +173,7 @@ const SCENES := {
 		["flag", "clue_brakes"],
 	]},
 	# ------------------------------------------------------------------ Frankie
-	"the_kid": { "set": "bay", "cast": [["LEO", 96, 1, "stand"], ["FRANKIE", 150, -1, "pockets"], ["GUS", 250, -1, "crossed"]], "lines": [
+	"the_kid": { "set": "bay", "cast": [["LEO", 56, 1, "stand"], ["FRANKIE", 106, -1, "pockets"], ["GUS", 172, -1, "crossed"]], "lines": [
 		["*", "BAY 3. A WEEK LATER. ALL WEEK THERE'S BEEN A KID ON THE CURB OUT FRONT AT CLOSING, WATCHING THROUGH THE BAY WINDOW. TONIGHT THE KID IS INSIDE."],
 		["FRANKIE", "Your back left's low. Like, really low. I could hear it when you pulled in."],
 		["LEO", "Who let you in here?"],
@@ -198,7 +198,7 @@ const SCENES := {
 		["flag", "frankie_met"],
 		["flag", "clue_frankie"],
 	]},
-	"frankie": { "set": "bay", "cast": [["MIKEY", 40, 1, "pockets"], ["ARIES", 92, 1, "crossed"], ["LEO", 160, 1, "stand"], ["FRANKIE", 214, -1, "stand"]], "lines": [
+	"frankie": { "set": "bay", "cast": [["MIKEY", 28, 1, "pockets"], ["ARIES", 72, 1, "crossed"], ["LEO", 124, 1, "stand"], ["FRANKIE", 172, -1, "stand"]], "lines": [
 		["*", "COVINGTON AUTO. A SATURDAY IN JUNE. FRANKIE HASN'T MISSED A SATURDAY SINCE NOVEMBER. OR MOST WEDNESDAYS. OR ONE CHRISTMAS EVE NOBODY TALKS ABOUT."],
 		["FRANKIE", "Pads are at three mil. The rotor's got a lip on it. The slides are dry. That's a fail."],
 		["LEO", "That's a fail. Write it up."],
