@@ -25,6 +25,7 @@ var snow_fx: CPUParticles2D
 var rain_fx: CPUParticles2D
 var fog_rect: ColorRect
 var flash_rect: ColorRect
+var white_out := 0.0             # a white flash that fades on its own (a black-out in the prologue)
 var clouds: Node2D
 var car_i := 0
 var _light_t := 0.0
@@ -870,7 +871,8 @@ func _process(dt: float) -> void:
 	var fogc := Color(0.75, 0.77, 0.8) if sky.daylight() > 0.4 else Color(0.18, 0.2, 0.26)
 	if sky.snow > 0.5: fogc = Color(0.9, 0.92, 0.96) if sky.daylight() > 0.4 else Color(0.3, 0.32, 0.4)
 	fog_rect.color = Color(fogc.r, fogc.g, fogc.b, sky.fog * 0.55)
-	flash_rect.color = Color(1, 1, 1, sky.flash * 0.55 * (1.0 if bool(GameSettings.get_v("graphics", "flashes")) else 0.0))
+	white_out = maxf(0.0, white_out - dt * 0.8)
+	flash_rect.color = Color(1, 1, 1, maxf(white_out, sky.flash * 0.55 * (1.0 if bool(GameSettings.get_v("graphics", "flashes")) else 0.0)))
 	if sky.thunder_in >= 0.0 and sky.thunder_in < dt:
 		Controls.rumble(0.4, 0.8, 0.6)
 	# the car's world

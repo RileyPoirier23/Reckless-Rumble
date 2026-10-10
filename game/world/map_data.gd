@@ -85,6 +85,7 @@ func build() -> void:
 	_salvage()
 	_impound()
 	_street_lights()
+	_lights_off_the_road()
 	_graph()
 
 # ------------------------------------------------------------------ geography
@@ -697,6 +698,47 @@ func _fill_industrial(r: Rect2, zone: String, rng: RandomNumberGenerator) -> voi
 		lights.append({ "p": Vector2(b.end.x + 1, b.get_center().y), "type": "sodium", "seed": rng.randi() })
 
 ## Streetlights: every road in a lit zone gets poles on alternating sides; highways get
+## Lights that stand on a pole never stand in a lane: one that landed on a road (the next street at
+## a corner, a lot that a road runs through) moves out to the kerb, arm over the road, or goes.
+## Runway lights, canopy lights, porch lights and signs are flush with what they're on.
+const FLUSH_LIGHTS := ["runway", "canopy", "porch", "neon", "neon_red", "casino", "aviation"]
+
+func _lights_off_the_road() -> void:
+	var keep: Array = []
+	for l in lights:
+		if String(l.type) in FLUSH_LIGHTS or road_at(l.p, 0.8).is_empty():
+			keep.append(l)
+			continue
+		var moved := _kerb_spot(l.p)
+		if moved.is_empty(): continue
+		l.p = moved.p
+		l.arm = moved.arm
+		keep.append(l)
+	lights = keep
+
+## The nearest spot off every road beside the road at `p`: { p, arm } (the arm points back over
+## the road), or {} if there's no room (a junction box, a lot hemmed in by streets).
+func _kerb_spot(p: Vector2) -> Dictionary:
+	var on := road_at(p, 0.8)
+	var r: Dictionary = on.road
+	var pts: PackedVector2Array = r.pts
+	var a: Vector2 = pts[on.seg]
+	var b: Vector2 = pts[on.seg + 1]
+	var along := (b - a).normalized()
+	var t := clampf((p - a).dot(along), 0.0, a.distance_to(b))
+	var mid := a + along * t
+	var out := (p - mid).normalized() if p.distance_to(mid) > 0.05 else along.orthogonal()
+	for side in [1.0, -1.0]:
+		for slide in [0.0, 6.0, -6.0, 12.0, -12.0]:
+			var q: Vector2 = mid + along * slide + out * side * (float(r.w) / 2.0 + 1.5)
+			if road_at(q, 0.8).is_empty() and not _in_building(q): return { "p": q, "arm": -out * side }
+	return {}
+
+func _in_building(q: Vector2) -> bool:
+	for bd in buildings:
+		if (bd.r as Rect2).grow(0.5).has_point(q): return true
+	return false
+
 ## high-mast lights at the interchanges; the country stays dark.
 func _street_lights() -> void:
 	var rng := RandomNumberGenerator.new()

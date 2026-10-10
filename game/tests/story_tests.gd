@@ -82,6 +82,11 @@ func _init() -> void:
 			var m := family.search(txt)
 			if m: hit += "%s: %s; " % [id, m.get_string()]
 	check("Frankie: nobody's partner, nobody's son", hit == "" and not StoryScript.CAST.has("SHAY"), hit)
+	# the drunk drive ends at the fence at the end of Airstrip Rd (the meet's on the other side),
+	# not wherever you happen to crash
+	var lc: Dictionary = StoryMissions.MISSIONS.last_call.objectives[0]
+	check("the prologue's crash is at the airstrip fence, not wherever you crash", bool(lc.get("crash_at", false)) and not lc.has("crash_ends")
+		and (lc.to as Vector2).distance_to(StoryMissions.AIRSTRIP) < 40.0)
 	# the prologue demo: day one, then the thank-you, then the title
 	DemoBuild.forced = true
 	var cut := DemoBuild.end_step()

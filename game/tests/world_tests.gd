@@ -16,6 +16,10 @@ func _init() -> void:
 	check("map has the places", m.landmarks.filter(func(l): return l.dest).size() >= 12, "%d destinations" % m.landmarks.size())
 	check("Covington Auto's lot is pavement", m.ground_at(Vector2(5570, 1566)) == "asphalt")
 	check("Main St downtown is a road", not m.road_at(Vector2(6000, 1548)).is_empty())
+	var in_lane := 0
+	for l in m.lights:
+		if not String(l.type) in MapData.FLUSH_LIGHTS and not m.road_at(l.p, 0.8).is_empty(): in_lane += 1
+	check("no lamp post stands in a road", in_lane == 0, "%d in a lane" % in_lane)
 	check("the Petitcodiac runs past downtown", m.river_at(Vector2(5950, 1650)) == 1)
 	check("the causeway is a bridge over it", m.ground_at(Vector2(5700, 1680)) == "asphalt" and m.river_at(Vector2(5700, 1680)) == 1)
 	var far := 0

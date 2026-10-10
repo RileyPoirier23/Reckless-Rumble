@@ -6,14 +6,17 @@ extends RefCounted
 const COVINGTON := Vector2(5570, 1566)
 const TIMS_MOUNTAIN := Vector2(5470, 1132)
 const AIRSTRIP := Vector2(6640, 1022)
+const AIRSTRIP_FENCE := Vector2(6620, 1034)     # where Airstrip Rd ends at the runway: the Familia's meet is on the other side
 
 const MISSIONS := {
 	"last_call": {
 		"title": "LAST CALL",
-		"car": "supreem", "start": Vector2(6280, 1000), "heading": PI / 2.0,
+		"car": "supreem", "start": Vector2(6280, 1000), "heading": -PI / 2.0,      # facing the way the shortcut goes
 		"time": 1.6, "season": "fall", "weather": "drizzle", "impaired": 0.85,
-		"intro": ["YOU'RE DRUNK. YOU'RE HIGH. THE ROAD IS MOVING.", "MIKEY: \"TEXT ME WHEN UR HOME\""],
-		"objectives": [{ "text": "GET HOME. (COVINGTON AUTO)", "to": COVINGTON, "radius": 20.0, "crash_ends": true, "max_time": 34.0 }],
+		"intro": ["YOU'RE DRUNK. YOU'RE HIGH. THE ROAD IS MOVING.", "MIKEY: \"TEXT ME WHEN UR HOME\"", "THE SHORTCUT HOME IS AIRSTRIP RD, PAST THE OLD RUNWAY. PROBABLY."],
+		# the prologue ends the way it has to: through the fence at the end of Airstrip Rd, into the
+		# Familia's meet. A crash anywhere before that, Leo blacks out and comes to back on the road.
+		"objectives": [{ "text": "GET HOME. THE SHORTCUT: AIRSTRIP RD, PAST THE OLD RUNWAY.", "to": AIRSTRIP_FENCE, "radius": 16.0, "crash_at": true }],
 	},
 	"runs_great": {
 		"title": "RUNS GREAT",
@@ -54,6 +57,7 @@ class MissionRunner extends Node2D:
 	var _intro_i := 0
 	var _end_t := -1.0
 	var _end_text := ""
+	var _hit_seen := 0.0              # damage already blacked out for
 
 	func setup(the_drive: Node, mission: Dictionary) -> void:
 		drive = the_drive
@@ -87,14 +91,19 @@ class MissionRunner extends Node2D:
 		var o := objective()
 		if o.is_empty() or done: return
 		var car: PlayerCar = drive.car
-		# the prologue ends the way it has to: in somebody's car
-		if o.get("crash_ends", false):
-			var hit: float = car.damage.front + car.damage.left + car.damage.right + car.damage.rear
-			if hit > 0.25 or obj_t > float(o.get("max_time", 999.0)) or (car.sim.speed() > 33.0 and obj_t > 8.0):
+		if o.get("crash_at", false):
+			# the end of the road: through the fence, into the meet
+			if car.sim.pos.distance_to(o.to) < float(o.radius):
 				_end_text = "..."
 				_end_t = 1.2
 				done = true
 				Controls.rumble(1.0, 1.0, 0.8)
+				return
+			# anywhere else, a black-out: back on the road a little way before it, and keep going
+			var hit: float = car.damage.front + car.damage.left + car.damage.right + car.damage.rear
+			if hit - _hit_seen > 0.25:
+				_hit_seen = hit
+				_black_out(car)
 				return
 		if car.sim.pos.distance_to(o.to) < float(o.radius) and (not o.get("stop", false) or car.sim.speed() < 2.0):
 			if o.get("careful", false):
@@ -116,6 +125,26 @@ class MissionRunner extends Node2D:
 				_end_t = 1.0
 			else:
 				_route()
+
+	## A crash on the way: the screen goes white, and Leo is back on the road behind where it
+	## happened, stopped, facing the right way.
+	func _black_out(car: PlayerCar) -> void:
+		var route: PackedVector2Array = drive.gps.route
+		var at := car.sim.pos
+		var h := car.sim.heading
+		if route.size() >= 2:
+			var k := 0
+			for i in route.size():
+				if route[i].distance_squared_to(car.sim.pos) < route[k].distance_squared_to(car.sim.pos): k = i
+			var back := maxi(0, k - 1)
+			var nxt := mini(route.size() - 1, back + 1)
+			at = route[back].lerp(route[nxt], 0.3)
+			h = (route[nxt] - route[back]).angle()
+		drive._teleport(at, h)
+		car.sim.set_world_velocity(Vector2.ZERO)
+		drive.white_out = 1.0
+		drive.hud.post("YOU BLACK OUT FOR A SECOND. WHEN YOU COME TO, YOU'RE STILL ON THE ROAD. SOMEHOW.", 5.0)
+		Controls.rumble(0.8, 0.8, 0.5)
 
 	func _finish() -> void:
 		drive.hud.objective = ""
