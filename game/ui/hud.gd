@@ -241,12 +241,13 @@ func _draw() -> void:
 			Hints.fmt("DRIVE {drive}  STEER {steer}  HANDBRAKE {handbrake}"),
 			Hints.fmt("SHIFT {shift}  AUTO/MANUAL {gearbox}  TOW HOME {reset}"),
 			Hints.fmt("BLINKERS {blinkers}  HAZARDS {hazards}"),
+			Hints.fmt("BACK UP: STOP, LET GO, THEN HOLD {brake}"),
 			Hints.fmt("HIGH BEAMS {high_beams} (HOLD TO FLASH)  HORN {horn}"),
 			Hints.fmt("MAP {map}  GIGS {jobs}  USE {use}"),
 			Hints.fmt("HIDE THIS {help}  PAUSE, SETTINGS {pause}"),
 		]
 		for i in lines.size():
-			PixelFont.draw(self, hr.position + Vector2(6, 5 + i * 11), String(lines[i]).substr(0, 60), BONE if i < 5 else ASH)
+			PixelFont.draw(self, hr.position + Vector2(6, 5 + i * 11), String(lines[i]).substr(0, 60), BONE if i < lines.size() - 1 else ASH)
 
 # ------------------------------------------------------------------ the scan tool
 

@@ -115,6 +115,33 @@ func _init() -> void:
 	run(back, 1.0, 0.0, 1.0)
 	run(back, 3.0, 0.0, 1.0, -0.6)
 	check("no NaNs at 300 km/h or in reverse", ok_num(fast) and ok_num(back) and back.vx < -0.5, "reverse %.1f m/s" % back.vx)
+	# braking is braking: hold it from 50 km/h and the car stops and stays stopped (it never backs
+	# up, the wheels never turn backwards); let go and press it again to reverse; in reverse the gas
+	# stops you and holds you, and you let go and press it again for drive
+	for d in ["RWD", "FWD", "AWD"]:
+		var bc := rolling(car(d), 50.0)
+		bc.auto_gearbox = true
+		var low_v := 99.0
+		var low_w := 99.0
+		var went_back := false
+		for i in 600:
+			bc.step(1.0 / 120.0, 0.0, 1.0, 0.0, 0.0)
+			low_v = minf(low_v, bc.vx)
+			low_w = minf(low_w, bc.w_wheel)
+			if bc.gear < 0: went_back = true
+		check("%s: hold the brake and it stops, and stays stopped" % d, low_v > -0.01 and low_w > -0.01 and not went_back and absf(bc.vx) < 0.05,
+			"lowest %.2f m/s, wheel %.2f rad/s, now %.2f" % [low_v, low_w, bc.vx])
+		run(bc, 0.3, 0.0, 0.0)
+		run(bc, 2.0, 0.0, 1.0)
+		check("%s: let go and press it again to reverse" % d, bc.gear < 0 and bc.vx < -0.3, "gear %d, %.2f m/s" % [bc.gear, bc.vx])
+		var low_r := -99.0
+		for i in 480:
+			bc.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+			if i > 240: low_r = maxf(low_r, bc.vx)
+		check("%s: in reverse the gas stops it and holds it" % d, bc.gear < 0 and low_r < 0.01 and absf(bc.vx) < 0.05, "gear %d, %.2f m/s" % [bc.gear, bc.vx])
+		run(bc, 0.3, 0.0, 0.0)
+		run(bc, 2.0, 1.0, 0.0)
+		check("%s: let go and press the gas again for drive" % d, bc.gear > 0 and bc.vx > 0.3, "gear %d, %.2f m/s" % [bc.gear, bc.vx])
 	# fuel: cruising sips it, flat out gulps it, dry it doesn't go, premium keeps a hot tune from knocking
 	var cruise := rolling(car(), 90.0)
 	cruise.burn_fuel = true

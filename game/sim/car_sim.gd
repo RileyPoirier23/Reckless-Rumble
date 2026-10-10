@@ -42,6 +42,12 @@ var clutch_locked := false
 var shift_timer := 0.0
 var boost := 0.0       # 0..1 of max boost
 var reverse_hold := 0.0
+var _brake_down := false        # the pedals as the auto gearbox sees them: down; let go with the
+var _gas_down := false          # car standing still (armed); and whether this press started from
+var _brake_armed := false       # a standstill
+var _gas_armed := false
+var _brake_from_rest := false
+var _gas_from_rest := false
 
 # ---- state: the parts that suffer
 var engine_health := 1.0
@@ -203,12 +209,28 @@ static func pacejka(slip: float, b: float, c: float) -> float:
 ## controls: throttle 0..1, brake 0..1, steer -1..1, handbrake 0..1
 func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: float) -> void:
 	messages.clear()
-	# auto gearbox: hold brake at a stop to back up (the brake pedal becomes the gas)
+	# auto gearbox: hold the brake at a stop to back up (the brake pedal becomes the gas). Only a
+	# press that starts from a standstill counts (stopped, or let go while stopped and only crept
+	# since): braking to a stop holds you there however long you stay on it. Let go and press again
+	# to reverse; the same with the gas to go from reverse back into drive.
 	if auto_gearbox:
-		if gear > 0 and absf(vx) < 0.6 and brake > 0.3 and throttle < 0.1:
+		var at_rest := absf(vx) < 0.15
+		if brake > 0.3 and not _brake_down:
+			_brake_down = true
+			_brake_from_rest = at_rest or (_brake_armed and absf(vx) < 0.6)
+		elif brake < 0.1 and _brake_down:
+			_brake_down = false
+			_brake_armed = at_rest
+		if throttle > 0.3 and not _gas_down:
+			_gas_down = true
+			_gas_from_rest = at_rest or (_gas_armed and absf(vx) < 0.6)
+		elif throttle < 0.1 and _gas_down:
+			_gas_down = false
+			_gas_armed = at_rest
+		if gear > 0 and absf(vx) < 0.6 and _brake_down and _brake_from_rest and throttle < 0.1:
 			reverse_hold += dt
 			if reverse_hold > 0.35: gear = -1; shift_timer = 0.15
-		elif gear < 0 and absf(vx) < 0.6 and throttle > 0.3 and brake < 0.1:
+		elif gear < 0 and absf(vx) < 0.6 and _gas_down and _gas_from_rest and brake < 0.1:
 			gear = 1; shift_timer = 0.15; reverse_hold = 0.0
 		else:
 			reverse_hold = 0.0 if gear > 0 else reverse_hold
@@ -401,6 +423,10 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var t_brake_r := t_sh if absf(w_wheel) > 0.05 else 0.0
 	var brake_dir := signf(w_wheel)
 	var road_t := (fx_f + fx_r) * r
+	# a stopped wheel with the brake on stays stopped, up to what the brake can hold (the clutch
+	# slips and the engine idles against it, the way an automatic sits at a light)
+	var held := t_sh > 0.0 and absf(w_wheel) <= 0.05
+	if held: clutch_locked = false
 	if clutch_locked and gr != 0.0:
 		# engine and wheels turn together
 		var i_tot := iw + ie * gr * gr
@@ -409,7 +435,12 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		if absf(tc_needed) > tc_max * 1.05 or engage < 1.0:
 			clutch_locked = false
 		else:
+			var w_was := w_wheel
 			w_wheel += acc * h
+			# the brakes stop a wheel; they never turn it the other way
+			if t_brake_r > 0.0 and signf(w_wheel) != signf(w_was):
+				w_wheel = 0.0
+				clutch_locked = false
 			w_eng = w_wheel * gr
 	if not clutch_locked:
 		var diff := w_eng - w_wheel * gr
@@ -418,8 +449,13 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		# a slipping clutch turns work into heat and wear: about one disc per 4 MJ
 		if not arcade(): clutch_cond = maxf(0.0, clutch_cond - absf(tc * diff) * h / 4.0e6)
 		var w_before := w_wheel
-		w_wheel += (tc * gr * eff - road_t - t_brake_r * brake_dir) / iw * h
-		if t_brake_r > 0.0 and signf(w_wheel) != signf(w_before): w_wheel = 0.0
+		var drive_t := tc * gr * eff - road_t
+		if held:
+			if absf(drive_t) <= t_sh: w_wheel = 0.0
+			else: w_wheel += (drive_t - signf(drive_t) * t_sh) / iw * h
+		else:
+			w_wheel += (drive_t - t_brake_r * brake_dir) / iw * h
+			if t_brake_r > 0.0 and signf(w_wheel) != signf(w_before): w_wheel = 0.0
 		# fully engaged and not slipping hard any more: lock up
 		if gr != 0.0 and engage >= 1.0 and (absf((w_eng - w_wheel * gr) * 40.0) < tc_max * 0.8 or signf(w_eng - w_wheel * gr) != signf(diff)):
 			clutch_locked = true

@@ -26,7 +26,7 @@ const JOB := Rect2(4, 38, 196, 172)       # the left column: race order and grid
 const RIGHT := Rect2(582, 48, 52, 132)    # the drag tree
 const DIAG := Rect2(4, 214, 214, 44)      # the scan tool under the dash
 const DASH := Rect2(4, 262, 214, 94)
-const HELP := Rect2(204, 108, 248, 72)    # the controls card (F1 / START), above the car
+const HELP := Rect2(204, 97, 248, 83)     # the controls card (F1 / START), above the car
 
 ## Subtitles wrap at this many characters (scale 1: 4 px a character, 210 px less padding).
 const SUB_CHARS := 49

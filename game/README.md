@@ -210,7 +210,7 @@ On the controller the stick has a response curve (small movements, small correct
 
 **Burnout:** hold the gas and the brake together while stopped. The front brakes hold the car and the rear tires spin.
 
-**Reverse (automatic):** hold the brake at a stop.
+**Reverse (automatic):** braking is only ever braking: hold the brake from any speed and the car stops and stays stopped. To back up, stop, let go of the brake, then hold it again; in reverse it's the same with the gas to go forward again.
 
 ## What can go wrong (on purpose)
 
