@@ -221,6 +221,10 @@ void fragment() {
 		var wd2: Node = load("res://tests/wild_demo.gd").new()
 		wd2.main = self
 		add_child(wd2)
+	elif OS.get_cmdline_user_args().has("--meet-demo"):
+		var mtd: Node = load("res://tests/meet_demo.gd").new()
+		mtd.main = self
+		add_child(mtd)
 	elif OS.get_cmdline_user_args().has("--salvage-demo"):
 		var sd: Node = load("res://tests/salvage_demo.gd").new()
 		sd.main = self
@@ -712,7 +716,8 @@ func _teleport(at: Vector2, heading: float) -> void:
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open()
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() \
+		or (jobs.meet != null and jobs.meet.state == "results")
 	if garage.visible or death.visible or car.dead: return
 	if job_board.visible or market.panel_open() or fuel.open() or salvage.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":

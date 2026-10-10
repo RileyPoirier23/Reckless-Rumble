@@ -21,6 +21,7 @@ func _ready() -> void:
 	main.sky.forced = true
 	main.save.cash = 2000
 	main.save.heat = 0.0
+	_fresh_car()
 	if not OS.get_cmdline_user_args().has("--police-only"):
 		await _race_ai()
 	if OS.get_cmdline_user_args().has("--race-only"):
@@ -35,11 +36,19 @@ func _ready() -> void:
 	if not OS.get_cmdline_user_args().has("--police-only"): await _pinks()
 	await _ride()
 	await _salvage()
-	var want := 9 if not OS.get_cmdline_user_args().has("--police-only") else 6
+	await _meet()
+	var want := 10 if not OS.get_cmdline_user_args().has("--police-only") else 7
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
 	get_tree().quit()
+
+## Start from a healthy car: the tests run on the real save, and worn pads from a last run would
+## make it brake late for the cops.
+func _fresh_car() -> void:
+	main.car.sim.reset_parts()
+	main.car.sim.set_wear({})
+	main._store_car()
 
 func _wait(s: float) -> void:
 	await get_tree().create_timer(s, true, true, false).timeout
@@ -407,4 +416,51 @@ func _salvage() -> void:
 	main.sky.time_h = 21.0
 	await _wait(0.2)
 	check("salvage: closed at night", not y.is_open())
+	_fresh_car()
+	done += 1
+
+func _meet() -> void:
+	var j: JobRunner = main.jobs
+	main.sky.time_h = 22.5
+	main.save.cash = 1000
+	main.save.erase("meets")
+	main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 40), -PI / 2.0)
+	j.start("meet")
+	await _wait(0.5)
+	check("meet: the locals are parked when you get there", j.meet != null and j.meet.cars.size() == 6)
+	if j.meet == null:
+		j.finish(false)
+		return
+	var m: CarMeet = j.meet
+	main._teleport(CarMeet.YOUR_SPOT, -PI / 2.0)
+	main.car.sim.set_world_velocity(Vector2.ZERO)
+	await _wait(0.6)
+	check("meet: park in your spot and the show starts ($%d in)" % CarMeet.ENTRY, m.state == "show" and int(main.save.cash) == 1000 - CarMeet.ENTRY, "%s, $%d" % [m.state, int(main.save.cash)])
+	var p0: Vector2 = main.car.sim.pos
+	Input.action_press("throttle")
+	var top := 0.0
+	for i in 120:
+		await get_tree().physics_frame
+		top = maxf(top, main.car.sim.rpm)
+	Input.action_release("throttle")
+	check("meet: the gas just revs it", top > float(main.car.sim.spec.engine.redline_rpm) * 0.8 and main.car.sim.pos.distance_to(p0) < 0.3 and m.hype > 0.0,
+		"%d rpm, moved %.2f m, hype %.2f" % [int(top), main.car.sim.pos.distance_to(p0), m.hype])
+	Input.action_press("use")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	Input.action_release("use")
+	check("meet: pop the hood", m.hood)
+	var cash1 := int(main.save.cash)
+	m.t = CarMeet.SHOW_S - 0.05
+	await _wait(0.3)
+	check("meet: the votes come in", m.state == "results" and m.place >= 1 and m.place <= 7 and m.results.size() == 7, "%s, place %d" % [m.state, m.place])
+	check("meet: prize money for the podium", int(main.save.cash) == cash1 + m.paid and (m.paid > 0) == (m.place <= 3 or m.paid == CarMeet.PEOPLES), "place %d, $%d" % [m.place, m.paid])
+	check("meet: it goes in the book", int(main.save.get("meets", {}).get("count", 0)) == 1)
+	check("meet: the results card holds the car", main.car.locked and m.hud.pics.size() == 3)
+	m.leave()
+	await _wait(0.3)
+	check("meet: back in gear to leave", m.state == "leave" and not main.car.show_mode and main.car.sim.gear == 1, "%s gear %d" % [m.state, main.car.sim.gear])
+	main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 120), 0.0)
+	await _wait(0.4)
+	check("meet: drive off and the night's over", j.kind == "" and j.meet == null)
 	done += 1

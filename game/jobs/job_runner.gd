@@ -41,6 +41,8 @@ var race: StreetRace
 var race_route := {}
 var race_start := Vector2.ZERO
 var race_rival := {}
+# the meet
+var meet: CarMeet
 # rides
 var rider := {}
 var _ride_wait := 0.0
@@ -113,6 +115,10 @@ func start(k: String) -> void:
 			_ride_wait = 3.0
 			drive.clear_route()
 			drive.hud.post("HOPP-IN: YOU'RE ONLINE. RATING %.1f. WAITING FOR A REQUEST." % Rides.average(drive.save), 4.0)
+		"meet":
+			stage = "drive"
+			drive._on_dest("THE MEET", CarMeet.YOUR_SPOT)
+			drive.hud.post("THE MEET: %s. BACK ROW OF THE CHAMPAGNE PLACE LOT." % String(CarMeet.theme_for(_meet_day()).name), 5.0)
 		"cruise":
 			stage = "cruise"
 			_cruise_m = 0.0
@@ -130,6 +136,10 @@ func finish(done := true) -> void:
 	if _mass_add > 0.0:
 		car().sim.spec.mass = float(car().sim.spec.mass) - _mass_add
 		_mass_add = 0.0
+	if meet:
+		meet.close()
+		meet.queue_free()
+		meet = null
 	if strip:
 		strip.close()
 		strip.queue_free()
@@ -144,6 +154,7 @@ func finish(done := true) -> void:
 		"tow": if not done: drive.hud.post("YOU LEAVE IT IN THE DITCH. SOMEBODY ELSE'S PROBLEM NOW.", 4.0)
 		"ride": drive.hud.post("HOPP-IN: OFFLINE. %d RIDE%s, $%d. RATING %.1f." % [runs, "" if runs == 1 else "S", earned, Rides.average(drive.save)], 6.0)
 		"street": if done: drive.hud.post("RACE NIGHT: %s." % ("$%d UP" % earned if earned > 0 else "$%d DOWN" % -earned), 5.0)
+		"meet": if not done: drive.hud.post("YOU SKIP THE MEET. SOMEBODY ELSE GETS YOUR SPOT. IT'S A MINIVAN.", 4.0)
 		"cruise": drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
 	if k == "tow" and String(car().spec.get("id", "")) == "tow": drive.job_restore_car()
 	kind = ""
@@ -170,6 +181,7 @@ func _process(dt: float) -> void:
 		"drag": _drag(dt)
 		"street": _street(dt)
 		"ride": _ride(dt)
+		"meet": _meet(dt)
 		"cruise":
 			_cruise_m += car().sim.speed() * dt
 	_objective()
@@ -198,8 +210,31 @@ func _objective() -> void:
 				if Rides.TYPES[rider.kind].has("wants_speed"):
 					var left := Rides.expected_s(float(rider.route_m)) - float(rider.t)
 					o += "  %s" % ("%d:%02d" % [int(left) / 60, int(left) % 60] if left >= 0.0 else "LATE %ds" % int(-left))
+		"meet":
+			if meet == null or meet.state == "arrive": o = "THE MEET: PARK IN YOUR SPOT AT THE BACK OF THE CHAMPAGNE PLACE LOT."
+			elif meet.state == "show": o = "THE MEET: REV IT, POP THE HOOD. THE VOTES ARE IN SOON."
 		"cruise": o = ""
 	drive.hud.objective = o
+
+# ------------------------------------------------------------------ the meet
+
+## The meet's night (after midnight it's still the night before).
+func _meet_day() -> int:
+	return int(drive.sky.day) - (1 if float(drive.sky.time_h) < 6.0 else 0)
+
+func _meet(_dt: float) -> void:
+	if meet == null:
+		# the locals are parked by the time you get there
+		if car().sim.pos.distance_to(CarMeet.YOUR_SPOT) < 220.0:
+			meet = CarMeet.new()
+			add_child(meet)
+			meet.setup(drive, rng, _meet_day())
+			stage = "meet"
+		return
+	if meet.state == "show" and stage != "show":
+		stage = "show"
+		drive.clear_route()
+	if meet.state == "done": finish(true)
 
 # ------------------------------------------------------------------ pizza
 

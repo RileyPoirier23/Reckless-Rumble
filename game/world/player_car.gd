@@ -144,6 +144,8 @@ var blink := 0                    # -1 left, 1 right, 0 off
 var hazards := false
 var _blink_steer := 0.0
 var locked := false               # a menu is up: hands off, ease to a stop
+var show_mode := false            # parked at the meet: out of gear, handbrake on, the gas just revs it
+var _in_show := false
 
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
 ## a little stability control). SIM gives you none; ARCADE gives you more.
@@ -206,6 +208,13 @@ func _physics_process(dt: float) -> void:
 	# locked: ease to a stop and hold it there on the handbrake (the brake pedal past 0.3 at a
 	# standstill would find reverse)
 	var ins := _inputs(dt) if not locked else ([0.0, 0.3, 0.0, 0.0] if sim.speed() > 0.5 else [0.0, 0.25, 0.0, 1.0])
+	if show_mode and not locked:
+		sim.gear = 0
+		ins = [Controls.trigger("throttle"), 0.0, 0.0, 1.0]
+		_in_show = true
+	elif _in_show:
+		_in_show = false
+		if sim.auto_gearbox: sim.gear = 1
 	var th: float = ins[0]
 	var br: float = ins[1]
 	var st: float = ins[2]

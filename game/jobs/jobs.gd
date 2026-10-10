@@ -23,11 +23,14 @@ const KINDS := {
 	"street": { "title": "STREET RACE", "open": [22.0, 28.0],
 		"blurb": "Marco, three locals, a route. Everyone pays in. Winner takes the pot.",
 		"pay": "THE POT, LESS MARCO'S TENTH. AND HEAT." },
+	"meet": { "title": "THE MEET AT CHAMPAGNE PLACE", "open": [22.0, 26.0],
+		"blurb": "Fri & Sat, back of the mall lot. Park it, pop the hood. The crowd votes.",
+		"pay": "$250 BEST IN SHOW. $20 TO GET IN." },
 	"cruise": { "title": "NIGHT DRIVE", "open": [21.0, 29.0],
 		"blurb": "No job. No GPS voice. Just the road and the radio you don't have yet.",
 		"pay": "NOTHING. THAT'S THE POINT." },
 }
-const ORDER := ["pizza", "ride", "tow", "drag", "street", "cruise"]
+const ORDER := ["pizza", "ride", "tow", "drag", "street", "meet", "cruise"]
 
 ## Tonight's street race: Marco runs a different route each night, unless you haven't the rep for
 ## it, in which case you get the best one you're allowed into.
@@ -69,12 +72,17 @@ const LADDER := [
 ]
 
 ## Is a job open at this hour of the day (0..24)?
-static func open_now(kind: String, hour: float) -> bool:
+static func open_now(kind: String, hour: float, day := -1) -> bool:
+	if kind == "meet" and day >= 0 and not meet_night(day, hour): return false
 	var o: Array = KINDS[kind].open
 	var from: float = o[0]
 	var to: float = o[1]
 	if to <= 24.0: return hour >= from and hour < to
 	return hour >= from or hour < to - 24.0
+
+## The meet's on Friday and Saturday nights (after midnight it's still the night before).
+static func meet_night(day: int, hour: float) -> bool:
+	return weekday(day - (1 if hour < 6.0 else 0)) in ["FRIDAY", "SATURDAY"]
 
 static func opens_at(kind: String) -> String:
 	var from: float = KINDS[kind].open[0]

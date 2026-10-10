@@ -64,6 +64,7 @@ static func fine(over_kmh: float, what: Array) -> int:
 	if what.has("racing"): f += 1500.0
 	if what.has("fleeing"): f += 1000.0
 	if what.has("ramming"): f += 800.0
+	if what.has("stunting"): f += 400.0
 	return int(round(f / 5.0)) * 5
 
 ## Do they take the car? When the heat's high, or you raced, or you ran for a long time.
@@ -172,6 +173,10 @@ func _sees(k: AiCar, c: PlayerCar, d: float) -> bool:
 		skip.append(hit.rid)
 	return true
 
+## A patrol car that's seen something (the meet's burnouts) lights you up.
+func pull_over(k: AiCar, why: String) -> void:
+	_light_up(k, why, 0.0)
+
 func _light_up(k: AiCar, why: String, over: float) -> void:
 	state = "stop"
 	stop_t = 0.0
@@ -245,7 +250,7 @@ func _bust(c: PlayerCar) -> void:
 	var lines: Array = []
 	if top_over > 15.0: lines.append("%d IN A %d" % [int(top_over + _limit_here(c)), int(_limit_here(c))])
 	for o in offences:
-		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP", "ramming": "DAMAGE TO A POLICE VEHICLE" }[o])
+		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP", "ramming": "DAMAGE TO A POLICE VEHICLE", "stunting": "STUNT DRIVING" }[o])
 	var what := ", ".join(lines) if not lines.is_empty() else "BEING YOU, AT NIGHT, IN THAT"
 	drive.hud.post("CONSTABLE TREMBLAY: \"LICENCE AND REGISTRATION.\"", 4.0)
 	drive.hud.post("TICKET: %s. $%d." % [what, f], 7.0)

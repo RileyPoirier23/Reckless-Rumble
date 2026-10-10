@@ -119,6 +119,50 @@ func _init() -> void:
 		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
+	# the meet
+	var mfri := 4
+	check("the meet: Friday and Saturday nights, and after midnight it's still the night before",
+		Jobs.weekday(mfri) == "FRIDAY" and Jobs.meet_night(mfri, 23.0) and Jobs.meet_night(mfri + 1, 1.0) and Jobs.meet_night(mfri + 1, 23.0)
+		and Jobs.meet_night(mfri + 2, 1.0) and not Jobs.meet_night(mfri + 2, 23.0) and not Jobs.meet_night(mfri - 1, 23.0))
+	check("the board only opens it on those nights", Jobs.open_now("meet", 23.0, mfri) and not Jobs.open_now("meet", 23.0, mfri - 1) and not Jobs.open_now("meet", 15.0, mfri))
+	var themes := {}
+	for d in 7: themes[CarMeet.theme_for(d).id] = true
+	check("a different theme every night of the week", themes.size() == CarMeet.THEMES.size(), str(themes.keys()))
+	var tricked := { "finish": "chrome", "rim": "deepdish", "rim_size": 0.78, "drop": 0.8, "caliper": Color("#c8242c"), "tint": 0.5, "stripes": "racing",
+		"spoiler": "gt", "kit": { "lip": true, "skirts": true, "diffuser": true }, "exhaust": "quad" }
+	check("stock looks score nothing; a full kit and wheels score plenty", CarMeet.looks_pts({}) == 0.0 and CarMeet.looks_pts(tricked) > 12.0, "%.1f" % CarMeet.looks_pts(tricked))
+	check("stance night counts the drop and the wheels double", CarMeet.looks_pts({ "drop": 1.0 }, true) == 2.0 * CarMeet.looks_pts({ "drop": 1.0 }))
+	var built := { "intake": "intake_kandm", "exhaust": "exh_magnaflown", "tires": "tire_semi", "induction": "ind_upgrade" }
+	check("the build counts the stages, up to a point", CarMeet.build_pts({}) == 0.0 and CarMeet.build_pts(built) > 2.0 and CarMeet.build_pts(built) <= 12.0, "%.1f" % CarMeet.build_pts(built))
+	check("dents cost you", CarMeet.clean_pts({ "front": 0.5 }) < 0.0 and CarMeet.clean_pts({ "front": 1.0, "rear": 1.0, "left": 1.0 }) == -8.0)
+	var anything: Dictionary = CarMeet.THEMES[0]
+	var sleeper: Dictionary = CarMeet.THEMES.filter(func(x): return x.id == "sleeper")[0]
+	var sv := SaveGame.load_spec("silvio")
+	var shut := CarMeet.card(sv, {}, 8.0, {}, anything, 0.0, false)
+	var open_c := CarMeet.card(sv, {}, 8.0, {}, anything, 0.0, true)
+	check("keep the hood down and they only half-believe you", float(open_c.total) - float(shut.total) > 5.0, "%.1f vs %.1f" % [float(open_c.total), float(shut.total)])
+	check("sleeper night: the shiny one loses to the plain fast one", float(CarMeet.card(sv, {}, 10.0, {}, sleeper, 0.0, true).total) > float(CarMeet.card(sv, tricked, 10.0, {}, sleeper, 0.0, true).total))
+	var mr := RandomNumberGenerator.new()
+	var wins_built := 0
+	var wins_stock := 0
+	var jdm_night: Dictionary = CarMeet.THEMES.filter(func(x): return x.id == "jdm")[0]
+	var jdm_n := 0
+	var names_ok := true
+	for seed_i in 30:
+		mr.seed = 900 + seed_i
+		var ents := CarMeet.make_entrants(mr, anything if seed_i % 2 == 0 else jdm_night, 6, "silvio")
+		var seen_n := {}
+		for e in ents:
+			if seen_n.has(e.name) or String(e.id) == "silvio" or CarCatalog.spec(String(e.id)).is_empty(): names_ok = false
+			seen_n[e.name] = true
+			if seed_i % 2 == 1 and String(CarCatalog.entry(String(e.id)).get("class", "")) == "jdm": jdm_n += 1
+		var best := 0.0
+		for e in ents: best = maxf(best, float(CarMeet.card(CarCatalog.spec(String(e.id)), e.looks, float(e.build), e.damage, anything, float(e.hype), true).total))
+		if float(CarMeet.card(sv, tricked, 10.0, {}, anything, 2.5, true).total) > best: wins_built += 1
+		if float(CarMeet.card(SaveGame.load_spec("silvio"), {}, 0.0, { "front": 0.4 }, anything, 0.0, false).total) > best: wins_stock += 1
+	check("six locals, different people, real cars, never your own", names_ok)
+	check("on JDM night the locals mostly bring JDM", jdm_n >= 40, "%d of 90" % jdm_n)
+	check("a built, kitted car usually takes it; a dented stocker never does", wins_built >= 22 and wins_stock == 0, "%d / %d of 30" % [wins_built, wins_stock])
 	# Northside Salvage
 	var pile := SalvageYard.stock(12)
 	var again := SalvageYard.stock(12)

@@ -62,7 +62,7 @@ func _process(_dt: float) -> void:
 		if k == current:
 			visible = false
 			quit_job.emit()
-		elif Jobs.open_now(k, sky.time_h):
+		elif Jobs.open_now(k, sky.time_h, sky.day):
 			visible = false
 			picked.emit(k)
 
@@ -91,13 +91,13 @@ func _draw() -> void:
 	for i in range(top, mini(Jobs.ORDER.size(), top + rows)):
 		var k: String = Jobs.ORDER[i]
 		var job: Dictionary = Jobs.KINDS[k]
-		var open := Jobs.open_now(k, sky.time_h)
+		var open := Jobs.open_now(k, sky.time_h, sky.day)
 		var h := 48.0
 		var box := Rect2(r.position.x + 6, y, r.size.x - 12, h - 4)
 		draw_rect(box, Color(1, 1, 1, 0.09) if i == sel else Color(1, 1, 1, 0.03))
 		if i == sel: draw_rect(box, GOLD, false, 1.0)
 		PixelFont.draw(self, box.position + Vector2(5, 4), String(job.title), BONE if open else ASH)
-		var status := "ON IT" if k == current else ("OPEN" if open else "OPENS %s" % Jobs.opens_at(k))
+		var status := "ON IT" if k == current else ("OPEN" if open else ("FRI & SAT" if k == "meet" and not Jobs.meet_night(sky.day, sky.time_h) else "OPENS %s" % Jobs.opens_at(k)))
 		var scol := GOLD if k == current else (GREEN if open else ASH)
 		PixelFont.draw(self, box.position + Vector2(box.size.x - 5 - PixelFont.width(status), 4), status, scol)
 		PixelFont.draw(self, box.position + Vector2(5, 14), Jobs.street_line(save, sky.day) if k == "street" else (String(job.pay) + ("  RATING %.1f" % Rides.average(save) if k == "ride" else "")), GOLD if open else ASH)
