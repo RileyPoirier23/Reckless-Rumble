@@ -173,6 +173,18 @@ func _init() -> void:
 		var bd: Dictionary = Auction.BIDDERS[i]
 		if int(lim[i]) < int(float(al[0].worth) * float(bd.top[0])) - 1 or int(lim[i]) > int(float(al[0].worth) * float(bd.top[1])) + 1: lim_ok = false
 	check("each bidder has a limit, somewhere around what it's worth", lim_ok, str(lim))
+	# $1,990 on a $1,999 ask: a counter splits the difference, it doesn't round up past the ask
+	var off_range: Array = []
+	var counters := 0
+	for sd in 400:
+		var hl := { "seller": "flipper", "ask": 1999, "patience": 999, "ghosted": false, "deal": -1, "chat": [] }
+		var hr := RandomNumberGenerator.new()
+		hr.seed = sd
+		var ans := Market.offer(hl, 1990, hr)
+		if String(ans.kind) == "counter":
+			counters += 1
+			if int(ans.amount) > 1999 or int(ans.amount) < 1990: off_range.append(int(ans.amount))
+	check("a counter-offer lands between your offer and the ask", counters > 0 and off_range.is_empty(), "%d counters, out of range: %s" % [counters, str(off_range.slice(0, 3))])
 	# a check under the hood at five to midnight: ten minutes later it's tomorrow, and the parts
 	# truck's clock moved too
 	var sky := WorldSky.new()
