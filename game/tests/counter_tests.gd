@@ -146,6 +146,8 @@ func _init() -> void:
 	_hot_parts()
 	_winter()
 	_audit_more()
+	_lists()
+	_overtime()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
 
@@ -323,9 +325,10 @@ func _desk() -> void:
 
 # ------------------------------------------------------------------ Desk 2.1: weeks 5 to 7
 
-## Every red Leo can reach from a pulled file: its own day, its own papers, no face, no car.
+## Every red Leo can reach from a pulled file: its own day, its own papers, its own week's
+## stolen list, no face, no car.
 func _file_reds(a: Dictionary) -> Array:
-	return _reds(a, int(a.audit.day), []).map(func(x): return x.topic)
+	return _reds(a, int(a.audit.day), CounterRules.audit_list(a, [])).map(func(x): return x.topic)
 
 func _late_weeks() -> void:
 	# 17. the calendar: eight weeks, Remembrance Day shut, the audit in week 7, winter in week 8
@@ -418,10 +421,10 @@ func _audit() -> void:
 		for i in 25:
 			var w := rr.walk_in(day)
 			var probs := CounterRules.find_problems(w, day, rr.bolo)
-			if probs.has("stolen"): continue
 			tried += 1
-			var back := CounterRules.rebuild({ "seed": w.seed, "day": day })
-			if back.reg != w.reg or back.sheet != w.sheet or back.licence != w.licence or back.request != w.request or CounterRules.find_problems(back, day, []) != probs: bad += 1
+			# (the file keeps the stolen list it was read against, so a stolen car rebuilds too)
+			var back := CounterRules.rebuild({ "seed": w.seed, "day": day, "list": int(w.get("list", -1)) })
+			if back.reg != w.reg or back.sheet != w.sheet or back.licence != w.licence or back.request != w.request or CounterRules.find_problems(back, day, rr.bolo) != probs: bad += 1
 	check("a walk-in's papers rebuild exactly from the file", bad == 0 and tried > 80, "%d/%d" % [bad, tried])
 	var rng := RandomNumberGenerator.new()
 	var files := [{ "no": 1, "day": 3, "stamp": "APPROVED", "correct": true, "probs": [], "kind": "regular", "seed": 5, "id": "" },
@@ -433,6 +436,8 @@ func _audit() -> void:
 	var only := true
 	for i in 20: if int(CounterRules.pull(files, 42, rng).get("no", 0)) != 1: only = false
 	check("Hachey only pulls walk-ins you approved or denied, judged from papers alone, from before today", only)
+	check("...and a stolen car only when its file kept that week's list", not CounterRules.auditable({ "no": 2, "day": 4, "stamp": "APPROVED", "correct": false, "probs": ["stolen"], "kind": "regular", "seed": 6, "id": "" }, 42)
+		and CounterRules.auditable({ "no": 2, "day": 4, "stamp": "APPROVED", "correct": false, "probs": ["stolen"], "kind": "regular", "seed": 6, "id": "", "list": 5 }, 42))
 	# every problem type a file can hold is findable from the file, on the file's own day
 	var missing := 0
 	tried = 0
@@ -445,7 +450,7 @@ func _audit() -> void:
 			var rr := CounterRules.new(day * 11 + String(prob).length())
 			rr.make_bolo()
 			var w := rr.walk_in(day, prob)
-			var a := CounterRules.audit_customer({ "no": 7, "day": day, "stamp": "DENIED", "correct": true, "seed": w.seed, "want": prob })
+			var a := CounterRules.audit_customer({ "no": 7, "day": day, "stamp": "DENIED", "correct": true, "seed": w.seed, "want": prob, "list": int(w.list) })
 			tried += 1
 			var ts := _file_reds(a)
 			if not (ts.has(prob) or (prob == "no_insurance" and CounterRules.standing_topics(a, day).has(prob))):
@@ -753,12 +758,11 @@ func _audit_more() -> void:
 		for i in 12:
 			var bx := r.box(day)
 			var probs := CounterRules.find_problems(bx, day, r.bolo)
-			if probs.has("hot_part"): continue
 			DeskBook.reset()
 			var rec := DeskBook.file(day, bx, "APPROVED", probs.is_empty(), probs)
 			tried += 1
 			var back := CounterRules.rebuild(rec)
-			if _papers(back) != _papers(bx) or CounterRules.find_problems(back, day, []) != probs or not CounterRules.auditable(rec, 46): bad += 1
+			if _papers(back) != _papers(bx) or CounterRules.find_problems(back, day, CounterRules.list_of(int(rec.list))) != probs or not CounterRules.auditable(rec, 46): bad += 1
 	check("a courier's box rebuilds exactly from its file, and Hachey can pull it", bad == 0 and tried > 40, "%d/%d" % [bad, tried])
 	# 32. every regular's visit, down every branch, rebuilds exactly from its file
 	bad = 0
@@ -780,13 +784,10 @@ func _audit_more() -> void:
 				var rec := DeskBook.file(day, c, "DENIED", true, probs)
 				# what Leo stamps afterwards doesn't change the file
 				DeskBook.files.append({ "no": 99, "day": day, "id": String(id), "stamp": "APPROVED", "correct": false, "kind": "regular", "seed": -1 })
-				# (a stolen part's serial came off that week's list: it doesn't rebuild, and isn't pulled)
-				if probs.has("hot_part"):
-					if CounterRules.auditable(rec, 60): bad += 1
-					continue
+				# (a stolen part's serial came off that week's list, and the file kept the list)
 				tried += 1
 				var back := CounterRules.rebuild(rec)
-				var ok: bool = _papers(back) == _papers(c) and CounterRules.find_problems(back, day, []) == probs
+				var ok: bool = _papers(back) == _papers(c) and CounterRules.find_problems(back, day, CounterRules.list_of(int(rec.list))) == probs
 				if not ok or not CounterRules.auditable(rec, 60):
 					bad += 1
 					if note == "": note = "%s %d %s" % [id, k, key]
@@ -843,3 +844,211 @@ func _audit_more() -> void:
 	check("the same wrong stamp twice: no new citation, no story flags, but he writes it down", same.correct and same.citation == "" and same.flags.is_empty() and same.get("wrong_twice", false))
 	var fixed := CounterRules.judge(rv, "DENIED", 42, [])
 	check("putting it right is still disagreeing with yourself: a citation", not fixed.correct and String(fixed.citation).begins_with("AUDIT") and String(fixed.line).contains("wrong then"))
+
+# ------------------------------------------------------------------ Desk 2.3: the list a file keeps, and what comes back
+
+func _lists() -> void:
+	# 37. a new stolen list every week, made from the book's seed, the same one all week
+	DeskBook.reset()
+	var w5 := DeskBook.week_list(5)
+	var w7 := DeskBook.week_list(7)
+	check("a new stolen list every week, the same all week", w5 != w7 and CounterRules.list_of(w5) == CounterRules.list_of(w5)
+		and CounterRules.list_of(w5) != CounterRules.list_of(w7) and CounterRules.bolo_cars(CounterRules.list_of(w5)).size() == 6)
+	# a stolen car in week 5 (and a stolen part in week 6), approved: the file keeps its week's list,
+	# Hachey reads it against that in week 7, and against this week's list it would look clean
+	var bad := 0
+	var note := ""
+	var wall := { "key": "bolo", "val": 0, "doc": "" }
+	for i in 16:
+		var day: int = [31, 39][i % 2]
+		var want: String = ["stolen", "hot_part"][i % 2]
+		var r := CounterRules.new(i * 5 + 1)
+		r.use_list(DeskBook.week_list(CounterRules.week_of(day)))
+		var w := r.walk_in(day, want)
+		var probs := CounterRules.find_problems(w, day, r.bolo)
+		DeskBook.reset()
+		var rec := DeskBook.file(day, w, "APPROVED", false, probs)
+		var a := CounterRules.audit_customer(rec)
+		var then := CounterRules.audit_list(a, CounterRules.list_of(w7))
+		var fact := { "key": "plate", "val": a.reg.plate, "doc": "reg", "row": "PLATE" } if want == "stolen" else { "key": "serial", "val": a.sheet.serial, "doc": "sheet", "row": "PART" }
+		var ok: bool = probs == [want] and int(rec.get("list", -1)) == r.list_seed and CounterRules.auditable(rec, 42) and then == r.bolo
+		ok = ok and CounterRules.find_problems(a, day, then) == [want] and _papers(a).slice(2) == _papers(w).slice(2)
+		ok = ok and CounterRules.compare(a, day, then, fact, wall)[1] == false and CounterRules.compare(a, day, CounterRules.list_of(w7), fact, wall)[1] == true
+		if not ok:
+			bad += 1
+			if note == "": note = "%s day %d: %s" % [want, day, probs]
+	DeskBook.reset()
+	check("a pulled file is read against the stolen list from its own week, not this week's", bad == 0, note)
+	# 38. somebody back about an old file brings what was on the car: the part, and its invoice
+	var found := 0
+	var kept := 0
+	var honest := true
+	note = ""
+	for i in 600:
+		if found >= 8: break
+		var r := CounterRules.new(i * 3 + 11)
+		r.use_list(DeskBook.week_list(6))
+		var w := r.walk_in(39, ["fails_inspection", "expired_reg", "insurance_expired", "noise", "clean"][i % 5])
+		if not w.has("invoice"): continue
+		var probs := CounterRules.find_problems(w, 39, r.bolo)
+		DeskBook.reset()
+		var rec := DeskBook.file(39, w, "DENIED", not probs.is_empty(), probs)
+		var due := DeskRegulars.due(rec)
+		if due < 0: continue
+		var specs := DeskRegulars.returns(due)
+		if specs.is_empty(): continue
+		found += 1
+		var bc := r.scripted(specs[0], due)
+		if bc.get("invoice", {}) == w.invoice and String(bc.sheet.get("serial", "")) == String(w.sheet.serial) and bc.docs.has("invoice"): kept += 1
+		elif note == "": note = "%s came back without it" % [probs]
+		if CounterRules.find_problems(bc, due, r.bolo) != bc.flags: honest = false
+		var brec := DeskBook.file(due, bc, "APPROVED", true, CounterRules.find_problems(bc, due, r.bolo))
+		if _papers(CounterRules.rebuild(brec)) != _papers(bc): honest = false
+	DeskBook.reset()
+	check("somebody back about an old file brings the part they had on, and its invoice", found >= 4 and kept == found, "%d of %d %s" % [kept, found, note])
+	check("...on honest papers, and their file rebuilds with them", honest)
+
+# ------------------------------------------------------------------ Desk 2.3: overtime
+
+## The day number of a date.
+func _on(y: int, m: int, d: int) -> int:
+	return CounterRules.days_between(CounterRules.WEEK_START, [y, m, d])
+
+func _overtime() -> void:
+	# 39. the calendar after the run: December, the holidays, the new year, the spring
+	var first := CounterRules.OVERTIME_START
+	check("overtime opens Monday, December 2: the next open day after the run", CounterRules.next_open(CounterRules.LAST_DAY) == first
+		and CounterRules.date_str(CounterRules.today(first)) == "DEC 02 2019" and CounterRules.overtime(first) and not CounterRules.overtime(CounterRules.LAST_DAY))
+	var shut := [[2019, 12, 25], [2019, 12, 26], [2020, 1, 1], [2020, 2, 17], [2020, 4, 10], [2020, 5, 18], [2020, 7, 1], [2020, 8, 3], [2020, 9, 7], [2020, 10, 12], [2020, 11, 11]]
+	var open := [[2019, 12, 24], [2019, 12, 27], [2020, 1, 2], [2020, 4, 9], [2020, 4, 13], [2020, 4, 30], [2020, 5, 1], [2020, 5, 19]]
+	check("the shop shuts for New Brunswick's holidays in overtime", shut.all(func(x): return not CounterRules.is_open(_on(x[0], x[1], x[2])) and CounterRules.holiday(_on(x[0], x[1], x[2])) != "")
+		and open.all(func(x): return CounterRules.is_open(_on(x[0], x[1], x[2]))), str(shut.filter(func(x): return CounterRules.is_open(_on(x[0], x[1], x[2])))))
+	check("Good Friday: the bills come Thursday", CounterRules.week_closes(_on(2020, 4, 9)) and not CounterRules.week_closes(_on(2020, 4, 8)) and CounterRules.week_closes(_on(2020, 4, 17)))
+	var run_shut := 0
+	for d in CounterRules.LAST_DAY + 1: if posmod(d, 7) < 5 and not CounterRules.is_open(d): run_shut += 1
+	check("the run's own calendar is the same: only Thanksgiving and Remembrance Day", run_shut == 2 and CounterRules.holiday(7) == "THANKSGIVING" and CounterRules.holiday(35) == "REMEMBRANCE DAY")
+	var d := first
+	for i in 120: d = CounterRules.next_open(d)
+	check("open day after open day, overtime rolls through the winter into spring", CounterRules.today(d)[0] == 2020 and int(CounterRules.today(d)[1]) == 5, CounterRules.date_str(CounterRules.today(d)))
+	# 40. every rule stays up, and the dated ones bite on their dates
+	var jan := _on(2020, 1, 14)
+	var apr30 := _on(2020, 4, 30)
+	var may1 := _on(2020, 5, 1)
+	check("every rule of the eight weeks is still on the wall", CounterRules.rules_for(first).size() == CounterRules.RULES.size() and CounterRules.binder(first))
+	check("winters on working cars: a problem from Dec 1 through Apr 30, not after", [first, jan, apr30].all(func(x): return CounterRules.possible("no_winter_tires", x))
+		and not CounterRules.possible("no_winter_tires", may1) and not CounterRules.possible("no_winter_tires", _on(2020, 11, 24)) and CounterRules.possible("no_winter_tires", _on(2020, 11, 25)))
+	check("studs: fine through Apr 30, out of season from May 1 to Oct 14", not CounterRules.possible("studs_out_of_season", apr30) and CounterRules.possible("studs_out_of_season", may1)
+		and CounterRules.possible("studs_out_of_season", _on(2020, 10, 14)) and not CounterRules.possible("studs_out_of_season", _on(2020, 10, 15)))
+	var cab := func(day: int, tires: String) -> Dictionary:
+		var r := CounterRules.new(day)
+		r.make_bolo()
+		var c := _plain(r, day)
+		c.request = "SAFETY INSPECTION"
+		c.reg.use = "TAXI"
+		c.sheet.tires = tires
+		c.bolo = r.bolo
+		return c
+	var c1: Dictionary = cab.call(jan, "ALL-SEASON")
+	check("January: a cab on all-seasons gets no sticker", CounterRules.find_problems(c1, jan, c1.bolo) == ["no_winter_tires"] and _topics(c1, jan, c1.bolo).has("no_winter_tires"))
+	var c2: Dictionary = cab.call(may1, "ALL-SEASON")
+	check("May 1: the same cab on all-seasons, its own business", CounterRules.find_problems(c2, may1, c2.bolo).is_empty() and _reds(c2, may1, c2.bolo).is_empty())
+	var c3: Dictionary = cab.call(apr30, "STUDDED")
+	check("April 30: studs in season", CounterRules.find_problems(c3, apr30, c3.bolo).is_empty() and _reds(c3, apr30, c3.bolo).is_empty())
+	var c4: Dictionary = cab.call(may1, "STUDDED")
+	check("May 1: studs out of season, under their own name", CounterRules.find_problems(c4, may1, c4.bolo) == ["studs_out_of_season"] and _topics(c4, may1, c4.bolo).has("studs_out_of_season"))
+	var r := CounterRules.new(3)
+	r.make_bolo()
+	var sw := r.customer(may1, "clean", { "plain": true, "request": "SUMMER TIRES ON" })
+	sw.sheet.tires = "STUDDED"
+	check("May: somebody in to get their studs off is the job, not a problem", CounterRules.find_problems(sw, may1, r.bolo).is_empty() and CounterRules.seasonal("WINTER TIRES ON", may1) == "SUMMER TIRES ON" and CounterRules.seasonal("WINTER TIRES ON", jan) == "WINTER TIRES ON")
+	# 41. overtime's line: the whole pool, every season, honest about its problems
+	var days: Array = []
+	d = first
+	while CounterRules.today(d)[1] != 7:
+		days.append(d)
+		for i in 3: d = CounterRules.next_open(d)
+	var lied := 0
+	var flags := {}
+	var kinds := {}
+	var regulars := 0
+	var too_soon := 0
+	var note := ""
+	for day in days:
+		var rl := CounterRules.new(day * 7 + 1)
+		rl.use_list(DeskBook.week_list(CounterRules.week_of(day)))
+		for x in rl.shift(day):
+			var cx: Dictionary = x.c
+			kinds[String(cx.kind)] = true
+			if String(cx.get("regular", "")) != "": regulars += 1
+			for f in cx.flags: flags[String(f)] = flags.get(String(f), 0) + 1
+			var m := int(CounterRules.today(day)[1])
+			if cx.flags.has("studs_out_of_season") and (m < 5 or m > 10): too_soon += 1
+			if cx.flags.has("no_winter_tires") and m >= 5 and m <= 10: too_soon += 1
+			if CounterRules.find_problems(cx, day, rl.bolo) != cx.flags:
+				lied += 1
+				if note == "": note = "%s: %s vs %s" % [CounterRules.date_str(CounterRules.today(day)), CounterRules.find_problems(cx, day, rl.bolo), cx.flags]
+	check("overtime's line is honest about its problems, December to June", lied == 0 and days.size() >= 30, "%d %s" % [lied, note])
+	check("the stud problem comes up in play from May, and winters on working cars through April", int(flags.get("studs_out_of_season", 0)) >= 2 and int(flags.get("no_winter_tires", 0)) >= 2 and too_soon == 0,
+		"%d studs, %d winters, %d out of season" % [int(flags.get("studs_out_of_season", 0)), int(flags.get("no_winter_tires", 0)), too_soon])
+	check("the full pool: walk-ins, the courier, stolen cars and parts, the Familia, and now and then a regular",
+		kinds.has("regular") and kinds.has("courier") and kinds.has("familia") and flags.has("stolen") and flags.has("hot_part") and regulars >= 4 and regulars <= days.size(),
+		"%s, %d regulars, %s" % [kinds.keys(), regulars, flags.keys()])
+	# 42. Hachey drops in now and then: one file, at 9:30 or 2:00, about one open day in four
+	var with := 0
+	var opened := 0
+	var times_ok := true
+	d = first
+	for i in 200:
+		opened += 1
+		var at := CounterRules.audit_times(d)
+		if not at.is_empty(): with += 1
+		if at.size() > 1 or (at.size() == 1 and not CounterRules.AUDIT_TIMES.has(at[0])): times_ok = false
+		d = CounterRules.next_open(d)
+	check("in overtime Hachey drops in now and then to pull a file", times_ok and with * 8 >= opened and with * 2 <= opened, "%d of %d days" % [with, opened])
+	# 43. the regulars in overtime: every visit, down every branch, honest, in its season
+	var regs := DeskRegulars.regulars()
+	var wrong := 0
+	var tried := 0
+	note = ""
+	var cat := CounterRules.catalogue()
+	for id in regs:
+		var ot: Array = (regs[id] as Dictionary).get("overtime", [])
+		if ot.is_empty(): wrong += 1
+		for k in ot.size():
+			var v: Dictionary = ot[k]
+			var season: Array = v.get("season", [])
+			var day := first
+			while not season.is_empty() and not CounterRules.in_season(CounterRules.today(day), season): day = CounterRules.next_open(day)
+			var cid := String((v.get("car", {}) as Dictionary).get("catalogue", ""))
+			if cat != null and cid != "" and (cat.call("entry", cid) as Dictionary).is_empty(): wrong += 1
+			for key in [""] + (v.get("after", {}) as Dictionary).keys():
+				DeskBook.reset()
+				if key != "": DeskBook.files = [{ "no": 1, "day": day - 1, "id": String(id), "stamp": String(key).trim_suffix("_WRONG"), "correct": not String(key).ends_with("_WRONG"), "kind": "regular", "seed": -1 }]
+				var s := DeskRegulars.spec(String(id), DeskRegulars.OT + k, "?", day)
+				var rr := CounterRules.new(day)
+				rr.make_bolo()
+				var c := rr.scripted(s, day)
+				tried += 1
+				var p := String(s.get("problem", "clean"))
+				if CounterRules.find_problems(c, day, rr.bolo) != c.flags or (p != "clean" and not CounterRules.possible(p, day)) or not s.get("quiet", false) or String(s.last) != key:
+					wrong += 1
+					if note == "": note = "%s %d %s on %s: %s vs %s" % [id, k, key, CounterRules.date_str(CounterRules.today(day)), CounterRules.find_problems(c, day, rr.bolo), c.flags]
+				# and their file rebuilds
+				var rec := DeskBook.file(day, c, "DENIED", true, c.flags)
+				if _papers(CounterRules.rebuild(rec)) != _papers(c):
+					wrong += 1
+					if note == "": note = "%s %d %s doesn't rebuild" % [id, k, key]
+	DeskBook.reset()
+	check("every regular has overtime visits, honest down every branch, in their seasons, and they rebuild", wrong == 0 and tried >= 12, "%d/%d %s" % [wrong, tried, note])
+	var doiron_may := 0
+	var doiron_dec := 0
+	d = first
+	for i in 260:
+		var pick := DeskRegulars.overtime_visit(d)
+		if not pick.is_empty() and pick[0] == "doiron":
+			var v := DeskRegulars.visit("doiron", int(pick[1]))
+			if String(v.problem) == "studs_out_of_season":
+				if int(CounterRules.today(d)[1]) >= 5 and int(CounterRules.today(d)[1]) <= 10: doiron_may += 1
+				else: doiron_dec += 1
+		d = CounterRules.next_open(d)
+	check("Mrs. Doiron's studs come in after April, never before", doiron_may >= 1 and doiron_dec == 0, "%d / %d" % [doiron_may, doiron_dec])

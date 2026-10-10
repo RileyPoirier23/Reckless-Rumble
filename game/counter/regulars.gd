@@ -14,9 +14,16 @@
 ## for a different clerk. Somebody turned away for nothing is back for an oil change, and not
 ## happy about it.
 ##
+## In overtime (after the run) the regulars still drop in now and then: one of their
+## "overtime" visits, on about one open day in three, picked to suit the season.
+##
 ## Both read DeskBook.files, which rides along in the story's save.
 class_name DeskRegulars
 extends RefCounted
+
+## An overtime visit's number: OT + its place in the regular's "overtime" list (a run visit's
+## number is its place in "visits").
+const OT := 100
 
 ## What somebody says when they come back with it fixed, by what was wrong last time.
 const FIXED := {
@@ -57,11 +64,38 @@ static func regulars() -> Dictionary:
 static func visits(day: int) -> Array:
 	var out: Array = []
 	var regs := regulars()
+	if CounterRules.overtime(day):
+		var pick := overtime_visit(day)
+		if not pick.is_empty(): out.append(spec(String(pick[0]), int(pick[1]), "?", day))
+		return out
 	for id in regs:
 		var vs: Array = (regs[id] as Dictionary).get("visits", [])
 		for k in vs.size():
 			if int((vs[k] as Dictionary).get("day", -1)) == day: out.append(spec(String(id), k))
 	return out
+
+## Overtime: the regular who drops in today, as [id, visit number] ([] for nobody). About one
+## open day in three, one of the overtime visits whose season (a [[month, day], [month, day]]
+## window, like the rules' seasons) takes in the date.
+static func overtime_visit(day: int) -> Array:
+	var h := absi(hash("regular_%d" % day))
+	if h % 3 != 0 or not CounterRules.is_open(day): return []
+	var t := CounterRules.today(day)
+	var fits: Array = []
+	var regs := regulars()
+	for id in regs:
+		var ot: Array = (regs[id] as Dictionary).get("overtime", [])
+		for k in ot.size():
+			var season: Array = (ot[k] as Dictionary).get("season", [])
+			if season.is_empty() or CounterRules.in_season(t, season): fits.append([String(id), OT + k])
+	if fits.is_empty(): return []
+	return fits[floori(h / 3.0) % fits.size()]
+
+## Regular `id`'s visit number `k` (from the run, or OT + k from overtime).
+static func visit(id: String, k: int) -> Dictionary:
+	var reg: Dictionary = regulars().get(id, {})
+	if k >= OT: return (reg.get("overtime", []) as Array)[k - OT]
+	return (reg.get("visits", []) as Array)[k]
 
 ## What Leo did with somebody last time, before `day`: "" if he's never seen them, WALKED, or
 ## the stamp, with _WRONG on the end when it was the wrong call.
@@ -73,17 +107,22 @@ static func outcome(id: String, day: int) -> String:
 
 ## Regular `id`'s visit `k`: who they are, the visit, and the branch for what happened last time.
 ## `known` is that last time, if it's known already (a file being rebuilt): "?" looks it up.
-static func spec(id: String, k: int, known := "?") -> Dictionary:
+## `day` is the day of an overtime visit (a run visit has its own).
+static func spec(id: String, k: int, known := "?", day := -1) -> Dictionary:
 	var reg: Dictionary = regulars().get(id, {})
-	var v: Dictionary = (reg.get("visits", []) as Array)[k]
+	var v := visit(id, k)
+	var on := int(v.get("day", day))
 	var out := { "id": id, "regular": id, "seed": id, "kind": "regular", "visit": k }
 	for key in ["cast", "person", "car"]:
 		if reg.has(key): out[key] = _dup(reg[key])
 	for key in v:
-		if not key in ["after", "after_id", "day"]: out[key] = _dup(v[key])
-	# a trade-in is a different car every time, with its own plate and VIN
-	if v.has("car"): out.seed = "%s_%d" % [id, k]
-	var last := outcome(String(v.get("after_id", id)), int(v.day)) if known == "?" else known
+		if not key in ["after", "after_id", "day", "season"]: out[key] = _dup(v[key])
+	# a trade-in is a different car every time, with its own plate and VIN (in overtime, every
+	# time it comes round)
+	if v.has("car"): out.seed = "%s_%d" % [id, k] if k < OT else "%s_%d_%d" % [id, k, on]
+	# overtime is the job, not the story: no story flags
+	if k >= OT: out.quiet = true
+	var last := outcome(String(v.get("after_id", id)), on) if known == "?" else known
 	out.last = last
 	var after: Dictionary = v.get("after", {})
 	for key in [last, last.trim_suffix("_WRONG")]:
@@ -132,6 +171,8 @@ static func back_spec(rec: Dictionary) -> Dictionary:
 	var h := absi(int(rec.seed) >> 7)
 	var probs: Array = rec.get("probs", [])
 	var p := String(probs[0]) if not probs.is_empty() else ""
+	# a stolen car, or a car with a stolen part on it, is the police's now
+	for x in probs: if CounterRules.LISTED.has(String(x)): return {}
 	var car: Dictionary = (orig.car as Dictionary).duplicate(true)
 	car.odo = int(car.odo) + 60 + h % 900
 	var day := due(rec)
@@ -140,6 +181,14 @@ static func back_spec(rec: Dictionary) -> Dictionary:
 		"arrive": 30.0 + float(h % 420), "papers": { "licence": { "number": String(orig.licence.number) } } }
 	# a cab's still a cab
 	if (orig.reg as Dictionary).has("use"): spec.papers.reg = { "use": String(orig.reg.use) }
+	# ...and what was on the car is still on it: a part put on somewhere else, with its invoice,
+	# and a salvage brand with its certificate (unless the certificate is what they went to get)
+	var kept := {}
+	if orig.has("invoice"):
+		kept.merge({ "part": String(orig.sheet.get("part", "")), "serial": String(orig.sheet.get("serial", "")),
+			"invoice": (orig.invoice as Dictionary).duplicate(true) })
+	if orig.has("cert") and p != "salvage_no_cert": kept.cert = (orig.cert as Dictionary).duplicate(true)
+	if not kept.is_empty(): spec.kept = kept
 	if p == "":
 		# turned away for nothing: back for something else, and not happy about it
 		if h % 10 >= 5: return {}
