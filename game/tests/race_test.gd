@@ -424,8 +424,24 @@ func _salvage() -> void:
 func _meet() -> void:
 	var j: JobRunner = main.jobs
 	main.sky.time_h = 22.5
-	main.save.cash = 1000
 	main.save.erase("meets")
+	# short the entry: they turn you away, and the money stays where it is
+	main.save.cash = CarMeet.ENTRY - 8
+	main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 40), -PI / 2.0)
+	j.start("meet")
+	await _wait(0.5)
+	if j.meet != null:
+		var broke: CarMeet = j.meet
+		main._teleport(CarMeet.YOUR_SPOT, -PI / 2.0)
+		main.car.sim.set_world_velocity(Vector2.ZERO)
+		await _wait(0.6)
+		check("meet: short the $%d and they turn you away" % CarMeet.ENTRY, broke.state == "turned_away" and int(main.save.cash) == CarMeet.ENTRY - 8 and not main.car.show_mode,
+			"%s, $%d" % [broke.state, int(main.save.cash)])
+		main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 120), 0.0)
+		await _wait(0.4)
+		check("meet: turned away, drive off and the night's over", j.kind == "" and j.meet == null)
+	j.finish(false)
+	main.save.cash = 1000
 	main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 40), -PI / 2.0)
 	j.start("meet")
 	await _wait(0.5)

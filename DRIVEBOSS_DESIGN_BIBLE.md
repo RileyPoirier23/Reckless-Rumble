@@ -300,7 +300,7 @@ What exists today (`game/story/story_script.gd`, `story_missions.gd`, the counte
 | **Sal** | Understatement; the only one who says what everyone sees | "He was chasing himself." | Small kindnesses, so Chapter 6 hurts |
 | **Darrell** | Lies and contradicts himself in the same sentence | Every line | Keep him exactly like this, and pay him off |
 | **Tremblay** | Tired, decent; counts Leo's chances out loud | (one brief) | A scene; her own guilt about Frank's report |
-| **Dale Hatch** | Warm salesman; calls Leo "kid"; calls Frank **"Frankie"** (nobody else does, and Gus flinches every time; when Leo names his son Frankie in June 2020, Gus says so out loud) | (absent) | An introduction in Chapter 1 |
+| **Dale Hatch** | Warm salesman; calls Leo "kid"; calls Frank **"Frankie"** (nobody else does, and Gus flinches every time; when a kid named Frankie starts hanging around the shop in November 2019, Gus says so out loud) | (absent) | An introduction in Chapter 1 |
 | **The old manager** | Absent, then nervous, then brave | (one mention) | A presence through paperwork |
 
 #### Foreshadowing
@@ -440,7 +440,7 @@ Eight chapters, one per year, as in the concept, each a fall-to-summer year that
 - **Leo pleads guilty.** The sentence (fiction, but plausible): custody, then a long driving prohibition, then an ignition interlock.
 - **The desk without Leo:** **Mikey runs the counter.** It's the tutorial again, with Mikey: "I read every paper. Like you said." He's good at it. It's the saddest funny thing in the game. Mia keeps the books. Gus does everything else.
 - **The drives:** you drive **as the crew** (section 3.1): Gus's slow, careful truck with the radio off; Toby's wrecker on tow calls; Mikey's errands. Mechanically it's the same game; emotionally it's the shop holding together without its owner.
-- **Visiting room scenes** (VA-11 Hall-A style conversations on a fixed set, once a week): Gus brings the soup Leo hates; Mikey brings news from the counter; Tremblay comes once, leaves a double-double, says nothing; Hatch comes once: "Frankie would've wanted me to look out for you. I've got a lawyer for you. No charge, son."
+- **Visiting room scenes** (VA-11 Hall-A style conversations on a fixed set, once a week): Gus brings the soup Leo hates; Mikey brings news from the counter; Tremblay comes once, leaves a double-double, says nothing; Hatch comes once: "Frankie would've wanted me to look out for you. I've got a lawyer for you. No charge, kid."
 - **Days sober** count up on the end-of-week screen from day 1. The vices menu is locked behind cravings that spike on the anniversary and on Aries's birthday.
 - **The Frank clue (the big one):** Darrell lists a parts car on MarketThing: "PARTS CAR. RAN WHEN PARKED. FJORD MUSTANK 87. SELLING FOR MY WIFE'S HUSBAND." It's the Fox. Leo, from the visiting-room phone, tells Mikey to buy it. On the lift, Gus finds the rear brake line **cut clean with a tubing cutter** (a spiral score, not a tear), and in the glovebox, Frank's **green brake log.** Last entry: "Sun Dec 2. All good. New lines holding. Thurs: meeting D. at the lookout. Bringing the book."
 - **Release (June 2024).** Dom picks Leo up at the gate in the black Charjer. They sit on the hood at Airstrip 7 at 3 a.m. Dom: "I'm not going to say grace tonight. I don't think He's listening to me right now. Let's just sit." End card: DAYS SOBER: 271.
@@ -491,7 +491,7 @@ Eight chapters, one per year, as in the concept, each a fall-to-summer year that
 | **Mia** | Wants Leo dead over a car their father built | Ch1: columns. Ch3: Aries's friend. Ch5: keeps the shop afloat. Ch7: follows the money | Clean: Covington Auto's bookkeeper, legit. Kingpin: partner. Street: runs the Familia |
 | **Sal** | Dry, kind in small ways, always there | Ch6: the leak, because he's drowning in Hatch Motors debt | Retired to Alberta, informant, or in custody, by the player's choice |
 | **Darrell** | Sold Leo a lie for $840 | Recurring liar; Ch5: sells the Fox without knowing what it is | Clean: the surprise witness. He worked Hatch's back lot in 2019 and recognises the auction paperwork trick. His wife Brenda finally appears, and she's the one who kept the receipts |
-| **Dale Hatch** | The friendliest man in Port Rumble: sponsor, mentor, "son" | Ch2 to 6: the fleet partnership, the lawyer, the visit. Ch8: the slip at the counter | Arrested at the bottom of the Mountain (Clean), through the guardrail at the hairpin (Street), signs it all over on the hood and leaves the province (Kingpin) |
+| **Dale Hatch** | The friendliest man in Port Rumble: sponsor, mentor, "kid" | Ch2 to 6: the fleet partnership, the lawyer, the visit. Ch8: the slip at the counter | Arrested at the bottom of the Mountain (Clean), through the guardrail at the hairpin (Street), signs it all over on the hood and leaves the province (Kingpin) |
 | **Const. Tremblay** | Counts Leo's chances out loud: "That's one." | First on scene for Frank (no skid marks, didn't push her sergeant) and for Aries (writes it straight) | Clean: reopens Frank's file and finally pushes. Street: knows and can't prove it. Kingpin: transfers to Fredericton |
 | **The old manager** (the avatar) | Absent: a mug, initials on old paperwork, a coffee-stained staff photo | Ch3: the USB chase. Scared, not guilty; kept the carbon copy | Clean: testifies, then comes back to the counter for one day to train Leo's new hire. Credits: "{NAME} as The Old Manager" |
 
@@ -1188,7 +1188,7 @@ Dry Maritime humour, swearing allowed, no slurs, no real car makes. Chiac lines 
 35. **DARRELL:** correction they were on my car. my wifes husbands car
 36. **TREMBLAY:** Leo, it's Constable Tremblay. That's one. Don't make me count to two.
 37. **TREMBLAY:** Thanks for the call on the Charjer. Double-double's on your counter. Don't tell anybody I'm nice.
-38. **HATCH:** Leo! Dale Hatch. Saw your numbers at dyno day. Frankie would've been proud. Door's always open, son.
+38. **HATCH:** Leo! Dale Hatch. Saw your numbers at dyno day. Frankie would've been proud. Door's always open, kid.
 39. **KERNEL:** ok plug it in and DONT touch anything. touching is how they get u
 40. **UNKNOWN NUMBER:** The old manager kept files on the shop computer. Check them. Tonight.
 41. **MARKETTHING (Kyle):** would u take 200 and a game controller (drift damaged)
@@ -1252,7 +1252,7 @@ Ron's stock reply to nonsense: **"Well. You've said it out loud now, and that's 
 91. **Jayden, the Mountain Road drive-thru kid:** "I've seen things, man. A guy ordered forty timbits for his dog. The dog was a cat."
 92. **Familia:** "Dom says hi. Dom says the napkin explains itself. Dom says don't read the napkin out loud."
 93. **Sting:** "Buddy of mine says you're the guy for, you know. Numbers. Not math numbers. The other numbers."
-94. **Hatch fleet driver:** "Fleet car from Hatch Motors. Mr. Hatch says you're quick and you're Frankie's boy. That's the whole message."
+94. **Hatch fleet driver:** "Fleet car from Hatch Motors. Mr. Hatch says you're quick and you're Frankie's kid. That's the whole message."
 95. **After a DENY:** "Fine. I'll go to Lindsay's. She passes anything with a pulse."
 96. **After an APPROVE:** "Frank used to give out a sucker after. I'm not asking. I'm just saying there was a tradition."
 97. **Inspector Hachey:** "Good morning. Don't mind me. I'm just going to stand here and be the Ministry."
@@ -1366,7 +1366,7 @@ Ron's stock reply to nonsense: **"Well. You've said it out loud now, and that's 
 193. **@MarketThingFails:** "Runs great" (photo: the car is on fire)
 194. **Yowl, ★★★★★:** "The kid read my insurance like it was scripture. Passed. Felt seen."
 195. **Yowl, ★☆☆☆☆:** "Wouldn't pass my car just because it had no brakes. Very judgmental for a garage."
-196. **@hatchmotors:** Proud sponsor of Dyno Day at Airstrip 7! Frankie Covington's boy pulled 211 at the wheels. FAMILY!
+196. **@hatchmotors:** Proud sponsor of Dyno Day at Airstrip 7! Frankie Covington's kid pulled 211 at the wheels. FAMILY!
 197. **DAILY CLUTCH:** POTHOLE ON MAIN NAMED A PERSON OF INTEREST
 198. **DAILY CLUTCH:** TIDAL BORE ARRIVES ON TIME; COUNCIL "INSPIRED," PROMISES NOTHING
 199. **DAILY CLUTCH:** MOOSE HOLDS UP TRANS-CANADA FOR AN HOUR, LEAVES WITHOUT EXPLAINING

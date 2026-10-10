@@ -217,6 +217,7 @@ func _objective() -> void:
 		"meet":
 			if meet == null or meet.state == "arrive": o = "THE MEET: PARK IN YOUR SPOT AT THE BACK OF THE CHAMPAGNE PLACE LOT."
 			elif meet.state == "show": o = "THE MEET: REV IT, POP THE HOOD. THE VOTES ARE IN SOON."
+			elif meet.state == "turned_away": o = "THE MEET: NO $%d, NO SPOT. DRIVE OFF." % CarMeet.ENTRY
 		"cruise": o = ""
 	drive.hud.objective = o
 

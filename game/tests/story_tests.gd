@@ -62,25 +62,26 @@ func _init() -> void:
 			# the GPS routes node to node; the last stretch is the street the place is on
 			check("%s: you can drive to '%s'" % [id, String(o.text).substr(0, 24)], r.size() >= 1 and r[r.size() - 1].distance_to(o.to) < 250.0 and map.ground_at(o.to) == "asphalt")
 			from = o.to
-	# Frankie: the news, then June, then the naming, and every choice names him Frankie
-	var news_i := -1
-	var born_i := -1
-	for k in StoryScript.STEPS.size():
-		var st: Dictionary = StoryScript.STEPS[k]
-		if String(st.get("id", "")) == "the_news": news_i = k
-		if String(st.get("id", "")) == "frankie": born_i = k
-	check("Frankie: the news comes first, then he's born", news_i >= 0 and born_i > news_i)
-	var naming: Array = []
-	var born_flags := []
-	for ln in StoryScript.SCENES.frankie.lines:
-		if String(ln[0]) == "choice": naming = ln[1]
-		if String(ln[0]) == "flag": born_flags.append(String(ln[1]))
-	var all_frankie := naming.size() == 3
-	for o in naming:
-		if not String(o[0]).contains("Frankie"): all_frankie = false
-	check("Frankie: every name Leo can pick is Frankie", all_frankie)
-	check("Frankie: he's born, and Gus's line plants the clue", born_flags.has("frankie_born") and born_flags.has("clue_frankie"))
-	check("Frankie: his mom's in the cast", StoryScript.CAST.has("SHAY"))
+	# Frankie: the kid from down the street Leo teaches. Leo has nobody; Frankie isn't his.
+	var at := {}
+	for k in StoryScript.STEPS.size(): at[String(StoryScript.STEPS[k].get("id", ""))] = k
+	check("Frankie: he turns up after Bay 3, and he's still coming round in June",
+		int(at.get("the_kid", -1)) > int(at.get("bay_three", 99)) and int(at.get("frankie", -1)) > int(at.get("the_kid", 99)))
+	var met_flags := []
+	var gus_hatch := false
+	for ln in StoryScript.SCENES.the_kid.lines:
+		if String(ln[0]) == "flag": met_flags.append(String(ln[1]))
+		if String(ln[0]) == "GUS" and String(ln[1]).contains("Dale Hatch"): gus_hatch = true
+	check("Frankie: Gus hears the name and says who else used it", gus_hatch and met_flags.has("clue_frankie") and met_flags.has("frankie_met"))
+	check("Frankie: he's a kid (a head shorter in the cutscenes)", int(StoryScript.CAST.FRANKIE.age) < 16 and bool(PixPeople.OUTFITS.FRANKIE.get("teen", false)))
+	var family := RegEx.create_from_string("\\b(PREGNANT|GIRLFRIEND|BOYFRIEND|WIFE|YOUR SON|MY SON|HIS SON|GRANDPA|GRANDSON|AUNT|UNCLE LEO|DADDY)\\b")
+	var hit := ""
+	for id in ["the_kid", "frankie"]:
+		for ln in StoryScript.SCENES[id].lines:
+			var txt := " ".join(PackedStringArray(ln.map(func(x): return str(x)))).to_upper()
+			var m := family.search(txt)
+			if m: hit += "%s: %s; " % [id, m.get_string()]
+	check("Frankie: nobody's partner, nobody's son", hit == "" and not StoryScript.CAST.has("SHAY"), hit)
 	# prompts follow the device
 	Controls.setup()
 	Hints.pad = false

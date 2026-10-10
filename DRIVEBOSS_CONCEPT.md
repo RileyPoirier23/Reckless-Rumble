@@ -24,7 +24,7 @@ A 506Studios game, in the same creative family as **CAGE BOSS**: pixel art, R-ra
 | **Online** | Online crews only in the co-op story mode, which comes **after launch** |
 | **Frank's killer** | Dale Hatch |
 | **Ideas** | All 27 ideas in section 20 are in |
-| **Family** | Shay, and their son Frankie (the news in October 2019; born June 2020, named after Frank) |
+| **Family** | No partner and no kids for Leo. **Frankie** (13) is a kid from down the street Leo mentors at the shop from November 2019; the name is a coincidence, and it's the name Dale Hatch called Frank |
 | **Radio** | Built later, after the core game |
 | **Engine** | Godot 4 |
 | **Look** | 2D for now: sprite-stacked cars drawn by code, with a chase camera that turns with the car |

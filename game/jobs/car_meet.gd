@@ -36,7 +36,7 @@ var drive: Node
 var theme: Dictionary = {}
 var entrants: Array = []         # the locals: { name, id, spec, paint, looks, build, clean, hype }
 var cars: Array = []             # their AiCars, parked
-var state := "arrive"            # arrive, show, results, leave, done
+var state := "arrive"            # arrive, show, results, leave, done (or turned_away, then done)
 var t := 0.0
 var hood := false
 var rev_t := 0.0
@@ -193,7 +193,11 @@ func _process(dt: float) -> void:
 	if c == null: return
 	match state:
 		"arrive":
-			if parked():
+			if parked() and int(drive.save.get("cash", 0)) < ENTRY:
+				# no money, no spot
+				state = "turned_away"
+				drive.hud.post("THE ORGANIZER HOLDS OUT A HAND. YOU'VE GOT $%d. \"IT'S $%d TO GET IN, KID. NO MONEY, NO SPOT.\"" % [maxi(0, int(drive.save.get("cash", 0))), ENTRY], 6.0)
+			elif parked():
 				state = "show"
 				t = 0.0
 				backed_in = absf(wrapf(c.sim.heading + PI / 2.0, -PI, PI)) > PI / 2.0
@@ -202,6 +206,8 @@ func _process(dt: float) -> void:
 				drive.hud.post("THE ORGANIZER TAKES YOUR $%d. \"FOR THE TIRE FUND.\" %s" % [ENTRY, String(theme.say)], 6.0)
 				if backed_in: drive.hud.post("BACKED IN. A GUY IN A HOODIE NODS. RESPECT.", 4.0)
 		"show": _show(dt, c)
+		"turned_away":
+			if not LOT.grow(30.0).has_point(c.sim.pos): state = "done"
 		"leave":
 			t += dt
 			var spin := absf(c.sim.w_wheel * float(c.sim.spec.tires.radius)) - c.sim.speed()
@@ -373,6 +379,12 @@ class MeetHud extends Control:
 
 	func _draw() -> void:
 		if meet == null: return
+		if meet.state == "turned_away":
+			var r := Rect2(4, 38, 168, 30)
+			draw_rect(r, Color(0, 0, 0, 0.6))
+			PixelFont.draw(self, r.position + Vector2(6, 5), "THE MEET: TURNED AWAY", RED)
+			PixelFont.draw(self, r.position + Vector2(6, 17), "$%d TO GET IN. YOU'VE GOT $%d." % [CarMeet.ENTRY, maxi(0, int(meet.drive.save.get("cash", 0)))], BONE)
+			return
 		if meet.state in ["arrive", "show"]:
 			var r := Rect2(4, 38, 168, 52)
 			draw_rect(r, Color(0, 0, 0, 0.6))

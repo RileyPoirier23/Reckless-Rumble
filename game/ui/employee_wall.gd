@@ -137,17 +137,19 @@ static func _draw_empty(ci: CanvasItem, r: Rect2) -> void:
 	ci.draw_rect(Rect2(r.position.x + r.size.x / 2.0 - 11 * k, r.position.y + 20 * k, 22 * k, r.size.y - 20 * k), c)
 	PixelFont.draw_centered(ci, r.get_center().x, r.end.y - 7 * k, "YOUR PHOTO", Color("8a8478"))
 
-## The photos from July 2020 on (the tenth photo) have little Frankie in them, in Leo's arm.
+## The photos from July 2020 on (the tenth photo) have Frankie in them: the kid from down the
+## street Leo's teaching, in front of him in his Covington Auto shirt, a bit taller every year.
 const FRANKIE_FROM := 9
 
-static func _frankie(ci: CanvasItem, at: Vector2, k: float, n: int) -> void:
-	var grown := clampf(float(n - FRANKIE_FROM) / 24.0, 0.0, 1.0)       # he gets bigger
-	var r := (3.2 + grown * 1.6) * k
-	ci.draw_rect(Rect2(at.x - r * 1.2, at.y - r * 0.2, r * 2.4, r * 1.6), Color("7ab8e0"))       # the blanket
-	ci.draw_circle(at + Vector2(0, -r * 0.6), r, Color("e8b894"))                                  # his face
-	ci.draw_rect(Rect2(at.x - r, at.y - r * 1.75, r * 2.0, r * 0.7), Color("d9a441"))             # a tiny Covington Auto cap
-	ci.draw_rect(Rect2(at.x - r * 0.45, at.y - r * 0.75, k * 0.7, k * 0.7), INK)
-	ci.draw_rect(Rect2(at.x + r * 0.25, at.y - r * 0.75, k * 0.7, k * 0.7), INK)
+static func _frankie(ci: CanvasItem, r: Rect2, k: float, n: int) -> void:
+	var c: Dictionary = StoryScript.CAST.FRANKIE
+	var grown := clampf(float(n - FRANKIE_FROM) / 24.0, 0.0, 1.0)
+	var fs := (17.0 + grown * 4.0) * k
+	var at := Vector2(r.position.x + 21 * k, r.end.y - fs)
+	ci.draw_texture_rect(Face.texture(int(c.seed), int(c.female), int(c.age) + int((n - FRANKIE_FROM + 6) / 12)), Rect2(at, Vector2(fs, fs)), false)
+	# the shirt, over whatever he came in
+	ci.draw_rect(Rect2(at.x + fs * 0.12, r.end.y - fs * 0.2, fs * 0.76, fs * 0.2), Color("d9a441"))
+	ci.draw_rect(Rect2(at.x + fs * 0.56, r.end.y - fs * 0.16, fs * 0.2, fs * 0.08), Color("f3ead2"))
 
 ## A photo: where it was taken, Leo in it, and what it's for.
 static func draw_photo(ci: CanvasItem, r: Rect2, a: Dictionary, n: int) -> void:
@@ -158,8 +160,8 @@ static func draw_photo(ci: CanvasItem, r: Rect2, a: Dictionary, n: int) -> void:
 	var face := Face.texture(int(WHO.seed), int(WHO.female), age)
 	var fs := 26.0 * k
 	ci.draw_texture_rect(face, Rect2(r.position.x + 4 * k, r.end.y - fs, fs, fs), false)
-	if n >= FRANKIE_FROM: _frankie(ci, Vector2(r.position.x + 4 * k + fs * 0.82, r.end.y - 5 * k), k, n)
 	_prop(ci, Rect2(r.position.x + 28 * k, r.position.y + 4 * k, 20 * k, r.size.y - 6 * k), String(a.get("prop", "")), k)
+	if n >= FRANKIE_FROM: _frankie(ci, r, k, n)
 	# the print's border and a little sheen
 	ci.draw_rect(r, Color(1, 1, 1, 0.5), false, 1.0)
 	ci.draw_rect(Rect2(r.position, Vector2(r.size.x, 2 * k)), Color(1, 1, 1, 0.08))

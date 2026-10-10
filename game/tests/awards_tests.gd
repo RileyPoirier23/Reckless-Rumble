@@ -76,7 +76,7 @@ func _init() -> void:
 	check("checking again doesn't win them twice", Awards.check(live).is_empty())
 	check("the first photo is October 2019", Awards.month_of(0) == "OCTOBER 2019")
 	check("then a month at a time, into the new year", Awards.month_of(3) == "JANUARY 2020" and Awards.month_of(15) == "JANUARY 2021", Awards.month_of(3))
-	check("little Frankie's in the photos from July 2020", Awards.month_of(EmployeeWall.FRANKIE_FROM) == "JULY 2020")
+	check("Frankie's in the photos from July 2020", Awards.month_of(EmployeeWall.FRANKIE_FROM) == "JULY 2020")
 	check("the photos are numbered in the order they were won", int(Awards.won.pizza_10.n) == 0 and int(Awards.won.cruise.n) == 1)
 	Awards.won = {}
 	Awards.load_file()

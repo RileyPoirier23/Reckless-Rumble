@@ -1,5 +1,5 @@
 ## Frankie, screenshots: godot --path game -s tests/frankie_demo.gd -- <out_dir>
-## The news, the June card, the naming, and Employee of the Month with him in the photos.
+## The kid in Bay 3, the June card, a Saturday at the shop, and Employee of the Month with him in the photos.
 extends SceneTree
 
 var out := "user://frankie_shots"
@@ -39,20 +39,20 @@ func _scene_at(id: String, upto: int) -> void:
 func _run() -> void:
 	await _wait(0.3)
 	StoryState.new_game()
-	await _scene_at("the_news", 4)
-	await _shot("1_the_news")
-	await _scene_at("the_news", 7)
-	await _shot("2_the_news_choice")
+	await _scene_at("the_kid", 1)
+	await _shot("1_the_kid")
+	await _scene_at("the_kid", 8)
+	await _shot("2_the_kid_choice")
+	await _scene_at("the_kid", 16)
+	await _shot("3_gus")
 	StoryState.step = _step_of(func(s): return s.type == "card" and String(s.title) == "JUNE 2020")
 	change_scene_to_file("res://story/story.tscn")
 	await _wait(1.4)
-	await _shot("3_june_card")
+	await _shot("4_june_card")
 	await _scene_at("frankie", 3)
-	await _shot("4_frankie_fridge")
-	await _scene_at("frankie", 7)
-	await _shot("5_frankie_name")
-	await _scene_at("frankie", 11)
-	await _shot("6_gus")
+	await _shot("5_saturday")
+	await _scene_at("frankie", 9)
+	await _shot("6_saturday_choice")
 	# the wall, a year and a half in: the later photos have him in them
 	change_scene_to_file("res://title.tscn")
 	await _wait(0.6)
