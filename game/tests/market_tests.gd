@@ -173,6 +173,26 @@ func _init() -> void:
 		var bd: Dictionary = Auction.BIDDERS[i]
 		if int(lim[i]) < int(float(al[0].worth) * float(bd.top[0])) - 1 or int(lim[i]) > int(float(al[0].worth) * float(bd.top[1])) + 1: lim_ok = false
 	check("each bidder has a limit, somewhere around what it's worth", lim_ok, str(lim))
+	# your hand up on a lot with no keys: the bid and the locksmith both have to be in your pocket
+	var stand := GDScript.new()
+	stand.source_code = "extends Node\nvar save := {}\n"
+	stand.reload()
+	var floor_drive: Variant = stand.new()
+	var au := Auction.new()
+	au.drive = floor_drive
+	var keyless: Dictionary = al[0].duplicate()
+	keyless.keys = false
+	au.lots = [keyless]
+	au.lot_i = 0
+	au.bid = 1000
+	au.wait_t = [1.0, 1.0, 1.0]
+	floor_drive.save = { "cash": 1100 }
+	var short := au.you_bid()
+	floor_drive.save = { "cash": 1000 + Auction.LOCKSMITH }
+	var enough := au.you_bid()
+	check("no keys: you can't bid what you can't pay the locksmith on top of", au.high == "YOU" and short.contains("LOCKSMITH") and enough.begins_with("YOU"), "%s / %s" % [short, enough])
+	au.free()
+	floor_drive.free()
 	# $1,990 on a $1,999 ask: a counter splits the difference, it doesn't round up past the ask
 	var off_range: Array = []
 	var counters := 0

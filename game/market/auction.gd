@@ -193,7 +193,11 @@ func _bid(who: String, price: int) -> void:
 func you_bid() -> String:
 	if not live() or high == "YOU": return ""
 	var price := your_price()
-	if int(drive.save.get("cash", 0)) < price: return "LYLE: \"YOU GOT $%d ON YOU, KID? NO? THEN PUT THE HAND DOWN.\"" % price
+	var have := int(drive.save.get("cash", 0))
+	if have < price: return "LYLE: \"YOU GOT $%d ON YOU, KID? NO? THEN PUT THE HAND DOWN.\"" % price
+	# no keys: the locksmith gets paid the same day as Lyle does
+	if not bool(lots[lot_i].keys) and have < price + LOCKSMITH:
+		return "LYLE: \"NO KEYS ON THAT ONE, KID. $%d AND $%d FOR THE LOCKSMITH. YOU DON'T HAVE IT.\"" % [price, LOCKSMITH]
 	_bid("YOU", price)
 	return "YOU: $%d." % price
 
