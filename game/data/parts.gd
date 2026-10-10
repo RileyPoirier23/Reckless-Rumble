@@ -129,7 +129,7 @@ static func install_h(id: String) -> float:
 
 ## How far the dyno lets you push this build: extra boost (fraction) and timing (steps of 2°).
 static func tune_range(installed: Dictionary, spec: Dictionary) -> Dictionary:
-	var turbo := not (spec.engine.get("turbo", {}) as Dictionary).is_empty()
+	var turbo := has_boost(installed, spec)
 	var boost := 0.15 if turbo else 0.0
 	var timing := 3
 	for sl in installed:
@@ -151,13 +151,22 @@ static func knock_risk(installed: Dictionary, tune: Dictionary) -> float:
 		forged += float(fx.get("tune_boost", 0.0)) if slot(String(installed[sl])) == "internals" else 0.0
 	return maxf(0.0, t * 0.09 + b * (1.4 - forged * 1.5) - 0.22 + resist)
 
-## Parts that only make sense on some cars.
-static func fits(id: String, spec: Dictionary) -> bool:
+## Whether there's boost to play with: a turbo from the factory, or a kit bolted on (the stock
+## spec doesn't know about the kit, so look at the parts too).
+static func has_boost(installed: Dictionary, spec: Dictionary) -> bool:
+	if not (spec.engine.get("turbo", {}) as Dictionary).is_empty(): return true
+	for sl in installed:
+		if effects(String(installed[sl])).has("turbo"): return true
+	return false
+
+## Parts that only make sense on some cars. `installed` is what's on it now (an intercooler fits
+## a car with a turbo kit on it).
+static func fits(id: String, spec: Dictionary, installed := {}) -> bool:
 	var p: Array = CATALOG[id]
 	var has_turbo: bool = not (spec.engine.get("turbo", {}) as Dictionary).is_empty()
 	var body := String(spec.get("body", "sedan"))
 	match String(p[0]):
-		"intercooler": return has_turbo or String(spec.get("_induction", "")) != ""
+		"intercooler": return has_boost(installed, spec) or String(spec.get("_induction", "")) != ""
 		"induction":
 			if id == "ind_upgrade": return has_turbo
 		"aero":
