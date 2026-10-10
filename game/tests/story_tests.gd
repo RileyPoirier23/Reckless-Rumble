@@ -91,11 +91,22 @@ func _init() -> void:
 	StoryState.step = cut
 	var thanks := StoryState.current()
 	StoryState.step = cut + 1
+	var credits := StoryState.current()
+	StoryState.step = cut + 2
 	var after := StoryState.current()
 	DemoBuild.forced = false
 	StoryState.step = cut
-	check("the prologue demo: all of day one, a thank-you instead of CHAPTER 1, then the title",
-		cut_ok and String(before.get("id", "")) == "home_night" and bool(thanks.get("demo_end", false)) and String(after.type) == "end" and String(StoryState.current().get("title", "")) == "CHAPTER 1")
+	check("the prologue demo: all of day one, a thank-you instead of CHAPTER 1, the credits, then the title",
+		cut_ok and String(before.get("id", "")) == "home_night" and bool(thanks.get("demo_end", false)) and String(credits.type) == "credits"
+		and String(after.type) == "end" and String(StoryState.current().get("title", "")) == "CHAPTER 1")
+	# the credits: her photo is there, and every line of the roll and the memorial fits the screen
+	var wide := ""
+	for r in EndCredits.ROLL:
+		var sc := 5 if String(r[1]) == "h" else (1 if String(r[1]) == "s" else 2)
+		if PixelFont.width(String(r[0]), sc) > 620: wide += String(r[0]) + "; "
+	for ln in Hud.wrap_lines(EndCredits.VERSE, 98) + ["I LOVE YOU MEMERE, I'LL KEEP MAKING YOU PROUD", "AUGUST 20TH 1953  -  OCTOBER 7TH 2026", "GRANDMOTHER, SISTER, WIFE AND MOTHER."]:
+		if 214 + PixelFont.width(String(ln)) > 632: wide += String(ln) + "; "
+	check("the credits: her photo's there and nothing runs off the screen", EndCredits.load_photo() != null and wide == "" and PixelFont.G.has(";"), wide)
 	StoryState.step = 0
 	# nobody in a cutscene stands in a car (parked behind them, in front of them, or wrecked),
 	# and no two cars in a set sit in each other unless they're the same wreck

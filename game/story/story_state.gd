@@ -7,6 +7,7 @@
 ## - "counter": a shift at the counter (CLOCK IN ... CLOCK OUT)
 ## - "drive":   the evening in your car, with a mission
 ## - "card":    a title card ("CHAPTER 1: WRONG TURF", "SIX MONTHS LATER")
+## - "credits": the credits, the thank-you and the memorial (EndCredits)
 class_name StoryState
 extends RefCounted
 
@@ -59,7 +60,8 @@ static func current() -> Dictionary:
 	if step < 0 or step >= StoryScript.STEPS.size(): return { "type": "end" }
 	# the prologue demo stops at the end of day one, with a thank-you
 	if DemoBuild.on() and step >= DemoBuild.end_step():
-		return DemoBuild.END_CARD if step == DemoBuild.end_step() else { "type": "end" }
+		var past := step - DemoBuild.end_step()
+		return DemoBuild.END_CARD if past == 0 else ({ "type": "credits" } if past == 1 else { "type": "end" })
 	return StoryScript.STEPS[step]
 
 ## Move on to the next step and go to whichever scene plays it.
@@ -75,6 +77,7 @@ static func go(tree: SceneTree) -> void:
 	match String(s.type):
 		"scene", "card": tree.change_scene_to_file("res://story/story.tscn")
 		"avatar": tree.change_scene_to_file("res://story/avatar.tscn")
+		"credits": tree.change_scene_to_file("res://ui/credits.tscn")
 		"counter": LoadingScreen.go(tree, "res://counter.tscn", "COVINGTON AUTO: CLOCKING IN")
 		"drive": LoadingScreen.go(tree, "res://drive.tscn", String(StoryMissions.MISSIONS.get(String(s.get("mission", "")), {}).get("title", "THE ROAD")))
 		_:

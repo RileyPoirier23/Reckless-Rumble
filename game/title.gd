@@ -16,6 +16,7 @@ func _items() -> void:
 			ITEMS.append(["CONTINUE THE PROLOGUE", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
 		ITEMS.append(["PLAY THE PROLOGUE", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE. THEN HIS FIRST DAY AT THE COUNTER.", "story:new"])
 		ITEMS.append(["SETTINGS", "CONTROLS AND REBINDING, A STEERING WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.", "settings"])
+		ITEMS.append(["CREDITS", "WHO MADE IT, WHO'S IN IT, AND WHO IT'S FOR.", "credits"])
 		ITEMS.append(["QUIT", "SEE YOU TOMORROW.", ""])
 		return
 	if StoryState.has_save():
@@ -25,6 +26,7 @@ func _items() -> void:
 	ITEMS.append(["THE LOT", "FREE DRIVE: PORT RUMBLE TO SALISBURY AND HAVELOCK, WITH TRAFFIC.", "res://drive.tscn"])
 	ITEMS.append(["EMPLOYEE OF THE MONTH", "THE WALL IN THE BREAK ROOM AT COVINGTON AUTO: A PHOTO FOR EVERYTHING YOU'VE DONE ON THE ROAD.", "wall"])
 	ITEMS.append(["SETTINGS", "CONTROLS AND REBINDING, A STEERING WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.", "settings"])
+	ITEMS.append(["CREDITS", "WHO MADE IT, WHO'S IN IT, AND WHO IT'S FOR.", "credits"])
 	ITEMS.append(["QUIT", "SEE YOU TOMORROW.", ""])
 
 var sel := 0
@@ -116,6 +118,9 @@ func _go() -> void:
 		"": get_tree().quit()
 		"settings": settings.open()
 		"wall": wall.open()
+		"credits":
+			EndCredits.from_menu = true
+			get_tree().change_scene_to_file("res://ui/credits.tscn")
 		"story:continue":
 			StoryState.load_game()
 			StoryState.go(get_tree())

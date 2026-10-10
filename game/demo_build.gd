@@ -1,6 +1,7 @@
 ## The prologue demo: a build with the "demo" feature tag (the DEMO export presets) plays day one
 ## (the drunk drive, the meet, the first shift at the counter, the evening's drives) and stops at
-## the CHAPTER 1 card with a thank-you. The title only offers the prologue, the settings and quit.
+## the CHAPTER 1 card with a thank-you, then the credits and the memorial. The title only offers
+## the prologue, the settings, the credits and quit.
 ## --prologue-build on the command line does the same in the editor or a test.
 class_name DemoBuild
 extends RefCounted
