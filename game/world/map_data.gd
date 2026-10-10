@@ -81,6 +81,7 @@ func build() -> void:
 	_find_bridges_and_crossings()
 	_buildings()
 	_salvage()
+	_impound()
 	_street_lights()
 	_graph()
 
@@ -313,9 +314,7 @@ func _landmarks() -> void:
 const SALVAGE := Rect2(6410, 910, 100, 60)
 func _salvage() -> void:
 	var r := SALVAGE
-	buildings = buildings.filter(func(b): return not (b.r as Rect2).intersects(r))
-	lots = lots.filter(func(l): return not (l.r as Rect2).intersects(r))
-	lights = lights.filter(func(l): return not r.has_point(l.p))
+	_clear_block(r)
 	lots.append({ "r": r, "kind": "gravel", "name": "", "lines": false })
 	buildings.append({ "r": Rect2(6412, 912, 26, 12), "h": 4.0, "kind": "shop", "name": "SALVAGE", "zone": "industrial" })
 	for s in [Rect2(6446, 912, 26, 7), Rect2(6476, 912, 30, 7), Rect2(6500, 924, 8, 30), Rect2(6450, 938, 36, 6), Rect2(6412, 958, 22, 8)]:
@@ -323,6 +322,24 @@ func _salvage() -> void:
 	lights.append({ "p": Vector2(6442, 930), "type": "sodium", "seed": 6442 })
 	lights.append({ "p": Vector2(6490, 962), "type": "sodium_flicker", "seed": 6490 })
 	landmarks.append({ "name": "NORTHSIDE SALVAGE", "p": Vector2(6426, 940), "dest": true })
+
+## The Northside impound lot, where the police tow you and the auction runs on Saturdays: a paved
+## lot with its lines and a booth at the gate (it takes over its block the same way).
+const IMPOUND_LOT := Rect2(6170, 910, 100, 60)
+func _impound() -> void:
+	var r := IMPOUND_LOT
+	_clear_block(r)
+	lots.append({ "r": r, "kind": "asphalt", "name": "", "lines": true })
+	buildings.append({ "r": Rect2(6172, 912, 18, 10), "h": 4.0, "kind": "shop", "name": "IMPOUND", "zone": "industrial" })
+	lights.append({ "p": Vector2(6200, 930), "type": "sodium", "seed": 6200 })
+	lights.append({ "p": Vector2(6250, 950), "type": "sodium", "seed": 6250 })
+	landmarks.append({ "name": "NORTHSIDE IMPOUND", "p": Vector2(6182, 934), "dest": true })
+
+## Take a block back from the warehouses: what was built there goes.
+func _clear_block(r: Rect2) -> void:
+	buildings = buildings.filter(func(b): return not (b.r as Rect2).intersects(r))
+	lots = lots.filter(func(l): return not (l.r as Rect2).intersects(r))
+	lights = lights.filter(func(l): return not r.has_point(l.p))
 
 func _tims(p: Vector2, zone: String) -> void:
 	var r := Rect2(p - Vector2(14, 14), Vector2(28, 28))

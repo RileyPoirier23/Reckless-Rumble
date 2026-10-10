@@ -47,6 +47,7 @@ var market: MarketRunner
 var police: Police
 var fuel: FuelStop
 var salvage: SalvageYard
+var auction: Auction
 var wildlife: Wildlife
 var hold_car := false          # a scene (or a test) has the car stopped
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
@@ -175,6 +176,9 @@ void fragment() {
 	salvage = SalvageYard.new()
 	add_child(salvage)
 	salvage.setup(self)
+	auction = Auction.new()
+	add_child(auction)
+	auction.setup(self)
 	wildlife = Wildlife.new()
 	add_child(wildlife)
 	wildlife.setup(self)
@@ -221,6 +225,10 @@ void fragment() {
 		var wd2: Node = load("res://tests/wild_demo.gd").new()
 		wd2.main = self
 		add_child(wd2)
+	elif OS.get_cmdline_user_args().has("--auction-demo"):
+		var ad: Node = load("res://tests/auction_demo.gd").new()
+		ad.main = self
+		add_child(ad)
 	elif OS.get_cmdline_user_args().has("--meet-demo"):
 		var mtd: Node = load("res://tests/meet_demo.gd").new()
 		mtd.main = self
@@ -716,10 +724,10 @@ func _teleport(at: Vector2, heading: float) -> void:
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() \
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() or auction.open() \
 		or (jobs.meet != null and jobs.meet.state == "results")
 	if garage.visible or death.visible or car.dead: return
-	if job_board.visible or market.panel_open() or fuel.open() or salvage.open(): return
+	if job_board.visible or market.panel_open() or fuel.open() or salvage.open() or auction.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
 		job_board.open(sky, save, jobs.kind, Market.places(world.map))
 		return

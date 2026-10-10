@@ -163,6 +163,11 @@ func _init() -> void:
 	check("six locals, different people, real cars, never your own", names_ok)
 	check("on JDM night the locals mostly bring JDM", jdm_n >= 40, "%d of 90" % jdm_n)
 	check("a built, kitted car usually takes it; a dented stocker never does", wins_built >= 22 and wins_stock == 0, "%d / %d of 30" % [wins_built, wins_stock])
+	# the impound lot
+	var imp_lm := map.landmarks.filter(func(l): return l.name == "NORTHSIDE IMPOUND")
+	var imp_clear := map.buildings.all(func(b): return not (b.r as Rect2).grow(2.0).has_point(Jobs.IMPOUND) and not (b.r as Rect2).grow(2.0).has_point(Auction.GATE))
+	check("the impound lot is on the map: paved, on the GPS, and the tow drops you clear of the booth",
+		imp_lm.size() == 1 and map.ground_at(Jobs.IMPOUND) == "asphalt" and imp_clear and map.route(Jobs.COVINGTON, Auction.GATE).size() >= 2, map.ground_at(Jobs.IMPOUND))
 	# Northside Salvage
 	var pile := SalvageYard.stock(12)
 	var again := SalvageYard.stock(12)

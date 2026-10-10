@@ -98,6 +98,10 @@ Pull up to Covington Auto's bay doors and stop: the garage opens. Pick which car
 
 Friday and Saturday nights from 10 (it's on the GIGS app), the back row of the Champagne Place lot fills up: six locals and a spot with your name on it ($20 to get in, for the organizer's tire fund). Park in it, nose in or backed in (backing in earns a nod). For forty seconds the crowd looks it over: the gas revs it (the car's out of gear with the handbrake on), and a louder exhaust gets them going faster, but rev it too long and they've heard enough. Pop the hood with the use key, or they'll only half-believe what's under it. Then the votes: how it looks (paint finish, wheels, the drop, tint, stripes, wing, kit, tips), the build (the stages of everything bolted on), dents, what the car's worth, the night's theme (JDM, muscle, euro, classics, stance night where the drop and wheels count double, sleeper night where looking fast counts against you), and the hype. $250 for best in show and a bump in street rep, $100 and $40 for second and third, $50 for the loudest. Leave with a burnout and the crowd loves it; the patrol car on Melanson Rd might not.
 
+## The impound auction
+
+Saturdays from 10 to 2, the Northside impound lot (on the GPS; it's also where the police tow you) sells what nobody came back for: four lots, as is, where is, no test drives and no looking under them. Pull up to the booth. Lyle opens each lot at about a fifth of what it's worth and takes bids in steps ($50, then $100 over $1,000, $250 over $5,000); Darrell, a dealer from Shediac and a guy in a trucker hat bid against you, each up to his own limit. Three calls with no new bid and it's sold. A street racer's seized car still has his parts on it, some lots have no keys ($250 for the locksmith), and whatever the car's hiding (a head gasket, a slipping clutch, a rolled-back odometer) comes with it. Walk away and the lot on the block goes to whoever wanted it most.
+
 ## Northside Salvage
 
 Lloyd's yard in Northside Industrial (on the GPS) is open 8 to 6: pull up to the trailer and stop. Every day there's a new pile: six used parts, graded A to D at 55% down to 16% of new, and three worn bits (a clutch, a turbo, a motor, a set of tires, brake pads) his nephew swaps on the car you came in, right there, for $40 and an hour or two. The panel says whether a part fits your car, and how much life a worn bit has left next to yours. Used parts go to Covington's on the yard truck an hour later, and that's when Gus opens the box: an A is always good, but the worse the grade, the better the odds it's cracked, seized or for a boat (a D is about a coin flip). No refunds. Lloyd also buys whatever's sitting on Gus's bench, for a fifth of new.
@@ -204,7 +208,7 @@ godot --headless --path game -- --traffic-test
 godot --headless --path game -- --race-test
 ```
 
-The race test (`--race-test`) runs inside the drive scene: three AI racers round the Downtown Box through traffic (they have to finish, stay on the route and not get stuck), a race you win and get paid for, a pull-over and a ticket, a chase you get away from, an impound, a deer and a moose, a pink-slip race, a HOPP-IN ride, a trip to the salvage yard, and a night at the meet. The jobs tests check the routes follow real roads, the field is matched to your car, and the ticket and impound rules.
+The race test (`--race-test`) runs inside the drive scene: three AI racers round the Downtown Box through traffic (they have to finish, stay on the route and not get stuck), a race you win and get paid for, a pull-over and a ticket, a chase you get away from, an impound, a deer and a moose, a pink-slip race, a HOPP-IN ride, a trip to the salvage yard, a night at the meet, and the impound auction. The jobs tests check the routes follow real roads, the field is matched to your car, and the ticket and impound rules.
 
 The map, sky and car tests check that:
 - the map builds quickly;

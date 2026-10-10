@@ -37,7 +37,8 @@ func _ready() -> void:
 	await _ride()
 	await _salvage()
 	await _meet()
-	var want := 10 if not OS.get_cmdline_user_args().has("--police-only") else 7
+	await _auction()
+	var want := 11 if not OS.get_cmdline_user_args().has("--police-only") else 8
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -463,4 +464,54 @@ func _meet() -> void:
 	main._teleport(CarMeet.YOUR_SPOT + Vector2(0, 120), 0.0)
 	await _wait(0.4)
 	check("meet: drive off and the night's over", j.kind == "" and j.meet == null)
+	done += 1
+
+func _auction() -> void:
+	var a: Auction = main.auction
+	main.save.cash = 20000
+	main.save.erase("auction")
+	main._teleport(Auction.GATE, 0.0)
+	main.car.sim.set_world_velocity(Vector2.ZERO)
+	await _wait(0.3)
+	check("auction: you're at the gate", a.at_gate())
+	a.start()
+	await _wait(0.2)
+	check("auction: lot 1 on the block", a.open() and a.live() and a.lot_i == 0 and a.bid == int(a.lots[0].open) and main.car.locked)
+	# nobody else wants this one
+	for i in a.tops.size(): a.tops[i] = 0
+	var cars0 := (main.save.garage as Array).size()
+	var cash0 := int(main.save.cash)
+	var said := a.you_bid()
+	check("auction: your hand goes up", a.high == "YOU" and said.contains("$"), said)
+	var t := 0.0
+	while t < 12.0 and str(0) not in a.done():
+		await _wait(0.25)
+		t += 0.25
+	var l0: Dictionary = a.lots[0]
+	var paid := cash0 - int(main.save.cash)
+	check("auction: going once, twice, sold to you", String(a.done().get("0", "")) == "YOU" and (main.save.garage as Array).size() == cars0 + 1,
+		"%s after %.1f s" % [str(a.done()), t])
+	check("auction: you pay the bid (and the locksmith, if it has no keys)", paid == int(l0.open) + (0 if bool(l0.keys) else Auction.LOCKSMITH), "$%d" % paid)
+	var won: Dictionary = main.save.garage[cars0]
+	check("auction: it comes with what was bolted on", str(won.parts) == str(l0.parts) and String(won.id) == String(l0.car))
+	# the next one: Darrell wants it more than you do
+	t = 0.0
+	while t < 6.0 and a.lot_i != 1 or not a.live():
+		await _wait(0.25)
+		t += 0.25
+		if t > 6.0: break
+	check("auction: on to lot 2", a.lot_i == 1 and a.live(), "lot %d" % a.lot_i)
+	a.tops[0] = int(a.bid) * 3
+	a.tops[1] = 0
+	a.tops[2] = 0
+	t = 0.0
+	while t < 20.0 and str(1) not in a.done():
+		await _wait(0.25)
+		t += 0.25
+	check("auction: Darrell bids, and it sells to him", String(a.done().get("1", "")) == "DARRELL", str(a.done()))
+	a.leave()
+	await _wait(0.2)
+	check("auction: walk away", not a.open() and not main.car.locked)
+	main.save.garage.remove_at(cars0)
+	SaveGame.write(main.save)
 	done += 1

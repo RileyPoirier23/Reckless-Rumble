@@ -143,5 +143,35 @@ func _init() -> void:
 	check("Gerald's questions aren't offers", int(r3.index) == -1 and (s2.garage as Array).size() == 3)
 	Market.unlist(s2, ad3)
 	check("taking the ad down", Market.ads(s2).is_empty() and not (s2.garage[0] as Dictionary).has("for_sale"))
+	# the impound auction
+	var sat := 5
+	check("the auction is on Saturdays", Jobs.weekday(sat) == "SATURDAY" and Auction.is_day(sat) and not Auction.is_day(sat + 1))
+	var al := Auction.lots_for(sat)
+	check("four lots, the same all day", al.size() == Auction.LOTS and str(al) == str(Auction.lots_for(sat)))
+	var opens_low := true
+	var racer_parts := 0
+	var parts_fit := true
+	var no_keys := 0
+	for d in 60:
+		for l in Auction.lots_for(d):
+			if int(l.open) > maxi(100, int(int(l.worth) * 0.3)) or int(l.open) < 100: opens_low = false
+			if not bool(l.keys): no_keys += 1
+			var lp: Dictionary = l.parts
+			if not lp.is_empty():
+				racer_parts += 1
+				for sl in lp:
+					if Parts.slot(String(lp[sl])) != String(sl) or not Parts.fits(String(lp[sl]), CarCatalog.spec(String(l.car))): parts_fit = false
+	check("lots open at about a fifth of what they're worth", opens_low)
+	check("a street racer's car still has his parts on it, and they fit", racer_parts > 10 and parts_fit, "%d lots" % racer_parts)
+	check("some come without keys", no_keys > 20 and no_keys < 120, "%d of 240" % no_keys)
+	check("Lyle's steps: $50, then $100, then $250", Auction.step(500) == 50 and Auction.step(2000) == 100 and Auction.step(8000) == 250)
+	var ar := RandomNumberGenerator.new()
+	ar.seed = 3
+	var lim := Auction.limits(al[0], ar)
+	var lim_ok := lim.size() == Auction.BIDDERS.size()
+	for i in lim.size():
+		var bd: Dictionary = Auction.BIDDERS[i]
+		if int(lim[i]) < int(float(al[0].worth) * float(bd.top[0])) - 1 or int(lim[i]) > int(float(al[0].worth) * float(bd.top[1])) + 1: lim_ok = false
+	check("each bidder has a limit, somewhere around what it's worth", lim_ok, str(lim))
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
