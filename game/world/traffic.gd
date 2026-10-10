@@ -44,6 +44,7 @@ var ysort: Node2D
 var player: PlayerCar
 var cars: Array[TrafficCar] = []
 var extra: Array = []          # cars with other drivers (racers, the police): traffic gives them room too
+var parked: Array = []         # the parked cars near you (ParkedCars): the racers and the police go round them
 var hush := Rect2()            # a street race is on in here: Marco's crew has the side streets blocked
 var junctions := {}                 # node -> { control, major_roads, radius, queue, offset }
 var _node_cells := {}               # Vector2i -> Array of node ids (64 m cells)
@@ -205,8 +206,13 @@ func next_node(a: int, b: int, car: TrafficCar) -> int:
 			if car.lane_i == 0 and turn > 0.5: continue          # inner lane: no right turns
 			if car.lane_i == 1 and turn < -0.5: continue         # outer lane: no left turns
 		if r.cls == "gravel": w *= 0.3
-		opts.append([e[0], w])
+		if car.highway_only and r.cls != "highway": continue
+		opts.append([e[0], w, int(MapData.CLS[r.cls].rank)])
 	if opts.is_empty(): return a
+	# buses and trucks keep to the big roads when there's one to keep to
+	if car.big:
+		var wide := opts.filter(func(o: Array) -> bool: return int(o[2]) >= 3)
+		if not wide.is_empty(): opts = wide
 	var total := 0.0
 	for o in opts: total += o[1]
 	var roll := car.rng.randf() * total
@@ -235,17 +241,17 @@ func _target_count(c: Vector2) -> int:
 	if h < 6.0 or h > 23.0: mult = 0.35          # the middle of the night
 	elif (h > 7.5 and h < 9.0) or (h > 16.0 and h < 18.0): mult = 1.35   # rush hour (such as it is)
 	match z.style:
-		"downtown", "commercial": return int(30 * mult)
-		"residential", "oldtown", "industrial": return int(20 * mult)
+		"downtown", "commercial": return int(34 * mult)
+		"residential", "oldtown", "industrial": return int(24 * mult)
 		"village": return int(10 * mult)
 	var rd := map.nearest_road(c, 80.0)
-	if not rd.is_empty() and rd.road.cls == "highway": return int(16 * mult)
-	return int(8 * mult)
+	if not rd.is_empty() and rd.road.cls == "highway": return int(22 * mult)
+	return int(11 * mult)
 
 func _spawn(cam_m: Vector2) -> void:
 	var nodes := _near_nodes(cam_m, SPAWN_MIN, SPAWN_MAX)
 	if nodes.is_empty(): return
-	for attempt in 6:
+	for attempt in 10:
 		var a: int = nodes[rng.randi() % nodes.size()]
 		var adj: Array = map.g_adj[a]
 		if adj.is_empty(): continue
@@ -263,28 +269,137 @@ func _spawn(cam_m: Vector2) -> void:
 		var s := ja + rng.randf() * (L - ja - jb)
 		var p := lane_point(a, b, s, lane)
 		if p.distance_to(cam_m) < SPAWN_MIN * 0.9 or hush.has_point(p): continue
-		var clear := true
-		for c in cars:
-			if c.pos.distance_to(p) < 30.0: clear = false
-		if player and player.sim.pos.distance_to(p) < 30.0: clear = false
-		if not clear: continue
+		var z := map.zone_at(p)
 		var car := TrafficCar.new()
 		car.traffic = self
 		car.rng.seed = rng.randi()
+		var fleet := _fleet_pick(String(road.cls), String(z.get("style", "")) if String(z.get("id", "")) != "" else "rural", car.rng)
+		# a semi needs the length of its trailer clear behind it too
+		var room := 30.0 + (24.0 if _fleet_has(fleet, "tractor") else 0.0)
+		var clear := true
+		for c in cars:
+			if c.pos.distance_to(p) < room or (c.trailer != null and c.trailer_centre.distance_to(p) < room): clear = false
+		if player and player.sim.pos.distance_to(p) < room: clear = false
+		if not clear:
+			car.free()
+			continue
 		# a car off the catalogue, picked for the part of town: rust and pickups out in the
 		# country, compacts and luxury downtown
-		var z := map.zone_at(p)
 		var style := String(z.get("style", ""))
 		if String(z.get("id", "")) == "" or style == "": style = "rural"
-		var body: Dictionary = CarCatalog.random_traffic(car.rng, style)
+		var body: Dictionary = CarCatalog.traffic_car(fleet, car.rng, style) if fleet != "" else CarCatalog.random_traffic(car.rng, style)
 		if body.is_empty():
 			body = BODIES[car.rng.randi() % BODIES.size()]
 			body.paint = PAINTS[car.rng.randi() % PAINTS.size()]
+		body.looks = dress(body, car.rng, style, sky.season == "winter", sky.time_h)
 		car.setup(body, Color(String(body.paint)), a, b, s, lane)
 		car.v = minf(car.desired_speed(road) * 0.8, 12.0)
 		ysort.add_child(car)
 		cars.append(car)
 		return
+
+static var _by_cue := {}            # cue -> the fleet ids that carry it
+
+## Now and then the next car out is one of the fleet, by where and when: semis on the highway,
+## school buses on weekday mornings and afternoons, city buses downtown, the garbage truck through
+## the neighbourhoods in the morning, delivery trucks where the shops are, the odd ambulance.
+func _fleet_pick(road_cls: String, style: String, r: RandomNumberGenerator) -> String:
+	var h := sky.time_h
+	var weekday := sky.day % 7 < 5
+	var roll := r.randf()
+	if road_cls == "highway": return _fleet_id("tractor", r) if roll < 0.2 else ""
+	if road_cls in ["ramp", "gravel"]: return ""
+	var town := style in ["downtown", "commercial", "residential", "oldtown", "village", "industrial"]
+	var odds: Array = []
+	if weekday and ((h > 7.0 and h < 9.0) or (h > 14.5 and h < 16.5)) and style in ["residential", "village", "downtown", "oldtown"]: odds.append(["schoolbus", 0.12])
+	if h > 6.0 and road_cls == "arterial" and style in ["downtown", "commercial", "oldtown"]: odds.append(["bus", 0.12])
+	if weekday and h > 6.0 and h < 12.0 and style in ["residential", "oldtown", "village"]: odds.append(["packer", 0.05])
+	if h > 7.0 and h < 19.0 and style in ["commercial", "industrial", "downtown"]: odds.append(["delivery", 0.08])
+	if town: odds.append(["ambulance", 0.012])
+	for o: Array in odds:
+		roll -= float(o[1])
+		if roll < 0.0: return _fleet_id(String(o[0]), r)
+	return ""
+
+static func _fleet_id(cue: String, r: RandomNumberGenerator) -> String:
+	if _by_cue.is_empty():
+		for id in CarCatalog.fleet_ids():
+			var art: Dictionary = CarCatalog.entry(id).get("art", {})
+			var tagged := false
+			for k: String in ["tractor", "schoolbus", "bus", "packer", "ambulance"]:
+				if art.has(k):
+					if not _by_cue.has(k): _by_cue[k] = []
+					_by_cue[k].append(id)
+					tagged = true
+			if not tagged:
+				if not _by_cue.has("delivery"): _by_cue["delivery"] = []
+				_by_cue["delivery"].append(id)
+	var pool: Array = _by_cue.get(cue, [])
+	return String(pool[r.randi() % pool.size()]) if not pool.is_empty() else ""
+
+static func _fleet_has(id: String, cue: String) -> bool:
+	return id != "" and (CarCatalog.entry(id).get("art", {}) as Dictionary).has(cue)
+
+## Somebody else's car: lived in. Clean or dirty (and salty all winter), the old ones rusting,
+## sun-faded, a primer panel, a door off a car of another colour, dents; a taxi, a pizza car or a
+## driving school with its sign on the roof, a work van with the business on its doors and a
+## ladder up top, a pickup with something in the bed; and now and then one somebody's modded.
+## Returns the mods CarArt draws (see CarArt and PixCars for the keys).
+static func dress(body: Dictionary, rng: RandomNumberGenerator, style: String, winter: bool, hour: float) -> Dictionary:
+	var m := {}
+	var wear := {}
+	var cls := String(body.get("class", ""))
+	var age := CarCatalog.GAME_YEAR - int(body.get("year", 2010))
+	var fam := String(body.get("body", "sedan"))
+	if fam in ["bus", "semi", "boxtruck"] or cls == "fleet": return _fleet(body, rng, winter)
+	var dirty := rng.randf() * (0.5 if style in ["rural", "village", "industrial"] else 0.25)
+	if winter:
+		wear.salt = rng.randf_range(0.35, 0.9)
+		dirty += 0.15
+	if dirty > 0.12: wear.dirt = dirty
+	if age >= 15 and rng.randf() < 0.35: wear.faded = rng.randf_range(0.25, 0.8)
+	if age >= 8 and rng.randf() < 0.3: wear.dents = rng.randf_range(0.2, 0.7)
+	if age >= 14 and rng.randf() < 0.08: wear.primer = ["hood", "fender", "door", "trunk"][rng.randi() % 4]
+	elif age >= 12 and rng.randf() < 0.05: wear.door = PAINTS[rng.randi() % PAINTS.size()]
+	var art: Dictionary = body.get("art", {})
+	if art.has("rust"): wear.rust = float(art.rust)
+	if not wear.is_empty(): m.wear = wear
+	# a job on the roof or on the doors
+	var town := style in ["downtown", "commercial", "oldtown", "residential"]
+	if cls in ["sedan", "compact", "economy"] and age < 20:
+		var roll := rng.randf()
+		if town and style != "residential" and roll < 0.06: m.sign = "taxi"
+		elif town and (hour > 16.0 or hour < 1.0) and roll < 0.09:
+			m.sign = "pizza"
+			m.decal = 3
+		elif town and hour > 8.0 and hour < 18.0 and roll < 0.11: m.sign = "school"
+	if cls in ["van", "work_truck"] or (fam in ["pickup", "van"] and rng.randf() < 0.3):
+		if rng.randf() < 0.55: m.decal = rng.randi() % CarArt.DECALS.size()
+		if rng.randf() < 0.4 and not art.has("ladder"): m.ladder = true
+	if fam == "pickup" and not art.has("toolbox") and rng.randf() < 0.4:
+		m.load = ["lumber", "firewood", "boxes", "mulch"][rng.randi() % 4]
+	# somebody's project
+	if cls in ["jdm", "sports", "hot_hatch", "muscle", "pony", "coupe", "compact"] and age < 35 and rng.randf() < 0.18:
+		var p := rng.randf()
+		m.rim = PixCars.RIMS[rng.randi() % 7]
+		if p < 0.6: m.drop = rng.randf_range(0.3, 0.9)
+		if p < 0.4: m.spoiler = ["ducktail", "wing", "gt"][rng.randi() % 3]
+		if p < 0.3: m.stripes = ["racing", "side", "rally"][rng.randi() % 3]
+		if p < 0.5: m.tint = 0.75
+		m.exhaust = ["dual", "quad", "single"][rng.randi() % 3]
+	return m
+
+## A fleet vehicle (a bus, a truck): cleaner, the outfit's colours and its name on the side.
+static func _fleet(body: Dictionary, rng: RandomNumberGenerator, winter: bool) -> Dictionary:
+	var m := {}
+	var wear := {}
+	if winter: wear.salt = rng.randf_range(0.3, 0.7)
+	if rng.randf() < 0.4: wear.dirt = rng.randf_range(0.15, 0.4)
+	if not wear.is_empty(): m.wear = wear
+	var art: Dictionary = body.get("art", {})
+	if art.has("decal"): m.decal = int(art.decal)
+	elif String(body.get("body", "")) == "boxtruck" and rng.randf() < 0.6: m.decal = rng.randi() % CarArt.DECALS.size()
+	return m
 
 # ------------------------------------------------------------------ the frame
 
@@ -294,7 +409,9 @@ func step(dt: float, cam_m: Vector2) -> void:
 	night = sky.lights_on(30)
 	# who's where (a 20 m grid), for finding the car ahead
 	_grid = {}
-	for c in cars: _put(c.pos, c)
+	for c in cars:
+		_put(c.pos, c)
+		if c.trailer != null and absf(c.trailer_centre.x - c.pos.x) + absf(c.trailer_centre.y - c.pos.y) > 4.0: _put(c.trailer_centre, c)
 	# despawn the far ones, spawn new ones out of sight
 	for i in range(cars.size() - 1, -1, -1):
 		var c := cars[i]
@@ -331,6 +448,7 @@ func leader(car: TrafficCar, reach: float) -> Array:
 				# two cars each waiting on the other: the older one goes
 				if o.lead_obj == car and car.get_instance_id() < o.get_instance_id() and o.state == "drive": continue
 				_consider(car, path, o.pos, o.velocity_vec(), o.length, o.width, best, o)
+				if o.trailer != null: _consider(car, path, o.trailer_centre, o.velocity_vec(), o.trailer_len, o.width, best, o)
 	if player and not ignore_player:
 		_consider(car, path, player.sim.pos, player.sim.world_velocity(), float(player.spec.length) * CarArt.CAR_SCALE, float(player.spec.width) * CarArt.CAR_SCALE, best, player)
 	for o in extra:
@@ -414,11 +532,13 @@ func _room_after(car: TrafficCar, n: int, to: int) -> bool:
 	var r2 := edge_road(n, to)
 	if r2.is_empty(): return true
 	var lanes: Array = LANE[r2.cls]
-	var exit := lane_point(n, to, 12.0, lanes[mini(car.lane_i, lanes.size() - 1)])
+	# a long one needs its whole length clear past the box
+	var room := 12.0 + maxf(0.0, car.length - 6.0)
+	var exit := lane_point(n, to, room, lanes[mini(car.lane_i, lanes.size() - 1)])
 	for c in cars:
 		if c == car: continue
-		if c.a == n and c.b == to and c.s < 12.0 and c.v < 2.0: return false
-		if c.a == n and c.b == to and c.s < 9.0: return false     # someone just went through: let them get clear
+		if c.a == n and c.b == to and c.s < room and c.v < 2.0: return false
+		if c.a == n and c.b == to and c.s < 9.0 + maxf(0.0, c.length - 6.0): return false     # someone just went through: let them get clear
 		if c.pos.distance_to(exit) < 2.5 and c.v < 1.0: return false
 	return true
 
@@ -455,6 +575,7 @@ func _box_empty(car: TrafficCar, n: int, radius: float) -> bool:
 		if c != car and is_instance_valid(c) and c.pos.distance_to(jp) < radius + 15.0: return false
 	for c in cars:
 		if c != car and c.pos.distance_to(jp) < radius + 0.5: return false
+		if c != car and c.trailer != null and c.trailer_centre.distance_to(jp) < radius + c.trailer_len * 0.5: return false
 	if player and not ignore_player and player.sim.pos.distance_to(jp) < radius + 1.0: return false
 	return true
 

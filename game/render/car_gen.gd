@@ -33,17 +33,17 @@ const RAKE: Array[float] = [33.0, 40.0, 50.0, 56.0, 60.0, 62.0, 63.0]
 
 const DEFAULT_LEN := { "coupe": 4.5, "hatch": 4.1, "sedan": 4.8, "wagon": 4.8, "muscle": 4.9, "pickup": 5.4, "tow": 6.6,
 	"suv": 4.8, "van": 5.1, "minivan": 4.9, "kei": 3.6, "bubble": 3.9, "roadster": 4.0, "sports": 4.4, "wedge": 4.3,
-	"offroad": 4.2, "boxtruck": 6.8, "trike": 3.3 }
+	"offroad": 4.2, "boxtruck": 6.8, "trike": 3.3, "bus": 12.0, "semi": 6.6 }
 const DEFAULT_CLASS := { "coupe": "coupe", "hatch": "hatch", "sedan": "sedan", "wagon": "wagon", "muscle": "muscle",
 	"pickup": "pickup", "tow": "work_truck", "suv": "suv", "van": "van", "minivan": "minivan", "kei": "kei",
 	"bubble": "economy", "roadster": "sports", "sports": "sports", "wedge": "exotic", "offroad": "offroad",
-	"boxtruck": "work_truck", "trike": "oddball" }
+	"boxtruck": "work_truck", "trike": "oddball", "bus": "fleet", "semi": "fleet" }
 ## Makes that build to Japanese taste (fender mirrors before '83, hardtop sedans, kei rules).
 const JDM_MAKES := ["Toyoda", "Datsum", "Nissun", "Hondo", "Acurra", "Mazduh", "Subaroo", "Mitsubishy", "Suzooki",
 	"Isuzoo", "Daihatsoo", "Lexis", "Infinitee", "Scionn"]
 const US_MAKES := ["Fjord", "Chevrolay", "GMZ", "Pontiak", "Oldsmobeel", "Buickk", "Cadillak", "Linkoln", "Merkury",
 	"Dodgy", "Plymooth", "Chryslur", "Jepp", "Ramm", "Rambla", "Studebakker", "Internashnal", "Hummor", "Saturne", "Geoh",
-	"Chequer", "Grumpman", "Shelbee"]
+	"Chequer", "Grumpman", "Shelbee", "Kenwerth", "Freightlinear", "Macc"]
 ## What a maker's cars from 2000 on wear so you know them at a glance, the way a CAGE BOSS face
 ## keeps its family's nose: the headlamp's shape and how far back it sweeps (a fraction of the
 ## length), the grille on the nose, the tail lamp, a six-light greenhouse (a little window behind
@@ -163,6 +163,10 @@ static func _family(f: Dictionary) -> String:
 			return "pickup"
 		"trike":
 			return "hatch"
+		"bus":
+			return "van"           # a very big van: a box, a flat face (or a school bus's nose), a row of windows
+		"semi":
+			return "pickup"        # a long-nosed cab with a frame behind it instead of a bed
 	return body
 
 static func _height(f: Dictionary, fam: String, era: int) -> float:
@@ -196,6 +200,8 @@ static func _height(f: Dictionary, fam: String, era: int) -> float:
 	if cls == "luxury" and not fam in ["suv", "offroad", "pickup"]: h += 0.03
 	if cls == "exotic" and fam in ["sports", "coupe", "mid", "wedge"]: h -= 0.04
 	if f.body == "trike": h = 1.4
+	if f.body == "bus": h = 2.95 if f.art.has("schoolbus") else 3.1
+	if f.body == "semi": h = 3.55 if f.art.has("sleeper") else 3.1
 	return h
 
 static func _j(r: RandomNumberGenerator, v: float, pct: float) -> float:
@@ -556,7 +562,7 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.nose_bot = 0.17
 		"boxtruck":
 			var model := String(f.model).to_lower()
-			g.cab = "cabover" if art.has("cabover") else ("step" if model.contains("step") else ("van" if model.contains("cube") else "conv"))
+			g.cab = "cabover" if art.has("cabover") else ("step" if model.contains("step") else ("van" if model.contains("cube") or art.has("cutaway") else "conv"))
 			g.rear = "boxtruck"
 			g.clear = 0.32
 			g.soft = 0.25
@@ -600,6 +606,8 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.doors = 2
 	_era(g, f, fam, L, us, r)
 	_modern(g, f, fam, L, r)
+	if f.body == "bus": _bus(g, f)
+	elif f.body == "semi": _tractor(g, f)
 	if art.has("fins") and fam in ["sedan", "coupe", "wagon", "roadster"]:
 		# every maker cut its fins its own way: tall or low, peaked at the tail or swept forward
 		g.fin = { 1956: 0.08, 1957: 0.12, 1958: 0.15, 1959: 0.24, 1960: 0.14 }.get(year, 0.07) * r.randf_range(0.6, 1.35)
@@ -611,6 +619,66 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 	g.kick = float(g.kick) + r.randf_range(-0.012, 0.012)
 	g.belt_up = float(g.belt_up) + r.randf_range(-0.012, 0.012)
 	return g
+
+## A bus: a box on the road. The city's has a flat face and a windshield nearly to the roof, the
+## school bus a short hood out front; both run a row of windows down the side and sit high.
+static func _bus(g: Dictionary, f: Dictionary) -> void:
+	var school: bool = f.art.has("schoolbus")
+	g.rear = "box"
+	g.cab = ""
+	g.clear = 0.32
+	g.rear_d = 0.02
+	g.d_w = 0.1
+	g.rt = 0.12
+	g.soft = 0.3
+	g.nose = "blunt"
+	g.tail_bot = 0.42
+	g.nose_bot = 0.4
+	g.kick = 0.0
+	g.belt_up = 0.0
+	g.crown = 0.02
+	g.doors = 2
+	g.boxy = false
+	if school:
+		g.hood_h = 1.3
+		g.cowl_rise = 0.14
+		g.cowl_d = 1.55
+		g.rake = 12.0
+		g.nose_drop = 0.85
+		g.nose_round = 0.04
+		g.ff = 0.24
+	else:
+		g.hood_h = 1.0
+		g.cowl_rise = 0.06
+		g.cowl_d = 0.1
+		g.rake = 5.0
+		g.nose_drop = 0.55
+		g.nose_round = 0.04
+		g.ff = 0.44
+
+## A semi tractor: a long hood, an upright cab, and behind it the frame with the fifth wheel the
+## trailer hooks onto, low down over the back wheels.
+static func _tractor(g: Dictionary, f: Dictionary) -> void:
+	g.cab = "reg"
+	g.rear = "pickup"
+	g.cab_d = 5.0 if f.art.has("sleeper") else 3.7
+	g.bed_h = 1.15
+	g.hood_h = 1.78
+	g.cowl_rise = 0.08
+	g.cowl_d = 2.0
+	g.rake = 16.0
+	g.clear = 0.48
+	g.under = 0.2
+	g.nose = "blunt"
+	g.nose_round = 0.06
+	g.nose_drop = 1.05
+	g.nose_bot = 0.42
+	g.tail_bot = 0.62
+	g.soft = 0.45
+	g.ff = 0.3
+	g.doors = 2
+	g.quarter = false
+	g.boxy = false
 
 ## Before 2000 each decade had its own sedan: the sixties compacts sit their cabin square over
 ## the wheelbase, the seventies full-size cars run a long flat hood to an upright chrome grille
@@ -904,7 +972,7 @@ static func _dna(f: Dictionary) -> Dictionary:
 	var rake := deg_to_rad(float(g.rake))
 	var top_h := H
 	if fam == "boxtruck" and g.cab != "step": top_h = float(g.cab_h)
-	if fam == "van" and H > 2.15:
+	if fam == "van" and H > 2.15 and f.body != "bus":
 		# a high roof: the windshield runs up nearly to it, the side glass stops at van height
 		top_h = H - 0.16
 		d.glass_cap = (2.0 - float(g.rt)) / L
@@ -1057,6 +1125,8 @@ static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNu
 				dlo_r = lerpf(b0.x, b1.x, t) + float(g.c_w) / L
 		"pickup":
 			dlo_rt = float(d.cab_x) + 0.1 / L
+			# a semi's sleeper is solid behind the door glass
+			if d.art.has("tractor"): dlo_rt = float(d.cab_x) + (2.1 if d.art.has("sleeper") else 0.45) / L
 			dlo_r = dlo_rt
 			if d.cab == "ute":
 				dlo_rt = float(d.cab_x) + 0.42 / L
@@ -1851,6 +1921,7 @@ class _Car:
 		_roof_things()
 		_aero()
 		_truck_things()
+		_fleet_things()
 		_lightbar()
 		_kit()
 		_wells()
@@ -3166,14 +3237,15 @@ class _Car:
 				var t2 := float(xx - x0) / float(maxi(1, x1 - x0))
 				var yy2 := int(lerpf(Y(float(d.belt_r)), Y(float(d.belt_f)), t2)) + 1
 				if on_paint(xx, yy2): p.img.set_pixel(xx, yy2, CarGen.CHROME[3])
-		if d.art.has("ttops") and lod >= 1:
+		var roof_mod := String(mods.get("roof", "stock"))
+		if (d.art.has("ttops") and roof_mod == "stock" or roof_mod == "ttops") and lod >= 1:
 			var tx0 := int(X(float(d.a_top))) - int(lf * 0.02)
 			var tx1 := int(X(float(d.a_top))) - int(lf * 0.14)
 			for xx in range(tx1, tx0):
 				var ty := _first_body(xx)
 				p.img.set_pixel(xx, ty, CarGen.GLASS_TOP)
 				if xx % 3 == 0: p.img.set_pixel(xx, ty + 1, CarGen.GLASS)
-		if d.art.has("sunroof") and lod >= 1:
+		if (d.art.has("sunroof") and roof_mod == "stock" or roof_mod == "sunroof") and lod >= 1:
 			var sx0 := int(X(float(d.a_top))) - int(lf * 0.05)
 			for xx in range(sx0 - int(lf * 0.1), sx0):
 				p.px(xx, _first_body(xx) - 1, CarGen.GLASS)
@@ -3530,7 +3602,8 @@ class _Car:
 			var fx := int(x_rr) + int(lf * 0.03)
 			var fy := _first_body(fx)
 			p.poly(PackedVector2Array([Vector2(fx - 3 * u, fy), Vector2(fx + 2 * u, fy - 2 * u), Vector2(fx + 3 * u, fy)]), CarGen.TRIM)
-		if art.has("rack"):
+		var roof_mod := String(mods.get("roof", "stock"))
+		if art.has("rack") and roof_mod == "stock" or roof_mod == "rack":
 			var y0 := _first_body(int((x_rf + x_rr) * 0.5))
 			var rx0 := int(x_rr) + int(lf * 0.02)
 			var rx1 := int(x_rf) - int(lf * 0.02)
@@ -3559,7 +3632,7 @@ class _Car:
 				var t0 := _first_body(xx)
 				for yy in range(t0, int(Y(float(d.glass_top)))):
 					if on_paint(xx, yy): p.img.set_pixel(xx, yy, CarGen.TRIM if yy > t0 else Color("3a3e46"))
-		if art.has("vinyl") or d.get("vinyl", false):
+		if (art.has("vinyl") or d.get("vinyl", false)) and roof_mod == "stock" or roof_mod == "vinyl":
 			var vc := Color("1e1c1e") if paint_c.get_luminance() > 0.3 else Color("e8e2d0")
 			for xx in range(int(X(float(d.dlo_rt))) - int(lf * 0.03), int(X(float(d.a_top))) - u):
 				var t0 := _first_body(xx)
@@ -3574,7 +3647,7 @@ class _Car:
 
 	## A light bar on the roof over the windshield: a black housing on two feet, its pods lit.
 	func _lightbar() -> void:
-		if not mods.get("lightbar", false) or lod == 0: return
+		if not (mods.get("lightbar", false) or String(mods.get("roof", "")) == "lightbar") or lod == 0: return
 		var x1 := int(X(float(d.roof_f))) - int(lf * 0.01)
 		var x0 := x1 - maxi(8, int(lf * 0.15))
 		var top := 0
@@ -3726,7 +3799,14 @@ class _Car:
 						p.rect(bx - u, by - 2 * u, u + 1, bt + 3 * u, CarGen.TRIM)
 						p.frame(bx - u - 1, by - 2 * u - 1, u + 3, bt + 3 * u + 2, CarGen.INK)
 		# a hood scoop, or louvres on a vented hood
-		if art.has("scoop") and not String(mods.get("hood", "")) == "vented":
+		var hood := String(mods.get("hood", "stock"))
+		if hood == "carbon" and lod >= 1:
+			# a carbon hood: the weave shows along its top from the cowl to the nose
+			for xx in range(int(X(float(d.cowl_x))) + u, int(X(float(d.nose_x))) - u):
+				var t0 := _first_body(xx)
+				for yy in range(t0, t0 + maxi(2, 2 * u)):
+					if on_paint(xx, yy): p.img.set_pixel(xx, yy, Color("2a2c30") if (xx + yy) % 2 == 0 else Color("1a1b1e"))
+		if (art.has("scoop") and hood == "stock") or hood == "scoop":
 			var sx := int(X(float(d.cowl_x) + (float(d.nose_x) - float(d.cowl_x)) * 0.35))
 			var sw := int(lf * 0.08)
 			var top := _first_body(sx + sw / 2)
@@ -3763,7 +3843,9 @@ class _Car:
 			var bx0 := int(X(0.004 + rear * 0.16))
 			var bx1 := int(X(float(d.cab_x) - float(d.get("sail", 0.0)))) - 2
 			var rail := int(Y(float(d.bed_h)))
-			if d.body == "tow":
+			if d.art.has("tractor"):
+				_fifth_wheel(bx0, bx1, rail)
+			elif d.body == "tow":
 				_wrecker(bx0, bx1, rail)
 			elif String(mods.get("bed", "stock")) == "tonneau":
 				p.rect(bx0, rail - 2 * u, bx1 - bx0, 2 * u, CarGen.TRIM)
@@ -3909,6 +3991,68 @@ class _Car:
 			p.px(a1 + 1, yy, CarGen.INK)
 		p.hline(int(round(float(sx) - hw * 0.4)), sy - int(sr) - 1, int(hw * 0.8) + 1, CarGen.INK)
 		p.hline(int(round(float(sx) - hw * 0.4)), sy + int(sr) + 1, int(hw * 0.8) + 1, CarGen.INK)
+
+	## A semi tractor's back half: the frame rails, the fifth wheel on top of them, a chrome tank
+	## under the door, the stacks standing up behind the cab.
+	func _fifth_wheel(bx0: int, bx1: int, rail: int) -> void:
+		var bottom := int(Y(float(d.rocker)))
+		for xx in range(bx0, bx1 + 2):
+			for yy in range(_first_body(xx), bottom + 1):
+				if on_paint(xx, yy): p.img.set_pixel(xx, yy, CarGen.WELL)
+		var fr := rail + int(lf * 0.02)
+		p.rect(bx0, fr, bx1 - bx0, maxi(2, int(lf * 0.012)), CarGen.TRIM)
+		p.rect(int(X(0.12)), fr - maxi(2, int(lf * 0.01)), int(lf * 0.12), maxi(2, int(lf * 0.01)), Color("3a3e46"))
+		var tx := int(X(float(d.cab_x) + 0.06))
+		var ty := int(Y(float(d.rocker))) - int(lf * 0.05)
+		p.rect(tx, ty, int(lf * 0.12), int(lf * 0.05), CarGen.CHROME[2])
+		p.hline(tx, ty, int(lf * 0.12), CarGen.CHROME[4])
+		p.frame(tx - 1, ty - 1, int(lf * 0.12) + 2, int(lf * 0.05) + 2, CarGen.INK)
+		var sx := bx1 - u
+		var top := int(Y(float(d.h))) - int(lf * 0.05)
+		p.rect(sx - u, top, 2 * u + 1, int(Y(float(d.belt_r))) - top, CarGen.CHROME[2])
+		p.vline(sx - u, top, int(Y(float(d.belt_r))) - top, CarGen.CHROME[4])
+		p.frame(sx - u - 1, top - 1, 2 * u + 3, int(Y(float(d.belt_r))) - top + 1, CarGen.INK)
+
+	## A bus's side: the school bus's black rub rails and its stop arm; the city bus's livery band and
+	## the route sign over its windshield. A box truck's job: the garbage packer's hopper, the
+	## ambulance's stripe and lights.
+	func _fleet_things() -> void:
+		var art: Dictionary = d.art
+		if lod == 0: return
+		if art.has("schoolbus"):
+			var rock := int(Y(float(d.rocker)))
+			var belt := int(Y(float(d.belt_r)))
+			for k in 3:
+				var yy := belt + (rock - belt) * (k + 1) / 4
+				for xx in range(x_lo, x_hi):
+					if on_paint(xx, yy): p.img.set_pixel(xx, yy, CarGen.INK)
+			var ax := int(X(float(d.cowl_x) - 0.03))
+			p.disc(ax - 2 * u, belt - u, maxf(2.0, lf * 0.014), Color("c8201c"))
+			if lod >= 2: p.text(int(X(0.3)), int(Y(float(d.h))) + 2 * u, "SCHOOL BUS", CarGen.INK)
+		elif art.has("bus"):
+			var band := int(Y(float(d.belt_r))) + 2 * u
+			for xx in range(x_lo, x_hi):
+				for yy in range(band, band + maxi(2, int(lf * 0.025))):
+					if on_paint(xx, yy): p.img.set_pixel(xx, yy, Color("2a5a9a"))
+			var sx := int(X(float(d.roof_f) - 0.06))
+			p.rect(sx, int(Y(float(d.h))) + u, int(lf * 0.05), 2 * u, Color("1a1a1e"))
+			p.hline(sx + u, int(Y(float(d.h))) + 2 * u, int(lf * 0.04), Color("f0a020"))
+			if lod >= 2: p.text(int(X(0.35)), band + int(lf * 0.03), "RUMBLE TRANSIT", Color("2a5a9a"))
+		if art.has("packer"):
+			var hx := int(X(0.02))
+			var hy := int(Y(float(d.h)))
+			p.line(hx, hy + int(lf * 0.1), hx + int(lf * 0.1), hy, CarGen.TRIM)
+			p.rect(int(X(0.25)), int(Y(float(d.belt_r))), int(lf * 0.3), int(lf * 0.04), Color("2a6a3a"))
+			if lod >= 2: p.text(int(X(0.27)), int(Y(float(d.belt_r))) + u, "RUMBLE WASTE", Color("f0f0ec"))
+		if art.has("ambulance"):
+			var sy := int(Y(float(d.belt_r))) + int(lf * 0.02)
+			for xx in range(x_lo, x_hi):
+				for yy in range(sy, sy + maxi(2, int(lf * 0.02))):
+					if on_paint(xx, yy): p.img.set_pixel(xx, yy, Color("c8201c"))
+			var bx := int(X(float(d.get("box_x", 0.5))))
+			p.rect(bx - int(lf * 0.03), int(Y(float(d.h))) - 2 * u, int(lf * 0.03), 2 * u, Color("e83020"))
+			p.rect(int(X(0.01)), int(Y(float(d.h))) - 2 * u, int(lf * 0.03), 2 * u, Color("e83020"))
+			if lod >= 2: p.text(int(X(0.15)), sy + int(lf * 0.03), "AMBULANCE", Color("c8201c"))
 
 	## The wrecker's body: side boxes over the rear wheel, and the boom up the back.
 	func _wrecker(bx0: int, bx1: int, rail: int) -> void:

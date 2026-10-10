@@ -444,7 +444,7 @@ func next_customer() -> void:
 	lit = {}
 	# a pulled file has no car in the bay: it's long gone
 	if c.kind != "audit":
-		var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
+		var spec := { "cat": String(c.car.get("cat", "")), "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
 		car_view.art = CarArt.new(spec, Color(c.car.paint), 0.15 if c.get("sheet", {}).get("rust", false) else 0.0, c.person.face)
 		car_view.heading = 0.0
 	car_view.visible = c.kind != "audit"

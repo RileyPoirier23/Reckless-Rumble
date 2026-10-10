@@ -94,7 +94,7 @@ static func apply(spec: Dictionary, entry: Dictionary) -> Dictionary:
 		s.grip = float(s.get("grip", 1.0)) * 0.97
 	return s
 
-## And how it looks in the side view: lifted on big rims, or (with pumps and no donk) sitting low.
+## And how it looks, side on and from above: lifted on big rims, or (with pumps and no donk) sitting low.
 static func looks(entry: Dictionary, m: Dictionary) -> Dictionary:
 	var d := donk_of(entry)
 	if d > 0:
@@ -103,11 +103,6 @@ static func looks(entry: Dictionary, m: Dictionary) -> Dictionary:
 	elif hyd_of(entry) > 0 and not m.has("drop"):
 		m.drop = 0.8
 	return m
-
-## The top-down view: how many pixels the body sits up off the ground, and how big the wheels draw.
-static func stance(entry: Dictionary) -> Vector2:
-	var d := donk_of(entry)
-	return Vector2(float(d) * 0.9, 1.0 + d * 0.12)
 
 # ------------------------------------------------------------------ hopping
 

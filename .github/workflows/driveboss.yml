@@ -83,6 +83,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/cargen_tests.gd | tee cargen.log
           grep -q "^0 failed" cargen.log
+      - name: Top-down car, traffic and parked car tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/top_down_tests.gd | tee topdown.log
+          grep -q "^0 failed" topdown.log
       - name: Jobs tests
         working-directory: game
         run: |

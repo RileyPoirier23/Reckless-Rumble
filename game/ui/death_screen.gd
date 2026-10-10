@@ -382,7 +382,10 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			var sub := String(info.get("sub", "tbone"))
 			var other: Dictionary = { "id": String(info.get("other_id", "")), "body": String(info.get("other_body", "van")) }
 			var other_paint: Color = info.get("other_paint", Color("d8d4c8"))
+			# the other one at its own size next to yours (a bus is a bus)
+			var other_m := float(CarCatalog.entry(String(other.id)).get("length", 0.0)) if CarCatalog.has(String(other.id)) else 0.0
 			var olen := 76 if String(CarGen.design(other).family) in ["van", "suv", "pickup", "boxtruck", "offroad"] else 68
+			if other_m > 0.0: olen = clampi(int(float(len) * other_m / maxf(3.0, float(info.get("length", 4.6)))), 50, 170)
 			x = 30
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			match sub:

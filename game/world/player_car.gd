@@ -19,7 +19,7 @@ var steam: CPUParticles2D
 var engine_smoke: CPUParticles2D
 var smoke_on := true           # Settings > Graphics: tire smoke
 var hyd := 0                    # 1ton's hydraulics kit (0 none .. 3 four pumps)
-var stance := Vector2.ZERO      # 1ton's donk: [pixels up off the ground, front wheel scale]
+var looks := {}                 # what the body shop, the parts and 1ton did to it (SaveGame.car_looks): the art wears them
 var hop := 0.0                  # metres off the ground mid-hop
 var _hop_v := 0.0
 var head_light: PointLight2D
@@ -59,7 +59,7 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	shape_node.shape = shape
 	add_child(shape_node)
 	view = CarView.new()
-	view.art = CarArt.new(spec, paint, 0.0, 1, CarArt.CAR_SCALE)
+	view.art = CarArt.new(spec, paint, 0.0, 1, CarArt.CAR_SCALE, looks)
 	add_child(view)
 	for i in 2:
 		var p := _particles(Color(0.85, 0.85, 0.88, 0.55), 1.2, 60)
@@ -386,8 +386,7 @@ func _update_look(dt: float, br: float) -> void:
 		var r := OneTon.hop_step(hop, _hop_v, dt, Input.is_action_pressed("hydraulics") and not locked and not quiet and sim.speed() < 6.0, hyd)
 		hop = float(r[0])
 		_hop_v = float(r[1])
-	view.lift = stance.x + hop * PX
-	if stance.y > 0.0: view.wheel_k = stance.y
+	view.lift = hop * PX              # (a donk stands up on its own big wheels: the art draws that)
 	view.braking = (br > 0.05 and sim.gear >= 0) or (sim.gear < 0 and throttle_in > 0.05)
 	view.reversing = sim.gear < 0
 	view.wheel_turn += sim.vx * dt * 3.0
@@ -395,7 +394,7 @@ func _update_look(dt: float, br: float) -> void:
 	var bucket := int((damage.front + damage.rear + damage.left + damage.right) * 12.0)
 	if bucket != damage_bucket:
 		damage_bucket = bucket
-		view.art = CarArt.new(spec, paint, damage, 3, CarArt.CAR_SCALE)
+		view.build(spec, paint, damage, 3, CarArt.CAR_SCALE, looks)
 	# tire marks and smoke
 	var half_wb := float(spec.wheelbase) * CarArt.CAR_SCALE / 2.0
 	var half_tr := float(spec.track) * CarArt.CAR_SCALE / 2.0

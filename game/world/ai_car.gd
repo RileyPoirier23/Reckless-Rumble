@@ -116,7 +116,7 @@ func _blocker(fwd: Vector2, v: float) -> Array:
 	var best: Array = [INF, 0.0, 0.0]
 	var cands: Array = []
 	if traffic:
-		for c in traffic.cars:
+		for c in traffic.cars + traffic.parked:
 			if c.pos.distance_squared_to(sim.pos) < (look + 10.0) * (look + 10.0):
 				cands.append([c.pos, c.velocity_vec(), c.width])
 	for o in others:
@@ -272,6 +272,7 @@ func _lights(dt: float, _st: float) -> void:
 	var bar := _bar as LightBar
 	bar.heading = sim.heading
 	bar.width = float(spec.width) * CarArt.CAR_SCALE
+	bar.roof = view.roof_px() + 1.0
 	bar.on = siren
 	bar.t = _flash_t2
 	_bar_light.visible = siren
@@ -284,6 +285,7 @@ func _lights(dt: float, _st: float) -> void:
 class LightBar extends Node2D:
 	var heading := 0.0
 	var width := 1.8
+	var roof := 17.0              # how high the cruiser's roof stands on the screen (px)
 	var on := false
 	var t := 0.0
 
@@ -295,7 +297,7 @@ class LightBar extends Node2D:
 		var f := Vector2(cos(heading), sin(heading))
 		var r := Vector2(-f.y, f.x)
 		var half := width * 0.42 * px
-		var c := CarView.screen_up * 17.0        # up on the roof, over the top slice
+		var c := CarView.screen_up * roof        # up on the roof, over the top slice
 		var phase := fmod(t * 3.0, 1.0) < 0.5
 		for side: float in [-1.0, 1.0]:
 			var a: Vector2 = c + r * side * half

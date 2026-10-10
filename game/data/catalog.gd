@@ -10,7 +10,10 @@
 ## those straight to SaveGame.load_spec.
 ##
 ## random_traffic() picks a car for the traffic in a zone: weighted by rarity, with more
-## pickups and rust out in the country and more compacts and luxury downtown.
+## pickups and rust out in the country and more compacts and luxury downtown. The fleet (class
+## "fleet": the buses, the semis, the garbage truck, the ambulance, the delivery trucks) only
+## ever drives in traffic: ids() leaves it out, so nobody sells you a school bus; fleet_ids()
+## lists it and traffic_car() dresses one for the road.
 class_name CarCatalog
 extends RefCounted
 
@@ -19,13 +22,14 @@ const G := 9.81
 
 const CLASSES := ["economy", "compact", "sedan", "wagon", "coupe", "sports", "muscle", "pony", "luxury",
 	"exotic", "hatch", "hot_hatch", "kei", "minivan", "van", "suv", "crossover", "pickup", "hd_pickup",
-	"work_truck", "offroad", "classic", "rally", "jdm", "euro", "oddball"]
+	"work_truck", "offroad", "classic", "rally", "jdm", "euro", "oddball", "fleet"]
 
 ## The body styles CarArt draws (top-down), and the nearest PixCars side-view body for each.
 const SIDE_BODY := {
 	"coupe": "coupe", "hatch": "hatch", "sedan": "sedan", "tow": "tow", "wagon": "suv", "pickup": "pickup",
 	"suv": "suv", "van": "van", "minivan": "van", "muscle": "coupe", "sports": "coupe", "wedge": "coupe",
 	"roadster": "coupe", "kei": "hatch", "offroad": "suv", "boxtruck": "van", "trike": "hatch", "bubble": "hatch",
+	"bus": "van", "semi": "pickup",
 }
 
 ## Art cues a table line can switch on (CarArt draws them); everything else in the flags column
@@ -33,7 +37,7 @@ const SIDE_BODY := {
 const ART_CUES := ["chrome", "nochrome", "round", "quad", "popups", "fins", "twotone", "vinyl", "wood", "rack", "norack",
 	"stripes", "scoop", "wing", "spoiler", "spare", "nospare", "bullbar", "beacon", "snorkel", "sunroof", "ttops", "topper",
 	"ladder", "toolbox", "cargo", "open", "crew", "ext", "cabover", "ute", "dually", "hardtop", "spotlight", "plow",
-	"portholes", "strakes", "split"]
+	"portholes", "strakes", "split", "bus", "schoolbus", "tractor", "sleeper", "packer", "ambulance", "cutaway"]
 
 ## A line about the car you get for free with some of the cues.
 const QUIRK_TEXT := {
@@ -107,10 +111,15 @@ static var _zone_pick := {}        # zone style -> [ids, cumulative weights]
 
 # ------------------------------------------------------------------ the public face
 
-## Every car id: the hand-made ones first, then the table in order.
+## Every car id: the hand-made ones first, then the table in order (the fleet left out).
 static func ids() -> Array:
 	_load()
-	return _order.duplicate()
+	return _order.filter(func(id: String) -> bool: return String(_entries[id]["class"]) != "fleet")
+
+## The traffic-only fleet: buses, semis, the garbage truck, the ambulance, the delivery trucks.
+static func fleet_ids() -> Array:
+	_load()
+	return _order.filter(func(id: String) -> bool: return String(_entries[id]["class"]) == "fleet")
 
 static func has(id: String) -> bool:
 	_load()
@@ -151,7 +160,15 @@ static func random_traffic(rng: RandomNumberGenerator, zone_style: String) -> Di
 	var cum: Array = pick[1]
 	var total: float = cum[cum.size() - 1]
 	var i: int = clampi(cum.bsearch(rng.randf() * total, false), 0, ids_z.size() - 1)
-	var e: Dictionary = _entries[ids_z[i]]
+	return _for_traffic(_entries[ids_z[i]], rng, zone_style)
+
+## One particular car (a fleet vehicle, say) dressed for the traffic like random_traffic's picks.
+static func traffic_car(id: String, rng: RandomNumberGenerator, zone_style := "") -> Dictionary:
+	_load()
+	if not _entries.has(id): return {}
+	return _for_traffic(_entries[id], rng, zone_style)
+
+static func _for_traffic(e: Dictionary, rng: RandomNumberGenerator, zone_style: String) -> Dictionary:
 	var paints: Array = e.paints
 	var art: Dictionary = (e.art as Dictionary).duplicate()
 	var age := GAME_YEAR - int(e.year)
@@ -226,7 +243,7 @@ static func _parse(line: String) -> Dictionary:
 	var pos := "front"
 	if tokens.has("mid"): pos = "mid"
 	elif tokens.has("rear"): pos = "rear"
-	var truckish := body in ["pickup", "boxtruck", "tow"] or cls in ["hd_pickup", "work_truck"]
+	var truckish := body in ["pickup", "boxtruck", "tow", "bus", "semi"] or cls in ["hd_pickup", "work_truck"]
 	var e := {
 		"id": id, "make": make, "model": model, "year": year, "class": cls, "body": body,
 		"side_body": SIDE_BODY.get(body, "sedan"), "name": ("%s %s" % [make, model]).to_upper(),
@@ -358,7 +375,7 @@ static func _quirks(e: Dictionary, tokens: Array) -> Array:
 
 const HEIGHT := { "coupe": 1.32, "hatch": 1.42, "sedan": 1.42, "tow": 1.95, "wagon": 1.45, "pickup": 1.85,
 	"suv": 1.78, "van": 2.05, "minivan": 1.72, "muscle": 1.32, "sports": 1.24, "wedge": 1.12, "roadster": 1.25,
-	"kei": 1.62, "offroad": 1.82, "boxtruck": 3.0, "trike": 1.4, "bubble": 1.38 }
+	"kei": 1.62, "offroad": 1.82, "boxtruck": 3.0, "trike": 1.4, "bubble": 1.38, "bus": 3.0, "semi": 3.25 }
 const FIRST_GEAR := { "kei": 11.5, "economy": 13.5, "compact": 14.0, "hatch": 14.0, "sedan": 14.5, "wagon": 14.0,
 	"coupe": 15.0, "sports": 16.5, "muscle": 17.5, "pony": 16.5, "luxury": 15.5, "exotic": 19.0, "hot_hatch": 14.5,
 	"minivan": 13.5, "van": 12.5, "suv": 12.5, "crossover": 13.5, "pickup": 12.5, "hd_pickup": 11.0,
@@ -377,7 +394,7 @@ static func _build_spec(e: Dictionary) -> Dictionary:
 	var pos: String = eng.position
 	var asp: String = eng.aspiration
 	var electric := asp == "E"
-	var truck := cls in ["pickup", "hd_pickup", "work_truck"] or body in ["pickup", "boxtruck"]
+	var truck := cls in ["pickup", "hd_pickup", "work_truck", "fleet"] or body in ["pickup", "boxtruck"]
 	var sporty := cls in ["sports", "exotic", "rally", "hot_hatch"]
 	# --- where the weight sits
 	var front: float = { "FWD": 0.61, "AWD": 0.57, "4WD": 0.56 }.get(drive, 0.53)
@@ -387,7 +404,7 @@ static func _build_spec(e: Dictionary) -> Dictionary:
 	var height: float = HEIGHT.get(body, 1.42)
 	var cg_k := 0.36
 	if body in ["pickup", "suv", "offroad", "van", "minivan", "kei"]: cg_k = 0.40
-	elif body == "boxtruck": cg_k = 0.32
+	elif body in ["boxtruck", "bus", "semi"]: cg_k = 0.32
 	elif body in ["wedge", "sports"]: cg_k = 0.38
 	# --- air
 	var cd := 0.30
@@ -395,7 +412,7 @@ static func _build_spec(e: Dictionary) -> Dictionary:
 		if year < int(row[0]):
 			cd = float(row[1])
 			break
-	cd += { "boxtruck": 0.25, "van": 0.05, "pickup": 0.08, "offroad": 0.10, "suv": 0.04, "kei": 0.02,
+	cd += { "boxtruck": 0.25, "bus": 0.3, "semi": 0.3, "van": 0.05, "pickup": 0.08, "offroad": 0.10, "suv": 0.04, "kei": 0.02,
 		"wedge": -0.04, "sports": -0.03, "roadster": 0.02 }.get(body, 0.0)
 	var cda := cd * width * height * (0.9 if body == "boxtruck" else 0.84)
 	# --- tires
@@ -571,6 +588,11 @@ static func _tires(e: Dictionary, truck: bool) -> Dictionary:
 	elif year < 2005: aspect = 60 if not fancy else 45
 	else: aspect = 55 if not fancy else (30 if cls == "exotic" else 35)
 	if truck or e.body in ["offroad"]: aspect = maxi(aspect, 70)
+	if cls == "fleet" and mass > 7000.0:
+		# a heavy truck's 22.5s
+		rim = 22
+		aspect = 80
+		wmm = 295
 	var radius := (rim * 25.4 / 2.0 + wmm * aspect / 100.0) / 1000.0
 	var size := ""
 	if year < 1975 and not truck:
@@ -1235,4 +1257,14 @@ Rolls-Rois|Silver Shaddow|1975|luxury|sedan|5.17|1.8|3.04|2100|RWD|6750|V8|NA|20
 Rolls-Rois|Phantomm|2005|luxury|sedan|5.83|1.99|3.57|2560|RWD|6749|V12|NA|453|720|5350|A6|120000|0.03||Umbrellas in the doors, stars in the headliner, and a turning circle measured in hectares.
 Bugattee|Veyrun|2008|exotic|wedge|4.46|2.0|2.71|1890|AWD|7993|W16|TT|1001|1250|6600|DCT7|1900000|0.005|mid,wing|Sixteen cylinders, four turbos, ten radiators, and tires that cost as much as a used Corolly.
 Maclarence|Eff-Won|1994|exotic|wedge|4.29|1.82|2.72|1140|RWD|6064|V12|NA|618|650|7500|M6|25000000|0.002|mid|The driver sits in the middle. The passengers sit behind on either side, and had better be good friends.
+# ---- The fleet: traffic only (rarity 0, never for sale)
+Grumpman|Metro-Snore Forty|2012|fleet|bus|12.2|2.55|6.2|12800|RWD|8900|I6|TD|280|1350|2300|A6|0|0|bus,rear,p=e8e8e4|Forty feet of low floor, a fare box that eats loonies and a driver who has seen everything twice.
+Internashnal|Skool Boss|2011|fleet|bus|10.9|2.44|6.1|11300|RWD|7600|I6|TD|250|1000|2600|A5|0|0|schoolbus,p=f0b020|Seventy-two kids, one driver, and a stop arm half of Port Rumble pretends not to see.
+Kenwerth|Tee-Six-Eighty-Ate|2016|fleet|semi|6.8|2.5|5.4|8600|RWD|14900|I6|TD|485|2500|2100|A10|0|0|tractor,sleeper,p=c8342c/1a3a6a/e8e8e8/1e1e24/2a6a3a|A sleeper cab, a long nose and an air horn the kids on the overpass have been pumping their arms at since Petitcodiac.
+Freightlinear|Cascadeeya|2013|fleet|semi|6.4|2.5|5.0|8100|RWD|14800|I6|TD|450|2300|2100|A10|0|0|tractor,p=e8e8e8/2c4a8a/8a8e94/d8a03a|Day cab, aero bumper, and a trailer full of somebody's groceries.
+Macc|El-Arr Packer|2009|fleet|boxtruck|9.2|2.5|5.3|14000|RWD|10800|I6|TD|325|1700|2100|A6|0|0|cabover,packer,p=2a6a3a/e8e8e8|Stops every forty feet. Starts again at six in the morning, under your window, on purpose.
+Fjord|E-Fiddy Ambulanz|2014|fleet|boxtruck|6.9|2.4|4.0|5200|RWD|6800|V10|NA|305|570|4750|A6|0|0|cutaway,ambulance,p=f0f0ec|A stretcher in the back, lights on every corner, and a paramedic who would like you to slow down.
+Grumpman|Step-Up Van|2004|fleet|boxtruck|7.3|2.4|4.3|5600|RWD|5700|V8|NA|210|420|4500|A4|0|0|p=6a4a2a/e8e8e8/f0d040|The parcel van: a sliding door that never closes and a driver who leaves the slip anyway.
+Internashnal|Dura-Snore Box|2015|fleet|boxtruck|8.6|2.5|5.4|9500|RWD|7600|I6|TD|260|900|2600|A6|0|0|p=e8e8e8/c8342c/2c4a8a|Twenty-six feet of box with a liftgate and a schedule it has never once kept.
 """
+

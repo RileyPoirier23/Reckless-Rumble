@@ -47,6 +47,16 @@ var wreck_t := 0.0
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var gone := false
 var paint := Color.WHITE
+var looks := {}              # its wear, its sign, its ladder, its mods (Traffic.dress)
+# a semi's trailer: drawn, solid, and swinging on the fifth wheel behind the tractor
+var trailer: CarView
+var trailer_shape: CollisionShape2D
+var trailer_heading := 0.0
+var trailer_len := 0.0       # the size it's drawn at (m)
+var trailer_centre := Vector2.ZERO
+var hitch_back := 0.0        # from the tractor's middle back to the fifth wheel (m)
+var highway_only := false    # semis stay on the Trans-Canada
+var big := false             # buses and trucks stick to the bigger roads where they can
 var _art_damage := -1.0
 var pull := 0.0              # moved over (m, right) for a siren coming up behind
 
@@ -80,8 +90,12 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	rect.size = Vector2(length, width) * PX * Vector2(0.95, 0.9)
 	shape.shape = rect
 	add_child(shape)
+	looks = body.get("looks", {})
+	var art_cues: Dictionary = body.get("art", {})
+	big = length > 9.5
+	if art_cues.has("tractor"): _hook_trailer(body)
 	view = CarView.new()
-	view.art = CarArt.new(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE)
+	view.build(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE, looks)
 	add_child(view)
 	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
@@ -129,7 +143,45 @@ func _siren_behind() -> float:
 
 # ------------------------------------------------------------------ driving
 
+## A trailer behind a semi tractor: a box with the outfit's name on it, on the fifth wheel.
+func _hook_trailer(body: Dictionary) -> void:
+	highway_only = true
+	trailer_len = 13.6 * CarArt.CAR_SCALE
+	var d := CarGen.design(body)
+	hitch_back = (0.5 - float(d.wr) - 0.03) * length
+	trailer_heading = heading
+	trailer = CarView.new()
+	var colours := ["#e8e8e8", "#f0f0ec", "#d8d8d4", "#c8342c", "#2c4a8a", "#e8e8e8"]
+	var t_looks := { "decal": rng.randi() % CarArt.DECALS.size() } if rng.randf() < 0.7 else {}
+	trailer.build({ "body": "trailer", "length": 13.6, "width": 2.55, "track": 2.1 }, Color(String(colours[rng.randi() % colours.size()])), 0.0, rng.randi(), CarArt.CAR_SCALE, t_looks)
+	add_child(trailer)
+	trailer_shape = CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(trailer_len, 2.55 * CarArt.CAR_SCALE) * PX * Vector2(0.95, 0.9)
+	trailer_shape.shape = rect
+	add_child(trailer_shape)
+	_tow(0.0)
+
+## The trailer follows its fifth wheel: it swings toward the way the tractor's heading, the
+## faster the further it's gone and the shorter the trailer.
+func _tow(dt: float) -> void:
+	if trailer == null: return
+	var fwd := Vector2(cos(heading), sin(heading))
+	var kingpin := pos - fwd * hitch_back
+	var speed := velocity_vec().length()
+	trailer_heading += sin(angle_difference(trailer_heading, heading)) * speed / maxf(1.0, trailer_len * 0.8) * dt
+	trailer_centre = kingpin - Vector2.from_angle(trailer_heading) * (trailer_len * 0.5 - 1.2 * CarArt.CAR_SCALE)
+	var local := (trailer_centre - pos) * PX
+	trailer.position = local
+	trailer.heading = trailer_heading
+	trailer.lean = Vector2.ZERO
+	trailer_shape.position = local
+	trailer_shape.rotation = trailer_heading
+	trailer.headlights = view.headlights if view else false
+	trailer.braking = view.braking if view else false
+
 func drive(dt: float) -> void:
+	_tow(dt)
 	if state == "wrecked":
 		_wrecked(dt)
 		_place()
@@ -347,7 +399,7 @@ func _refresh_art() -> void:
 	for k in damage: total += damage[k]
 	if absf(total - _art_damage) < 0.1: return
 	_art_damage = total
-	view.art = CarArt.new(spec, paint, damage, rng.randi(), CarArt.CAR_SCALE)
+	view.build(spec, paint, damage, rng.randi(), CarArt.CAR_SCALE, looks)
 
 func _wrecked(dt: float) -> void:
 	wreck_t += dt

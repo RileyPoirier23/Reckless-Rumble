@@ -16,6 +16,7 @@ var dark: CanvasModulate
 var lights: LightPool
 var traffic: Traffic
 var furniture: RoadFurniture
+var parked: ParkedCars
 var hud: Hud
 var dash: DashView
 var gps: GpsView
@@ -221,6 +222,9 @@ void fragment() {
 	add_child(furniture)
 	furniture.setup(self)
 	furniture.watch_on = furniture_watch
+	parked = ParkedCars.new()
+	add_child(parked)
+	parked.setup(self)
 	world.warm(car.sim.pos, Vector2(40, 25))
 	hud.show_help = bool(GameSettings.get_v("ui", "controls_card"))   # F1 (or the pause menu) shows the controls
 	_apply_settings()
@@ -304,17 +308,17 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car_i = i
 	var entry: Dictionary = save.garage[i] if i < (save.garage as Array).size() else { "id": CARS[i % CARS.size()], "paint": "", "damage": {} }
 	var spec: Dictionary = SaveGame.car_spec(entry)
-	var kit := { "hyd": OneTon.hyd_of(entry), "stance": OneTon.stance(entry) }
+	var hyd := OneTon.hyd_of(entry)
 	if String(entry.get("paint", "")) != "": spec.paint = entry.paint
 	var old_v := Vector2.ZERO
 	if car:
 		old_v = car.sim.world_velocity()
 		car.queue_free()
 	car = PlayerCar.new()
+	car.looks = SaveGame.car_looks(entry) if i < (save.garage as Array).size() else {}
 	ysort.add_child(car)
 	car.setup(spec, world, skids, hud, at, heading)
-	car.hyd = int(kit.hyd)
-	car.stance = kit.stance
+	car.hyd = hyd
 	car.fatal.connect(_on_fatal)
 	car.sim.set_world_velocity(old_v)
 	hud.sim = car.sim
@@ -799,6 +803,9 @@ func _process(dt: float) -> void:
 	var r := Vector2(320, 180).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	parked.step(dt, cam.global_position / PX)
+	CarView.view_centre = cam.global_position
+	CarView.view_radius = r
 	# the GPS shows the police (flashing when they're after you) and whoever you're racing
 	var bl: Array = []
 	var flash := fmod(Time.get_ticks_msec() / 250.0, 2.0) < 1.0

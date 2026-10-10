@@ -99,4 +99,11 @@ static func car_looks(entry: Dictionary) -> Dictionary:
 	if m.has("caliper") and m.caliper is String: m.caliper = Color(String(m.caliper))
 	if m.has("rim_color") and m.rim_color is String: m.rim_color = Color(String(m.rim_color))
 	if m.has("stripe_color") and m.stripe_color is String: m.stripe_color = Color(String(m.stripe_color))
+	# the bed and the roof, in the side view's words
+	match String(m.get("bed", "")):
+		"rollbar": m.rollbar = true
+		"rollbar_lights":
+			m.rollbar = true
+			m.lightbar = true
+	if String(m.get("roof", "")) == "lightbar": m.lightbar = true
 	return OneTon.looks(entry, m)          # 1ton's work: lifted on big rims, or laid out on the pumps
