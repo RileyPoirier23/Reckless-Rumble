@@ -100,7 +100,7 @@ func _draw() -> void:
 		var status := "ON IT" if k == current else ("OPEN" if open else ("FRI & SAT" if k == "meet" and not Jobs.meet_night(sky.day, sky.time_h) else "OPENS %s" % Jobs.opens_at(k)))
 		var scol := GOLD if k == current else (GREEN if open else ASH)
 		PixelFont.draw(self, box.position + Vector2(box.size.x - 5 - PixelFont.width(status), 4), status, scol)
-		PixelFont.draw(self, box.position + Vector2(5, 14), Jobs.street_line(save, sky.day) if k == "street" else (String(job.pay) + ("  RATING %.1f" % Rides.average(save) if k == "ride" else "")), GOLD if open else ASH)
+		PixelFont.draw(self, box.position + Vector2(5, 14), Jobs.street_line(save, sky.day, sky.time_h) if k == "street" else (String(job.pay) + ("  RATING %.1f" % Rides.average(save) if k == "ride" else "")), GOLD if open else ASH)
 		var lines := Hud.wrap_lines(String(job.blurb), 38)
 		for li in mini(lines.size(), 2): PixelFont.draw(self, box.position + Vector2(5, 24 + li * 8), lines[li], ASH)
 		y += h

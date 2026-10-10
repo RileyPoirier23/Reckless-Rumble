@@ -552,6 +552,9 @@ func _exit_tree() -> void:
 func lose_current_car() -> void:
 	var i := car_i
 	if i < 0 or i >= (save.garage as Array).size(): return
+	# lost at pinks while it was up on MarketThing: the ad comes down with it
+	var ad := Market.ad_for(save, i)
+	if not ad.is_empty(): Market.unlist(save, ad)
 	(save.garage as Array).remove_at(i)
 	car_i = -1
 	var next := 0

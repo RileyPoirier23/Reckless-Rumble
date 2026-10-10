@@ -201,8 +201,7 @@ func swap(key: String, grade: int) -> void:
 				t.tread = x
 				t.flat = false
 	var h: float = WEAR[key].h
-	drive.sky.time_h = fmod(drive.sky.time_h + h, 24.0)
-	drive.save.clock_h = float(drive.save.get("clock_h", 0.0)) + h
+	SaveGame.pass_hours(drive.sky, drive.save, h)          # (past midnight, the date turns over)
 	drive._store_car()
 
 ## Sell a part off Gus's bench.

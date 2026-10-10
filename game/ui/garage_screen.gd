@@ -156,7 +156,7 @@ func _options(sl: String) -> Array:
 	var inst := String(_car().parts.get(sl, ""))
 	if inst != "": out.append(inst)
 	for id in data.shelf:
-		if Parts.slot(String(id)) == sl and Parts.fits(String(id), _base_spec()) and not out.has(id): out.append(id)
+		if Parts.slot(String(id)) == sl and Parts.fits(String(id), _base_spec(), _car().get("parts", {})) and not out.has(id): out.append(id)
 	return out
 
 ## The parts as they'd be if you installed what you're looking at (so the numbers preview it).
@@ -296,7 +296,7 @@ func _site_input(dy: int, dx: int, go: bool) -> void:
 		return
 	if go:
 		var id: String = parts[site_row]
-		if not Parts.fits(id, _base_spec()):
+		if not Parts.fits(id, _base_spec(), _car().get("parts", {})):
 			_say("ROCKAUTTO.CA: THAT PART DOES NOT FIT A %s. WE CHECKED. WE NEVER CHECK." % String(_base_spec().model).to_upper())
 			return
 		var cost := Parts.price(id) + (int(Parts.price(id) * 0.25) + 40 if express else 0)
@@ -594,7 +594,7 @@ func _draw_site() -> void:
 		var id: String = parts[k]
 		var y := r.position.y + 36 + k * 30
 		var on := k == site_row
-		var fits := Parts.fits(id, _base_spec())
+		var fits := Parts.fits(id, _base_spec(), _car().get("parts", {}))
 		draw_rect(Rect2(r.position.x + 4, y - 2, r.size.x - 8, 28), Color(0.2, 0.35, 0.7, 0.18) if on else Color(0, 0, 0, 0.03))
 		PixelFont.draw(self, Vector2(r.position.x + 8, y), Parts.name_of(id), ink if fits else Color(ink, 0.4))
 		var price := "$%s" % _money(Parts.price(id))

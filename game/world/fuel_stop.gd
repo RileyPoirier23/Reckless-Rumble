@@ -72,7 +72,7 @@ func jerry_can() -> void:
 	var sim: CarSim = drive.car.sim
 	sim.add_fuel(JERRY_L, false)
 	drive.save.cash = int(drive.save.get("cash", 0)) - JERRY_FEE
-	drive.sky.time_h = fmod(drive.sky.time_h + 1.0 / 3.0, 24.0)
+	SaveGame.pass_hours(drive.sky, drive.save, 1.0 / 3.0)
 	drive.hud.post("TOBY SHOWS UP TWENTY MINUTES LATER WITH A JERRY CAN. \"SIXTY BUCKS. AND BUY GAS.\"", 6.0)
 
 func out_of_gas() -> bool:
