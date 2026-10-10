@@ -82,6 +82,21 @@ func _init() -> void:
 			var m := family.search(txt)
 			if m: hit += "%s: %s; " % [id, m.get_string()]
 	check("Frankie: nobody's partner, nobody's son", hit == "" and not StoryScript.CAST.has("SHAY"), hit)
+	# the prologue demo: day one, then the thank-you, then the title
+	DemoBuild.forced = true
+	var cut := DemoBuild.end_step()
+	var cut_ok := String(StoryScript.STEPS[cut].get("title", "")) == "CHAPTER 1" and String(StoryScript.STEPS[cut - 1].get("id", "")) == "home_night"
+	StoryState.step = cut - 1
+	var before := StoryState.current()
+	StoryState.step = cut
+	var thanks := StoryState.current()
+	StoryState.step = cut + 1
+	var after := StoryState.current()
+	DemoBuild.forced = false
+	StoryState.step = cut
+	check("the prologue demo: all of day one, a thank-you instead of CHAPTER 1, then the title",
+		cut_ok and String(before.get("id", "")) == "home_night" and bool(thanks.get("demo_end", false)) and String(after.type) == "end" and String(StoryState.current().get("title", "")) == "CHAPTER 1")
+	StoryState.step = 0
 	# nobody in a cutscene stands in a car (parked behind them, in front of them, or wrecked),
 	# and no two cars in a set sit in each other unless they're the same wreck
 	var hits := ""

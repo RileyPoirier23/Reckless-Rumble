@@ -11,6 +11,13 @@ var ITEMS: Array = []
 
 func _items() -> void:
 	ITEMS = []
+	if DemoBuild.on():
+		if DemoBuild.saved_step() > 0 and DemoBuild.saved_step() < DemoBuild.end_step():
+			ITEMS.append(["CONTINUE THE PROLOGUE", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
+		ITEMS.append(["PLAY THE PROLOGUE", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE. THEN HIS FIRST DAY AT THE COUNTER.", "story:new"])
+		ITEMS.append(["SETTINGS", "CONTROLS AND REBINDING, A STEERING WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.", "settings"])
+		ITEMS.append(["QUIT", "SEE YOU TOMORROW.", ""])
+		return
 	if StoryState.has_save():
 		ITEMS.append(["CONTINUE THE STORY", "PICK UP WHERE LEO LEFT OFF.", "story:continue"])
 	ITEMS.append(["NEW STORY", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE.", "story:new"])
@@ -138,7 +145,7 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 200, 640, 160), Color("1e1c22"))
 	# the logo
 	PixelFont.draw_centered(self, 320, 16, "DRIVEBOSS", GOLD, 8, INK)
-	PixelFont.draw_centered(self, 320, 62, "PORT RUMBLE. EIGHT WINTERS. ONE GARAGE.", BONE, 2, INK)
+	PixelFont.draw_centered(self, 320, 62, "THE PROLOGUE: A DEMO" if DemoBuild.on() else "PORT RUMBLE. EIGHT WINTERS. ONE GARAGE.", BONE, 2, INK)
 	if (settings and settings.visible) or (wall and wall.visible): return
 	for i in ITEMS.size():
 		var r := _item_rect(i)

@@ -57,6 +57,9 @@ static func save() -> void:
 
 static func current() -> Dictionary:
 	if step < 0 or step >= StoryScript.STEPS.size(): return { "type": "end" }
+	# the prologue demo stops at the end of day one, with a thank-you
+	if DemoBuild.on() and step >= DemoBuild.end_step():
+		return DemoBuild.END_CARD if step == DemoBuild.end_step() else { "type": "end" }
 	return StoryScript.STEPS[step]
 
 ## Move on to the next step and go to whichever scene plays it.
