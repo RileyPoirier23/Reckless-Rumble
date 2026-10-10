@@ -1159,6 +1159,31 @@ The coffee can pays anything except rent (the landlord wants cheques), or launde
 
 **Accessibility:** text speed, instant text, text size 1x or 1.5x, high-contrast box, the bleep toggle, screen shake off, flash reduction (lightning, the crash).
 
+### 3.13 What you see from the road
+
+**Camera angle.** Three angles, set in Settings > UI or flipped with T while driving. OVERHEAD looks straight down. ANGLED, the default, squashes the ground to 82% and stands everything 1.45x taller (car slices, walls, poles, animals, light bars), so you see the sides of things. LOW goes to 68% and 1.9x. Tests always drive overhead.
+
+**Line of sight**, Project Zomboid style (`world/sight.gd`):
+- Every building near the car throws a shadow away from it. The ground in a shadow is darker.
+- Traffic, the police, racers and animals in a shadow fade out until they come round the corner. The police's own sight was already line-of-sight (a ray to you, blocked by buildings).
+- A building between the camera and the car goes see-through, so the car is never lost under a roof (the taller ANGLED walls make this matter more).
+- Gas pumps and the radio mast don't block anything.
+- Settings > Graphics > LINE OF SIGHT turns it off.
+
+**Crash scenes** (`world/incidents.gd`):
+- Every 3–6 minutes of free driving (no job, chase, race or story mission), two cars tangle 140–260 m from you, on a street or highway with room for a scene.
+- The radio has it ("Traffic on the nines..."). The scene shows on the GPS in orange.
+- A patrol car, an ambulance and a fire engine come down that same lane from junctions back up the road, lights and siren on (there's a siren to hear). They park in a line behind the wrecks: police nearest, then the ambulance, then the fire engine.
+- Once everyone's there, cones go out in a taper behind the fire engine. The lane was shut the moment it happened, so traffic turns off before it.
+- After a minute or so the wrecks are towed and everybody leaves. If you're 600 m away, it packs up without you.
+- **A crash you cause** (a hard hit, about 40 km/h, on a car in traffic) gets the same response. Wait for the police and it's an insurance claim, plus a little karma ("stayed"). Drive 150 m off before they arrive and it's a hit and run: 30 heat and -2 karma.
+
+**Text.** Cagebook, the font made for CAGE BOSS, everywhere:
+- the proportional 3x5 face for small text;
+- the 5x7 face for anything drawn at scale 2 or more, never wider than what it replaced.
+
+Wrapping is by measured width.
+
 ---
 
 ## 4. Lines in the game's voice
