@@ -231,10 +231,10 @@ func _show(dt: float, c: PlayerCar) -> void:
 		var b := build_pts(_entry().get("parts", {}))
 		drive.hud.post("YOU POP THE HOOD. " + ("PHONES COME OUT. SOMEBODY ASKS WHAT IT MAKES." if b > 4.0 else ("A COUPLE OF NODS." if b > 1.0 else "\"IS THAT... STOCK?\" THEY SAY IT LIKE A DIAGNOSIS.")), 5.0)
 	_say_t -= dt
-	if _say_t <= 0.0:
+	if _say_t <= 0.0 and drive.hud.chatter_ready():
 		_say_t = 7.0
 		var line := _comment()
-		if line != "": drive.hud.post(line, 5.0)
+		if line != "": drive.hud.chatter("", line)
 	if t >= SHOW_S: _vote()
 
 ## Your garage entry ({} if you came in somebody else's car).
@@ -332,7 +332,9 @@ func _draw() -> void:
 	var r := Rect2((YOUR_SPOT - Vector2(1.4, 2.6)) * px, Vector2(2.8, 5.2) * px)
 	var a := 0.5 + 0.3 * sin(Time.get_ticks_msec() / 250.0)
 	draw_rect(r, Color(0.85, 0.64, 0.25, a), false, 3.0)
-	PixelFont.draw_centered(self, r.get_center().x, r.position.y - 14, "YOU", Color(0.95, 0.85, 0.5, a), 2)
+	# a painted arrow into the spot (no lettering over the lot)
+	var c := r.get_center()
+	draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -10), c + Vector2(8, -10), c + Vector2(0, 6)]), Color(0.95, 0.85, 0.5, a * 0.8))
 
 
 ## The meet's corner of the screen: the theme, the clock, the hype; then the results card.

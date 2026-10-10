@@ -200,7 +200,7 @@ func _objective() -> void:
 			elif stage == "hook": o = "BACK UP TO IT. STOP. HOLD %s TO WORK THE BOOM." % Hints.key("use")
 			elif stage == "deliver": o = "TOW IT TO %s. EASY ON THE BRAKES: IT WEIGHS %d KG." % [tow_dest.name, int(target.mass)]
 		"drag":
-			if stage == "drive": o = "DRAG NIGHT: AIRSTRIP 7. STOP AT THE START LINE ON RUNWAY 7."
+			if stage == "drive" and strip == null: o = "DRAG NIGHT: AIRSTRIP 7. STOP AT THE START LINE ON RUNWAY 7."
 		"street":
 			if race == null: o = "STREET RACE: %s. %s STOP AT THE START AND SIGN IN WITH MARCO." % [race_route.name, race_route.blurb]
 		"ride":
@@ -453,7 +453,7 @@ func _ride(dt: float) -> void:
 			_talk_t -= dt
 			if _talk_t <= 0.0:
 				_talk_t = rng.randf_range(18.0, 30.0)
-				drive.hud.post(String((t.talk as Array)[rng.randi() % (t.talk as Array).size()]), 5.0)
+				drive.hud.chatter(String(rider.name), String((t.talk as Array)[rng.randi() % (t.talk as Array).size()]))
 			if c.sim.pos.distance_to(rider.to) < 14.0 and c.sim.speed() < 2.0: _drop_off()
 
 func _drop_off() -> void:

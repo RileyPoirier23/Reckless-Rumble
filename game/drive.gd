@@ -199,12 +199,7 @@ void fragment() {
 	add_child(traffic)
 	traffic.setup(world, sky, ysort, car)
 	world.warm(car.sim.pos, Vector2(40, 25))
-	if mission:
-		hud.show_help = false        # the story has its own words up top; F1/START still shows the controls
-	else:
-		hud.post("COLD START. LET IT WARM UP BEFORE YOU WRING IT OUT.", 6.0)
-		hud.post(Hints.fmt("{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."), 8.0)
-		hud.post(Hints.fmt("{jobs}: GIGS. PIZZA, TOW CALLS, DRAG NIGHT."), 8.0)
+	hud.show_help = false            # F1/START shows the controls; the first-run tips point at it
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -283,6 +278,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car.sim.set_world_velocity(old_v)
 	hud.sim = car.sim
 	hud.player = car
+	hud.diag_style = String(spec.get("dash", "analog90"))
 	if traffic: traffic.player = car
 	dash.sim = car.sim
 	dash.style = String(spec.get("dash", "analog90"))
@@ -342,6 +338,7 @@ func _hook_car(spec: Dictionary, at: Vector2, heading: float) -> void:
 	car.fatal.connect(_on_fatal)
 	hud.sim = car.sim
 	hud.player = car
+	hud.diag_style = String(spec.get("dash", "analog90"))
 	if traffic: traffic.player = car
 	dash.sim = car.sim
 	dash.style = String(spec.get("dash", "analog90"))
@@ -559,7 +556,6 @@ func clear_route() -> void:
 func _on_dest(name: String, at: Vector2, quiet := false) -> void:
 	dest = { "name": name, "p": at }
 	gps.set_route(world.map.route(car.sim.pos, at), name)
-	if not quiet: hud.post("GPS: %s" % name, 3.0)
 
 func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticles2D:
 	var p := CPUParticles2D.new()
@@ -584,6 +580,44 @@ func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticle
 	cam.add_child(p)
 	return p
 
+func _tip_used(key: String) -> void:
+	var seen: Array = save.get("tips_seen", [])
+	if not seen.has(key):
+		seen.append(key)
+		save.tips_seen = seen
+
+## Whether a menu or a panel has the screen (the HUD hides under it).
+func modal_open() -> bool:
+	return job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
+		or fuel.open() or salvage.open() or auction.open() or (jobs.meet != null and jobs.meet.state == "results") \
+		or map_screen.visible or death.visible or (garage != null and garage.visible)
+
+## First-run tips, once a save: after a few seconds of plain driving (no job, no race, no chase),
+## one at a time, and never one you've already used.
+const TIPS := [
+	["map", "{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."],
+	["jobs", "{jobs}: GIGS. PIZZA, TOW CALLS, RIDES, RACES."],
+	["help", "{help}: THE CONTROLS, WHENEVER YOU NEED THEM."],
+	["diag", "THE SCAN TOOL UNDER THE DASH SHOWS WHAT YOUR CAR IS COMPLAINING ABOUT."],
+]
+var _tip_t := 0.0
+func _tips(dt: float) -> void:
+	if not free_roam or StoryState.active or jobs.active() or police.chasing() or hud.stepped_aside: return
+	if not hud.msgs.is_empty() or car.sim.speed() < 2.0:
+		return
+	_tip_t += dt
+	if _tip_t < 8.0: return
+	_tip_t = 0.0
+	var seen: Array = save.get("tips_seen", [])
+	for t in TIPS:
+		if seen.has(t[0]): continue
+		# used it already: no need to say
+		if (t[0] == "map" and map_screen.visible) or (t[0] == "jobs" and job_board.visible): continue
+		seen.append(t[0])
+		save.tips_seen = seen
+		hud.notify(Hints.fmt(String(t[1])), "tip")
+		return
+
 ## Free roam picks up the calendar where the last session left it: the day (so Saturday's auction
 ## is still on Saturday), the hour and the season.
 func _restore_calendar() -> void:
@@ -604,10 +638,10 @@ func _apply_season(s: String, reset := true) -> void:
 	var tips := {
 		"summer": "SUMMER. GRIP EVERYWHERE. THUNDERSTORMS ROLL IN AFTER HOT DAYS.",
 		"fall": "FALL. WET LEAVES ARE ICE WITH A NICER COLOUR. FOG ON THE RIVER.",
-		"winter": "WINTER. SNOW, BLIZZARDS, FREEZING RAIN. SUMMER TIRES ARE HOCKEY PUCKS: T.",
+		"winter": "WINTER. SNOW, BLIZZARDS, FREEZING RAIN. SUMMER TIRES ARE HOCKEY PUCKS: GUS SELLS WINTERS.",
 		"spring": "SPRING. RAIN, MUD AND POTHOLES. FREEZING RAIN ON COLD NIGHTS.",
 	}
-	hud.post(tips[s], 5.0)
+	hud.notify(tips[s], "tip")
 
 func _process(dt: float) -> void:
 	if garage and garage.visible:
@@ -617,6 +651,12 @@ func _process(dt: float) -> void:
 	if sky.season != _season_seen:
 		if _season_seen != "": _apply_season(sky.season, false)
 		_season_seen = sky.season
+	# a menu or a panel is up: the HUD steps aside rather than poking out round its edges
+	var modal := modal_open()
+	hud.stepped_aside = modal
+	dash.visible = not modal
+	gps.visible = not modal
+	_tips(dt)
 	# the chase cam: behind the car and turning with it, so up on the screen is always ahead.
 	# It swings round a little slower than the car, so you can see a slide happen.
 	var target := car.sim.heading + PI / 2.0
@@ -635,14 +675,14 @@ func _process(dt: float) -> void:
 	var up := Vector2(0, -1).rotated(cam_rot)
 	CarView.screen_up = up
 	var spd := car.sim.speed()
-	var ahead := up * (40.0 + minf(spd * PX * 0.14, 50.0))     # see more of what's ahead, more as you go faster
+	var ahead := up * HudLayout.look_ahead(spd)     # see more of what's ahead, more as you go faster
 	if _dying:
 		# the death cam: in close on the wreck
 		cam.global_position = cam.global_position.lerp(car.global_position, minf(1.0, 3.0 * dt / maxf(Engine.time_scale, 0.05)))
 		cam.zoom = cam.zoom.lerp(Vector2(2.6, 2.6), minf(1.0, 2.5 * dt / maxf(Engine.time_scale, 0.05)))
 	else:
 		cam.global_position = car.global_position + ahead
-		var z := lerpf(1.55, 1.0, clampf(spd / 50.0, 0.0, 1.0)) * zoom_mult        # in close; pulls back with speed
+		var z := HudLayout.zoom_at(spd) * zoom_mult        # in close; pulls back with speed
 		cam.zoom = cam.zoom.lerp(Vector2(z, z), 1.5 * dt)
 	var r := Vector2(320, 180).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
@@ -697,7 +737,6 @@ func _process(dt: float) -> void:
 	fog_rect.color = Color(fogc.r, fogc.g, fogc.b, sky.fog * 0.55)
 	flash_rect.color = Color(1, 1, 1, sky.flash * 0.55)
 	if sky.thunder_in >= 0.0 and sky.thunder_in < dt:
-		hud.post("*THUNDER*", 1.5)
 		Input.start_joy_vibration(0, 0.4, 0.8, 0.6)
 	# the car's world
 	car.sim.set_ambient(sky.temperature())
@@ -747,23 +786,27 @@ func _inputs() -> void:
 	if garage.visible or death.visible or car.dead: return
 	if job_board.visible or market.panel_open() or fuel.open() or salvage.open() or auction.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
+		_tip_used("jobs")
 		job_board.open(sky, save, jobs.kind, Market.places(world.map))
 		return
 	# the garage: pull up to the bay doors and stop
 	if not StoryState.active and GARAGE_DOOR.has_point(car.sim.pos) and car.sim.speed() < 2.0:
-		hud.post(Hints.fmt("{use}: THE GARAGE"), 0.15)
+		hud.prompt(Hints.fmt("{use}: THE GARAGE"))
 		if Input.is_action_just_pressed("use"):
 			_store_car()
 			garage.open(save)
 			return
 	if Input.is_action_just_pressed("map"):
+		_tip_used("map")
 		if map_screen.visible: map_screen.visible = false
 		else: map_screen.open()
 	if map_screen.visible: return
 	if Input.is_action_just_pressed("gearbox"):
 		car.sim.auto_gearbox = not car.sim.auto_gearbox
-		hud.post("AUTOMATIC" if car.sim.auto_gearbox else Hints.fmt("MANUAL: {shift} TO SHIFT"))
-	if Input.is_action_just_pressed("help"): hud.show_help = not hud.show_help
+		hud.diag_event("GEARBOX: AUTOMATIC" if car.sim.auto_gearbox else Hints.fmt("GEARBOX: MANUAL. {shift} TO SHIFT"))
+	if Input.is_action_just_pressed("help"):
+		_tip_used("help")
+		hud.show_help = not hud.show_help
 	if Input.is_action_just_pressed("reset") and police.chasing():
 		hud.post("TOBY ISN'T TOWING YOU OUT OF A POLICE CHASE.", 3.0)
 	elif Input.is_action_just_pressed("reset") and fuel.out_of_gas() and car.sim.speed() < 1.0:
@@ -778,7 +821,6 @@ func _inputs() -> void:
 	if not car.sim.auto_gearbox:
 		if Input.is_action_just_pressed("shift_up"): car.sim.shift(car.sim.gear + 1)
 		if Input.is_action_just_pressed("shift_down"): car.sim.shift(car.sim.gear - 1)
-		for m in car.sim.messages: hud.post(m)
 
 
 ## Cloud shadows drifting over everything on a cloudy day.

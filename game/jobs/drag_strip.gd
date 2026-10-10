@@ -247,8 +247,8 @@ func _draw_signin() -> void:
 ## The Christmas tree: two columns (the other lane on the left), stage bulbs, three ambers,
 ## green and red, lit by each lane's own clock.
 func _draw_tree() -> void:
-	var x0 := 586.0
-	_panel(Rect2(x0 - 4, 60, 52, 150))
+	var x0 := HudLayout.RIGHT.position.x + 4.0
+	_panel(Rect2(x0 - 4, 60, 52, 118))
 	for i in 2:
 		var cx := x0 + 10 + i * 24
 		var l: Dictionary = lanes[i] if lanes.size() > i else {}
@@ -261,17 +261,22 @@ func _draw_tree() -> void:
 		for k in bulbs.size():
 			var on: bool = bulbs[k][1]
 			var col: Color = bulbs[k][0]
-			var y := 72.0 + k * 19.0 if k >= 2 else 70.0 + k * 8.0
-			var rad := 3.0 if k < 2 else 7.0
-			if k >= 2: y = 92.0 + (k - 2) * 20.0
+			var y := 70.0 + k * 8.0
+			var rad := 3.0 if k < 2 else 6.0
+			if k >= 2: y = 92.0 + (k - 2) * 15.0
 			draw_circle(Vector2(cx, y), rad + 1.0, INK)
 			draw_circle(Vector2(cx, y), rad, col if on else col.darkened(0.78))
-		PixelFont.draw_centered(self, cx, 200, "THEM" if i == 0 else "YOU", ASH)
-	# the board up top: names and dial-ins
+		PixelFont.draw_centered(self, cx, 168, "THEM" if i == 0 else "YOU", ASH)
+	# the board: names and dial-ins, in the left column (nothing over the strip)
 	if lanes.size() == 2:
-		_panel(Rect2(180, 40, 280, 18))
-		PixelFont.draw(self, Vector2(186, 45), "%s  %.2f" % [String(lanes[0].name), float(lanes[0].dial)], BONE)
-		PixelFont.draw(self, Vector2(400, 45), "YOU  %.2f" % float(lanes[1].dial), GOLD)
+		var b := Rect2(HudLayout.JOB.position, Vector2(196, 28))
+		_panel(b)
+		PixelFont.draw(self, b.position + Vector2(6, 5), "THEM  %s" % String(lanes[0].name).substr(0, 30), BONE)
+		var d0 := "%.2f" % float(lanes[0].dial)
+		PixelFont.draw(self, Vector2(b.end.x - 6 - PixelFont.width(d0), b.position.y + 5), d0, BONE)
+		PixelFont.draw(self, b.position + Vector2(6, 16), "YOU", GOLD)
+		var d1 := "%.2f" % float(lanes[1].dial)
+		PixelFont.draw(self, Vector2(b.end.x - 6 - PixelFont.width(d1), b.position.y + 16), d1, GOLD)
 
 func _draw_slip() -> void:
 	var r := Rect2(190, 80, 260, 200)

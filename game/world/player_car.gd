@@ -126,7 +126,7 @@ func respawn() -> void:
 	position = start_pos * PX
 	damage_bucket = -1
 	for k in damage: damage[k] = 0.0
-	_say("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
+	if not quiet: hud.notify("TOWED HOME AND FIXED UP. DON'T TELL GUS.")
 
 var can_die := true               # the story turns this off when a crash is the plot
 var dead := false
@@ -264,10 +264,10 @@ func _physics_process(dt: float) -> void:
 			sim.set_world_velocity(vw)
 			sim.yaw_rate *= 0.55
 			sim.w_wheel = sim.vx / float(spec.tires.radius) if absf(sim.vx) > 0.5 else sim.w_wheel
-			if vn > 6.0: _say("CRUNCH (%d KM/H)" % int(vn * 3.6), 2.0)
+			if vn > 6.0: _diag("CRUNCH: HIT AT %d KM/H" % int(vn * 3.6))
 		move_and_collide(col.get_remainder().slide(n))
 	sim.pos = position / PX
-	for m in sim.messages: _say(m)
+	for m in sim.messages: _diag(m)
 	_update_look(dt, br)
 
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
@@ -338,13 +338,17 @@ func _take_damage(dir_world: Vector2, vn: float, at: Vector2) -> void:
 		var sgn := 1.0 if zone == "front" else -1.0
 		var p := sim.pos + sim.forward() * sgn * float(spec.length) * 0.5
 		Debris.spawn(get_parent(), p, sim.heading, sim.world_velocity() * 0.6 + sim.forward() * sgn * 2.0, "bumper", paint, float(spec.width))
-		_say("THERE GOES THE %s BUMPER" % ("FRONT" if zone == "front" else "REAR"), 3.0)
+		_diag("THERE GOES THE %s BUMPER" % ("FRONT" if zone == "front" else "REAR"))
 	elif amt > 0.25 and randf() < 0.4:
 		Debris.spawn(get_parent(), at, sim.heading, sim.world_velocity() * 0.5, "hubcap" if randf() < 0.3 else "glass", paint)
 	if amt >= 0.02: damage_bucket = -2         # redraw the art now
 
 func _say(msg: String, secs := 4.0) -> void:
 	if not quiet: hud.post(msg, secs)
+
+## What the car reports goes on the scan tool, not across the windshield.
+func _diag(msg: String) -> void:
+	if not quiet and hud: hud.diag_event(msg)
 
 func velocity_vec() -> Vector2:
 	return sim.world_velocity()
@@ -358,7 +362,7 @@ func hit(dv: Vector2, at: Vector2) -> void:
 	if vn > 0.5:
 		sim.impact(vn, "side")
 		_take_damage(-dv / vn, vn * 1.2, at)
-	if vn > 6.0: _say("CRUNCH (%d KM/H)" % int(vn * 3.6), 2.0)
+	if vn > 6.0: _diag("CRUNCH: HIT AT %d KM/H" % int(vn * 3.6))
 
 func _wheel_world(u: float, v: float) -> Vector2:
 	return position + (sim.forward() * u + sim.right() * v) * PX

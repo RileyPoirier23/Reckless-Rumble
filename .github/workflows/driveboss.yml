@@ -93,6 +93,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/story_tests.gd | tee story.log
           grep -q "^0 failed" story.log
+      - name: HUD layout tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/hud_layout_tests.gd | tee hud.log
+          grep -q "^0 failed" hud.log
       - name: Export
         working-directory: game
         run: |

@@ -368,14 +368,12 @@ class PoliceHud extends Control:
 		queue_redraw()
 
 	func _draw() -> void:
-		if police == null or police.drive == null or StoryState.active: return
+		if police == null or police.drive == null or StoryState.active or police.drive.hud.stepped_aside: return
 		var h := police.heat()
-		if h < 1.0 and not police.chasing(): return
+		# nothing to show until the first pip lights
+		if h < 10.0 and not police.chasing(): return
 		# just over the GPS, whichever GPS this car has
-		var g: Rect2 = police.drive.gps.screen
-		var r := Rect2(g.position.x - 4, g.position.y - 40, maxf(g.size.x + 8, 150.0), 22 if police.chasing() else 12)
-		if r.end.x > 636.0: r.position.x = 636.0 - r.size.x
-		if not police.chasing(): r.position.y += 10
+		var r := HudLayout.police_rect(String(police.drive.gps.style), police.chasing())
 		draw_rect(r, Color(0, 0, 0, 0.55))
 		PixelFont.draw(self, r.position + Vector2(6, 4), "HEAT", Color("f3ead2"))
 		for i in 5:

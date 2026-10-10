@@ -717,7 +717,7 @@ class Layer extends Node2D:
 			for x in range(int(r.position.x) + 3, int(r.end.x) - 2, 3):
 				draw_rect(Rect2(Vector2(x, r.position.y + 1) * PX, Vector2(0.15, 5) * PX), white)
 				if r.size.y > 16: draw_rect(Rect2(Vector2(x, r.end.y - 6) * PX, Vector2(0.15, 5) * PX), white)
-			if l.name != "": PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.6), 2)
+			if l.name != "": PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.32), 2)
 
 	func _rail(w: World) -> void:
 		var snowy := w.sky.snow_cover > 0.3

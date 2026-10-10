@@ -370,20 +370,22 @@ class RaceHud extends Control:
 		var bone := Color("f3ead2")
 		var ash := Color("8a8478")
 		if race.state == "grid":
-			# tonight's field (down the left, out of the way of the cars), and the lights
-			var card := Rect2(4, 102, 196, 14 + race.info.size() * 36)
+			# tonight's field and the lights, down the left under the running order (out of the way
+			# of the cars: nothing goes over the road)
+			var card := Rect2(HudLayout.JOB.position.x, 102, 196, 22 + race.info.size() * 26)
 			draw_rect(card, Color(0, 0, 0, 0.7))
 			draw_rect(card, gold, false, 1.0)
 			PixelFont.draw(self, card.position + Vector2(5, 4), "TONIGHT: %d LAP%s, $%d IN" % [int(race.route.laps), "" if int(race.route.laps) == 1 else "S", int(race.route.buy_in)], gold)
-			for i in race.info.size():
-				var y := card.position.y + 15 + i * 36
-				PixelFont.draw(self, Vector2(card.position.x + 5, y), String(race.info[i].name).substr(0, 31), bone)
-				PixelFont.draw(self, Vector2(card.position.x + 5, y + 8), String(race.info[i].car).substr(0, 31), gold.darkened(0.2))
-				var ls := Hud.wrap_lines(String(race.info[i].line).to_upper(), 31)
-				for li in mini(ls.size(), 2): PixelFont.draw(self, Vector2(card.position.x + 9, y + 17 + li * 8), ls[li], ash)
 			var n := 3 - int(race.t - 1.0)
 			var txt := "READY" if race.t < 1.0 else (str(n) if n >= 1 else "GO")
-			PixelFont.draw_centered(self, 320, 120, txt, gold, 4, Color(0, 0, 0, 0.8))
+			var cw := PixelFont.width(txt, 3)
+			PixelFont.draw(self, Vector2(card.end.x - 5 - cw, card.position.y + 3), txt, Color("6fbf5a") if txt == "GO" else gold, 3)
+			for i in race.info.size():
+				var y := card.position.y + 22 + i * 26
+				PixelFont.draw(self, Vector2(card.position.x + 5, y), String(race.info[i].name).substr(0, 46), bone)
+				PixelFont.draw(self, Vector2(card.position.x + 5, y + 8), String(race.info[i].car).substr(0, 46), gold.darkened(0.2))
+				var ls := Hud.wrap_lines(String(race.info[i].line).to_upper(), 46)
+				if not ls.is_empty(): PixelFont.draw(self, Vector2(card.position.x + 9, y + 16), ls[0], ash)
 		var order := race.order()
 		# the running order, top left under the car panel, with the checkpoint and the clock
 		var r := Rect2(4, 38, 196, 24 + order.size() * 9)
@@ -403,9 +405,15 @@ class RaceHud extends Control:
 		var ck := StreetRace.clock_str(race.clock)
 		PixelFont.draw(self, r.position + Vector2(r.size.x - 5 - PixelFont.width(ck), r.size.y - 9), ck, bone)
 		if race.state == "done":
+			# the result, under the running order
 			var p := race.place()
 			var won := race._winnings()
 			var title := "YOU WIN" if won > 0 or race.won_pinks() else ("P%d" % p if race.finish_t.has(-1) else "DNF")
 			if not race.rival.is_empty() and not race.won_pinks(): title = "PINKS: LOST"
-			PixelFont.draw_centered(self, 320, 110, title, gold, 4, Color(0, 0, 0, 0.8))
-			if won > 0: PixelFont.draw_centered(self, 320, 150, "+$%d" % won, Color("6fbf5a"), 2, Color(0, 0, 0, 0.8))
+			var res := Rect2(r.position.x, r.end.y + 4, r.size.x, 24)
+			draw_rect(res, Color(0, 0, 0, 0.7))
+			draw_rect(res, gold, false, 1.0)
+			PixelFont.draw(self, res.position + Vector2(6, 5), title, gold, 3)
+			if won > 0:
+				var ws := "+$%d" % won
+				PixelFont.draw(self, Vector2(res.end.x - 6 - PixelFont.width(ws, 2), res.position.y + 7), ws, Color("6fbf5a"), 2)

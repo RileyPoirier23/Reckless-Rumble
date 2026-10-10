@@ -8,6 +8,7 @@ class_name CarArt
 extends RefCounted
 
 const PX := 12.0         # pixels per metre (the whole game uses this)
+const CAR_SCALE := 1.0   # cars are drawn this much bigger than life next to the roads
 const SLICES := 16
 const K := PX / 8.0      # the recipe is written in 8 px/m units and drawn finer
 
