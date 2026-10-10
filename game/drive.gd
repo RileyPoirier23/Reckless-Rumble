@@ -786,6 +786,7 @@ func _idle_objective() -> void:
 		_auto_obj = want
 
 const TIPS := [
+	["guide", "{pause}, THEN HOW IT WORKS: THE GAME ON FIVE PAGES."],
 	["map", "{map}: THE MAP. PICK A PLACE AND THE GPS TAKES YOU THERE."],
 	["jobs", "{jobs}: GIGS. PIZZA, TOW CALLS, RIDES, RACES."],
 	["help", "{help}: THE CONTROLS, WHENEVER YOU NEED THEM."],

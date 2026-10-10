@@ -33,6 +33,11 @@ func _run() -> void:
 	await _wait(0.3)
 	await _shot("2_controls_card")
 	pm.card = false
+	for g in HowItWorks.PAGES.size():
+		pm.guide = g
+		await _wait(0.2)
+		await _shot("2_guide_%d" % (g + 1))
+	pm.guide = -1
 	pm.settings.open()
 	pm.settings.tab = 4
 	await _wait(0.3)

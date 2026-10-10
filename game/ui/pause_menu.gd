@@ -10,20 +10,22 @@ const GOLD := Color("d9a441")
 const ASH := Color("8a8478")
 const INK := Color("0b090d")
 
-const ITEMS := ["RESUME", "SETTINGS", "CONTROLS", "EMPLOYEE OF THE MONTH", "QUIT TO TITLE"]
+const ITEMS := ["RESUME", "HOW IT WORKS", "SETTINGS", "CONTROLS", "EMPLOYEE OF THE MONTH", "QUIT TO TITLE"]
 const DESCS := {
 	"RESUME": "BACK ON THE ROAD.",
+	"HOW IT WORKS": "WHAT A DAY IS, GETTING ABOUT, MONEY, THE POLICE, AND WHO LEO'S TURNING INTO.",
 	"SETTINGS": "CONTROLS, THE WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.",
 	"CONTROLS": "WHAT EVERY BUTTON DOES. CHANGE THEM IN SETTINGS.",
 	"EMPLOYEE OF THE MONTH": "THE WALL IN THE BREAK ROOM AT COVINGTON AUTO.",
 	"QUIT TO TITLE": "THE GAME'S SAVED FIRST.",
 	"SET UP THE WHEEL": "A WHEEL'S PLUGGED IN. TWENTY SECONDS: TURN IT, PRESS THE PEDALS, AND IT DRIVES.",
 }
-const PANEL := Rect2(200, 70, 240, 150)
+const PANEL := Rect2(200, 52, 240, 184)
 const CARD := Rect2(150, 40, 340, 270)
 
 var sel := 0
 var card := false              # the controls card is up
+var guide := -1                # the HOW IT WORKS page that's up (-1: none)
 var settings: SettingsScreen
 var wall: EmployeeWall
 var _opened := -1               # the frame it opened on: the same press doesn't close it again
@@ -49,6 +51,7 @@ func open() -> void:
 	visible = true
 	sel = 0
 	card = false
+	guide = -1
 	_opened = Engine.get_process_frames()
 	get_parent().move_child(self, -1)          # over every panel the HUD layer has
 	get_tree().paused = true
@@ -71,6 +74,14 @@ func _process(_dt: float) -> void:
 	if settings.visible or wall.visible: return
 	var f := Engine.get_process_frames()
 	if f == _opened or f == _back: return
+	if guide >= 0:
+		var pages := HowItWorks.PAGES.size()
+		if Input.is_action_just_pressed("ui_right") or Input.is_action_just_pressed("ui_accept"):
+			guide += 1
+			if guide >= pages: guide = -1
+		elif Input.is_action_just_pressed("ui_left"): guide = maxi(0, guide - 1)
+		elif Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("pause"): guide = -1
+		return
 	if card:
 		if Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("pause"):
 			card = false
@@ -88,6 +99,7 @@ func _process(_dt: float) -> void:
 func _pick(item: String) -> void:
 	match item:
 		"RESUME": close()
+		"HOW IT WORKS": guide = 0
 		"SETTINGS": settings.open()
 		"SET UP THE WHEEL": settings.open_wheel()
 		"CONTROLS": card = true
@@ -113,6 +125,9 @@ static func card_lines() -> Array:
 func _draw() -> void:
 	if not visible or settings.visible or wall.visible: return
 	draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, 0.6))
+	if guide >= 0:
+		_draw_guide()
+		return
 	if card:
 		_draw_card()
 		return
@@ -130,6 +145,21 @@ func _draw() -> void:
 	for k in mini(ls.size(), 2):
 		PixelFont.draw_centered(self, PANEL.get_center().x, PANEL.end.y - 24 + k * 9, ls[k], ASH)
 	PixelFont.draw_centered(self, 320, 340, Hints.fmt("{updown}: PICK  {ui_accept}: SELECT  {pause}: RESUME"), ASH)
+
+func _draw_guide() -> void:
+	draw_rect(CARD, Color(0.05, 0.05, 0.07, 0.96))
+	draw_rect(CARD, Color(GOLD, 0.7), false, 1.0)
+	PixelFont.draw(self, CARD.position + Vector2(10, 8), "HOW IT WORKS", GOLD, 2)
+	var n := HowItWorks.PAGES.size()
+	var pg := "%d / %d" % [guide + 1, n]
+	PixelFont.draw(self, Vector2(CARD.end.x - 10 - PixelFont.width(pg), CARD.position.y + 12), pg, ASH)
+	PixelFont.draw(self, CARD.position + Vector2(10, 30), String(HowItWorks.PAGES[guide][0]), BONE)
+	var y := CARD.position.y + 44
+	for ln in HowItWorks.lines(guide, 80):
+		if y > CARD.end.y - 22: break
+		PixelFont.draw(self, Vector2(CARD.position.x + 10, y), ln, BONE if ln != "" else ASH)
+		y += 9 if ln != "" else 4
+	PixelFont.draw_centered(self, CARD.get_center().x, CARD.end.y - 14, Hints.fmt("{leftright}: TURN THE PAGE  {ui_cancel}: BACK"), ASH)
 
 func _draw_card() -> void:
 	draw_rect(CARD, Color(0.05, 0.05, 0.07, 0.96))

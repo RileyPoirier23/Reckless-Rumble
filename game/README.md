@@ -200,7 +200,7 @@ The camera sits behind the car and turns with it, so up is always ahead. Time, w
 | Hydraulics (hop; hold to keep hopping) | X | A |
 | Controls card | F1 | (in the pause menu) |
 | Camera angle (overhead, angled, low) | T | (Settings > UI) |
-| Pause: resume, settings, controls, quit to title | Esc | Start |
+| Pause: resume, how it works, settings, controls, quit to title | Esc | Start |
 
 Every one of these can be changed in **Settings > Controls** (from the title or the pause menu): pick a row, Left/Right for the keyboard or controller column, Enter and press the new key or button (Delete clears it). The prompts on screen follow whatever you bind. The same tab has the stick's dead zone and response curve, how much the stick and keys steer less at speed, the trigger dead zone, easing for the keyboard (keys are on or off, so the gas, brake and steering ease in and come back out quicker), vibration, and the gearbox.
 
@@ -209,6 +209,8 @@ On the controller the stick has a response curve (small movements, small correct
 **A steering wheel.** Plug it in and the game finds it (anything that calls itself a wheel: Logitech, Thrustmaster, Fanatec, Moza and the rest) and offers SET UP YOUR WHEEL on the title and in the pause menu. That runs the calibration straight away: you can confirm each step with any button on the wheel, so you never have to let go of it, and the last two steps catch the paddles. A wheel only drives: its rim, pedals and buttons never move a menu, the counter's cursor or the button prompts (menus stay on the keyboard, the mouse and a controller), and a controller plugged in beside it keeps working. Or do it by hand in **Settings > Wheel**: pick it, run CALIBRATE (hands off, full left, full right, the gas, the brake; it works out which axis is which and which way they run, and handles both pedals on one axis), set the wheel's rotation to match its own software, and turn on DRIVE WITH THE WHEEL. The rim turns the road wheels one for one (AUTO range gears it like a real car, about 14 to 1; or pick how many degrees give full lock), with no steering help in the way. Paddles, and an H-shifter's gears, bind on the same tab. There's no force feedback in the game: turn on your wheel's centring spring in its own software.
 
 **Line of sight (`world/sight.gd`):** what Leo can see from the driver's seat, Project Zomboid style. Every building near the car throws a shadow away from it; the ground in a shadow is darker, and traffic, the police, racers and animals in one fade out until they come round the corner. A building standing between the camera and the car goes see-through, so the car is never lost under a roof. Gas pumps and the radio mast don't block anything. Settings > Graphics > LINE OF SIGHT turns it off.
+
+**How it works** (pause menu): the game on five pages: what a day is (the counter in the morning, the road at night), getting about (the objective line, the map and GPS, the tow home), money, the police and the road, and how Leo's karma works. A first-run tip points at it.
 
 **Camera angle:** OVERHEAD looks straight down; ANGLED (the default) tips the camera so the ground is foreshortened and you see the sides of cars and buildings; LOW tips it further. T flips through them while you drive.
 
