@@ -83,14 +83,16 @@ func _init() -> void:
 			if m: hit += "%s: %s; " % [id, m.get_string()]
 	check("Frankie: nobody's partner, nobody's son", hit == "" and not StoryScript.CAST.has("SHAY"), hit)
 	# nobody in a cutscene stands in a car (parked behind them, in front of them, or wrecked),
-	# and no two cars in a set sit in each other unless they're the same wreck
+	# and no two cars in a set sit in each other (one wreck's cars only touch where they folded)
 	var hits := ""
 	var stacked := ""
+	var sets_used := {}
 	for id in StoryScript.SCENES:
 		var sc: Dictionary = StoryScript.SCENES[id]
 		var scene_sets := [String(sc.set)]
 		for ln in sc.lines:
 			if String(ln[0]) == "set": scene_sets.append(String(ln[1]))
+		for st in scene_sets: sets_used[st] = true
 		for c in sc.get("cast", []):
 			var poses := [String(c[3])]
 			for ln in sc.lines:
@@ -104,15 +106,55 @@ func _init() -> void:
 					for v in StorySets.vehicles_in(String(st)):
 						var o := body.intersection(v.rect)
 						if o.size.x > 1 and o.size.y > 1: hits += "%s: %s (%s) in a car in %s; " % [id, String(c[0]), pose, st]
-	for st in ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay"]:
-		var vs := StorySets.vehicles_in(st)
+	# every set any scene uses, and a wreck's cars really meet (a crash, not two parked cars)
+	var apart := ""
+	for st in sets_used:
+		var vs := StorySets.vehicles_in(String(st))
 		for a in vs.size():
-			for b in range(a + 1, vs.size()):
-				if String(vs[a].wreck) != "" and vs[a].wreck == vs[b].wreck: continue
-				var o: Rect2 = (vs[a].rect as Rect2).intersection(vs[b].rect)
-				if o.size.x > 1 and o.size.y > 1: stacked += "%s: cars %d and %d; " % [st, a, b]
+			var wreck := String(vs[a].wreck)
+			var gap := 999.0
+			for b in vs.size():
+				if b == a: continue
+				var ra: Rect2 = vs[a].rect
+				var rb: Rect2 = vs[b].rect
+				var o := ra.intersection(rb)
+				var same := wreck != "" and String(vs[b].wreck) == wreck
+				if b > a and o.size.x > (3 if same else 1) and o.size.y > 1: stacked += "%s: cars %d and %d (%dpx); " % [st, a, b, int(o.size.x)]
+				if same: gap = minf(gap, maxf(maxf(rb.position.x - ra.end.x, ra.position.x - rb.end.x), maxf(rb.position.y - ra.end.y, ra.position.y - rb.end.y)))
+			if wreck != "" and gap > 2.0: apart += "%s: car %d of %s is %s px off the rest; " % [st, a, wreck, str(gap)]
+	check("cutscenes: every scene's set was checked for cars", sets_used.has("airstrip") and sets_used.size() >= 8, str(sets_used.keys()))
 	check("cutscenes: nobody stands in a car", hits == "", hits)
-	check("cutscenes: no two cars sit in each other (apart from the wreck)", stacked == "", stacked)
+	check("cutscenes: no two cars sit in each other (a wreck's only touch)", stacked == "", stacked)
+	check("cutscenes: a wreck's cars meet where they hit", apart == "", apart)
+	# nobody in a cutscene calls Leo son, sir or Frank's boy: he's "kid", or Leo
+	var address := RegEx.create_from_string("\\b(SON|SIR|MA'AM|MADAM|YOUNG MAN|YOUNG LADY|[A-Z]+'S BOY)\\b")
+	var called := ""
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			if ln.size() < 2 or not ln[1] is String: continue
+			var m := address.search(String(ln[1]).to_upper())
+			if m: called += "%s: %s; " % [id, m.get_string()]
+	check("cutscenes: nobody calls Leo son, sir or somebody's boy", called == "", called)
+	# the death screen's crash pictures: the other car meets Leo's nose and never sits in it,
+	# head-on, rear-ended or T-boned, slow or fast, with a wheel off or not
+	var crashed := ""
+	for sub in ["headon", "rear", "tbone"]:
+		for kmh: float in [60.0, 100.0, 160.0]:
+			for pair in [["coupe", 4.52, "van"], ["tow", 6.6, "sedan"], ["hatch", 4.62, "pickup"], ["sedan", 5.04, "hatch"]]:
+				var info := { "cause": "traffic", "sub": sub, "body": pair[0], "length": pair[1], "other_body": pair[2], "speed_kmh": kmh, "wheeloff": kmh > 95.0 }
+				DeathScreen.paint_scene(info, 7)
+				var cs: Array = DeathScreen.cars
+				var what := "%s %s into a %s at %d" % [sub, pair[0], pair[2], int(kmh)]
+				if cs.size() != 2:
+					crashed += "%s: %d cars; " % [what, cs.size()]
+					continue
+				var ra: Rect2i = cs[0]
+				var rb: Rect2i = cs[1]
+				var o := ra.intersection(rb)
+				var gap := maxi(rb.position.x - ra.end.x, ra.position.x - rb.end.x)
+				if o.size.x > 2 and o.size.y > 1: crashed += "%s: %dpx inside; " % [what, o.size.x]
+				elif gap > 1: crashed += "%s: %dpx apart; " % [what, gap]
+	check("death screen: a traffic crash's two cars meet where they hit, never one in the other", crashed == "", crashed)
 	# prompts follow the device
 	Controls.setup()
 	Hints.pad = false

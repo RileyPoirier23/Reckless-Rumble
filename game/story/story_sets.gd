@@ -12,7 +12,7 @@ const FEET_Y := 128                 # the cast stand with their feet on this lin
 
 static var _cache := {}
 ## Where the vehicles stand in each set: { rect (set px), wreck } each, so nobody in a cutscene
-## stands in one and no two cars sit in each other (unless they're one wreck, on purpose).
+## stands in one and no two cars sit in each other (one wreck's cars only touch where they hit).
 static var vehicles := {}
 static var _painting := ""
 
@@ -41,17 +41,43 @@ static func vehicles_in(name: String) -> Array:
 	return vehicles.get(name, [])
 
 ## A car in the set: painted, and where it stands remembered. Cars with the same `wreck` name
-## are one crash and are allowed to be in each other.
+## are one crash: they meet where they folded, but still don't sit in each other.
 static func _car(p: Pix, x: int, y: int, len: int, body: String, paint: Color, dmg := {}, flip := false, tilt := 0.0, mods := {}, wreck := "") -> void:
-	# where it stands: the car itself, not its smoke or the glow off its lamps
+	var r := _reach(x, y, len, body, paint, dmg, flip, tilt, mods)
+	if r.size != Vector2i.ZERO: _vehicle(Rect2(r), wreck)
+	PixCars.draw(p, x, y, len, body, paint, dmg, flip, tilt, mods)
+
+## Where a car drawn at x stands: the car itself (see _alone).
+static func _reach(x: int, y: int, len: int, body: String, paint: Color, dmg := {}, flip := false, tilt := 0.0, mods := {}) -> Rect2i:
+	return _alone(x, y, len, body, paint, dmg, flip, tilt, mods).img.get_used_rect()
+
+## The car drawn at x on an empty set, without its smoke, its lamp glow or a bumper hanging off
+## it (that's wreckage: it goes under whatever the car hit).
+static func _alone(x: int, y: int, len: int, body: String, paint: Color, dmg := {}, flip := false, tilt := 0.0, mods := {}) -> Pix:
 	var bare := dmg.duplicate()
 	bare.erase("smoke")
 	bare.erase("lights")
+	if bare.get("bumper", "") == "hang": bare.bumper = "gone"
 	var probe := Pix.new(AW, AH, 1)
 	PixCars.draw(probe, x, y, len, body, paint, bare, flip, tilt, mods)
-	var r := probe.img.get_used_rect()
-	if r.size != Vector2i.ZERO: _vehicle(Rect2(r), wreck)
-	PixCars.draw(p, x, y, len, body, paint, dmg, flip, tilt, mods)
+	return probe
+
+## A hood buckled up into a tent where a car hit something: the top edge of the car between
+## x0 and x1 lifted into a peak h px high. `alone` is the car on its own (see _alone).
+static func _buckle(p: Pix, alone: Pix, x0: int, x1: int, h: int) -> void:
+	var mid := (x0 + x1) / 2.0
+	for xx in range(x0, x1 + 1):
+		var top := -1
+		for yy in AH:
+			if alone.get_px(xx, yy).a > 0.0:
+				top = yy
+				break
+		var lift := int(round(h * (1.0 - absf(xx - mid) / maxf(1.0, (x1 - x0) / 2.0))))
+		if top < 1 or lift <= 0: continue
+		var edge := p.get_px(xx, top)
+		var skin := p.get_px(xx, top + 1)
+		for k in lift + 1: p.px(xx, top - k, skin)
+		p.px(xx, top - lift, edge)
 
 static func _vehicle(r: Rect2, wreck := "") -> void:
 	(vehicles[_painting] as Array).append({ "rect": r, "wreck": wreck })
@@ -255,20 +281,44 @@ static func _airstrip(p: Pix) -> void:
 	for x in range(0, AW, 24): p.vline(x, 60, 24, Color("5a5e68"))
 	p.line(40, 66, 30, 84, Color("6a6e78"))
 	p.line(76, 66, 88, 82, Color("6a6e78"))
-	# the ring of cars, headlights on (beams in the haze), behind the wreck and clear of everybody
-	var ring := [[30, 95, "sedan", Color("2a2a2e"), 4.9, false], [116, 94, "muscle", Color("d8a03a"), 4.8, true]]
+	# the ring of cars, headlights on across the circle (beams in the haze), behind the wreck,
+	# clear of each other and of everybody
+	var ring := [[30, 95, "sedan", Color("2a2a2e"), 4.9, false], [128, 94, "muscle", Color("d8a03a"), 4.8, true]]
 	for c in ring:
-		_car(p, int(c[0]), int(c[1]), PixCars.length_px(float(c[4]), 0.45), String(c[2]), c[3], { "lights": true }, bool(c[5]))
-	p.beam(110, 86, 210, 80, 130, Color("fff4c8"), 0.25)
-	p.beam(116, 86, 20, 82, 130, Color("fff4c8"), 0.25)
-	# the wreck: Dad's Supreem, parked inside Mia's car
-	_car(p, 108, 126, PixCars.length_px(4.5, 0.56), "coupe", Color("3a6aa8"), { "rear": 0.9, "glass": true, "bumper": "gone" }, true, 0.0, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" }, "the wreck")
-	_car(p, 30, 128, PixCars.length_px(4.6, 0.56), "hatch", Color("d8d4c8"), { "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" }, false, 0.0, {}, "the wreck")
-	# Mia's turbo, on the ground, where turbos don't go
-	p.disc(204, 140, 5.0, Color("8a8a90"))
-	p.ring(204, 140, 5.0, Color("4a4a50"))
-	p.disc(204, 140, 2.0, Color("2a2a2e"))
-	p.rect(209, 138, 7, 3, Color("6a6a70"))
+		_car(p, int(c[0]), int(c[1]), PixCars.length_px(float(c[4]), 0.40), String(c[2]), c[3], { "lights": true }, bool(c[5]))
+	p.beam(101, 88, 210, 80, 130, Color("fff4c8"), 0.25)
+	p.beam(128, 88, 20, 82, 130, Color("fff4c8"), 0.25)
+	# the wreck: Dad's Supreem (the white hatch) went nose first into Mia's coupe. Both fronts
+	# folded where they met: two cars nose to nose, a metre shorter each, not one inside the other.
+	var hatch_len := PixCars.length_px(4.6, 0.56)
+	var coupe_len := PixCars.length_px(4.5, 0.56)
+	var hatch_dmg := { "front": 1.0, "glass": true, "smoke": 0.4, "bumper": "hang" }
+	var coupe_dmg := { "front": 1.0, "glass": true, "smoke": 0.6, "bumper": "gone" }
+	var coupe_mods := { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" }
+	# the coupe's crushed nose put on the Supreem's, one column shared
+	var seam := _reach(30, 128, hatch_len, "hatch", Color("d8d4c8"), hatch_dmg).end.x
+	var cx := seam - 1 - (_reach(AW / 2, 128, coupe_len, "coupe", Color("3a6aa8"), coupe_dmg, true, 0.0, coupe_mods).position.x - AW / 2)
+	p.ellipse(seam, 129, 14.0, 1.6, Color("3a8a6a", 0.5))                 # both radiators, on the runway
+	_car(p, 30, 128, hatch_len, "hatch", Color("d8d4c8"), hatch_dmg, false, 0.0, {}, "the wreck")
+	_car(p, cx, 128, coupe_len, "coupe", Color("3a6aa8"), coupe_dmg, true, 0.0, coupe_mods, "the wreck")
+	# both hoods folded up off the hit
+	_buckle(p, _alone(30, 128, hatch_len, "hatch", Color("d8d4c8"), hatch_dmg), seam - 12, seam - 4, 2)
+	_buckle(p, _alone(cx, 128, coupe_len, "coupe", Color("3a6aa8"), coupe_dmg, true, 0.0, coupe_mods), seam + 3, seam + 12, 2)
+	# glass, grille and indicator bits where they met
+	p.speckle(seam - 12, 126, 24, 3, Color("9ec4e0"), 0.3)
+	p.speckle(seam - 6, 127, 12, 2, Color("e0a040"), 0.12)
+	p.speckle(seam - 6, 127, 12, 2, Color("16161a"), 0.18)
+	# Mia's bumper and Mia's turbo, thrown clear onto the runway behind the hit, in the headlights:
+	# on the ground, where turbos don't go
+	var tx := seam + 2
+	p.rect(tx - 7, 95, 5, 2, Color("6a6a70"))
+	p.disc(tx, 96, 3.0, Color("8a8a90"))
+	p.ring(tx, 96, 3.0, Color("4a4a50"))
+	p.px(tx, 96, Color("2a2a2e"))
+	p.px(tx - 1, 95, Color("c8c8d0"))
+	p.line(seam - 5, 101, seam + 9, 99, Color("3a6aa8"))
+	p.line(seam - 5, 102, seam + 9, 100, Color("2a4a78"))
+	p.line(seam - 5, 103, seam + 9, 101, INK)
 	p.rect(0, 60, AW, 70, Color(0.7, 0.7, 0.8, 0.05))
 
 # ====================================================================== the office
