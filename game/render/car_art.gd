@@ -87,7 +87,8 @@ var n := 16                         # slices
 var atlas: ImageTexture             # every slice, side by side (slice z at x = z * size.x)
 var lamp_z0 := 0                    # the lamps' slices: lamp_tex[kind] holds slices lamp_z0 .. lamp_z0 + lamp_n - 1
 var lamp_n := 0
-var lamp_tex := {}                  # "brake", "rev", "head", "bl", "br" -> ImageTexture (lit pixels only)
+var lamp_tex := {}                  # "brake", "rev", "head", "bl", "br", "beacon" -> ImageTexture (lit pixels only)
+var has_beacons := false            # an emergency rig's lights (lamp_tex.beacon) to flash when it runs code
 var wheel_tex: ImageTexture         # one front wheel's stack, its slices side by side (rim face toward +y)
 var wheel_n := 0
 var wheel_size := Vector2i.ZERO
@@ -224,7 +225,7 @@ func compute() -> void:
 ## The textures, from what compute() painted. Main thread.
 func finish() -> void:
 	atlas = ImageTexture.create_from_image(_imgs.atlas)
-	for kk: String in ["brake", "rev", "head", "bl", "br"]: lamp_tex[kk] = ImageTexture.create_from_image(_imgs[kk])
+	for kk: String in ["brake", "rev", "head", "bl", "br", "beacon"]: lamp_tex[kk] = ImageTexture.create_from_image(_imgs[kk])
 	wheel_tex = ImageTexture.create_from_image(_imgs.wheel)
 	_imgs = {}
 
@@ -383,6 +384,7 @@ class _Shaper:
 		gh.resize(p.sx)
 		var g0 := _glass_rear()
 		var g1 := float(d.cowl_x)
+		var open := String(d.rear) == "open"
 		var belt_r := float(d.belt_r)
 		var belt_f := float(d.belt_f)
 		var dlo_r := float(d.dlo_r)
@@ -404,8 +406,9 @@ class _Shaper:
 			if u > g0 and u < g1:
 				var t := clampf((u - dlo_r) / maxf(0.01, a_bot - dlo_r), 0.0, 1.0)
 				var bz := Z(lerpf(belt_r, belt_f, t))
-				if zt[x] > bz + 0.6:
-					sh[x] = bz
+				# an open car has no roof over its cockpit, but the cockpit's still there
+				if zt[x] > bz + 0.6 or open:
+					sh[x] = minf(bz, zt[x])
 					gh[x] = 1
 		# a crushed end buckles: the hood (or the trunk) kinks up behind the crush, in folds
 		var fr := float(dmg.get("front", 0.0))
@@ -447,7 +450,10 @@ class _Shaper:
 			"fast", "hatch": return float(d.tail_x) + 0.005
 			"pickup": return float(d.cab_x)
 			"boxtruck": return float(d.get("box_x", 1.0))
-			"open": return float(d.dlo_r) - 0.02
+			"open":
+				# a Jepp's tub is open all the way back to the tailgate
+				if fam == "offroad": return 0.03 + 2.0 / maxf(1.0, float(p.lpx))
+				return float(d.dlo_r) - 0.02
 		return 0.0
 
 	## Ride height: slammed sits it down on its tires, lifted (and a donk) stands it up.
@@ -478,11 +484,13 @@ class _Shaper:
 		match nose:
 			"blunt": rn *= 0.4
 			"wedge":
-				tn = 0.16
-				rn = 0.2
+				# a doorstop: the front third drawn in to a point
+				tn = 0.34
+				rn = 0.1
 		if fam in ["sports", "mid", "rear", "roadster"]:
 			tn = maxf(tn, 0.09)
 			tt = 0.06
+		if cls == "exotic" or fam == "mid": tn = maxf(tn, 0.18)
 		if fam == "bubble":
 			tn = 0.2
 			tt = 0.16
@@ -672,7 +680,9 @@ class _Shaper:
 				# the hood and the trunk lid stop short of the fenders
 				if reg == CarArt.R_HOOD and vn > 0.86: reg = CarArt.R_FENDER
 				var edge := minf(w - av, minf(float(x_nose - x) * 1.4, float(x - x_tail) * 1.4))
-				p.m0[i] = _paint(_shade(edge), reg)
+				var shade := _shade(edge)
+				if reg == CarArt.R_HOOD and shade == 4: shade = _hood_shade(u, vn)
+				p.m0[i] = _paint(shade, reg)
 		# door shut lines and handles along the sides, for the side bands
 		for dc: Array in d.get("door_cuts", []):
 			for e: int in [0, 1]:
@@ -680,6 +690,21 @@ class _Shaper:
 				if xx >= 0 and xx < p.sx: p.doors[xx] = 1
 			var xh := int(round(X(float(dc[1])))) + 2
 			if xh >= 0 and xh < p.sx and p.doors[xh] == 0: p.doors[xh] = 2
+
+	## The hood's own lines by maker and era: a modern hood with two sharp creases running in
+	## toward the grille (the light catches the inside of each), or a domed one lit down the middle.
+	func _hood_shade(u: float, vn: float) -> int:
+		var year := int(d.year)
+		var t := clampf((u - float(d.cowl_x)) / maxf(0.05, 1.0 - float(d.cowl_x)), 0.0, 1.0)
+		if t < 0.08 or t > 0.92: return 4
+		var crease := float(d.get("crease", 0.0))
+		if year >= 1998 and crease >= 0.28:
+			var line := 0.5 - 0.16 * t
+			if absf(vn - line) < 0.07: return 5 if vn < line else 3
+			return 4
+		if year >= 1998 and crease >= 0.0 and crease < 0.2 or fam in ["muscle"] or String(d.cls) == "muscle":
+			return 5 if vn < 0.26 else 4
+		return 4
 
 	## How light the top of the paint is, by how far in from the edge it is: the flat tops catch
 	## the sky and the last couple of pixels roll over into shadow (a bevel, the pixel-art way).
@@ -710,7 +735,13 @@ class _Shaper:
 		var roof_crown := Z(float(d.crown)) * 0.5
 		var a_w := 1.0
 		var c_w := 1.0 + clampf(float(d.get("c_w", 0.0)) * 8.0, 0.0, 2.5) if not d.get("xo", false) else 1.0
+		# a modern sedan's C-pillar: thin on the six-light cars, thick on the rest
+		if not d.has("c_w") and int(d.year) >= 2000 and fam in ["sedan", "coupe"]:
+			c_w = 1.0 if (d.get("dna", {}) as Dictionary).get("sixlight", false) else 2.4
 		var black_pillars := String(d.get("pillar", "body")) == "black" or bool(d.get("xo", false))
+		if open:
+			_open_cockpit()
+			return
 		for x in p.sx:
 			if zt[x] < 0.0 or gh[x] == 0: continue
 			var u: float = p.ux[x]
@@ -722,16 +753,6 @@ class _Shaper:
 				if p.h0[i] < 0: continue
 				var v := float(y) + 0.5 - p.cy
 				var av := absf(v)
-				if open:
-					# no roof: the cockpit, seats and all, sunk into the body
-					if av < p.gb - 1.0 and u < cowl - 0.01:
-						p.h0[i] = maxi(p.b0[i], int(round(s - 0.32 * rz)) + p.zoff)
-						p.m0[i] = _cockpit(u, v, cowl)
-					elif av < p.gb - 1.0:
-						# the windshield frame
-						p.h0[i] = int(round(s + 0.35 * rz)) + p.zoff
-						p.m0[i] = CarArt.M_GLASS | (2 << 8)
-					continue
 				if av >= p.gb: continue
 				var tt := clampf((p.gb - av) / maxf(1.0, p.gb - p.gr), 0.0, 1.0)
 				var hz := s + (t_top - s) * tt
@@ -743,8 +764,9 @@ class _Shaper:
 				var on_roof := av < p.gr - 0.5 and u <= roof_f and u >= roof_r
 				var mat := 0
 				if on_roof:
+					# lit along the crown, rolling off toward the edges
 					var re := minf(p.gr - av, minf((u - roof_r), (roof_f - u)) * float(p.lpx))
-					mat = _paint(2 if re < 1.0 else (4 if re < 2.5 else 5), CarArt.R_ROOF)
+					mat = _paint(2 if re < 1.0 else (4 if re < 2.5 or av > p.gr * 0.62 else 5), CarArt.R_ROOF)
 				elif u > roof_f:
 					# the windshield, its A-pillars down each side
 					var edge := p.gr + (p.gb - p.gr) * clampf((u - roof_f) / maxf(0.01, cowl - roof_f), 0.0, 1.0)
@@ -835,16 +857,132 @@ class _Shaper:
 		if t < 0.35: return 2
 		return 1 if t < 0.75 else 0
 
-	## An open car's cockpit from above: two seats, the dash, the wheel, the deck behind.
-	func _cockpit(u: float, v: float, cowl: float) -> int:
-		var L_px := float(p.lpx)
-		var du := (cowl - u) * L_px
-		if du < 2.0: return CarArt.M_DASH
+	## An open car from above: the windshield standing up off the cowl in its frame, the dash, the
+	## seats sunk into the tub with the wheel in front of the driver's, the coaming round the edge,
+	## the top folded down or the hoops behind the seats; a Jepp's tub runs back to the tailgate,
+	## a bench and the cargo floor behind the front seats and the roll bar over it all.
+	func _open_cockpit() -> void:
+		var cowl := float(d.cowl_x)
+		var lp := float(p.lpx)
+		var offroad := fam == "offroad"
+		var year := int(d.year)
+		var ws_len := (0.16 if offroad else 0.32) * px / lp     # how far back the raked glass reaches
+		var ws0 := cowl - ws_len
+		var ws_h := (0.44 if offroad else 0.36) * rz            # how tall it stands over the belt
+		var frame := CarArt.M_CHROME | (3 << 8) if art.has("chrome") else CarArt.M_TRIM
+		if offroad: frame = _paint(4, CarArt.R_PILLAR)
+		var lip := 1.6 if p.gb > 9.0 else 1.1                    # the coaming round the cockpit (px)
 		var seat_c := p.gb * 0.48
-		var dv := absf(absf(v) - seat_c)
-		if du < 4.0 and v < 0.0 and dv < 2.0: return CarArt.M_TRIM | (1 << 16)    # the steering wheel
-		if du >= 3.0 and du < 9.0 and dv < p.gb * 0.32: return CarArt.M_SEAT | ((1 if du > 7.0 else 0) << 8)
-		return CarArt.M_SEAT | (2 << 8)
+		var seat_hw := maxf(1.5, p.gb * 0.3)
+		# the cockpit's length behind the glass, and the seats in it
+		var x_back := p.sx
+		for x in p.sx:
+			if gh[x] == 1: x_back = mini(x_back, x)
+		var cock := (ws0 - p.ux[x_back]) * lp
+		var seat0 := 4.5
+		var seat_len := clampf((cock if not offroad else 0.62 * px + seat0) - seat0 - 0.5, 4.0, 0.62 * px)
+		var seat1 := seat0 + seat_len
+		var bench0 := seat1 + 0.35 * px
+		var bench1 := bench0 + 0.45 * px
+		var top_z := 0.0
+		for x in p.sx:
+			if zt[x] < 0.0 or gh[x] == 0: continue
+			var u: float = p.ux[x]
+			var s: float = sh[x]
+			var du := (ws0 - u) * lp
+			var floor_z := int(round(s - 0.36 * rz)) + p.zoff
+			var belt_z := int(round(s)) + p.zoff
+			for y in p.sy:
+				var i := p.idx(x, y)
+				if p.h0[i] < 0: continue
+				var v := float(y) + 0.5 - p.cy
+				var av := absf(v)
+				if u >= ws0:
+					# the windshield, leaning back from the cowl; its frame round the top and the sides
+					if av >= p.gb - 0.5: continue
+					var hz := s + ws_h * clampf((cowl - u) / maxf(0.001, ws_len), 0.0, 1.0)
+					p.h0[i] = maxi(p.h0[i], int(round(hz)) + p.zoff)
+					top_z = maxf(top_z, hz)
+					var on_frame := (u - ws0) * lp < 1.0 or av > p.gb - 1.5
+					# low and see-through: the sky in it, the dash showing under it
+					p.m0[i] = frame if on_frame else CarArt.M_GLASS | (maxi(2, _glint(u, v, ws0, cowl)) << 8)
+					p.gs[i] = (frame if (frame & 255) == CarArt.M_PAINT else CarArt.M_TRIM) if on_frame else 0
+					continue
+				if av > p.gb - lip or av > p.hw[x] - lip: continue
+				var h := floor_z
+				var m := CarArt.M_SEAT | (2 << 8)
+				var dv := absf(av - seat_c)
+				if du < 2.0:
+					h = belt_z - 1
+					m = CarArt.M_DASH
+				elif du < 4.0 and v < 0.0 and dv < 2.2 and (du >= 3.0 or dv > 1.2):
+					# the steering wheel, its rim across in front of the driver
+					h = belt_z - 1
+					m = CarArt.M_TRIM | (1 << 16)
+				elif du >= seat0 and du < seat1 and dv < seat_hw:
+					# a seat: the cushion low, the back standing up at its rear, the headrest
+					var back := du > seat1 - 2.2
+					h = floor_z + int(round(0.14 * rz))
+					m = CarArt.M_SEAT | (1 << 8)
+					if back:
+						h = belt_z + (1 if dv < seat_hw * 0.55 else 0)
+						m = CarArt.M_SEAT | ((3 if dv < seat_hw * 0.55 else 1) << 8)
+					elif dv > seat_hw - 1.0: m = CarArt.M_SEAT
+				elif du >= seat0 - 1.0 and du < seat1 - 2.0 and av < maxf(1.0, p.gb * 0.12):
+					# the console between the seats, the shifter on it
+					h = floor_z + int(round(0.18 * rz))
+					m = CarArt.M_CHROME | (2 << 8) if absf(du - seat0 - seat_len * 0.3) < 0.8 else CarArt.M_TRIM | (1 << 8)
+				elif offroad and du >= bench0 and du < bench1 and av < p.gb - lip - 0.5:
+					# a Jepp's back bench
+					var bback := du > bench1 - 1.8
+					h = floor_z + int(round((0.36 if bback else 0.14) * rz))
+					m = CarArt.M_SEAT | ((3 if bback else 1) << 8)
+				elif offroad and du >= bench1:
+					# the cargo floor, ribbed
+					h = floor_z + 1
+					m = CarArt.M_BED | ((x % 3) << 8)
+				p.h0[i] = maxi(p.b0[i], h)
+				p.m0[i] = m
+				p.belt[i] = 999
+		p.roof_z = top_z + float(p.zoff)
+		# behind the seats: a roll bar on the Jepps, hoops on the modern roadsters, or the top folded down
+		var x_seat := int(round(X(ws0 - (seat1 - 1.0) / lp)))
+		var bar_z := int(round(sh[clampi(x_seat, 0, p.sx - 1)] + ws_h * 1.15)) + p.zoff
+		if offroad or mods.get("rollbar", false):
+			# a hoop behind the front seats, bars back to the tub's corners
+			var xr0 := x_tail + 2
+			for x in range(xr0, mini(p.sx, x_seat + 1)):
+				for y in p.sy:
+					var av2 := absf(float(y) + 0.5 - p.cy)
+					if av2 > p.gb - lip + 0.2: continue
+					var rail := av2 > p.gb - lip - 1.0
+					if not rail and x != x_seat and x != xr0: continue
+					var i2 := p.idx(x, y)
+					var post := rail and (x == x_seat or x == xr0)
+					p.b2[i2] = (int(round(sh[x])) + p.zoff) if post else bar_z - 1
+					p.h2[i2] = bar_z
+					p.m2[i2] = CarArt.M_TRIM | (1 << 8)
+			p.roof_z = maxf(p.roof_z, float(bar_z))
+		elif year >= 1996 and x_seat >= 0:
+			# a hoop behind each headrest
+			for x in range(x_seat - 1, x_seat + 1):
+				for y in p.sy:
+					var dv2 := absf(absf(float(y) + 0.5 - p.cy) - seat_c)
+					if dv2 > seat_hw * 0.8: continue
+					var i3 := p.idx(x, y)
+					p.b2[i3] = int(round(sh[x])) + p.zoff
+					p.h2[i3] = bar_z - 2
+					p.m2[i3] = (CarArt.M_CHROME | (2 << 8)) if x == x_seat else _paint(4, CarArt.R_BODY)
+		elif not art.has("hardtop") and x_back > x_tail:
+			# the soft top folded down on the deck behind the cockpit
+			for x in range(maxi(x_tail + 2, x_back - 3), x_back):
+				for y in p.sy:
+					var av3 := absf(float(y) + 0.5 - p.cy)
+					var i4 := p.idx(x, y)
+					if p.h0[i4] < 0 or av3 > p.gb - lip: continue
+					p.h0[i4] += 2 if x > x_back - 3 else 1
+					p.m0[i4] = CarArt.M_TRIM | ((2 if x == x_back - 1 else 0) << 8)
+					p.belt[i4] = 999
 
 	# ------------------------------------------------------------ the ends
 
@@ -893,42 +1031,29 @@ class _Shaper:
 		if hl <= 0.0: hl = { "round": 0.035, "quad": 0.04, "rect": 0.035, "flush": 0.05, "jewel": 0.06, "popup": 0.0, "truck": 0.04 }.get(head, 0.07)
 		var hpx := maxf(2.0, hl * float(p.lpx))
 		var tail_kind := String(d.get("tail_lamp", "swept"))
-		var tlpx := maxf(1.5, float(d.get("tail_len", 0.0)) * float(p.lpx) * 0.6)
+		var tlpx := maxf(2.0, float(d.get("tail_len", 0.0)) * float(p.lpx) * 0.6)
+		var grille := String(d.get("grille", "none"))
 		for x in p.sx:
 			var dn := float(x_nose) - float(x)
 			var dt := float(x) - float(x_tail)
-			if dn > hpx + 1.0 and dt > tlpx + 2.0: continue
+			if dn > hpx * 1.7 + 1.0 and dt > tlpx + 3.0: continue
 			for y in p.sy:
 				var i := p.idx(x, y)
 				if p.h0[i] < 0 or (p.m0[i] & 255) != CarArt.M_PAINT: continue
 				var v := float(y) + 0.5 - p.cy
 				var vn := absf(v) / maxf(1.0, p.hw[x])
-				# headlamps: on the hood's front corners
-				if dn <= hpx and head != "none":
-					var on := false
-					match head:
-						"round": on = vn > 0.6 and vn < 0.9 and dn < 2.5
-						"quad": on = (vn > 0.48 and vn < 0.66 or vn > 0.72 and vn < 0.9) and dn < 2.0
-						"popup": on = false
-						"truck", "rect": on = vn > 0.55 and vn < 0.92 and dn < 2.0
-						_:
-							# swept back along the fender, narrowing as it goes
-							var reach := hpx * (0.4 + 0.6 * clampf((vn - 0.55) / 0.4, 0.0, 1.0))
-							on = vn > 0.56 and vn < 0.95 and dn < reach
-					if on: p.m0[i] = CarArt.M_HEAD | ((0 if v < 0.0 else 1) << 16)
+				var side := (0 if v < 0.0 else 1) << 16
+				# the grille between the lamps, seen over the nose: the maker's face in a pixel or two
+				if dn < 1.0 and grille != "none" and _grille_at(grille, vn): p.m0[i] = CarArt.M_GRILLE
+				# headlamps: on the hood's front corners, in the maker's shape
+				if dn <= hpx * 1.7 and head != "none":
+					if _head_at(head, dn, vn, hpx): p.m0[i] = CarArt.M_HEAD | side
 					elif head == "popup" and vn > 0.6 and vn < 0.9 and absf(dn - 3.0) < 0.6: p.m0[i] = _paint(2, CarArt.R_HOOD)
 					# turn signals at the outer corners
-					if dn < 2.0 and vn >= 0.9: p.m0[i] = CarArt.M_AMBER | ((0 if v < 0.0 else 1) << 16)
-				# tail lamps on the deck's back corners (the ones you see from above)
-				if dt <= tlpx + 1.0:
-					var on2 := false
-					match tail_kind:
-						"bar", "racetrack": on2 = dt < 1.5 and vn < 0.92
-						"wrap": on2 = vn > 0.6 and dt < 2.5
-						"fin": on2 = vn > 0.75 and dt < 3.0
-						"tall": on2 = false
-						_: on2 = vn > 0.62 and dt < 1.5
-					if on2: p.m0[i] = CarArt.M_TAIL | ((0 if v < 0.0 else 1) << 16)
+					if dn < 2.0 and vn >= 0.9: p.m0[i] = CarArt.M_AMBER | side
+				# tail lamps on the deck's back corners (the ones you see from above), big enough to read
+				if dt <= tlpx + 3.0 and _tail_at(tail_kind, dt, vn, tlpx): p.m0[i] = CarArt.M_TAIL | side
+
 		# the lamps' slices (the faces carry them too): from the bumper's top to the hood
 		p.lz0 = maxi(0, int(minf(p.z_nose.x, p.z_tail.x)) - 1)
 		p.lz1 = int(maxf(p.z_nose.z, p.z_tail.z)) + 2
@@ -937,6 +1062,63 @@ class _Shaper:
 			if (p.m0[i] & 255) == CarArt.M_BRAKE3:
 				p.lz1 = maxi(p.lz1, p.h0[i] + 1)
 				break
+
+	## Is this spot (dn px back from the nose, vn out from the middle 0..1) a headlamp, by its shape?
+	func _head_at(head: String, dn: float, vn: float, hpx: float) -> bool:
+		match head:
+			"round": return vn > 0.6 and vn < 0.9 and dn < 2.5
+			"quad": return (vn > 0.48 and vn < 0.66 or vn > 0.72 and vn < 0.9) and dn < 2.0
+			"popup", "hidden": return false
+			"truck", "rect": return vn > 0.55 and vn < 0.92 and dn < 2.0
+			"jewel", "frog": return Vector2((dn - 1.6) / 1.6, (vn - 0.74) / 0.16).length() < 1.0
+			"tower": return vn > 0.8 and vn < 0.96 and dn < 2.0
+			"blade":
+				# a thin streak run far back along the fender
+				return vn > 0.72 and vn < 0.95 and dn < hpx * 1.2 * (vn - 0.6) / 0.35
+			"teardrop":
+				# a fat drop, round at the front, pointed at the back
+				var k := clampf(dn / maxf(1.0, hpx * 1.1), 0.0, 1.0)
+				return dn < hpx * 1.1 and absf(vn - 0.76 - k * 0.06) < 0.2 * (1.0 - k * k)
+			"hook":
+				# swept back, then hooked in across the hood at its back end
+				var reach := hpx * (0.5 + 0.5 * clampf((vn - 0.55) / 0.4, 0.0, 1.0))
+				return vn > 0.56 and vn < 0.95 and dn < reach or absf(dn - hpx * 0.95) < 0.8 and vn > 0.5 and vn < 0.8
+			"boomerang":
+				# the long one that runs on up the fender
+				var reach2 := hpx * (0.4 + 0.6 * clampf((vn - 0.55) / 0.4, 0.0, 1.0))
+				return vn > 0.56 and vn < 0.95 and dn < reach2 or vn > 0.86 and dn < hpx * 1.6
+			"split":
+				# a slim running lamp at the top, the lamps proper in a block of their own behind
+				return vn > 0.6 and vn < 0.92 and dn < 1.2 or vn > 0.66 and vn < 0.9 and dn > 2.2 and dn < 2.2 + hpx * 0.5
+		# swept back along the fender, narrowing as it goes
+		var reach3 := hpx * (0.4 + 0.6 * clampf((vn - 0.55) / 0.4, 0.0, 1.0))
+		return vn > 0.56 and vn < 0.95 and dn < reach3
+
+	## Is this spot (dt px in from the tail) a tail lamp?
+	func _tail_at(kind: String, dt: float, vn: float, tlpx: float) -> bool:
+		match kind:
+			"bar", "racetrack", "slim": return dt < 2.0 and vn < 0.94
+			"wrap": return vn > 0.6 and dt < 2.5 or vn > 0.85 and dt < tlpx + 2.0
+			"fin": return vn > 0.75 and dt < 3.0
+			"tall", "tower": return vn > 0.8 and dt < 2.2
+			"round": return dt < 2.2 and (absf(vn - 0.78) < 0.13)
+			"dual": return dt < 2.2 and (absf(vn - 0.82) < 0.1 or absf(vn - 0.56) < 0.1)
+			"ell": return vn > 0.6 and dt < 1.8 or vn > 0.84 and dt < tlpx + 2.0
+			"boomerang": return vn > 0.62 and dt < 1.8 or vn > 0.8 and dt < 1.8 + tlpx * (vn - 0.8) / 0.2
+			"teardrop": return dt < 2.0 + tlpx * 0.6 * clampf((vn - 0.6) / 0.35, 0.0, 1.0) and vn > 0.58
+			"lid": return dt < 2.0 and vn > 0.4
+			"block": return dt < 2.2 and vn > 0.5
+		return vn > 0.62 and dt < 2.0
+
+	## The grille as it shows over the nose, by its kind.
+	func _grille_at(kind: String, vn: float) -> bool:
+		match kind:
+			"big", "hex", "tiger", "waterfall": return vn < 0.5
+			"split": return vn > 0.1 and vn < 0.45
+			"beak", "vee": return vn < 0.22
+			"kidney": return vn > 0.06 and vn < 0.3
+			"slim", "bar": return vn < 0.36
+		return false
 
 	## Mirrors stand off the doors at the front of the side glass (on the fenders, on old JDM cars).
 	func _mirrors() -> void:
@@ -1179,15 +1361,46 @@ class _Shaper:
 						p.m2[i] = CarArt.M_STEEL | ((1 if av < w * 0.5 and (x % 3) != 0 else 0) << 8)
 					elif (absf(u - 0.5) < 0.03 or absf(u - 0.75) < 0.03) and av < w * 0.3:
 						p.m0[i] = CarArt.M_TRIM | (2 << 8)
-				if school or amb:
+				if school:
 					# warning lamps on the four corners
 					var front := x > x1 - 3
 					var back := x < x0 + 2
 					if (front or back) and av > w * 0.55 and av < w * 0.85:
 						p.b2[i] = rz0 + 1
 						p.h2[i] = rz0 + 1
-						p.m2[i] = (CarArt.M_BEACON if school and av < w * 0.7 else CarArt.M_TAIL) if school else CarArt.M_LIGHTBAR | (1 << 8)
+						p.m2[i] = CarArt.M_BEACON if av < w * 0.7 else CarArt.M_TAIL
+		if amb: _ambulance_roof()
 		p.lz1 = maxi(p.lz1, rz0 + 2)
+
+	## An ambulance's box from above: a red beacon on each of its top corners, a light bar across
+	## its front edge over the cab (red and clear lenses), and the air conditioner on the roof.
+	func _ambulance_roof() -> void:
+		var bx := mini(int(round(X(float(d.get("box_x", 1.0))))), x_nose)
+		var top := 0
+		for x in range(x_tail, bx):
+			top = maxi(top, p.h0[p.idx(x, int(p.cy))])
+		for x in range(x_tail + 1, bx):
+			var w: float = p.hw[x]
+			for y in p.sy:
+				var i := p.idx(x, y)
+				if p.h0[i] < top - 1: continue
+				var av := absf(float(y) + 0.5 - p.cy)
+				var mat := -1
+				var hgt := 1
+				var front := x >= bx - 3
+				if (front or x <= x_tail + 2) and av > w * 0.62 and av < w - 0.5:
+					mat = CarArt.M_BEACON | (1 << 16)
+				elif front and x == bx - 2 and av < w * 0.55:
+					# the light bar: red and clear lenses in turn
+					mat = CarArt.M_BEACON | ((1 if int(av / 2.0) % 2 == 0 else 2) << 16)
+				elif p.ux[x] > 0.2 and p.ux[x] < 0.34 and av < w * 0.45:
+					mat = CarArt.M_STEEL | ((1 if (x % 3) != 0 else 2) << 8)
+					hgt = 2
+				if mat < 0: continue
+				p.b2[i] = top + 1
+				p.h2[i] = top + hgt
+				p.m2[i] = mat
+		p.lz1 = maxi(p.lz1, top + 3)
 
 	## A pickup's bed (and what's in it, or the cover over it); the box behind a box truck's cab.
 	func _bed_and_box() -> void:
@@ -1274,8 +1487,25 @@ class _Shaper:
 					var i8 := p.idx(x, y)
 					if p.h0[i8] < 0: continue
 					var av5 := absf(float(y) + 0.5 - p.cy)
-					p.m0[i8] = _paint(4 if av5 < p.hw[x] - 1.0 else 2, CarArt.R_BOX) | (((1 if (x - x_tail) % 6 == 0 else 0)) << 16)
+					# the roof bows between its ribs: a shade darker over each one (an ambulance's box is smooth)
+					var rib := (x - x_tail) % 6 == 0 and not art.has("ambulance")
+					p.m0[i8] = _paint(2 if av5 >= p.hw[x] - 1.0 else (3 if rib else 4), CarArt.R_BOX)
+					# a translucent skylight strip down the middle of a parcel box
+					if not art.has("ambulance") and av5 < p.hw[x] * 0.14 and x > x_tail + 2 and x < bx - 3:
+						p.m0[i8] = CarArt.M_PLATE
 					p.belt[i8] = 999
+			# a roof vent or two near the front of the box
+			if not art.has("ambulance"):
+				for k: int in [5, 12]:
+					var xv := bx - k
+					if xv <= x_tail + 2: continue
+					for y in p.sy:
+						var av7 := absf(float(y) + 0.5 - p.cy)
+						var i11 := p.idx(xv, y)
+						if p.h0[i11] < 0 or absf(av7 - p.hw[xv] * 0.55) > 1.2: continue
+						p.b2[i11] = p.h0[i11] + 1
+						p.h2[i11] = p.h0[i11] + 1
+						p.m2[i11] = CarArt.M_STEEL | (1 << 8)
 		elif d.body == "tow":
 			# the wrecker: a steel deck behind the cab, the boom down the middle
 			var xc2 := int(round(X(float(d.cab_x)))) - 1
@@ -1610,6 +1840,7 @@ class _Painter:
 	var lamp_head := PackedInt32Array()
 	var lamp_bl := PackedInt32Array()
 	var lamp_br := PackedInt32Array()
+	var lamp_beacon := PackedInt32Array()
 	var dmg: Dictionary
 	var rim_c := Color("c9ced6")
 	var rim_style := "fivespoke"
@@ -1655,6 +1886,7 @@ class _Painter:
 	var chrome_frame := false
 	var seat_c := Color("26262a")
 	var fleet := ""                    # schoolbus, bus, ambulance, packer: the outfit's bands down the side
+	var black_roof: Array[Color] = []  # a floating roof: the roof and its pillars in gloss black
 	# per column
 	var door0 := PackedByteArray()     # the front doors' span
 	var door1 := PackedByteArray()     # the back doors'
@@ -1744,6 +1976,17 @@ class _Painter:
 		grille_none = int(d.year) >= 2012 and String(dna.get("grille", "")) == "none"
 		chrome_frame = String(d.get("frame", "black")) == "chrome"
 		seat_c = Color("3a2c26") if int(d.year) < 1985 else Color("26262a")
+		# the late cars that float their roof on blacked-out pillars (one in three, by the car)
+		var fam_r := String(d.family)
+		if int(d.year) >= 2014 and fam_r in ["sedan", "hatch", "coupe", "suv"] and paint.get_luminance() > 0.2 and not twotone \
+				and absi(String(d.get("id", d.model)).hash()) % 3 == 0 and not mods.has("livery"):
+			var rb := CarGen.ramp(Color("1a1c20"), "gloss")
+			for kk: String in ["deep", "sh", "mid", "base", "lt", "hi", "spec"]: black_roof.append(rb[kk])
+		if String(d.rear) == "open":
+			# an open car shows off its seats: black, tan, red or cream leather, by the car
+			var hides: Array[Color] = [Color("3e3e46"), Color("9a7650"), Color("8a2a24"), Color("d0c4a4")]
+			if int(d.year) >= 1995: hides = [Color("3e3e46"), Color("3e3e46"), Color("9a7650"), Color("8a2a24")]
+			seat_c = hides[absi(String(d.get("id", d.model)).hash()) % hides.size()]
 		for fk: String in ["schoolbus", "bus", "ambulance", "packer"]:
 			if d.art.has(fk) and fleet == "": fleet = fk
 		if String(d.family) == "trailer": fleet = "trailer"
@@ -1777,6 +2020,7 @@ class _Painter:
 		lamp_head.resize(ln)
 		lamp_bl.resize(ln)
 		lamp_br.resize(ln)
+		lamp_beacon.resize(ln)
 		for y in p.sy:
 			for x in p.sx:
 				var i := y * p.sx + x
@@ -1790,6 +2034,7 @@ class _Painter:
 		art._imgs.head = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_head.to_byte_array())
 		art._imgs.bl = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_bl.to_byte_array())
 		art._imgs.br = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_br.to_byte_array())
+		art._imgs.beacon = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_beacon.to_byte_array())
 		_front_wheel_stack()
 
 	func _lamp(kind: int, x: int, y: int, z: int, c: Color) -> void:
@@ -1803,6 +2048,9 @@ class _Painter:
 			2: lamp_head[at] = ci
 			3: lamp_bl[at] = ci
 			4: lamp_br[at] = ci
+			5:
+				lamp_beacon[at] = ci
+				art.has_beacons = true
 
 	## A cheap, steady noise for (x, y): the same pixel gets the same speck every time.
 	func _hn(x: int, y: int, s := 0) -> float:
@@ -1838,9 +2086,13 @@ class _Painter:
 		# only the car's outside faces carry the bumpers, the lamps and the grille
 		var inner := p.nmin[i] >= 0
 		var riser := c.darkened(0.12)
+		# a crowned roof or hood steps down a slice at a time: the same paint all the way, so the
+		# steps don't draw contour lines across it
+		var smooth := inner and (m & 255) == CarArt.M_PAINT and top - p.nmin[i] <= 2 and _paint_round(i)
 		for z in range(vis, top):
 			var sc: Color
 			if bolt: sc = _top_colour(m, x, y).darkened(0.25)
+			elif smooth: sc = c
 			elif inner and z <= belt: sc = riser
 			elif z > belt: sc = _glass_side(i, x, y, z, belt)
 			else:
@@ -1858,6 +2110,14 @@ class _Painter:
 							flank_c[fi] = sc.to_rgba32()
 			if z == b and ground: sc = sc.lerp(CarArt.INK, 0.65)
 			buf[row + z * p.sx] = sc.to_abgr32()
+
+	## True when every neighbour lower than this pixel is paint too (a step inside one panel).
+	func _paint_round(i: int) -> bool:
+		var top: int = p.h0[i]
+		for j: int in [i - 1, i + 1, i - p.sx, i + p.sx]:
+			if j < 0 or j >= p.h0.size() or p.h0[j] >= top: continue
+			if (p.m0[j] & 255) != CarArt.M_PAINT: return false
+		return true
 
 	func _column_wheel(i: int, x: int, y: int) -> void:
 		var top: int = p.h1[i]
@@ -2018,6 +2278,7 @@ class _Painter:
 		match mat:
 			CarArt.M_PAINT:
 				if (m >> 20) & 1 == 1: return _paint_c(shade, (m >> 12) & 15, x, y).darkened(0.38)
+				if not black_roof.is_empty() and ((m >> 12) & 15) in [CarArt.R_ROOF, CarArt.R_PILLAR]: return black_roof[clampi(shade - 2, 0, 6)]
 				return _paint_c(shade, (m >> 12) & 15, x, y)
 			CarArt.M_GLASS:
 				var g: Color = glass[clampi(shade, 0, 3)]
@@ -2038,12 +2299,22 @@ class _Painter:
 			CarArt.M_AMBER: return CarArt.AMBER_OFF
 			CarArt.M_REV: return Color("d8d8d0")
 			CarArt.M_GRILLE: return Color("17181c")
-			CarArt.M_SEAT: return seat_c.lightened(0.12) if shade == 1 else (seat_c if shade == 0 else Color("1c1c20"))
+			CarArt.M_SEAT:
+				match shade:
+					0: return seat_c.darkened(0.15)
+					1: return seat_c
+					3: return seat_c.lightened(0.18)
+				return Color("1c1c20")
 			CarArt.M_DASH: return Color("18181c")
 			CarArt.M_BED: return Color("2a2a2e") if shade != 0 else Color("1c1c20")
 			CarArt.M_CARGO: return _cargo(vr, shade, x, y)
 			CarArt.M_SIGN: return _sign_top(vr, x, y)
-			CarArt.M_BEACON: return CarArt.AMBER if (x + y) % 2 == 0 else CarArt.AMBER.darkened(0.2)
+			CarArt.M_BEACON:
+				# amber, an ambulance's red, or a clear lens
+				match vr:
+					1: return Color("b81c18") if (x + y) % 2 == 0 else Color("8a1410")
+					2: return Color("e4e6ea")
+				return CarArt.AMBER if (x + y) % 2 == 0 else CarArt.AMBER.darkened(0.2)
 			CarArt.M_PLATE: return Color("d8d4c0")
 			CarArt.M_BRAKE3: return Color("7a1414")
 			CarArt.M_LIGHTBAR: return Color("f4f4ec") if shade != 0 else Color("2a2c32")
@@ -2081,7 +2352,7 @@ class _Painter:
 		var g: int = p.gs[i]
 		if g == 0: g = CarArt.M_SIDEGLASS
 		if (g & 255) == CarArt.M_PAINT: return _paint_c(2, CarArt.R_PILLAR, x, y, 0.95).darkened(0.08)
-		if (g & 255) == CarArt.M_TRIM: return CarArt.TRIM
+		if (g & 255) == CarArt.M_TRIM: return CarArt.TRIM if (p.m0[i] & 255) != CarArt.M_CHROME else CarArt.CHROME[2]
 		if z == belt + 1 and chrome_frame: return CarArt.CHROME[2]
 		return glass[0] if (z - belt) % 4 != 1 else glass[1]
 
@@ -2202,6 +2473,8 @@ class _Painter:
 					_lamp(3 + vr, x, y, z, CarArt.TAIL_LIT)
 			CarArt.M_AMBER: _lamp(3 + vr, x, y, z, CarArt.AMBER_LIT)
 			CarArt.M_BRAKE3: _lamp(0, x, y, z, CarArt.TAIL_LIT)
+			CarArt.M_BEACON:
+				if (m >> 16) & 15 != 0: _lamp(5, x, y, z, Color("ff2a1e") if (m >> 16) & 15 == 1 else Color("f4f8ff"))
 			CarArt.M_LIGHTBAR:
 				if ((m >> 8) & 15) != 0: _lamp(2, x, y, z, Color("fffff0"))
 

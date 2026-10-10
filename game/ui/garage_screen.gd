@@ -84,6 +84,8 @@ var dyno_t := -1.0
 var tune_row := 0
 var preview: ImageTexture
 var preview_top: CarArt              # and how it'll look out on the road, from above
+var preview_big: CarArt              # the same, drawn twice the size, for the top view
+var top_view := false                # the preview shows the car from above, big, turning
 var preview_key := ""
 var rng := RandomNumberGenerator.new()
 
@@ -136,6 +138,8 @@ func _process(dt: float) -> void:
 	if Input.is_action_just_pressed("ui_right"): dx = 1
 	if Input.is_action_just_pressed("ui_left"): dx = -1
 	var go := Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("use")
+	# flip the preview between the side and the top while you try things on
+	if tabs()[tab] == "LOOKS" and Input.is_action_just_pressed("horn"): top_view = not top_view
 	match tabs()[tab]:
 		"CARS": _cars_input(dx, go)
 		"UPGRADES": _upgrades_input(dy, dx, go)
@@ -397,7 +401,7 @@ func _draw() -> void:
 		BAY: hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: 1TON PUTS IT IN  {ui_cancel}: CLOSE"
 		"CARS": hint = "{leftright}: PICK  {use}: TAKE IT OUT  {horn}: GUS FIXES IT  {ui_cancel}: CLOSE"
 		"UPGRADES": hint = "{updown}: SLOT  {leftright}: PART  {ui_accept}: INSTALL  {ui_cancel}: CLOSE"
-		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY THE BODY SHOP  {ui_cancel}: CLOSE"
+		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY  {horn}: %s  {ui_cancel}: CLOSE" % ("SIDE VIEW" if top_view else "TOP VIEW")
 		"ROCKAUTTO.CA": hint = "{leftright}: CATEGORY  {updown}: PART  {ui_accept}: ORDER  {ui_cancel}: CLOSE"
 		"DYNO": hint = "{updown}: BOOST/TIMING  {leftright}: TUNE  {ui_accept}: PULL  {ui_cancel}: CLOSE"
 	PixelFont.draw(self, Vector2(16, 344), Hints.fmt(hint), ASH)
@@ -431,10 +435,16 @@ func _preview_box() -> void:
 		if float(d.get("rear", 0.0)) > 0.3: dmg.rear = float(d.rear) * 0.6
 		preview = ImageTexture.create_from_image(PixCars.showroom(spec, len, Color(paint), looks, dmg))
 		preview_top = CarArt.new(spec, Color(paint), _car().damage, 5, 1.0, looks)
-	var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
-	draw_texture(preview, pos)
-	# from above, turning slowly on the shop floor's corner
-	CarView.paint_stack(self, preview_top, Vector2(r.end.x - 48, r.position.y + 50), Time.get_ticks_msec() / 2400.0)
+		preview_big = null
+	if top_view and tabs()[tab] == "LOOKS":
+		# from above, big, turning slowly in the middle of the floor
+		if preview_big == null: preview_big = CarArt.new(spec, Color(paint), _car().damage, 5, 2.0, looks)
+		CarView.paint_stack(self, preview_big, r.get_center() + Vector2(0, 14), Time.get_ticks_msec() / 2400.0)
+	else:
+		var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
+		draw_texture(preview, pos)
+		# from above, turning slowly on the shop floor's corner
+		CarView.paint_stack(self, preview_top, Vector2(r.end.x - 48, r.position.y + 50), Time.get_ticks_msec() / 2400.0)
 	var name := "%s %s '%s" % [String(spec.make).to_upper(), String(spec.model).to_upper(), str(int(spec.get("year", 0)) % 100).pad_zeros(2)]
 	PixelFont.draw(self, r.position + Vector2(6, 6), name, GOLD, 2)
 	# the numbers, under the car

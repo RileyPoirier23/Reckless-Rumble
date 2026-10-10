@@ -16,6 +16,7 @@ var headlights := false
 var wheel_turn := 0.0              # for the tread flicker
 var blink_left := false            # the turn signal switch (the lamp pulses on its own)
 var blink_right := false
+var beacons := false               # an emergency rig running code: its roof lights flash
 var lift := 0.0                    # pixels the whole car sits up off its shadow (a hop)
 var wheel_k := 1.0                 # how big the front wheels draw (old donk scaling; the art sizes its own wheels now)
 var still := false                 # a parked car: only redrawn when the camera turns or it's on screen again
@@ -134,6 +135,8 @@ func _lamp_slice(ci: CanvasItem, z: int, off: Vector2, half: Vector2, bl: bool, 
 	elif headlights: ci.draw_texture_rect_region(art.lamp_tex.brake, dst, src, Color(0.6, 0.6, 0.6))
 	if reversing: ci.draw_texture_rect_region(art.lamp_tex.rev, dst, src)
 	if headlights: ci.draw_texture_rect_region(art.lamp_tex.head, dst, src)
+	if beacons and art.has_beacons and fmod(Time.get_ticks_msec() / 1000.0, 0.34) < 0.17:
+		ci.draw_texture_rect_region(art.lamp_tex.beacon, dst, src)
 	if bl: ci.draw_texture_rect_region(art.lamp_tex.bl, dst, src)
 	if br: ci.draw_texture_rect_region(art.lamp_tex.br, dst, src)
 
@@ -142,7 +145,7 @@ class LampLayer extends Node2D:
 	var view: CarView
 	func _draw() -> void:
 		if view == null or view.art == null or view.art.lamp_tex.is_empty(): return
-		if not (view.braking or view.reversing or view.headlights or view.blink_left or view.blink_right): return
+		if not (view.braking or view.reversing or view.headlights or view.blink_left or view.blink_right or view.beacons): return
 		var half := Vector2(view.art.size) / 2.0
 		var fwd := Vector2(cos(view.heading), sin(view.heading))
 		var rt := Vector2(-sin(view.heading), cos(view.heading))

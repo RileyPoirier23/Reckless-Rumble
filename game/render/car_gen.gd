@@ -3239,12 +3239,19 @@ class _Car:
 				if on_paint(xx, yy2): p.img.set_pixel(xx, yy2, CarGen.CHROME[3])
 		var roof_mod := String(mods.get("roof", "stock"))
 		if (d.art.has("ttops") and roof_mod == "stock" or roof_mod == "ttops") and lod >= 1:
+			# the glass panels set into the roof over the doors: a band of glass down through the
+			# roof line, sky along its top, the T-bar's frame at either end
 			var tx0 := int(X(float(d.a_top))) - int(lf * 0.02)
-			var tx1 := int(X(float(d.a_top))) - int(lf * 0.14)
+			var tx1 := int(X(float(d.a_top))) - int(lf * 0.15)
+			var tt := maxi(2, int(lf * 0.012))
 			for xx in range(tx1, tx0):
 				var ty := _first_body(xx)
-				p.img.set_pixel(xx, ty, CarGen.GLASS_TOP)
-				if xx % 3 == 0: p.img.set_pixel(xx, ty + 1, CarGen.GLASS)
+				for k in tt:
+					if on_paint(xx, ty + k): p.img.set_pixel(xx, ty + k, CarGen.GLASS_TOP if k == 0 else (CarGen.GLASS if (xx + k) % 4 != 0 else CarGen.GLASS_TOP))
+			for ex: int in [tx1 - 1, tx0]:
+				var ty2 := _first_body(ex)
+				for k2 in tt + 1:
+					if on_paint(ex, ty2 + k2): p.img.set_pixel(ex, ty2 + k2, CarGen.INK)
 		if (d.art.has("sunroof") and roof_mod == "stock" or roof_mod == "sunroof") and lod >= 1:
 			var sx0 := int(X(float(d.a_top))) - int(lf * 0.05)
 			for xx in range(sx0 - int(lf * 0.1), sx0):
@@ -3807,14 +3814,17 @@ class _Car:
 				for yy in range(t0, t0 + maxi(2, 2 * u)):
 					if on_paint(xx, yy): p.img.set_pixel(xx, yy, Color("2a2c30") if (xx + yy) % 2 == 0 else Color("1a1b1e"))
 		if (art.has("scoop") and hood == "stock") or hood == "scoop":
-			var sx := int(X(float(d.cowl_x) + (float(d.nose_x) - float(d.cowl_x)) * 0.35))
-			var sw := int(lf * 0.08)
+			# a scoop that stands up off the hood: sloping up from the cowl, its open mouth facing
+			# forward, lit along the top
+			var sx := int(X(float(d.cowl_x) + (float(d.nose_x) - float(d.cowl_x)) * 0.22))
+			var sw := int(lf * 0.13)
 			var top := _first_body(sx + sw / 2)
-			var sh := maxi(2, int(lf * 0.016))
-			var pts3 := PackedVector2Array([Vector2(sx, top + 1), Vector2(sx + sw * 0.25, top - sh), Vector2(sx + sw, top - sh), Vector2(sx + sw, top + 1)])
+			var sh := maxi(3, int(lf * 0.028))
+			var pts3 := PackedVector2Array([Vector2(sx, top + 1), Vector2(sx + sw * 0.45, top - sh), Vector2(sx + sw, top - sh), Vector2(sx + sw, top + 1)])
 			p.poly(pts3, (pal.base as Color))
-			p.hline(int(sx + sw * 0.25), top - sh, int(sw * 0.75), (pal.hi as Color))
-			p.vline(sx + sw - u, top - sh + 1, sh, CarGen.WELL)
+			p.hline(int(sx + sw * 0.45), top - sh, int(sw * 0.55), (pal.hi as Color))
+			p.line(sx + 1, top, int(sx + sw * 0.45), top - sh + 1, (pal.lt as Color) if pal.has("lt") else (pal.hi as Color))
+			p.rect(sx + sw - 2 * u, top - sh + 1, 2 * u, sh, CarGen.WELL)
 			p.poly_outline(pts3, CarGen.INK)
 		if String(mods.get("hood", "stock")) == "vented":
 			# a raised louvre panel standing up off the hood, its slots facing back

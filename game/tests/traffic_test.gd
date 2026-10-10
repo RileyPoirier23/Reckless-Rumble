@@ -1,6 +1,8 @@
-## Traffic soak test, run inside the drive scene: godot --headless --path game -- --traffic-test
+## Traffic soak test, run inside the drive scene: godot --headless --fixed-fps 60 --path game -- --traffic-test
 ## Parks you downtown (then on the highway), lets traffic run, and checks it flows: no pile-ups
-## between AI cars, nobody stuck for a minute, cars actually getting somewhere.
+## between AI cars, nobody stuck for a minute, cars actually getting somewhere. The traffic's dice
+## are seeded; --fixed-fps makes every frame the same length too, so a run is the same every time
+## (without it the frame times wobble and so does the traffic).
 extends Node
 
 var main: Node
@@ -99,6 +101,17 @@ func _dump(c) -> void:
 		if d < 30.0:
 			print("     car d%.1f %s v%.1f a%d b%d c%d stopped_at%d t%.1f rule %s wait %.0f" % [d, o.state, o.v, o.a, o.b, o.c_next, o.stopped_at, o.stop_time, o.last_rule, o.wait_t])
 
+## One car on a limited-access highway and the other on a road that crosses it with no junction
+## there: the overpass. They pass over and under each other, not into each other.
+func _levels_differ(a: TrafficCar, b: TrafficCar) -> bool:
+	var tr: Traffic = main.traffic
+	var ra: Dictionary = tr.edge_road(a.a, a.b)
+	var rb: Dictionary = tr.edge_road(b.a, b.b)
+	if bool(ra.get("limited", false)) == bool(rb.get("limited", false)): return false
+	for n in [a.a, a.b, b.a, b.b]:
+		if tr.junctions.has(n) and tr.map.g_pos[n].distance_to(a.pos) < 30.0: return false
+	return true
+
 ## Two cars touching: their collision boxes (the size they're drawn at, the way they point)
 ## overlap. Two long trucks passing in their own lanes on a narrow street don't.
 static func overlap(a: TrafficCar, b: TrafficCar) -> bool:
@@ -148,7 +161,7 @@ func _process(dt: float) -> void:
 			var a: TrafficCar = cars[i]
 			var b: TrafficCar = cars[j]
 			if a.pos.distance_to(b.pos) < (a.length + b.length) * 0.32: _near["%d-%d" % [a.get_instance_id(), b.get_instance_id()]] = true
-			if a.pos.distance_to(b.pos) < (a.length + b.length) * 0.5 and overlap(a, b):
+			if a.pos.distance_to(b.pos) < (a.length + b.length) * 0.5 and overlap(a, b) and not _levels_differ(a, b):
 				var key := "%d-%d" % [a.get_instance_id(), b.get_instance_id()]
 				if not _hit_pairs.has(key):
 					_hit_pairs[key] = true

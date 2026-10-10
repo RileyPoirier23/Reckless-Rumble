@@ -46,7 +46,7 @@ jobs:
       - name: Traffic soak test
         working-directory: game
         run: |
-          timeout 900 "$GODOT" --headless --path . -- --traffic-test | tee traffic.log
+          timeout 900 "$GODOT" --headless --fixed-fps 60 --path . -- --traffic-test | tee traffic.log
           grep -q "^0 failed" traffic.log
       - name: Street race and police test
         working-directory: game

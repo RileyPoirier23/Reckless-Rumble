@@ -96,6 +96,44 @@ func _shapes() -> void:
 	var whole := _art("charjer")
 	check("a crushed nose is shorter and has lost a headlamp", bent.atlas.get_image().get_used_rect().size.x < whole.atlas.get_image().get_used_rect().size.x + 1 and not (bent.head_ok[0] and bent.head_ok[1]))
 	check("a car drawn twice is the same picture", not _differs(_art("silvio"), _art("silvio")))
+	# an open car has its cockpit: the windshield's glass, the seats sunk in behind it
+	var no_cockpit: Array = []
+	var open_n := 0
+	for id2: String in CarCatalog.ids():
+		var d2 := CarGen.design(CarCatalog.spec(id2))
+		if String(d2.rear) != "open": continue
+		open_n += 1
+		var p3 := _plan(id2)
+		var glass := false
+		var seat := false
+		for x in p3.sx:
+			var u: float = p3.ux[x]
+			if u < float(d2.dlo_r) - 0.03 and String(d2.family) != "offroad" or u > float(d2.cowl_x) + 0.01: continue
+			for y in p3.sy:
+				var m: int = p3.m0[p3.idx(x, y)] & 255
+				if m == CarArt.M_GLASS: glass = true
+				if m == CarArt.M_SEAT: seat = true
+		if not (glass and seat): no_cockpit.append(id2)
+	check("every open car shows its windshield and its seats from above", open_n > 25 and no_cockpit.is_empty(), "%d open, %s" % [open_n, str(no_cockpit.slice(0, 5))])
+	var jepp := _plan("jepp_wranglur_1995")
+	var bar := false
+	for i in jepp.h2.size():
+		if jepp.h2[i] >= 0 and (jepp.m2[i] & 255) == CarArt.M_TRIM: bar = true
+	check("a Jepp has its roll bar", bar)
+	# a crowned roof steps down a slice at a time without drawing contour lines (the smile)
+	var civic := _art("hondo_civil_ess_eye_1999", {}, 0.0, Color("e8e4dc"))
+	var cp := _plan("hondo_civil_ess_eye_1999")
+	var dark_steps := 0
+	var img := civic.atlas.get_image()
+	for x in cp.sx:
+		var u2: float = cp.ux[x]
+		if u2 < float(cp.d.roof_r) + 0.02 or u2 > float(cp.d.roof_f) - 0.02: continue
+		for y in cp.sy:
+			var i2 := cp.idx(x, y)
+			if absf(float(y) + 0.5 - cp.cy) > cp.gr * 0.7 or cp.nmin[i2] < 0: continue
+			for z in range(maxi(cp.nmin[i2], 0), cp.h0[i2]):
+				if img.get_pixel(z * cp.sx + x, y).get_luminance() < 0.35: dark_steps += 1
+	check("a light car's roof has no dark contour lines across it", dark_steps == 0, "%d dark step pixels" % dark_steps)
 
 ## Everything the body shop sells shows on the car out on the road.
 func _mods() -> void:
@@ -206,6 +244,15 @@ func _fleet() -> void:
 	semi._hook_trailer(CarCatalog.traffic_car(Traffic._fleet_id("tractor", r), r))
 	semi.heading = 0.6
 	for i in 200: semi._tow(1.0 / 30.0)
+	var amb := _art("fjord_e_fiddy_ambulanz_2014")
+	check("the ambulance has its roof lights, ready to flash", amb.has_beacons and amb.lamp_tex.has("beacon"))
+	var van := _plan("grumpman_step_up_van_2004")
+	var sky := false
+	var vent := false
+	for i3 in van.m0.size():
+		if (van.m0[i3] & 255) == CarArt.M_PLATE and van.h0[i3] > 20: sky = true
+		if van.h2[i3] >= 0 and (van.m2[i3] & 255) == CarArt.M_STEEL: vent = true
+	check("a step van's roof has its skylight and vents", sky and vent)
 	check("a trailer swings round behind its tractor", absf(angle_difference(semi.trailer_heading, semi.heading)) < 0.05 and semi.trailer_centre.distance_to(semi.pos) > 8.0, "%.2f" % semi.trailer_heading)
 	semi.free()
 
@@ -244,6 +291,46 @@ func _parked() -> void:
 	var mall := { "kind": "stall", "lot": "mall", "style": "commercial" }
 	var drive_way := { "kind": "driveway", "style": "residential" }
 	check("the mall's lot empties at night, the driveways fill up", pc.odds(mall, 13.0) > pc.odds(mall, 2.0) * 5.0 and pc.odds(drive_way, 23.0) > pc.odds(drive_way, 13.0))
+	# every spot in town taken at once: no two cars touch, every car fits its spot, a curb car
+	# stays clear of the lane beside it and off every other street
+	var all: Array = []
+	var too_long: Array = []
+	var off_bay: Array = []
+	var near_lane: Array = []
+	for k in pc.spots:
+		for pk: Array in pc.pick(k, 12.0, 1, true):
+			var sp: Dictionary = pk[0]
+			var body: Dictionary = pk[1]
+			var half := Vector2(float(body.length), float(body.width)) * CarArt.CAR_SCALE / 2.0
+			all.append([sp.p, float(pk[2]), half, sp.kind])
+			var f0 := Vector2.from_angle(float(pk[2]))
+			var shape := PackedVector2Array([(sp.p as Vector2) + f0 * half.x + f0.orthogonal() * half.y, (sp.p as Vector2) + f0 * half.x - f0.orthogonal() * half.y,
+				(sp.p as Vector2) - f0 * half.x - f0.orthogonal() * half.y, (sp.p as Vector2) - f0 * half.x + f0.orthogonal() * half.y])
+			if String(sp.kind) == "curb":
+				for bd in map.buildings:
+					var br: Rect2 = bd.r
+					if br.get_center().distance_to(sp.p) > 80.0: continue
+					if not Geometry2D.intersect_polygons(shape, PackedVector2Array([br.position, Vector2(br.end.x, br.position.y), br.end, Vector2(br.position.x, br.end.y)])).is_empty(): in_house.append(sp.p)
+				if half.x * 2.0 > ParkedCars.BAY: too_long.append(body.id)
+				var f := Vector2.from_angle(float(pk[2]))
+				var rd := map.nearest_road(sp.p, 12.0)
+				for c: Vector2 in [f * half.x + f.orthogonal() * half.y, f * half.x - f.orthogonal() * half.y, -f * half.x + f.orthogonal() * half.y, -f * half.x - f.orthogonal() * half.y]:
+					var at := (sp.p as Vector2) + c
+					var on := map.road_at(at, 0.0)
+					if not on.is_empty() and not is_same(on.road, rd.road): off_bay.append(sp.p)
+					var dc := map.nearest_road(at, 12.0)
+					if not dc.is_empty() and is_same(dc.road, rd.road) and float(dc.dist) < float(rd.road.w) / 2.0 - 0.3: near_lane.append(sp.p)
+	var touching: Array = []
+	for i in all.size():
+		for j in range(i + 1, all.size()):
+			if (all[i][0] as Vector2).distance_to(all[j][0]) > 16.0: continue
+			if ParkedCars.boxes_touch(all[i], all[j]): touching.append([all[i][0], all[j][0]])
+	check("with every spot taken, no two parked cars touch", all.size() > 300 and touching.is_empty(), "%d cars, %s" % [all.size(), str(touching.slice(0, 3))])
+	check("no car longer than its curb bay", too_long.is_empty(), str(too_long.slice(0, 4)))
+	check("no curb car pokes into another street", off_bay.is_empty(), str(off_bay.slice(0, 3)))
+	check("no curb car parked into a building", in_house.is_empty(), str(in_house.slice(0, 3)))
+	check("a curb car's inside wheels stop at the road's edge, the lane stays clear", near_lane.is_empty(), str(near_lane.slice(0, 3)))
+	check("no box truck or limo squeezed into a curb bay", not ParkedCars.fits({ "body": "boxtruck", "length": 6.9 }, "curb") and not ParkedCars.fits({ "body": "sedan", "length": 8.3 }, "curb") and ParkedCars.fits({ "body": "sedan", "length": 4.6 }, "curb"))
 	pc.free()
 	tr.free()
 	fake.free()

@@ -96,6 +96,9 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	if art_cues.has("tractor"): _hook_trailer(body)
 	view = CarView.new()
 	view.build(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE, looks)
+	# now and then the ambulance is on a call: its lights going (by where it showed up, so the
+	# traffic's dice aren't touched)
+	view.beacons = art_cues.has("ambulance") and int(ns * 7.0) % 5 < 2
 	add_child(view)
 	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
@@ -225,6 +228,9 @@ func drive(dt: float) -> void:
 		pos -= nrm * clampf(lat_err, -1.5 * dt, 1.5 * dt)
 	# --- how fast it wants to go: the limit, then slower for the bend ahead
 	var v0 := desired_speed(road) * (1.0 - 0.55 * yielding)
+	# still swinging round onto this road (out of a hairpin): slow until it's pointing down it
+	var herr := absf(angle_difference(heading, din.angle()))
+	if herr > 0.3: v0 = minf(v0, lerpf(v0, 5.0, clampf((herr - 0.3) / 0.9, 0.0, 1.0)))
 	var jr: float = traffic.junctions.get(b, {}).get("radius", 0.0)
 	var bend := absf(turn_ahead)
 	if bend > 0.25:
@@ -261,7 +267,9 @@ func drive(dt: float) -> void:
 	# --- progress along the edge, and on to the next one
 	s = (pos - A).dot(din)
 	# on to the next road: at the end of this one, or once it's round the corner onto the next
-	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5
+	# (only once it's well along this road: on a stub a few metres long, "round the corner" can
+	# be true the moment it gets onto it)
+	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and s > L * 0.5 and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5
 	if s >= L - 0.2 or past_corner:
 		a = b
 		b = c_next
@@ -271,7 +279,8 @@ func drive(dt: float) -> void:
 		# turned round at a dead end and heading back into the junction it just crossed: that's a
 		# new crossing, with the rules and all
 		if entered == b: _leave_box()
-	if entered >= 0 and entered != b and pos.distance_to(map.g_pos[entered]) > float(traffic.junctions.get(entered, {}).get("radius", 6.0)) + 3.0:
+	var jx: Dictionary = traffic.junctions.get(entered, {}) if entered >= 0 else {}
+	if entered >= 0 and entered != b and pos.distance_to(map.g_pos[entered]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0:
 		_leave_box()
 	# --- lights
 	var turning := db < 40.0 and absf(turn_ahead) > 0.5 and absf(turn_ahead) < 2.8
