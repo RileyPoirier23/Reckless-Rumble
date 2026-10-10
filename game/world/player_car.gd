@@ -228,17 +228,17 @@ func _inputs(dt: float) -> Array:
 		show_off = sim.assist == CarSim.Assist.STREET and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or _hb_t < 2.0)
 		# traction control: back off the gas while the rears spin up
 		var spin := sim.drive_slip()
-		var tc_limit := 2.5 if sim.assist == CarSim.Assist.STREET else 1.5
+		var tc_limit := 2.0 if sim.assist == CarSim.Assist.STREET else 1.5
 		if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off:
 			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)
 		if not wheel:
 			# stability: steer into a slide for you, and don't let the stick over-rotate at speed
 			# (how much less lock at speed is a setting: Settings > Controls > SPEED STEERING)
 			var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
-			var help := 0.55 if sim.assist == CarSim.Assist.STREET else 0.9
+			var help := 0.75 if sim.assist == CarSim.Assist.STREET else 0.9
 			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off:
 				st = clampf(st + beta * help * 1.6, -1.0, 1.0)
-			var at_speed := lerpf(1.0, 0.55 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(float(GameSettings.get_v("controls", "speed_steer")), 0.0, 1.5))
+			var at_speed := lerpf(1.0, 0.5 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(float(GameSettings.get_v("controls", "speed_steer")), 0.0, 1.5))
 			st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
 	return [th, br, st, hb]
 

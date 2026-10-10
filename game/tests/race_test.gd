@@ -242,6 +242,12 @@ func _wildlife() -> void:
 	check("the wildlife test has a country road", not rd.is_empty())
 	if rd.is_empty(): return
 	var dir: Vector2 = rd.dir
+	# the road to ourselves: a car in the lane would be what we hit, not the moose or the deer
+	var tr: Traffic = main.traffic
+	var hush0 := tr.hush
+	tr.hush = Rect2(rd.point - Vector2(250, 250), Vector2(500, 500))
+	for tc in tr.cars:
+		if tc.pos.distance_to(rd.point) < 250.0: tc.gone = true
 	var died: Array = []
 	var catch_it := func(info: Dictionary): died.append(info)
 	var c: PlayerCar = main.car
@@ -300,6 +306,7 @@ func _wildlife() -> void:
 	c.fatal.disconnect(catch_it)
 	c.fatal.connect(main._on_fatal)
 	w.enabled = false
+	tr.hush = hush0
 	done += 1
 
 ## Pink slips: win and the rival's car is in your garage; lose and yours is in theirs.
