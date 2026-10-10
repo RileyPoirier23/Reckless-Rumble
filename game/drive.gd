@@ -56,6 +56,7 @@ var award_card: AwardCard
 var _award_t := 2.0
 var awards_due: Array = []    # won, card not shown yet (it waits until you've stopped)
 var awards_on := true         # tests and demos stage their own scenes: no cards stopping them
+var furniture_watch := true   # (and no stop signs and red lights going on the police's sheet)
 var hold_car := false          # a scene (or a test) has the car stopped
 var free_roam := true          # not a test, a demo or a story mission: the calendar carries over
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
@@ -206,6 +207,7 @@ void fragment() {
 			wildlife.enabled = false
 			free_roam = false
 			awards_on = false
+			furniture_watch = false
 	if StoryState.active: free_roam = false
 	if free_roam: _restore_calendar()
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
@@ -218,6 +220,7 @@ void fragment() {
 	furniture = RoadFurniture.new()
 	add_child(furniture)
 	furniture.setup(self)
+	furniture.watch_on = furniture_watch
 	world.warm(car.sim.pos, Vector2(40, 25))
 	hud.show_help = bool(GameSettings.get_v("ui", "controls_card"))   # F1 (or the pause menu) shows the controls
 	_apply_settings()

@@ -48,6 +48,7 @@ var _cum := {}                     # road idx -> PackedFloat32Array of arc lengt
 var _js := {}                      # road idx -> Array of [s, node] junctions along it
 var _bld := {}                     # Vector2i (32 m) -> Array of building rects, for keeping signs out of them
 # watching you
+var watch_on := true               # tests and demos drive their own way through junctions: off there
 var _in_j := -1
 var _slow_t := 99.0
 var _slow_p := Vector2.ZERO
@@ -715,7 +716,9 @@ func _watch(dt: float) -> void:
 	else:
 		_slow_t += dt
 	var n := _junction_at(p)
-	if n == _in_j: return
+	if n == _in_j or not watch_on:
+		_in_j = n
+		return
 	_in_j = n
 	if n < 0: return
 	var why := violation(n, p, c.sim.world_velocity(), _slow_t < 6.0 and _slow_p.distance_to(map.g_pos[n]) < float(traffic.junctions[n].radius) + 22.0)
