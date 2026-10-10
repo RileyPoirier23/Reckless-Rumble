@@ -88,6 +88,7 @@ func start(k: String) -> void:
 			drive.hud.post("DRAG NIGHT. PULL ONTO RUNWAY 7 AND STOP AT THE LINE.", 5.0)
 		"street":
 			stage = "drive"
+			Karma.deed("street_race")
 			var st: Dictionary = drive.save.get("street", {})
 			var rep := int(st.get("rep", 0))
 			var rung := int(st.get("pinks", 0))
@@ -368,6 +369,7 @@ func _tow(dt: float) -> void:
 			var n := Jobs.tow_pay(km, Jobs.is_night(drive.sky.time_h), Jobs.bad_weather(drive.sky.weather))
 			pay(n)
 			Awards.bump("tows")
+			Karma.deed("tow_done")
 			drive.hud.post("DROPPED AT %s. %.1f KM TOWED. +$%d" % [tow_dest.name, km, n], 6.0)
 			finish(true)
 

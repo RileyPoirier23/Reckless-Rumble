@@ -35,13 +35,13 @@ const ROLL := [
 	["MIKEY, AND HIS HAT", "n"],
 	["ARIES COVINGTON", "n"],
 	["FRANKIE, FROM DOWN THE STREET", "n"],
+	["DALE HATCH, HATCH MOTORS", "n"],
 	["DOM TORTELLINI, WHO SAYS GRACE", "n"],
 	["MIA TORTELLINI", "n"],
 	["SAL", "n"],
 	["TOBY CORMIER, WHO WILL TOW YOU", "n"],
 	["CONSTABLE TREMBLAY, WHO COUNTS", "n"],
 	["DARRELL, WHO SOLD YOU A LIE FOR $840", "n"],
-	["DALE HATCH, HATCH MOTORS", "n"],
 	["1TON AND THE LUCHADOOROS", "n"],
 	["LA CALAVERA  -  EL PULPO", "n"],
 	["MARCO, WHO RUNS THE STREET", "n"],
@@ -144,10 +144,16 @@ func _draw() -> void:
 	if menu and stage != "memorial":
 		PixelFont.draw(self, Vector2(640 - 4 - PixelFont.width(Hints.fmt("{ui_accept}: SKIP TO THE END")), 350), Hints.fmt("{ui_accept}: SKIP TO THE END"), ASH)
 
+## A line of the roll as this story ended: on the Mountain ending, Frankie's line is his years.
+static func line_text(s: String) -> String:
+	if s == "FRANKIE, FROM DOWN THE STREET" and StoryState.active and StoryState.flag("frankie_dead"):
+		return "FRANKIE, FROM DOWN THE STREET (2007 - 2026)"
+	return s
+
 func _draw_roll() -> void:
 	var y := roll_y
 	for r in ROLL:
-		var s := String(r[0])
+		var s := line_text(String(r[0]))
 		if s != "" and y > -40.0 and y < 370.0:
 			var k := String(r[1])
 			var col := RED if k == "h" else (GOLD if k in ["g", "b"] else (ASH if k == "s" else BONE))

@@ -7,6 +7,7 @@
 ## - "counter": a shift at the counter (CLOCK IN ... CLOCK OUT)
 ## - "drive":   the evening in your car, with a mission
 ## - "card":    a title card ("CHAPTER 1: WRONG TURF", "SIX MONTHS LATER")
+## A step with "if" only plays for some Leos (a karma tier, a flag): that's how the endings branch.
 ## - "credits": the credits, the thank-you and the memorial (EndCredits)
 class_name StoryState
 extends RefCounted
@@ -64,9 +65,15 @@ static func current() -> Dictionary:
 		return DemoBuild.END_CARD if past == 0 else ({ "type": "credits" } if past == 1 else { "type": "end" })
 	return StoryScript.STEPS[step]
 
-## Move on to the next step and go to whichever scene plays it.
+## Is this step for this Leo? A step can ask for a karma tier or a flag ("if", see Karma.holds):
+## the endings branch this way.
+static func step_on(s: Dictionary) -> bool:
+	return not s.has("if") or Karma.holds(s["if"])
+
+## Move on to the next step (past any that aren't for this Leo) and go to whichever scene plays it.
 static func advance(tree: SceneTree) -> void:
 	step += 1
+	while step < StoryScript.STEPS.size() and not step_on(StoryScript.STEPS[step]): step += 1
 	var s := current()
 	if s.get("day_ends", false): day += 1
 	save()

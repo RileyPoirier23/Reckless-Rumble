@@ -23,6 +23,8 @@ const OUTFITS := {
 	"SAL": { "kind": "tracksuit", "top": 0x5a1e28, "bottom": 0x5a1e28, "chain": true, "shoes": 0xf0f0f0 },
 	"ARIES": { "kind": "hoodie", "top": 0x6a4c8a, "bottom": 0x2a2a3a, "shoes": 0xe8e0d0, "teen": true },
 	"FRANKIE": { "kind": "hoodie", "top": 0x8a2e26, "bottom": 0x34343c, "hat": "cap", "hat_c": 0x2a3a5a, "shoes": 0xe8e4dc, "teen": true },
+	"FRANKIE19": { "kind": "coveralls", "top": 0x2c3a5a, "bottom": 0x34343c, "patch": true, "hat": "cap", "hat_c": 0x8a2e26, "shoes": 0xe8e4dc },
+	"HATCH": { "kind": "suit", "top": 0x8a6a40, "bottom": 0x3a3428, "shirt": 0xe8e4dc, "shoes": 0x3a2a1c },
 	"TOBY": { "kind": "hivis", "top": 0x2a2a30, "bottom": 0x3a3a34, "hat": "cap", "hat_c": 0x1e1e22, "shoes": 0x5a3a1c },
 	"TREMBLAY": { "kind": "police", "top": 0x1c2232, "bottom": 0x1c2232, "hat": "police", "shoes": 0x0e0e10 },
 	"DARRELL": { "kind": "plaid", "top": 0x9a2a24, "bottom": 0x3a4a62, "hat": "trucker", "hat_c": 0x3a5a3a, "shoes": 0x5a3a1c },

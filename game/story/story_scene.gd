@@ -10,6 +10,8 @@ const ASH := Color("8a8478")
 const RED := Color("e0402e")
 
 const CPS := 55.0                 # typewriter: characters a second
+## Lines that are instructions, not something said: they run as soon as they come up.
+const INSTRUCTIONS := ["set", "cast", "cash", "flag", "pose"]
 
 var step: Dictionary
 var lines: Array = []
@@ -22,6 +24,12 @@ var history: Array = []           # [set, cast poses] at each line (so going bac
 var demo := false
 var cast := {}                     # who -> { x, facing, pose } for the people standing in the set
 var _paid := {}                    # "cash" lines already counted (going back and forward again doesn't pay twice)
+## Moving between places: the screen fades to black, the place (and who's there) changes, and it
+## fades back in. 0..1 going out, 1..2 coming back in; -1 when nothing's moving.
+const FADE_S := 0.35
+var _tr := 1.0                     # every scene fades in from black
+var _tr_to := ""                   # the set it's going to ("" just fading in)
+var _leaving := false              # the scene's over: fading out before the next step
 
 func _ready() -> void:
 	Controls.setup()
@@ -39,13 +47,39 @@ func _ready() -> void:
 
 func _process(dt: float) -> void:
 	t += dt
+	if _tr >= 0.0:
+		_tr += dt / FADE_S
+		if _tr >= 1.0 and _leaving:
+			_leaving = false
+			_tr = -1.0
+			StoryState.advance(get_tree())
+			return
+		if _tr >= 1.0 and _tr_to != "":
+			set_name = _tr_to          # it's black: change places, then whoever's there (the next "cast")
+			_tr_to = ""
+			_next()
+		if _tr >= 2.0: _tr = -1.0
+		queue_redraw()
+		if _tr >= 0.0 and _tr < 1.0: return
 	if step.type == "scene" and i < lines.size(): shown += dt * CPS
 	# instructions run as soon as they come up (a run of them all at once: two people bow together)
-	while step.type == "scene" and i < lines.size() and String(lines[i][0]) in ["set", "cash", "flag", "pose"]:
+	while step.type == "scene" and i < lines.size() and (String(lines[i][0]) in INSTRUCTIONS or _skip(lines[i])):
 		var ln: Array = lines[i]
+		if _skip(ln):
+			_next()
+			continue
 		match String(ln[0]):
 			"set":
-				set_name = ln[1]
+				if String(ln[1]) == set_name:
+					_next()
+				else:
+					# somewhere else: fade out, change places there
+					_tr = 0.0
+					_tr_to = String(ln[1])
+					break
+			"cast":
+				cast = {}
+				for c in ln[1]: cast[String(c[0])] = { "x": int(c[1]), "facing": int(c[2]), "pose": String(c[3]) }
 				_next()
 			"cash":
 				if not _paid.has(i):
@@ -63,7 +97,7 @@ func _process(dt: float) -> void:
 	if Input.is_action_just_pressed("shift_down") or Input.is_action_just_pressed("ui_text_backspace"):
 		back()
 	if _is_choice():
-		var opts: Array = lines[i][1]
+		var opts := _opts()
 		if Input.is_action_just_pressed("ui_down"): choice_sel = (choice_sel + 1) % opts.size()
 		if Input.is_action_just_pressed("ui_up"): choice_sel = (choice_sel + opts.size() - 1) % opts.size()
 	if Input.is_action_just_pressed("menu_back") or Input.is_action_just_pressed("ui_back_pad"):
@@ -73,7 +107,7 @@ func _process(dt: float) -> void:
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 		if _is_choice():
-			var opts: Array = lines[i][1]
+			var opts := _opts()
 			for k in opts.size():
 				if _choice_rect(k, opts.size()).has_point(get_global_mouse_position()):
 					choice_sel = k
@@ -87,6 +121,14 @@ func _poses() -> Dictionary:
 func _is_choice() -> bool:
 	return step.type == "scene" and i < lines.size() and String(lines[i][0]) == "choice"
 
+## A line that only plays for some Leos (a karma tier, a choice made earlier): see Karma.holds.
+static func _skip(ln: Array) -> bool:
+	return ln.size() > 2 and ln[2] is Dictionary and not Karma.holds(ln[2])
+
+## The choice's options this Leo has (an option can ask for a karma tier too).
+func _opts() -> Array:
+	return (lines[i][1] as Array).filter(func(o: Array) -> bool: return not (o.size() > 2 and o[2] is Dictionary and not Karma.holds(o[2])))
+
 ## Forward: finish the line if it's still typing, otherwise the next line.
 func press() -> void:
 	if step.type == "card":
@@ -96,7 +138,7 @@ func press() -> void:
 	if _is_choice():
 		# back up and pick again: only the last pick counts
 		for o in lines[i][1]: StoryState.flags.erase(String(o[1]))
-		var opt: Array = lines[i][1][choice_sel]
+		var opt: Array = _opts()[choice_sel]
 		StoryState.set_flag(opt[1])
 		_next()
 		return
@@ -107,28 +149,37 @@ func press() -> void:
 	_next()
 
 func _next() -> void:
-	history.append([set_name, _poses()])
+	history.append([set_name, cast.duplicate(true)])
 	i += 1
 	shown = 0.0
 	choice_sel = 0
 	if i >= lines.size():
-		StoryState.advance(get_tree())
+		# fade out, then the next step
+		_leaving = true
+		_tr = 0.0
 
 func back() -> void:
 	# step back to the previous spoken line (instructions don't count)
 	var j := i - 1
-	while j >= 0 and String(lines[j][0]) in ["set", "cash", "flag", "pose"]: j -= 1
-	if j < 0: return
+	while j >= 0 and (String(lines[j][0]) in INSTRUCTIONS or _skip(lines[j])): j -= 1
+	if j < 0 or _leaving or (_tr >= 0.0 and _tr < 1.0): return
 	while history.size() > j:
 		var h: Array = history.pop_back()
 		set_name = h[0]
-		for who in h[1]: cast[who].pose = h[1][who]
+		cast = (h[1] as Dictionary).duplicate(true)
 	i = j
 	shown = 9999.0
 
 # ------------------------------------------------------------------ drawing
 
 func _draw() -> void:
+	_draw_scene()
+	# moving between places, starting and ending: a fade through black over everything
+	if _tr >= 0.0:
+		var a := clampf(1.0 - absf(_tr - 1.0), 0.0, 1.0)
+		if a > 0.0: draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, a))
+
+func _draw_scene() -> void:
 	if step.is_empty(): return
 	if step.type == "card":
 		_card()
@@ -140,8 +191,8 @@ func _draw() -> void:
 	_people(who, talking)
 	if i >= lines.size(): return
 	if who == "choice":
-		_choices(ln[1])
-	elif not who in ["set", "cash", "flag", "pose"]:
+		_choices(_opts())
+	elif not who in INSTRUCTIONS:
 		if who != "*" and not cast.has(who) and who != "MANAGER": _phone(who, StoryState.fill(String(ln[1])))
 		_box(who, StoryState.fill(String(ln[1])))
 
@@ -203,6 +254,12 @@ func _card() -> void:
 	if String(step.get("sub", "")) != "":
 		PixelFont.draw_centered(self, 320, 162, String(step.sub), Color(BONE, a), 3)
 	PixelFont.draw_centered(self, 320, 200, String(step.get("small", "")), Color(ASH, a), 1)
+	# the chapter cards say what Port Rumble's saying about Leo by now
+	if step.get("karma", false):
+		var tier := Karma.tier()
+		var col := Color("6fbf5a") if tier == "high" else (Color("e0402e") if tier == "low" else BONE)
+		PixelFont.draw_centered(self, 320, 236, "WHAT PORT RUMBLE SAYS ABOUT LEO", Color(ASH, a * 0.8), 1)
+		PixelFont.draw_centered(self, 320, 248, Karma.describe(tier), Color(col, a), 2)
 	if t > 1.0: PixelFont.draw_centered(self, 320, 320, Hints.fmt("PRESS {ui_accept}"), Color(BONE, 0.4 + 0.3 * sin(t * 4.0)))
 
 func _box(who: String, text: String) -> void:

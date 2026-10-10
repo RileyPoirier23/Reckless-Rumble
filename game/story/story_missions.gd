@@ -7,6 +7,11 @@ const COVINGTON := Vector2(5570, 1566)
 const TIMS_MOUNTAIN := Vector2(5470, 1132)
 const AIRSTRIP := Vector2(6640, 1022)
 const AIRSTRIP_FENCE := Vector2(6620, 1034)     # where Airstrip Rd ends at the runway: the Familia's meet is on the other side
+# the Mountain: Mountain Rd climbs from Main to the hairpin, then Magnet Hill Rd goes over the hill
+const MOUNTAIN_FOOT := Vector2(5950, 1545)
+const HAIRPIN := Vector2(5180, 860)
+const HILL_TOP := Vector2(5000, 720)
+const GENERAL := Vector2(6005, 1500)          # the Port Rumble General's emergency doors, on John St by the Rumble Centre
 
 const MISSIONS := {
 	"last_call": {
@@ -31,6 +36,34 @@ const MISSIONS := {
 		"time": 22.4, "season": "fall", "weather": "cloudy", "gasket": true,
 		"intro": ["YOUR CAR. $840. IT'S LEAKING SOMETHING.", "GET IT HOME BEFORE IT GETS HOT."],
 		"objectives": [{ "text": "DRIVE IT HOME TO COVINGTON AUTO. STOP AT THE BAY DOORS.", "to": COVINGTON, "radius": 14.0, "stop": true }],
+	},
+	# ------------------------------------------------------------------ the finale
+	"long_way_down": {
+		"title": "THE LONG WAY DOWN",
+		"car": "supreem", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 23.9, "season": "winter", "weather": "snow", "tires": "winter",
+		"intro": ["GUS REBUILT DAD'S SUPREEM. IT TOOK HIM SIX WINTERS.", "FRANKIE'S AT THE TIM BURTONS ON MOUNTAIN RD. DON'T LET HIM DRIVE THAT CAR ANOTHER METRE."],
+		"objectives": [{ "text": "GET TO FRANKIE: THE TIM BURTONS ON MOUNTAIN RD. STOP IN THE LOT. TREMBLAY'S ON HER WAY.", "to": TIMS_MOUNTAIN, "radius": 18.0, "stop": true }],
+	},
+	"snowbank": {
+		"title": "SNOWBANK",
+		"car": "supreem", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 23.9, "season": "winter", "weather": "snow", "tires": "winter",
+		"intro": ["FRANKIE'S IN A SNOWBANK AT THE HAIRPIN. HIS ARM'S BENT WRONG.", "QUICK. NOT STUPID."],
+		"objectives": [
+			{ "text": "GET TO FRANKIE: THE SNOWBANK AT THE HAIRPIN, THE TOP OF MOUNTAIN RD.", "to": HAIRPIN, "radius": 22.0, "stop": true },
+			{ "text": "GET HIM TO THE PORT RUMBLE GENERAL, ON JOHN ST BY THE RUMBLE CENTRE. QUICK. NOT STUPID.", "to": GENERAL, "radius": 22.0, "stop": true },
+		],
+	},
+	"the_mountain": {
+		"title": "THE MOUNTAIN",
+		"car": "supreem", "start": MOUNTAIN_FOOT, "heading": -2.2524,         # facing up Mountain Rd
+		"time": 23.0, "season": "winter", "weather": "snow", "tires": "winter",
+		"intro": ["HATCH'S CHARJER, UP MOUNTAIN RD, LIKE EVERY NIGHT.", "TREMBLAY: \"LEO. DON'T.\""],
+		# a chase: he drives the road to the top of the hill; catch him first (ram him, or sit on
+		# his bumper long enough that he's got nowhere to go)
+		"objectives": [{ "text": "CATCH DALE HATCH BEFORE HE'S OVER THE HILL.", "to": HILL_TOP, "radius": 25.0,
+			"chase": { "car": "charjer", "paint": "#16161c", "start": Vector2(5868, 1444), "heading": -2.2524, "skill": 0.78, "cap": 30.0, "tires": "winter" } }],
 	},
 	"detailing": {
 		"title": "DETAILING",
@@ -58,6 +91,8 @@ class MissionRunner extends Node2D:
 	var _end_t := -1.0
 	var _end_text := ""
 	var _hit_seen := 0.0              # damage already blacked out for
+	var target: AiCar                 # the car being chased (a "chase" objective)
+	var _close_t := 0.0               # seconds spent right on its bumper
 
 	func setup(the_drive: Node, mission: Dictionary) -> void:
 		drive = the_drive
@@ -91,6 +126,9 @@ class MissionRunner extends Node2D:
 		var o := objective()
 		if o.is_empty() or done: return
 		var car: PlayerCar = drive.car
+		if o.has("chase"):
+			_chase(dt, o, car)
+			return
 		if o.get("crash_at", false):
 			# the end of the road: through the fence, into the meet
 			if car.sim.pos.distance_to(o.to) < float(o.radius):
@@ -109,6 +147,7 @@ class MissionRunner extends Node2D:
 			if o.get("careful", false):
 				var dmg: float = car.damage.front + car.damage.left + car.damage.right + car.damage.rear
 				var cost := int(dmg * 2500.0)
+				Karma.deed("careless" if cost > 0 else "careful")
 				if cost > 0:
 					StoryState.debt += cost
 					drive.hud.post("MIA ADDS $%d TO YOUR DEBT. FOR THE SCRATCHES." % cost, 5.0)
@@ -125,6 +164,55 @@ class MissionRunner extends Node2D:
 				_end_t = 1.0
 			else:
 				_route()
+
+	## A chase: the target drives its road to the objective's end. Ram it, or stay right on it for
+	## two and a half seconds and it's over. Let it get over the hill (or lose it), and it's back to the start.
+	func _chase(dt: float, o: Dictionary, car: PlayerCar) -> void:
+		if target == null: _spawn_target(o)
+		var d := car.sim.pos.distance_to(target.sim.pos)
+		var rammed := car.last_hit == target and Engine.get_physics_frames() - car.hit_frame < 4 and car.sim.speed() > 5.0
+		_close_t = _close_t + dt if d < 10.0 else maxf(0.0, _close_t - dt * 0.5)
+		drive.hud.objective = "%s   HATCH: %d M AHEAD" % [String(o.text), int(d)]
+		if rammed or _close_t > 2.5:
+			target.hold = true
+			done = true
+			_end_t = 1.0
+			Controls.rumble(1.0, 1.0, 0.6)
+			return
+		if target.sim.pos.distance_to(o.to) < float(o.radius) or d > 650.0:
+			drive.hud.post("HE'S OVER THE HILL. HE COMES BACK DOWN EVERY NIGHT, LEO. AGAIN." if d <= 650.0 else "YOU LOST HIM. AGAIN.", 5.0)
+			target.queue_free()
+			drive.traffic.extra.erase(target)
+			target = null
+			_close_t = 0.0
+			drive._teleport(m.start, float(m.heading))
+			drive.white_out = 1.0
+
+	func _spawn_target(o: Dictionary) -> void:
+		var c: Dictionary = o.chase
+		target = AiCar.new()
+		drive.ysort.add_child(target)
+		var spec := SaveGame.load_spec(String(c.car))
+		spec.paint = String(c.get("paint", spec.get("paint", "#16161c")))
+		spec.name = "DALE HATCH"
+		target.setup_ai(spec, drive.world, drive.skids, drive.hud, c.start, float(c.get("heading", 0.0)), 70)
+		target.traffic = drive.traffic
+		target.skill = float(c.get("skill", 0.8))
+		target.speed_cap = float(c.get("cap", 30.0))
+		if c.has("tires"): target.sim.compound = String(c.tires)
+		target.others = [drive.car]
+		# his road starts where he is: the router starts at the nearest junction, which can be
+		# behind him (and he'd turn round for it)
+		var fwd := Vector2.from_angle(float(c.get("heading", 0.0)))
+		var r: PackedVector2Array = drive.world.map.route(c.start, o.to)
+		var path := PackedVector2Array([c.start])
+		var ahead := false
+		for p in r:
+			if not ahead and (p - (c.start as Vector2)).dot(fwd) < 5.0: continue
+			ahead = true
+			path.append(p)
+		target.set_path(path, false, 10.0)
+		drive.traffic.extra.append(target)
 
 	## A crash on the way: the screen goes white, and Leo is back on the road behind where it
 	## happened, stopped, facing the right way.

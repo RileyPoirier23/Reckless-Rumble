@@ -15,7 +15,7 @@ func _init() -> void:
 		match String(st.type):
 			"scene": if not StoryScript.SCENES.has(st.id): bad.append(st.id)
 			"drive": if not StoryMissions.MISSIONS.has(st.mission): bad.append(st.mission)
-			"card", "avatar", "counter": pass
+			"card", "avatar", "counter", "credits": pass
 			_: bad.append(st.type)
 	check("every step points at a real scene or mission", bad.is_empty(), str(bad))
 	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay", "black"]
@@ -31,7 +31,7 @@ func _init() -> void:
 			if w == "pose":
 				if not StoryScript.CAST.has(String(ln[1])): who_bad.append("pose for " + String(ln[1]))
 				continue
-			if w in ["*", "choice", "set", "cash", "flag", "MANAGER"]: continue
+			if w in ["*", "choice", "set", "cast", "cash", "flag", "MANAGER"]: continue
 			if not StoryScript.CAST.has(w): who_bad.append(w)
 			if (String(ln[1]).length() > 230): who_bad.append("too long: " + String(ln[1]).substr(0, 30))
 	for id in StoryScript.SCENES:
@@ -120,23 +120,25 @@ func _init() -> void:
 	var sets_used := {}
 	for id in StoryScript.SCENES:
 		var sc: Dictionary = StoryScript.SCENES[id]
-		var scene_sets := [String(sc.set)]
-		for ln in sc.lines:
-			if String(ln[0]) == "set": scene_sets.append(String(ln[1]))
-		for st in scene_sets: sets_used[st] = true
+		# walk the scene: where it is and who's standing there change as it goes ("set", "cast")
+		var where := String(sc.set)
+		sets_used[where] = true
+		var here := {}
 		for c in sc.get("cast", []):
-			var poses := [String(c[3])]
-			for ln in sc.lines:
-				if String(ln[0]) == "pose" and String(ln[1]) == String(c[0]): poses.append(String(ln[2]))
-			for pose in poses:
-				var img := PixPeople.sprite(String(c[0]), String(pose), 0).get_image()
-				var u := img.get_used_rect()
-				var left := int(c[1]) - img.get_width() / 2 + (u.position.x if int(c[2]) > 0 else img.get_width() - u.end.x)
-				var body := Rect2(left, StorySets.FEET_Y - img.get_height() + u.position.y, u.size.x, u.size.y)
-				for st in scene_sets:
-					for v in StorySets.vehicles_in(String(st)):
-						var o := body.intersection(v.rect)
-						if o.size.x > 1 and o.size.y > 1: hits += "%s: %s (%s) in a car in %s; " % [id, String(c[0]), pose, st]
+			here[String(c[0])] = c
+			hits += _stand(id, c, String(c[3]), where)
+		for ln in sc.lines:
+			match String(ln[0]):
+				"set":
+					where = String(ln[1])
+					sets_used[where] = true
+				"cast":
+					here = {}
+					for c in ln[1]:
+						here[String(c[0])] = c
+						hits += _stand(id, c, String(c[3]), where)
+				"pose":
+					if here.has(String(ln[1])): hits += _stand(id, here[String(ln[1])], String(ln[2]), where)
 	# every set any scene uses, and a wreck's cars really meet (a crash, not two parked cars)
 	var apart := ""
 	for st in sets_used:
@@ -237,5 +239,106 @@ func _init() -> void:
 	check("the story save round-trips", StoryState.step == 7 and StoryState.manager() == "RAY MELANSON" and StoryState.flag("owes_familia"))
 	check("lines fill in the old manager's name", StoryState.fill("{MANAGER}'S MUG") == "RAY MELANSON'S MUG")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(StoryState.PATH))
+	_karma()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
+
+
+# ------------------------------------------------------------------ karma and the endings
+
+## Play the steps from the first one, as a Leo with these flags, and list the scenes and drives
+## that would play (the conditional steps skipped the way StoryState.advance skips them).
+func _path(flags: Dictionary) -> Array:
+	StoryState.flags = flags.duplicate()
+	var out: Array = []
+	for st in StoryScript.STEPS:
+		if not StoryState.step_on(st): continue
+		if st.type == "scene": out.append(String(st.id))
+		elif st.type == "drive": out.append(String(st.mission))
+	return out
+
+func _karma() -> void:
+	var was := StoryState.flags.duplicate()
+	var was_active := StoryState.active
+	StoryState.active = true
+	StoryState.day = 3
+	# every choice in the script is worth something (or deliberately nothing)
+	var missing := []
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			if String(ln[0]) != "choice": continue
+			for o in ln[1]:
+				if not Karma.CHOICES.has(String(o[1])): missing.append(String(o[1]))
+	check("karma: every choice in the script counts for something", missing.is_empty(), str(missing))
+	# a calm Leo and a reckless one
+	StoryState.flags = { "quiet": true, "meet_agree": true, "checked_silvio": true, "kid_light": true, "mentor_job": true }
+	check("karma: the careful answers make him HIGH", Karma.tier() == "high", "%.1f" % Karma.score())
+	StoryState.flags = { "cocky": true, "meet_defiant": true, "blind_buy": true, "kid_closed": true }
+	check("karma: the cocky ones make him LOW", Karma.tier() == "low", "%.1f" % Karma.score())
+	StoryState.flags = { "quiet": true, "meet_agree": true }
+	check("karma: a bit of both is the middle", Karma.tier() == "middle", "%.1f" % Karma.score())
+	# going back in a scene and picking again only counts the last pick
+	StoryState.flags = { "cocky": true }
+	var cocky := Karma.score()
+	StoryState.flags.erase("cocky")
+	StoryState.flags["quiet"] = true
+	check("karma: pick again and only the last pick counts", Karma.score() > cocky and is_equal_approx(Karma.score(), 0.0), "%.1f then %.1f" % [cocky, Karma.score()])
+	# what he does on the road, capped per day
+	StoryState.flags = {}
+	for i in 10: Karma.deed("crash_traffic")
+	check("karma: ten crashes in one night count for no more than the cap", is_equal_approx(Karma.score(), -2.0), "%.1f" % Karma.score())
+	StoryState.day = 4
+	Karma.deed("escape")
+	check("karma: running from the police counts, the next day too", is_equal_approx(Karma.score(), -4.0) and Karma.tier() == "low", "%.1f" % Karma.score())
+	StoryState.active = false
+	var before := Karma.score()
+	Karma.deed("escape")
+	check("karma: outside the story (the lot, the counter's free mode) nothing counts", is_equal_approx(Karma.score(), before))
+	StoryState.active = true
+	# the police give a calm driver a little slack and a reckless one none
+	StoryState.flags = { "kid_light": true, "kid_home": true, "mentor_job": true }
+	var calm := Karma.police_slack()
+	StoryState.flags = { "cocky": true, "kid_closed": true, "meet_defiant": true }
+	check("karma: the police give a calm Leo slack and a reckless one none", calm > 0.0 and Karma.police_slack() < 0.0, "%.0f / %.0f" % [calm, Karma.police_slack()])
+	# lines for one kind of Leo
+	check("karma: a line for a reckless Leo plays for him and not for a calm one",
+		Karma.holds({ "karma": "low" }) and not Karma.holds({ "karma": "high" }) and Karma.holds({ "karma": "not_high" }) and not Karma.holds({ "karma": "not_low" }))
+	check("karma: lines can follow a choice made earlier", Karma.holds({ "flag": "cocky" }) and not Karma.holds({ "flag": "quiet" }) and Karma.holds({ "not_flag": "quiet" }))
+	# every kind of Leo hears something different from Gus, Frankie and Hatch
+	var tiered := { "low": 0, "high": 0 }
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			if ln.size() > 2 and ln[2] is Dictionary and (ln[2] as Dictionary).has("karma") and tiered.has(String(ln[2].karma)): tiered[String(ln[2].karma)] += 1
+	check("karma: people talk to a reckless Leo and a calm one differently", int(tiered.low) >= 8 and int(tiered.high) >= 8, str(tiered))
+	# the endings: settled by the night of the first snow, by what Leo taught Frankie
+	var safe := _path({ "frankie_safe": true })
+	var hurt := _path({ "frankie_hurt": true })
+	var dead := _path({ "frankie_dead": true })
+	check("endings: HIGH, Frankie did his Sunday check: the long way down, Hatch arrested", safe.has("long_way_down") and safe.has("clean_end") and not safe.has("funeral") and not safe.has("the_mountain"), str(safe.slice(-4)))
+	check("endings: MIDDLE, Frankie skipped it once: the snowbank, Hatch gone", hurt.has("snowbank") and hurt.has("middle_end") and not hurt.has("clean_end") and not hurt.has("funeral"), str(hurt.slice(-4)))
+	check("endings: LOW, Frankie dies, then the revenge mission", dead.has("funeral") and dead.has("the_mountain") and dead.has("street_end") and dead.find("funeral") < dead.find("the_mountain") and not dead.has("clean_end"), str(dead.slice(-4)))
+	# the night of the first snow settles it from the tier, one flag each
+	var first: Array = StoryScript.SCENES.first_snow.lines
+	var settle := {}
+	for ln in first:
+		if String(ln[0]) == "flag" and ln.size() > 2: settle[String(ln[2].karma)] = String(ln[1])
+	check("endings: each tier settles one ending", settle == { "high": "frankie_safe", "middle": "frankie_hurt", "low": "frankie_dead" }, str(settle))
+	check("endings: the revenge mission is a chase up the Mountain", StoryMissions.MISSIONS.the_mountain.objectives[0].has("chase"))
+	check("endings: Hatch trips over the green book Gus told Leo about",
+		str(StoryScript.SCENES.bay_three.lines).contains("green book") and str(StoryScript.SCENES.hatch_counter.lines).contains("green book"))
+	check("credits: on the Mountain ending, Frankie's line has his years", EndCredits.line_text("FRANKIE, FROM DOWN THE STREET").contains("2026"))
+	StoryState.flags = was
+	StoryState.active = was_active
+
+
+## Is this person, in this pose, standing in one of the set's cars? ("" if not)
+func _stand(id: String, c: Array, pose: String, st: String) -> String:
+	var img := PixPeople.sprite(String(c[0]), pose, 0).get_image()
+	var u := img.get_used_rect()
+	var left := int(c[1]) - img.get_width() / 2 + (u.position.x if int(c[2]) > 0 else img.get_width() - u.end.x)
+	var body := Rect2(left, StorySets.FEET_Y - img.get_height() + u.position.y, u.size.x, u.size.y)
+	var out := ""
+	for v in StorySets.vehicles_in(st):
+		var o := body.intersection(v.rect)
+		if o.size.x > 1 and o.size.y > 1: out += "%s: %s (%s) in a car in %s; " % [id, String(c[0]), pose, st]
+	return out

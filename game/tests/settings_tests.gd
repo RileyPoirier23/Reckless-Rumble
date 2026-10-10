@@ -200,6 +200,17 @@ func _wheel_only_drives() -> void:
 	var stick := pedal.duplicate() as InputEventJoypadMotion
 	stick.device = 1
 	check("a pedal on the wheel never moves a menu; the pad's stick does", not InputMap.event_is_action(pedal, "ui_down") and InputMap.event_is_action(stick, "ui_down"))
+	# an H-shifter's gears are buttons 12 to 18 on a Logitech wheel: the same numbers as a pad's
+	# D-pad (hazards, blinkers, high beams). On the wheel they must do nothing of the sort
+	var clash := ""
+	for b in [11, 12, 13, 14, 15, 16, 17, 18]:
+		var gear := InputEventJoypadButton.new()
+		gear.device = 0
+		gear.button_index = b as JoyButton
+		gear.pressed = true
+		for a in ["blink_left", "blink_right", "hazards", "high_beams", "horn", "use", "map", "pause", "ui_up", "ui_down", "ui_left", "ui_right"]:
+			if InputMap.event_is_action(gear, a): clash += "button %d is %s; " % [b, a]
+	check("the shifter's gears never work the blinkers, the hazards or the high beams", clash == "", clash)
 	check("the stick and the rumble use the pad", Controls.active_pad() == 1)
 	CounterScene.setup_actions()
 	check("the counter's desk buttons hear the pad, not the wheel", _listens("desk_click", 1) and not _listens("desk_click", 0))

@@ -200,6 +200,7 @@ var _blink_steer := 0.0
 var locked := false               # a menu is up: hands off, ease to a stop
 var show_mode := false            # parked at the meet: out of gear, handbrake on, the gas just revs it
 var _in_show := false
+var _karma_hit: Object = null    # the last car Leo put his into (one bump, one count)
 var show_off := false             # doing a donut or a handbrake slide on purpose: the aids step back
 
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
@@ -325,6 +326,9 @@ func _physics_process(dt: float) -> void:
 			var where := "front" if d > 0.6 else ("rear" if d < -0.6 else "side")
 			_check_fatal(col, other, vn, d, vw.length())
 			if other is AiCar and (other as AiCar).lights.a > 0.0 and vn > 3.0: hit_police += 1
+			elif other is TrafficCar and vn > 4.0 and not quiet and other != _karma_hit:
+				_karma_hit = other
+				Karma.deed("crash_traffic")
 			sim.impact(vn, where)
 			_take_damage(-n, vn, col.get_position() / PX)
 			if is_car:

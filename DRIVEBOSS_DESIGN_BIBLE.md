@@ -520,6 +520,22 @@ The **evidence** meter is the set of clues 3, 5, 6, 8, 10, 12 and 13 the player 
 
 **Meters** (all in `StoryState`): `family` (Familia trust, -100 to 100), `law` (police trust, 0 to 100), `heat` (attention, 0 to 100, decays 5 a week), `ministry` (citations in the last 30 shift days), `shop_rep` (Yowl stars, 1.0 to 5.0), `street_rep` (0 to 1000), `hatch` (hidden: Hatch fleet cars stamped), `evidence` (clue ids), `sober_days`, `stress`, `debt`, and each crew member's `loyalty`.
 
+**Karma (built).** Under the meters sits one thing everybody in Port Rumble can see: what kind of man Leo is turning into. `story/karma.gd` scores it from two halves: his cutscene choices (each is worth something, worked out from the choices on file so backing up and picking again only counts the last pick) and what he does with a car in the story (tickets, running from the police, putting cars into traffic, hitting a cruiser, bringing the Familia's car back without a scratch, a tow, a street race; each kind capped per day). Three tiers: **HIGH** (cool, calm and collected, +4 and up), **MIDDLE**, **LOW** (reckless, -4 and down). The chapter cards say which ("WHAT PORT RUMBLE SAYS ABOUT LEO"), the road says when it changes, and:
+
+- **People talk to him differently.** Any script line or choice option can ask for a tier or an earlier choice (`{"karma": "low"}`, `{"flag": "cocky"}`): Mikey, Dom, Gus, Aries, Frankie and Hatch all have lines for a reckless Leo and a calm one. On LOW, Frankie hero-worships the fence and the police chases; on HIGH his mom says Leo's the one who reads the papers.
+- **The road treats him differently.** In the story the police give a calm Leo 5 km/h of slack and a reckless one none.
+- **The ending hangs on what he taught Frankie.** On HIGH, Leo's told him "every Sunday you check your brakes" and he does: the night of the first snow, Frankie finds his brake line cut clean the day Hatch Motors did his winter tires "on the house", and doesn't drive it. On MIDDLE he skipped the check once, lost the brakes on Mountain Rd and put the Silvio in a snowbank at the hairpin: a broken arm. On LOW, Leo taught him about a hundred and forty through a fence instead, and Toby calls: no skid marks in fresh snow, the same as Frank. **Frankie dies, and the last mission is revenge.**
+
+**The finale as built** (Chapter 8, "The Mountain", reached straight after Chapter 1 until Chapters 2 to 7 are written): Hatch at the counter trips over the green book (Gus's Bay 3 line, "nobody knew about that book but me and you kids"); a last choice at the counter (stay calm and call Tremblay, or confront him) counts toward the tier; the night of the first snow settles which ending it is (a flag each: `frankie_safe`, `frankie_hurt`, `frankie_dead`, so a bump on the drive that follows can't switch it). Then:
+
+| Tier | The drive | The ending |
+|---|---|---|
+| HIGH | THE LONG WAY DOWN: get to Frankie at the Tim Burtons on Mountain Rd | CLEAN: Tremblay's cruiser across Mountain Rd, Hatch arrested ("Frankie and his Sundays"), everybody checks their brakes on Sunday |
+| MIDDLE | SNOWBANK: the hairpin, then the Port Rumble General on John St | GONE: nothing sticks; Hatch signs the building over to the shop and leaves the province; Frankie works the counter one-handed |
+| LOW | the funeral, then THE MOUNTAIN: a chase. Hatch's Charjer up Mountain Rd at 11; ram him or sit on his bumper before he's over the hill (he gets away, he comes back down tomorrow: go again) | THE STREET: a gap in the guardrail at the hairpin, Hatch alive and talking, Toby's "you look like him", Leo in the back of Tremblay's cruiser. Frankie's line in the credits gets his years |
+
+Story drives can also set the tires (`"tires": "winter"`), and an objective can be a chase (`"chase"`: the car, where it starts, how good a driver, how fast).
+
 **The three endings and their variants** (decided at the Chapter 7 choice, gated at the Chapter 8 finish line):
 
 | Ending | Gate | What happens | Variants |

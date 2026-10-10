@@ -144,7 +144,15 @@ static func events_from(en: Array) -> Array[InputEvent]:
 	var on_wheel := en.size() > 3 and int(en[3]) >= 0
 	var devs: Array[int] = []
 	if on_wheel:
-		if Wheel.device >= 0: devs.append(Wheel.device)
+		# on the rig: the wheel, or the rig part it was bound on (a shifter on its own plug),
+		# found by name, since ids change between sessions
+		var part := String(en[4]) if en.size() > 4 else ""
+		var d := Wheel.device
+		if part != "":
+			d = -1
+			for c in Wheel.connected():
+				if Wheel.joy_name(c) == part: d = c
+		if d >= 0: devs.append(d)
 	else: devs = _pad_targets()
 	for d in devs:
 		var ev := event_from(en)
@@ -181,11 +189,18 @@ static func entry_of(e: InputEvent, wheel_device := -1) -> Array:
 	var wheel := e.device >= 0 and (e.device == wheel_device or Wheel.is_wheel(e.device))
 	if e is InputEventJoypadButton and e.pressed:
 		var jb := e as InputEventJoypadButton
-		return ["joybtn", int(jb.button_index), 0.0, jb.device if wheel else -1]
+		return rig_entry(["joybtn", int(jb.button_index), 0.0, jb.device if wheel else -1])
 	if e is InputEventJoypadMotion and absf((e as InputEventJoypadMotion).axis_value) > 0.6:
 		var j := e as InputEventJoypadMotion
-		return ["joyaxis", int(j.axis), signf(j.axis_value), j.device if wheel else -1]
+		return rig_entry(["joyaxis", int(j.axis), signf(j.axis_value), j.device if wheel else -1])
 	return []
+
+## A binding made on a rig part that isn't the wheel itself (a shifter or a button box on its
+## own plug) remembers the part by name.
+static func rig_entry(en: Array) -> Array:
+	var d := int(en[3])
+	if d >= 0 and d != Wheel.device and Wheel.device >= 0: en.append(Wheel.joy_name(d))
+	return en
 
 ## Rebind one column of an action: the keyboard ("key") or the controller/wheel ("pad"). The
 ## controller column holds a pad's button and a wheel's side by side: binding one keeps the other.

@@ -72,12 +72,23 @@ static func looks_like_wheel(dev: int) -> bool:
 	var info := Input.get_joy_info(dev)
 	return wheel_name(joy_name(dev), int(str(info.get("vendor_id", "0"))), int(str(info.get("product_id", "0"))))
 
-## A wheel, or a pedal set, shifter or handbrake on its own plug.
+## Words in a controller's name that say it's a gamepad (an unknown device that says none of
+## these is taken for part of a rig).
+const PAD_WORDS := ["pad", "controller", "xbox", "x-box", "playstation", "dualshock", "dualsense", "ps3", "ps4", "ps5",
+	"joy-con", "switch", "8bitdo", "joystick", "nintendo", "steam", "stadia", "luna"]
+
+## A wheel, or a pedal set, shifter or handbrake on its own plug. Also anything the engine doesn't
+## know as a gamepad and that doesn't call itself one: a wheel whose name we've never seen. (Its
+## shifter's buttons share numbers with a pad's D-pad, so it mustn't work the blinkers.)
 static func looks_like_rig(dev: int) -> bool:
 	if looks_like_wheel(dev): return true
 	var nm := joy_name(dev).to_lower()
 	for n in RIG_PARTS:
 		if nm.contains(n): return true
+	if test_pads.is_empty() and not Input.is_joy_known(dev) and nm != "":
+		for w in PAD_WORDS:
+			if nm.contains(w): return false
+		return true
 	return false
 
 ## The plugged-in pad that was set up as `what` ("" the wheel, "pedals_" its pedal set): by its

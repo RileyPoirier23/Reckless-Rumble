@@ -44,7 +44,8 @@ var _hits := 0
 ## How strict they are (Settings > Difficulty): how far over they let slide, how long they give you
 ## to pull over, how long they keep looking.
 func over_kmh() -> float:
-	return OVER_KMH / maxf(strictness, 0.1)
+	# in the story, they give a calm driver a little slack and a reckless one none
+	return maxf(5.0, OVER_KMH / maxf(strictness, 0.1) + Karma.police_slack())
 
 func stop_s() -> float:
 	return STOP_S / maxf(strictness, 0.1)
@@ -156,6 +157,7 @@ func _physics_process(dt: float) -> void:
 		_hits = c.hit_police
 		if not offences.has("ramming"):
 			offences.append("ramming")
+			Karma.deed("hit_police")
 			add_heat(20.0)
 			drive.hud.post("YOU HIT A POLICE CAR. THAT'S A DIFFERENT KIND OF PAPERWORK.", 4.0)
 			if state == "calm" and not cruisers.is_empty(): _light_up(_nearest(c), "ramming", 0.0)
@@ -279,6 +281,9 @@ func _bust(c: PlayerCar) -> void:
 	if take: f += IMPOUND_FEE
 	drive.save.cash = int(drive.save.get("cash", 0)) - f
 	drive.save.tickets = int(drive.save.get("tickets", 0)) + 1
+	Karma.deed("ticket")
+	if take: Karma.deed("impound")
+	elif not offences.has("fleeing"): Karma.deed("pulled_over")
 	var lines: Array = []
 	if top_over > 15.0: lines.append("%d IN A %d" % [int(top_over + _limit_here(c)), int(_limit_here(c))])
 	for o in offences:
@@ -315,6 +320,7 @@ func _limit_here(c: PlayerCar) -> float:
 
 func _lost() -> void:
 	Awards.bump("escapes")
+	Karma.deed("escape")
 	drive.hud.post("YOU LOST THEM. FOR NOW. THEY KNOW THE CAR.", 5.0)
 	_stand_down()
 

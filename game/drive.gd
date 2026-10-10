@@ -352,6 +352,7 @@ func _start_mission(m: Dictionary) -> void:
 	var w: Dictionary = WorldSky.WEATHER[String(m.weather)]
 	sky.cloud = w.cloud; sky.fog = w.fog; sky.rain = w.rain; sky.snow = w.snow
 	car.impaired = float(m.get("impaired", 0.0))
+	if m.has("tires"): car.sim.compound = String(m.tires)        # (December: Gus put the winters on)
 	for o in m.objectives:
 		if o.get("crash_ends", false): car.can_die = false
 	if m.get("gasket", false): car.sim.head_gasket = true
@@ -738,6 +739,20 @@ func _gps_upkeep(dt: float) -> void:
 		gps.set_route(world.map.route(p, dest.p), String(dest.name))
 		hud.diag_event("GPS: REROUTING")
 
+## In the story, people notice when Leo turns into somebody else: say so when his tier changes.
+var _karma_tier := ""
+func _karma_watch() -> void:
+	if not StoryState.active: return
+	var t := Karma.tier()
+	if _karma_tier != "" and t != _karma_tier:
+		var line := ""
+		match t:
+			"low": line = "WORD GETS AROUND: PEOPLE ARE CALLING LEO RECKLESS. GUS HAS HEARD. SO HAS FRANKIE."
+			"high": line = "WORD GETS AROUND: LEO'S COOL, CALM AND COLLECTED. FRANKIE'S WATCHING HOW HE DOES IT."
+			_: line = "PEOPLE ARE GIVING LEO ANOTHER LOOK." if _karma_tier == "low" else "PEOPLE ARE STARTING TO WONDER ABOUT LEO."
+		hud.notify(line, "status", 2, 6.0)
+	_karma_tier = t
+
 ## Free roam with nothing on: say what you can do, so there's always a next step on the screen.
 const IDLE_LINE := "FREE DRIVE. {jobs}: GIGS FOR MONEY. {map}: THE MAP. THE GARAGE IS AT COVINGTON AUTO."
 var _auto_obj := ""                 # the line this put up (it only ever replaces its own)
@@ -848,6 +863,7 @@ func _process(dt: float) -> void:
 	_tips(dt)
 	_gps_upkeep(dt)
 	_idle_objective()
+	_karma_watch()
 	_burnout_tip(dt)
 	_burnout_count()
 	_awards(dt)

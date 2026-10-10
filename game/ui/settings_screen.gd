@@ -279,7 +279,8 @@ func _finish_bind(en: Array) -> void:
 
 # ------------------------------------------------------------------ the wheel wizard
 
-const WIZ_STEPS := ["wake", "rest", "left", "right", "gas", "brake", "up", "down", "done"]
+const WIZ_STEPS := ["wake", "rest", "left", "right", "gas", "brake", "up", "down", "g1", "g2", "g3", "g4", "g5", "g6", "gr", "done"]
+const WIZ_GEARS := { "g1": "gear_1", "g2": "gear_2", "g3": "gear_3", "g4": "gear_4", "g5": "gear_5", "g6": "gear_6", "gr": "gear_r" }
 const WIZ_TEXT := {
 	"wake": "PRESS THE GAS AND THE BRAKE ONCE EACH AND TURN THE WHEEL A LITTLE (SO THEY WAKE UP). LET GO, THEN PRESS A BUTTON ON THE WHEEL.",
 	"rest": "HANDS OFF THE WHEEL, FEET OFF THE PEDALS. HOLD STILL...",
@@ -289,6 +290,10 @@ const WIZ_TEXT := {
 	"brake": "LET GO OF THE GAS. PUSH THE BRAKE ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON.",
 	"up": "PULL THE RIGHT PADDLE: THAT SHIFTS UP. NO PADDLES? PRESS %s.",
 	"down": "NOW THE LEFT PADDLE: THAT SHIFTS DOWN. NO PADDLES? PRESS %s.",
+	"g1": "GOT AN H-SHIFTER? PUT IT IN 1ST. NO SHIFTER? PRESS %s.",
+	"g2": "2ND.", "g3": "3RD.", "g4": "4TH.", "g5": "5TH.",
+	"g6": "6TH. (A FIVE-SPEED? PRESS %s.)",
+	"gr": "REVERSE.",
 	"done": "DONE. PRESS A BUTTON TO SAVE IT, AND DRIVE.",
 }
 
@@ -305,6 +310,16 @@ static func wheel_press(dev: int, held: Array) -> int:
 		var down := Input.is_joy_button_pressed(dev, b as JoyButton)
 		if down and not bool(held[b]) and hit < 0: hit = b
 		held[b] = down
+	return hit
+
+## A button pressed since last frame on any of the watched rig parts: [device, button], or [].
+static func rig_press(devs: Array, held: Dictionary) -> Array:
+	var hit: Array = []
+	for d in devs:
+		var h: Array = held.get(d, [])
+		var b := wheel_press(int(d), h)
+		held[d] = h
+		if b >= 0 and hit.is_empty(): hit = [int(d), b]
 	return hit
 
 func _wiz_device() -> int:
@@ -325,8 +340,10 @@ func _start_wizard() -> void:
 	var devs: Array[int] = [d]
 	for o in Wheel.connected():
 		if o != d and (Wheel.looks_like_rig(o) or not Input.is_joy_known(o)): devs.append(o)
-	wiz = { "dev": d, "devs": devs, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [], "held": [], "up": -1, "down": -1 }
+	wiz = { "dev": d, "devs": devs, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [], "held": [], "up": -1, "down": -1,
+		"rig_held": {}, "gears": {} }
 	wheel_press(d, wiz.held)        # whatever's held as it starts doesn't count
+	rig_press(devs, wiz.rig_held)
 
 ## Every watched device's axes, one after another (device k's axis i is at k * JOY_AXIS_MAX + i).
 static func _axes(devs: Array) -> Array:
@@ -358,6 +375,16 @@ func _wizard(dt: float) -> void:
 			wiz.rest = rest
 			wiz.step = WIZ_STEPS.find("left")
 		return
+	if WIZ_GEARS.has(step):
+		var rp := rig_press(wiz.devs, wiz.rig_held)
+		if wb >= 0 and rp.is_empty(): rp = [int(wiz.dev), wb]
+		if not rp.is_empty():
+			wiz.gears[WIZ_GEARS[step]] = rp
+			wiz.step = int(wiz.step) + 1
+		elif Input.is_action_just_pressed("ui_accept"):
+			wiz.step = WIZ_STEPS.find("done")       # no shifter, or no more gears
+		return
+	rig_press(wiz.devs, wiz.rig_held)               # keep the other parts' buttons in step
 	# a button on the wheel goes on to the next step (so you never have to let go), as does accept
 	if wb < 0 and not Input.is_action_just_pressed("ui_accept"): return
 	if step == "up" or step == "down":
@@ -382,8 +409,15 @@ func _wizard(dt: float) -> void:
 		_changed("wheel")
 		for pair in [["shift_up", int(wiz.up)], ["shift_down", int(wiz.down)]]:
 			if int(pair[1]) >= 0: Controls.bind(String(pair[0]), "pad", ["joybtn", int(pair[1]), 0.0, d])
+		var gears: Dictionary = wiz.gears
+		for g in gears:
+			var rp: Array = gears[g]
+			var en: Array = ["joybtn", int(rp[1]), 0.0, int(rp[0])]
+			if int(rp[0]) != d: en.append(Input.get_joy_name(int(rp[0])))     # a shifter on its own plug
+			Controls.bind(String(g), "pad", en)
 		_changed("bindings")
 		var paddles := "" if int(wiz.up) < 0 else ", PADDLES ON BUTTONS %d AND %d" % [int(wiz.up), int(wiz.down)]
+		if not gears.is_empty(): paddles += ", A %d-POSITION SHIFTER" % gears.size()
 		wiz = {}
 		note = "THE WHEEL'S SET UP. STEERING ON AXIS %d, GAS ON %d, BRAKE ON %d%s%s%s." % [int(res.steer_axis), int(res.gas_axis), int(res.brake_axis), " (ONE AXIS)" if res.combined else "", " (THE PEDAL SET'S OWN PLUG)" if pd != d else "", paddles]
 		return
