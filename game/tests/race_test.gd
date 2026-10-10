@@ -276,7 +276,12 @@ func _wildlife() -> void:
 		await get_tree().physics_frame
 		t += 1.0 / 60.0
 	await _wait(0.3)
-	check("a deer at 50 bends the car, not you", died.is_empty() and float(c.damage.front) > 0.0 and deer.state == "hurt", "damage %.2f, deer %s" % [float(c.damage.front), deer.state])
+	var near := ""
+	for tc in main.traffic.cars:
+		if tc.pos.distance_to(c.sim.pos) < 25.0: near += "traffic %s; " % tc.state
+	for k in main.police.cruisers:
+		if k.sim.pos.distance_to(c.sim.pos) < 25.0: near += "cruiser; "
+	check("a deer at 50 bends the car, not you", died.is_empty() and float(c.damage.front) > 0.0 and deer.state == "hurt", "damage %.2f, deer %s, died %s, %.0f m from it, %.1f m/s, %s" % [float(c.damage.front), deer.state, str(died.map(func(d): return d.cause)), c.sim.pos.distance_to(deer.pos), c.sim.speed(), near])
 	w.clear()
 	# the horn
 	main._teleport(rd.point - dir * 60.0, dir.angle())
