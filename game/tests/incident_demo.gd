@@ -81,6 +81,25 @@ func _run() -> void:
 	main._teleport(sc.at - dir * 30.0 + dir.orthogonal() * 3.6, dir.angle() + PI)
 	await _wait(1.5)
 	await _shot("6_cones")
+	# the work trucks in a row, in daylight: the wrecker, the ambulance, the fire engine
+	inc.close(sc)
+	main.sky.time_h = 13.0
+	var at: Vector2 = main.car.sim.pos
+	var side := dir.orthogonal()
+	var row: Array = []
+	for i in 3:
+		var id: String = ["tow", "ambulance", "fire"][i]
+		var k := AiCar.new()
+		main.ysort.add_child(k)
+		var spec := SaveGame.load_spec(id)
+		k.setup_ai(spec, main.world, main.skids, main.hud, at + side * (5.0 + 3.6 * i) + dir * 4.0, dir.angle(), 90 + i)
+		k.hold = true
+		row.append(k)
+	main.zoom_mult = 1.0
+	await _wait(1.5)
+	main.hud.msgs.clear()
+	await _shot("7_trucks")
+	for k in row: k.queue_free()
 	# and one you caused: hit a car, then drive off
 	main.zoom_mult = 1.0
 	inc.close(sc)

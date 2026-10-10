@@ -344,7 +344,7 @@ static func _office(p: Pix) -> void:
 	p.disc(104, 37, 3.0, Color("c8a030"))
 	p.box(120, 16, 28, 30, Color("f0ece0"))
 	p.rect(120, 16, 28, 8, Color("c8342c"))
-	p.text(122, 18, "OCT19", Color("f0ece0"))
+	p.text(122, 18, "OCT26", Color("f0ece0"))
 	p.text(131, 30, "7", Color("2a2420"))
 	for k in 3: p.px(124 + k * 9, 40, Color("c8342c"))
 	# a tire shop calendar girl? no. a tire. on a calendar. it's that kind of shop.

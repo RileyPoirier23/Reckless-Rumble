@@ -149,6 +149,8 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 			var rear_wheel := absf(u + wf) <= 3.0 and absf(v) >= hw - 2.5 and absf(v) <= hw + 0.4
 			if boxy and zz >= 7:
 				c = _box_layer(u, v, hl, hw, zz, bodyc)
+			elif truck and zz >= 7:
+				c = _tow_layer(u, v, hl, hw, zz, bodyc)
 			else:
 				match zz:
 					0, 1:
@@ -160,6 +162,9 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 							var arch := (absf(u - wf) <= 3.4 or absf(u + wf) <= 3.4) and absf(v) >= hw - 1.6
 							if arch: c = TIRE if absf(absf(u) - wf) > 1.2 else RIM * (0.6 + 0.15 * zz)
 							if u > hl - 1.4 or u < -hl + 1.4: c = TRIM.lerp(bodyc, 0.25)        # bumpers
+						if truck and u < -hl + 1.4:
+							c = Color("1a1a1e")                                              # the wheel-lift crossbar
+							if absf(v) > hw - 1.8: c = Color("e0b020")                       # ...and its yellow hooks
 							if absf(v) > hw - 0.8 and absf(absf(u) - wf) > 3.4 and zz == 2: c = TRIM.lerp(bodyc, 0.5)   # skirt line
 					4, 5:
 						if _rounded(u, v, hl, hw, 3.0):
@@ -251,6 +256,40 @@ func _box_layer(u: float, v: float, hl: float, hw: float, zz: int, bodyc: Color)
 			return c2
 	if zz == 7 and u > front and _rounded(u, v, hl - 1.0, hw - 1.0, 3.0):
 		return bodyc                                                                       # the hood
+	return Color(0, 0, 0, 0)
+
+## The top of a wrecker: a short cab with its glass, the headache rack behind it, the yellow boom
+## down the middle of the deck with its ram beside it, and toolboxes along both sides.
+func _tow_layer(u: float, v: float, hl: float, hw: float, zz: int, bodyc: Color) -> Color:
+	var gk := float(clampi(zz - 7, 0, 2))
+	var cab_back := hl * 0.06
+	var front := hl * 0.46 - gk * 1.2
+	var yellow := Color("e0b020") * (0.75 + 0.25 * float(zz) / 11.0)
+	yellow.a = 1.0
+	var dark := STEEL * 0.55
+	dark.a = 1.0
+	# the cab
+	if u >= cab_back and absf(v) <= hw - 0.8 - gk * 0.6:
+		if zz <= 9 and u <= front:
+			if u < cab_back + 1.0 or u > front - 0.8: return bodyc * 0.9                   # B and A pillars
+			return GLASS_HI if zz == 9 and u > front - 2.0 else GLASS
+		if zz >= 10 and u <= hl * 0.40 and u >= cab_back + 0.6 and absf(v) <= hw - 1.6:
+			return bodyc * 1.08                                                             # the roof
+		if zz == 7 and u > front and _rounded(u, v, hl - 1.0, hw - 1.0, 3.0): return bodyc   # the hood
+		return Color(0, 0, 0, 0)
+	# the headache rack, right behind the cab
+	if u < cab_back and u >= cab_back - 1.2 and absf(v) <= hw - 1.0 and zz <= 10:
+		return dark if int(floorf(v + 100.0)) % 2 == 0 else STEEL * 0.8
+	if u < cab_back - 1.2 and u > -hl + 1.4:
+		# the boom down the middle, and the ram beside it
+		if zz <= 9 and absf(v) <= 1.1:
+			return yellow if absf(v) < 0.8 else yellow * 0.7
+		if zz == 7 and absf(v) > 1.1 and absf(v) <= 1.8 and u < -hl * 0.1 and u > -hl * 0.55: return dark
+		# toolboxes along the sides
+		if zz == 7 and absf(v) > hw - 2.2 and absf(v) <= hw - 0.3 and u > -hl * 0.75:
+			var lid := STEEL * (0.85 if int(floorf(u + 100.0)) % 4 != 0 else 0.6)
+			lid.a = 1.0
+			return lid
 	return Color(0, 0, 0, 0)
 
 ## What the crash did to this pixel: dents (darker, crumpled) toward the side that got hit,
