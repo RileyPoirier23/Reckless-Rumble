@@ -150,5 +150,14 @@ func _init() -> void:
 	mix.fuel_l = mix.tank_l * 0.5
 	mix.add_fuel(mix.tank_l, true)
 	check("half a tank of regular topped up with premium is half premium", absf(mix.premium - 0.5) < 0.01 and absf(mix.fuel_l - mix.tank_l) < 0.01, "%.2f" % mix.premium)
+	# a blown engine saved with the car is still blown when it comes back out of the garage
+	var blown := car()
+	blown._hurt_engine(2.0)
+	var reloaded := car()
+	reloaded.set_wear(blown.wear_state())
+	check("a blown engine stays blown through the save", blown.engine_blown and reloaded.engine_blown and reloaded.power_mult() == 0.0, "health %.2f, blown %s" % [reloaded.engine_health, str(reloaded.engine_blown)])
+	var tired := car()
+	tired.set_wear({ "engine": 0.4 })
+	check("a tired engine isn't a blown one", not tired.engine_blown and tired.power_mult() > 0.5, "%.2f" % tired.power_mult())
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
