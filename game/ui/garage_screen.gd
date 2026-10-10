@@ -1,7 +1,9 @@
 ## The garage at Covington Auto. Five tabs:
 ##   CARS      the cars you own; take one out, or have Gus straighten one out
 ##   UPGRADES  bolt on what's on the shelf (Gus charges labour), take parts back off
-##   LOOKS     the body shop: paint and finish, rims, calipers, ride height, tint, stripes, kits
+##   LOOKS     the body shop: paint and finish, rims, calipers, ride height, tint, stripes, kits,
+##             hoods, fenders, wheel offset, the roof, bull bars, spares and the bed (all of it shows
+##             on the car out on the road, too)
 ##   ROCKAUTTO.CA  the shop computer: order parts, standard or express shipping
 ##   DYNO      power and torque curves against stock, and what the car actually does
 ## The car you're working on is up on the left, big, in the side view, and changes as you do.
@@ -27,13 +29,28 @@ const FINISHES := ["gloss", "metallic", "pearl", "matte", "chrome"]
 const RIM_COLORS := ["#c8ccd4", "#1a1a1e", "#e8c040", "#e8e8ec", "#c8342c", "#2a6aa8", "#6a6a70", "#d8a060"]
 const CALIPERS := ["#5a5a60", "#c8242c", "#d8b020", "#2a6aa8", "#2a8a3a", "#e8e8ec"]
 const STRIPES := ["none", "racing", "side", "rally"]
+const LIVERIES := ["none", "slash", "split", "sponsor", "flames"]
 const SPOILERS := ["none", "ducktail", "wing", "gt"]
 const KITS := ["none", "lip", "lip + skirts", "full"]
 const EXHAUSTS := ["single", "dual", "quad"]
-const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS"]
+const HOODS := ["stock", "vented", "scoop", "carbon"]
+const FENDERS := ["stock", "flared"]
+const OFFSETS := ["stock", "poke", "tucked"]
+const ROOFS := ["stock", "sunroof", "ttops", "vinyl", "rack", "lightbar"]
+const BEDS := ["stock", "tonneau", "rollbar", "rollbar_lights"]
+const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
+	"HOOD", "FENDERS", "WHEEL OFFSET", "ROOF", "BULL BAR", "SPARE", "BED"]
+const LOOK_SHOWN := 14               # rows on the panel at once (it scrolls)
+const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "ROLL BAR + LIGHTS", "lightbar": "LIGHT BAR", "rack": "ROOF RACK",
+	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "tonneau": "TONNEAU COVER" }
 ## What the body shop charges for each kind of change.
 const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "CALIPERS": 180, "RIDE HEIGHT": 150,
-	"TINT": 220, "STRIPES": 350, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160 }
+	"TINT": 220, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160,
+	"HOOD": 700, "FENDERS": 850, "WHEEL OFFSET": 300, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
+## Which key in a car's looks each row sets.
+const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
+	"TINT": "tint", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust",
+	"HOOD": "hood", "FENDERS": "fenders", "WHEEL OFFSET": "offset", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
 
 const GUS := [
 	"\"TAKE WHAT YOU WANT. BRING IT BACK IN ONE PIECE.\"",
@@ -66,6 +83,9 @@ var express := false
 var dyno_t := -1.0
 var tune_row := 0
 var preview: ImageTexture
+var preview_top: CarArt              # and how it'll look out on the road, from above
+var preview_big: CarArt              # the same, drawn twice the size, for the top view
+var top_view := false                # the preview shows the car from above, big, turning
 var preview_key := ""
 var rng := RandomNumberGenerator.new()
 
@@ -118,6 +138,8 @@ func _process(dt: float) -> void:
 	if Input.is_action_just_pressed("ui_right"): dx = 1
 	if Input.is_action_just_pressed("ui_left"): dx = -1
 	var go := Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("use")
+	# flip the preview between the side and the top while you try things on
+	if tabs()[tab] == "LOOKS" and Input.is_action_just_pressed("horn"): top_view = not top_view
 	match tabs()[tab]:
 		"CARS": _cars_input(dx, go)
 		"UPGRADES": _upgrades_input(dy, dx, go)
@@ -226,11 +248,28 @@ func _look_value(r: String) -> Variant:
 		"RIDE HEIGHT": return float(trial.get("drop", 0.0))
 		"TINT": return float(trial.get("tint", 0.0))
 		"STRIPES": return trial.get("stripes", "none")
-		"STRIPE COLOUR": return trial.get("stripe_color", "#f0ece4")
+		"LIVERY": return trial.get("livery", "none")
+		"STRIPE COLOUR": return trial.get("stripe_color", "")
 		"SPOILER": return trial.get("spoiler", "none")
 		"BODY KIT": return trial.get("kit_name", "none")
 		"EXHAUST TIPS": return trial.get("exhaust", "single")
+		"HOOD": return trial.get("hood", "stock")
+		"FENDERS": return trial.get("fenders", "stock")
+		"WHEEL OFFSET": return trial.get("offset", "stock")
+		"ROOF": return trial.get("roof", "stock")
+		"BULL BAR": return "BULL BAR" if trial.get("bash", false) else "NONE"
+		"SPARE": return "ON THE BACK" if trial.get("spare", false) else "NONE"
+		"BED": return trial.get("bed", "stock")
 	return null
+
+## Rows that don't fit this car: a bed on a car without one, a spare where there's nowhere to hang it.
+func _look_fits(r: String) -> bool:
+	var fam := String(CarGen.design(_base_spec()).family)
+	match r:
+		"BED": return fam == "pickup" and String(_base_spec().get("body", "")) != "tow"
+		"SPARE": return fam in ["pickup", "suv", "offroad"]
+		"BULL BAR": return not fam in ["sports", "mid", "wedge", "roadster", "bubble"]
+	return true
 
 static func _cycle(arr: Array, v: Variant, d: int) -> Variant:
 	var i := arr.find(v)
@@ -238,8 +277,12 @@ static func _cycle(arr: Array, v: Variant, d: int) -> Variant:
 
 func _looks_input(dy: int, dx: int, go: bool) -> void:
 	row = clampi(row + dy, 0, LOOK_ROWS.size())          # the last row is PAY
+	scroll = clampi(scroll, row - LOOK_SHOWN + 1, row)
 	if dx != 0 and row < LOOK_ROWS.size():
 		var r: String = LOOK_ROWS[row]
+		if not _look_fits(r):
+			_say("NOTHING TO PUT THAT ON, ON THIS ONE.")
+			return
 		match r:
 			"PAINT": trial_paint = String(_cycle(PAINTS, trial_paint, dx))
 			"FINISH": trial.finish = _cycle(FINISHES, trial.get("finish", "gloss"), dx)
@@ -250,12 +293,24 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"RIDE HEIGHT": trial.drop = clampf(float(trial.get("drop", 0.0)) + dx * 0.2, 0.0, 1.0)
 			"TINT": trial.tint = clampf(float(trial.get("tint", 0.0)) + dx * 0.25, 0.0, 1.0)
 			"STRIPES": trial.stripes = _cycle(STRIPES, trial.get("stripes", "none"), dx)
-			"STRIPE COLOUR": trial.stripe_color = _cycle(PAINTS, trial.get("stripe_color", "#f4f4f4"), dx)
+			"LIVERY": trial.livery = _cycle(LIVERIES, trial.get("livery", "none"), dx)
+			"STRIPE COLOUR":
+				# AUTO first: the body shop picks a colour that stands out from the paint
+				var picked := String(_cycle([""] + PAINTS, trial.get("stripe_color", ""), dx))
+				if picked == "": trial.erase("stripe_color")
+				else: trial.stripe_color = picked
 			"SPOILER": trial.spoiler = _cycle(SPOILERS, trial.get("spoiler", "none"), dx)
 			"BODY KIT":
 				trial.kit_name = _cycle(KITS, trial.get("kit_name", "none"), dx)
 				trial.kit = { "lip": trial.kit_name != "none", "skirts": trial.kit_name in ["lip + skirts", "full"], "diffuser": trial.kit_name == "full" }
 			"EXHAUST TIPS": trial.exhaust = _cycle(EXHAUSTS, trial.get("exhaust", "single"), dx)
+			"HOOD": trial.hood = _cycle(HOODS, trial.get("hood", "stock"), dx)
+			"FENDERS": trial.fenders = _cycle(FENDERS, trial.get("fenders", "stock"), dx)
+			"WHEEL OFFSET": trial.offset = _cycle(OFFSETS, trial.get("offset", "stock"), dx)
+			"ROOF": trial.roof = _cycle(ROOFS, trial.get("roof", "stock"), dx)
+			"BULL BAR": trial.bash = not trial.get("bash", false)
+			"SPARE": trial.spare = not trial.get("spare", false)
+			"BED": trial.bed = _cycle(BEDS, trial.get("bed", "stock"), dx)
 	if go and row == LOOK_ROWS.size():
 		var cost := _looks_cost()
 		if cost == 0:
@@ -273,10 +328,8 @@ func _looks_cost() -> int:
 	var old: Dictionary = _car().get("looks", {})
 	var cost := 0
 	if trial_paint != String(_car().paint): cost += LOOK_COST.PAINT
-	var keys := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
-		"TINT": "tint", "STRIPES": "stripes", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust" }
-	for r in keys:
-		var k: String = keys[r]
+	for r: String in LOOK_KEYS:
+		var k: String = LOOK_KEYS[r]
 		if str(trial.get(k, "")) != str(old.get(k, "")): cost += int(LOOK_COST[r])
 	return cost
 
@@ -348,7 +401,7 @@ func _draw() -> void:
 		BAY: hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: 1TON PUTS IT IN  {ui_cancel}: CLOSE"
 		"CARS": hint = "{leftright}: PICK  {use}: TAKE IT OUT  {horn}: GUS FIXES IT  {ui_cancel}: CLOSE"
 		"UPGRADES": hint = "{updown}: SLOT  {leftright}: PART  {ui_accept}: INSTALL  {ui_cancel}: CLOSE"
-		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY THE BODY SHOP  {ui_cancel}: CLOSE"
+		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY  {horn}: %s  {ui_cancel}: CLOSE" % ("SIDE VIEW" if top_view else "TOP VIEW")
 		"ROCKAUTTO.CA": hint = "{leftright}: CATEGORY  {updown}: PART  {ui_accept}: ORDER  {ui_cancel}: CLOSE"
 		"DYNO": hint = "{updown}: BOOST/TIMING  {leftright}: TUNE  {ui_accept}: PULL  {ui_cancel}: CLOSE"
 	PixelFont.draw(self, Vector2(16, 344), Hints.fmt(hint), ASH)
@@ -365,8 +418,10 @@ static func _money(n: int) -> String:
 func _preview_box() -> void:
 	var r := Rect2(10, 28, 300, 160)
 	draw_rect(r, Color("2a2a30"))
-	draw_rect(Rect2(r.position.x, r.end.y - 40, r.size.x, 40), Color("4a4a48"))
-	draw_rect(Rect2(r.position.x, r.end.y - 41, r.size.x, 1), Color("c8a030"))
+	var top: bool = top_view and tabs()[tab] == "LOOKS"
+	if not top:
+		draw_rect(Rect2(r.position.x, r.end.y - 40, r.size.x, 40), Color("4a4a48"))
+		draw_rect(Rect2(r.position.x, r.end.y - 41, r.size.x, 1), Color("c8a030"))
 	var spec := _base_spec()
 	var shown := _shown_parts()
 	var looks := SaveGame.car_looks({ "parts": shown, "looks": trial if tab == 2 else _car().get("looks", {}), "custom": _custom_shown() })
@@ -381,8 +436,24 @@ func _preview_box() -> void:
 		if float(d.get("front", 0.0)) > 0.3: dmg.front = float(d.front) * 0.6
 		if float(d.get("rear", 0.0)) > 0.3: dmg.rear = float(d.rear) * 0.6
 		preview = ImageTexture.create_from_image(PixCars.showroom(spec, len, Color(paint), looks, dmg))
-	var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
-	draw_texture(preview, pos)
+		preview_top = CarArt.new(spec, Color(paint), _car().damage, 5, 1.0, looks)
+		preview_big = null
+	if top:
+		# from above, big, turning slowly on the shop's turntable: the car about as long as the
+		# panel is tall
+		var c := r.get_center() + Vector2(0, 6)
+		draw_circle(c, r.size.y * 0.43, Color("3a3a3c"))
+		draw_arc(c, r.size.y * 0.43, 0.0, TAU, 64, Color("5a5a58"), 2.0)
+		draw_arc(c, r.size.y * 0.28, 0.0, TAU, 48, Color("323234"), 1.0)
+		if preview_big == null:
+			var k := r.size.y * 0.8 / (float(spec.get("length", 4.5)) * CarArt.PX)
+			preview_big = CarArt.new(spec, Color(paint), _car().damage, 5, k, looks)
+		CarView.paint_stack(self, preview_big, c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5), Time.get_ticks_msec() / 2400.0)
+	else:
+		var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
+		draw_texture(preview, pos)
+		# from above, turning slowly on the shop floor's corner
+		CarView.paint_stack(self, preview_top, Vector2(r.end.x - 48, r.position.y + 50), Time.get_ticks_msec() / 2400.0)
 	var name := "%s %s '%s" % [String(spec.make).to_upper(), String(spec.model).to_upper(), str(int(spec.get("year", 0)) % 100).pad_zeros(2)]
 	PixelFont.draw(self, r.position + Vector2(6, 6), name, GOLD, 2)
 	# the numbers, under the car
@@ -471,8 +542,9 @@ func _draw_upgrades() -> void:
 
 func _draw_looks() -> void:
 	var r := _panel()
-	for k in LOOK_ROWS.size() + 1:
-		var y := r.position.y + 8 + k * 18
+	scroll = clampi(scroll, row - LOOK_SHOWN + 1, row)
+	for k in range(scroll, mini(LOOK_ROWS.size() + 1, scroll + LOOK_SHOWN + 1)):
+		var y := r.position.y + 8 + (k - scroll) * 17
 		var on := k == row
 		draw_rect(Rect2(r.position.x + 4, y - 4, r.size.x - 8, 16), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.02))
 		if k == LOOK_ROWS.size():
@@ -483,14 +555,19 @@ func _draw_looks() -> void:
 		PixelFont.draw(self, Vector2(r.position.x + 8, y), lr, GOLD if on else ASH)
 		var v: Variant = _look_value(lr)
 		var vx := r.position.x + 110
+		if not _look_fits(lr):
+			PixelFont.draw(self, Vector2(vx, y), "-", ASH)
+			continue
 		match lr:
+			"STRIPE COLOUR" when String(v) == "":
+				PixelFont.draw(self, Vector2(vx, y), "AUTO", BONE)
 			"PAINT", "RIM COLOUR", "CALIPERS", "STRIPE COLOUR":
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(String(v)))
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(1, 1, 1, 0.3), false, 1.0)
 			"RIM SIZE": PixelFont.draw(self, Vector2(vx, y), "%d IN" % int(14 + (float(v) - 0.5) * 30.0), BONE)
 			"RIDE HEIGHT": PixelFont.draw(self, Vector2(vx, y), "STOCK" if float(v) < 0.05 else "-%d MM" % int(float(v) * 60.0), BONE)
 			"TINT": PixelFont.draw(self, Vector2(vx, y), "%d%%" % int(float(v) * 100.0), BONE)
-			_: PixelFont.draw(self, Vector2(vx, y), (String(v) if String(v) != "" else "STOCK").to_upper(), BONE)
+			_: PixelFont.draw(self, Vector2(vx, y), String(LABELS.get(String(v), String(v) if String(v) != "" else "STOCK")).to_upper(), BONE)
 		if on: PixelFont.draw(self, Vector2(vx - 12, y), "<", GOLD)
 		if on: PixelFont.draw(self, Vector2(r.end.x - 14, y), ">", GOLD)
 

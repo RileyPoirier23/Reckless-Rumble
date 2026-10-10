@@ -3,7 +3,7 @@
  "make": "Fjord",
  "model": "E-Fiddy Type III Ambulance",
  "year": 2019,
- "body": "ambulance",
+ "body": "boxtruck",
  "dash": "truck",
  "gps": "trucker",
  "owner": "PORT RUMBLE EMS",
@@ -88,5 +88,10 @@
   "driven_inertia": 6.0,
   "size": "LT245/75R17"
  },
- "paint": "#f2f2ee"
+ "paint": "#f2f2ee",
+ "class": "fleet",
+ "art": {
+  "cutaway": true,
+  "ambulance": true
+ }
 }

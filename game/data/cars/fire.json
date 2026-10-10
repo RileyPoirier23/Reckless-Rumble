@@ -3,7 +3,7 @@
  "make": "Pierz",
  "model": "Arrow XT Pumper",
  "year": 2015,
- "body": "fire",
+ "body": "boxtruck",
  "dash": "truck",
  "gps": "trucker",
  "owner": "PORT RUMBLE FIRE",
@@ -84,5 +84,7 @@
   "driven_inertia": 20.0,
   "size": "315/80R22.5"
  },
- "paint": "#b81e1e"
+ "paint": "#b81e1e",
+ "class": "fleet",
+ "art": {}
 }

@@ -89,7 +89,7 @@ func _init() -> void:
 	for id in ["silvio", "supreem", "charjer", "tow"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
 		var art := CarArt.new(spec, Color(spec.paint))
-		check("%s: drawn" % id, art.slices.size() == CarArt.SLICES)
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10 and art.atlas.get_width() == art.size.x * art.n)
 		check("%s: has a dash and a GPS" % id, spec.has("dash") and spec.has("gps"))
 		var c := CarSim.new(spec)
 		c.set_ambient(20.0)
@@ -154,7 +154,7 @@ func _init() -> void:
 	for id in ["ambulance", "fire"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
 		var art := CarArt.new(spec, Color(spec.paint))
-		check("%s: drawn" % id, art.slices.size() == CarArt.SLICES)
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10)
 		var c := CarSim.new(spec)
 		c.set_ambient(15.0)
 		var tt := 0.0

@@ -50,13 +50,19 @@ The world streams in 64 m chunks around the camera, so it's all one drive with n
 ## Traffic
 
 The other drivers follow the lanes (right-hand traffic) and keep a safe gap to whatever is ahead of them, including you. They use the Intelligent Driver Model, which brakes harder the faster a gap closes. Through junctions they drive a curved path from their lane in to the right lane out. The rules:
-- **Traffic signals:** where two big roads cross in town. The main road gets the long green, and the light you see is the light they obey.
-- **Two-way stops:** the smaller street stops and waits for a gap in the main road.
+- **Traffic signals:** where two big roads cross in town. The main road gets the long green, and the light you see is the light they obey. Lights a few metres apart run in step.
+- **Two-way stops:** the smaller street stops and waits for a gap in the main road long enough to get across.
 - **All-way stops:** downtown and in the village centres. First to stop goes first.
 - **Lanes and turns:** left turns wait for oncoming traffic, and on multi-lane roads right turns come from the right lane only.
-- **Don't block the box:** nobody enters an intersection without room on the other side.
+- **Don't block the box:** nobody enters an intersection without room on the other side, and nobody pulls out across a car that's already crossing (or too close and too quick to stop).
 
-Cars spawn out of sight around you, and there are more downtown and at rush hour, fewer at 3 a.m. They signal before turns, show brake lights and use headlights at night.
+Cars spawn out of sight around you, just past the corners of the screen, and some come out up the road you're on (a few of them coming at you). There are more downtown and at rush hour, fewer at 3 a.m., and about twice as many on the Trans-Canada as there used to be. They signal before turns, show brake lights and use headlights at night.
+
+**Who's driving.** Every car comes off the catalogue, picked for the part of town: more pickups and rust out in the country, more compacts and luxury downtown. Nobody's car is showroom clean: dirt, winter salt, rust on the old ones, sun-faded paint, dents, a primer panel, a door off a car of another colour. Some have a job: a taxi, a pizza car or a driving school with its sign on the roof, a work van with a local business on its doors and a ladder on the rack, a pickup hauling lumber, firewood, boxes or mulch. Now and then one is somebody's project, lowered on aftermarket rims with a wing and tint.
+
+**The fleet** only ever drives in traffic (nobody sells you one): city buses on the downtown arterials, school buses on weekday mornings and afternoons, semis with trailers that swing behind them on the highway, the garbage truck through the neighbourhoods in the morning, step vans and box trucks where the shops are, and the odd ambulance running its lights. Long vehicles keep to the big roads and wait for their length to be clear past a junction.
+
+**Parked cars.** The town's curbs have parking bays cut into the sidewalk, the houses have driveways, and the lots have striped stalls; all of them fill with parked cars, by the time of day (downtown fills up by day, the driveways by night, the mall's lot empties after closing). Semis rest at the Large Stop. A parked car is solid: hit it and it slides and stays dented where it stops. The racers and the police steer round them.
 
 ## HOPP-IN rides
 
@@ -95,7 +101,13 @@ Hit a traffic car and the impact is shared by mass. It slides and spins, then pu
 
 ## The garage
 
-Pull up to Covington Auto's bay doors and stop: the garage opens. Pick which car to take out, or have Gus fix one up. Your cars, their paint and their damage are saved (`user://driveboss_save.json`).
+Pull up to Covington Auto's bay doors and stop: the garage opens. Five tabs:
+- **CARS:** pick which car to take out, or have Gus fix one up.
+- **UPGRADES** and **ROCKAUTTO.CA:** order parts and bolt them on (Gus charges labour).
+- **LOOKS:** the body shop. Paint and finish (gloss, metallic, pearl, matte, chrome), rims (style, colour, size), calipers, ride height, tint, stripes and their colour, liveries (slash, split, sponsor, flames), spoilers and wings, body kits, exhaust tips, the hood (louvred, scoop, carbon), fenders (wide and flared), wheel offset (poke or tucked), the roof (sunroof, T-tops, vinyl, a rack, a light bar), a bull bar, a spare on the back and the bed (tonneau, roll bar, roll bar with lights). The car on the left changes as you go; the horn key (H) turns it to a big top view on a turntable, the way it looks out on the road.
+- **DYNO:** power and torque against stock.
+
+Everything you change shows on the car everywhere: on the road, at the meet, in the cutscenes, on MarketThing. Your cars, their parts, their looks, their fuel and their damage are saved (`user://driveboss_save.json`).
 
 ## The meet
 
@@ -114,6 +126,16 @@ Lloyd's yard in Northside Industrial (on the GPS) is open 8 to 6: pull up to the
 The used-car app on Leo's phone (GIGS, then the shoulder buttons):
 - **BUY:** a new batch of listings every morning off the catalogue. Sellers lie (or don't), you haggle in the chat, and then you meet them in a parking lot. Touch the hood, pull the dipstick, put the creeper light under it and take it for a test drive before you hand over cash. Every hidden fault shows up in at least one check.
 - **SELL:** put one of your own cars up at a price you pick. Gus tells you what it's worth (age, kilometres, what's worn out, dents, plus a bit for the parts you put on). Answers come in by the hour: Brandon lowballs, the dealer offers fast and low, Nathalie is fair, Trevor needs his dad to see it, Gerald only asks questions, and Jay-P wants to trade a sled. A fair price gets bites; a dreamer's price gets Gerald, and nobody writes at four in the morning. Take an offer and the buyer picks the car up at Gus's. If someone offers over asking by certified cheque, the car leaves and the cheque bounces. You can't sell the car you're driving, your last car, or Toby's wrecker.
+
+## The cars
+
+**The catalogue** (`data/catalog.gd`) has 495 parody cars from 1955 to 2018, from kei trucks to hypercars, plus the four hand-made ones below (499 you can own) and eight fleet vehicles that only drive in traffic. Every car is one line: make, model, year, class, body, size, weight, drivetrain, engine, gearbox, price, rarity, a few art cues and a blurb. The game works the driving numbers out from that line (torque curve, gears, tires, weight balance). The makes and models are parodies, GTA style: a Hondo Civil, a Dodgy Charjer, a Fjord Mustank.
+
+**Every car draws as itself**, the way CAGE BOSS draws its faces: no image files, and no car is a copy of another. The car's line and a seed from its name become its design, dozens of separate details worked out from the real thing's proportions: length, height, wheelbase, where the engine sits, how fast the windshield leans for its decade, the roof line, the pillars, the glass, the lamps, the grille, the bumpers, the arches and the wheels. Since 2000 each maker has its own family look (its headlamp shape, grille, tail lamps, window trim, the line down the side, its stock rims), and the cars everybody knows have their shape drawn by hand on top of the rules (137 of them), so a Coontash reads as a Coontash. The design is painted a layer at a time with shading, reflections and a dark outline, and the same car comes out the same every time.
+
+**From the side** (cutscenes, the death screens, the garage, MarketThing, the auction, the meet, the loading screens, the counter's lot): `render/car_gen.gd` paints the design, and everything from the garage and every kind of damage (crumpled ends, scrapes to primer, cracked lamps, a hanging bumper, a lost wheel, the driver slumped in the window) goes on top.
+
+**From above** (driving): the same design is built up as a stack of slices, so every part of the car stands as high as its side view says. A Charjer, a Silvio and a Supreem are different shapes from above, not just different colours. The front wheels steer, a bus stands taller than a sports car, and convertibles and open 4x4s show their cockpits.
 
 ## Cars, dashes and GPS
 
@@ -256,11 +278,18 @@ godot --headless --path game -s tests/counter_tests.gd
 godot --headless --path game -s tests/desk_tests.gd
 godot --headless --path game -s tests/world_tests.gd
 godot --headless --path game -s tests/jobs_tests.gd
-godot --headless --path game -- --traffic-test
+godot --headless --path game -s tests/catalog_tests.gd
+godot --headless --path game -s tests/cargen_tests.gd
+godot --headless --path game -s tests/top_down_tests.gd
+godot --headless --fixed-fps 60 --path game -- --traffic-test --seeds 1,2,3
 godot --headless --path game -- --race-test
 ```
 
 The race test (`--race-test`) runs inside the drive scene: three AI racers round the Downtown Box through traffic (they have to finish, stay on the route and not get stuck), a race you win and get paid for, a pull-over and a ticket, a chase you get away from, an impound, a deer and a moose, a pink-slip race, a HOPP-IN ride, a trip to the salvage yard, a night at the meet, and the impound auction. The jobs tests check the routes follow real roads, the field is matched to your car, and the ticket and impound rules.
+
+The traffic soak (`--traffic-test`) parks you in the North End, downtown, on the Trans-Canada and in Salisbury and lets the traffic run: no pile-ups between drivers, nobody stuck for a minute, cars getting somewhere. With `--fixed-fps 60` a run is the same every time; `--seeds 1,2,3` runs every spot once per seed (different cars, turns and light phases), `--quick` only the first, and `--why` prints what a stuck car is waiting on.
+
+The car tests: the catalogue tests (`catalog_tests.gd`) check every car's line turns into a car that drives, no real make or model gets in, and traffic picks by zone. The side-view tests (`cargen_tests.gd`) check the same car is the same picture every time, cars of a class differ, era shapes, trucks on frames, the hand-drawn cars over their wheels, every mod and kind of damage, and nothing solid under the road. The top-down tests (`top_down_tests.gd`) check every car and fleet vehicle draws from its side view, cars differ in shape from above, every garage option shows on the road, the traffic's wear and signs show, the fleet is never for sale and keeps its hours, trailers follow, and every parking spot in town can be filled at once with nothing touching a lane, a junction, a house or another car.
 
 The map, sky and car tests check that:
 - the map builds quickly;
@@ -298,7 +327,10 @@ The driving tests (16 checks) run headless on every push:
 | Folder | What's in it |
 |---|---|
 | `sim/car_sim.gd` | The physics: tires, engine, clutch, gearbox, heat, damage. No drawing |
-| `render/car_art.gd` | Draws the car pixel by pixel as 16 stacked slices |
+| `data/catalog.gd` | The car catalogue: 495 parody cars and the fleet, one line each, turned into driving specs; picks traffic by zone |
+| `render/car_gen.gd` | Every car's design from its catalogue line and a seed (the CAGE BOSS way), and the side view painted from it |
+| `render/pix_cars.gd` | The front door for side-view cars (cutscenes, death screens, garage, MarketThing, auction, meet, loading screens, counter): mods and damage on top of CarGen |
+| `render/car_art.gd` | Draws the car top-down from the same design, pixel by pixel as stacked slices, with every garage option, traffic wear and dents |
 | `render/car_view.gd` | Stacks and rotates the slices, with body roll, steering wheels and lights |
 | `ui/hud_layout.gd` | Where every driving HUD panel goes (the test checks nothing overlaps or covers the car) |
 | `world/player_car.gd` | Input, collisions, tire marks, smoke and steam |
@@ -328,7 +360,8 @@ The driving tests (16 checks) run headless on every push:
 | `world/sky.gd` | The clock, the sun, the weather and what it leaves on the road |
 | `world/light_pool.gd` | Hands real lights to the nearest of the map's 1,200 light sources, with each kind's behaviour |
 | `ui/dash.gd`, `ui/gps.gd`, `ui/map_screen.gd` | The per-car dashes and GPS units, and the big map |
-| `world/traffic.gd`, `world/traffic_car.gd` | Traffic: spawning, lanes, the rules at junctions, and each driver |
+| `world/traffic.gd`, `world/traffic_car.gd` | Traffic: spawning, lanes, the rules at junctions, each driver, how lived-in each car is, and the fleet's hours |
+| `world/parked_cars.gd`, `world/parked_car.gd` | The parked cars: curb bays, driveways, lot stalls and the truck stop, filled by time of day; each one solid to hit |
 | `world/debris.gd` | Bumpers, glass and hubcaps that come off in a crash |
 | `ui/garage_screen.gd`, `save_game.gd` | The garage and the save file |
 | `controls.gd` | Every input action, for keyboard and controller |

@@ -49,7 +49,10 @@ func _init() -> void:
 	var lk := OneTon.looks({ "custom": { "donk": 2 } }, {})
 	check("a donk sits up in the side view", float(lk.drop) < -0.5 and float(lk.rim_size) > 0.8)
 	check("pumps alone sit it low", float(OneTon.looks({ "custom": { "hyd": 3 } }, {}).drop) > 0.5)
-	check("the lift in the top-down view", OneTon.stance({ "custom": { "donk": 4 } }).x > OneTon.stance({ "custom": { "donk": 1 } }).x)
+	var tall := CarArt.new(CarCatalog.spec("charjer"), Color.RED, 0.0, 1, CarArt.CAR_SCALE, OneTon.looks({ "custom": { "donk": 4 } }, {}))
+	var low := CarArt.new(CarCatalog.spec("charjer"), Color.RED, 0.0, 1, CarArt.CAR_SCALE, OneTon.looks({ "custom": { "donk": 1 } }, {}))
+	var stock := CarArt.new(CarCatalog.spec("charjer"), Color.RED, 0.0, 1, CarArt.CAR_SCALE)
+	check("from above, a donk stands up on big wheels", tall.n > low.n and low.n > stock.n and tall.wheel_n > stock.wheel_n, "%d / %d / %d slices" % [tall.n, low.n, stock.n])
 	check("save_game applies his work", float(SaveGame.car_spec({ "id": "charjer", "parts": {}, "custom": { "donk": 3 } }).tires.radius) > 0.4)
 	# the hop
 	for kit in [1, 2, 3]:

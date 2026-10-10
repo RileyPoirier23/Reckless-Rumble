@@ -431,7 +431,7 @@ func next_customer() -> void:
 	lit = {}
 	# a pulled file has no car in the bay: it's long gone
 	if c.kind != "audit":
-		var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
+		var spec := { "cat": String(c.car.get("cat", "")), "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
 		car_view.art = CarArt.new(spec, Color(c.car.paint), 0.15 if c.get("sheet", {}).get("rust", false) else 0.0, c.person.face)
 		car_view.heading = 0.0
 	car_view.visible = c.kind != "audit"
@@ -1589,7 +1589,9 @@ func _queue_tex(w: Dictionary) -> ImageTexture:
 	var car: Dictionary = w.get("queue_car", w.car)
 	var qlen := clampi(int(float(car.len) * 8.0), 30, 46)
 	w._qlen = qlen
-	var img := PixCars.image(qlen, PixCars.body_of({ "body": car.get("side_body", "sedan") }), Color(car.paint))
+	# the car as itself when it came out of the catalogue, rust and all
+	var who := { "id": String(car.get("cat", "")), "body": String(car.get("body", "sedan")), "length": float(car.len), "year": int(car.get("year", 2000)) }
+	var img := PixCars.image_of(who, qlen, Color(car.paint), { "rust": float(car.get("rust_look", 0.0)) })
 	var t := ImageTexture.create_from_image(img)
 	_qtex[id] = t
 	return t

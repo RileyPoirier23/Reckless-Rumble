@@ -71,13 +71,13 @@ func _park(want: bool) -> void:
 		var spec := OneTon.apply(CarCatalog.spec(id), { "custom": c[4] })
 		spec.paint = String(c[2])
 		var a := AiCar.new()
+		a.looks = OneTon.looks({ "custom": c[4] }, {})
 		drive.ysort.add_child(a)
 		var at: Vector2 = c[3]
 		a.setup_ai(spec, drive.world, drive.skids, drive.hud, at, -PI / 2.0, 120 + i)
 		a.set_path(PackedVector2Array([at, at + Vector2(0, -3)]), false)
 		a.traffic = drive.traffic
 		a.hold = true
-		a.view.lift = OneTon.stance({ "custom": c[4] }).x
 		drive.traffic.extra.append(a)
 		cars.append(a)
 
