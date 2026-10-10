@@ -8,17 +8,17 @@
 			"request": "SAFETY INSPECTION",
 			"problem": "clean",
 			"arrive": "10:30",
-			"says": "MY GUYS ARE SWAMPED, SO HERE I AM. SAFETY ON THIS ONE, SON. FRANKIE ALWAYS DID MY USED ONES.",
+			"says": "MY GUYS ARE SWAMPED, SO HERE I AM. SAFETY ON THIS ONE, KID. FRANKIE ALWAYS DID MY USED ONES.",
 			"letter": { "title": "HATCH MOTORS", "lines": ["FROM THE DESK OF DALE HATCH", "", "LEO -", "AN OFFER FOR COVINGTON AUTO.", "A FAIR PRICE. FOR FRANK'S KIDS.", "NO RUSH. THINK IT OVER.", "", "- D.H."] },
 			"ask": {
 				"local": { "line": "THE MOUNTAIN TIM BURTONS. FRANKIE AND I USED TO SIT IN THAT LOT. HE TOOK IT BLACK. CHECKED HIS BRAKES EVERY SUNDAY, TOO. CAREFUL MAN.",
 					"clue": { "id": "hatch_sundays", "note": "HATCH KNOWS DAD CHECKED HIS BRAKES EVERY SUNDAY. SO DID EVERYBODY, I GUESS." } }
 			},
 			"outcomes": {
-				"APPROVED": { "line": "\"Good man. Frankie's boy.\" He tucks the card under the mug. \"Think about it. For Aries.\" You never told him her name.", "flags": ["hatch_offer_seen"] },
-				"DENIED": { "line": "He laughs like it's a joke you both told. \"Sure, son. Sure.\" There was nothing wrong with it. He knows you know." },
+				"APPROVED": { "line": "\"Good. Frankie's kid.\" He tucks the card under the mug. \"Think about it. For Aries.\" You never told him her name.", "flags": ["hatch_offer_seen"] },
+				"DENIED": { "line": "He laughs like it's a joke you both told. \"Sure, kid. Sure.\" There was nothing wrong with it. He knows you know." },
 				"REPORT": { "line": "Constable Tremblay looks at the papers, looks at Hatch, and buys him a coffee. Then she looks at you for a long time.", "heat": 5 },
-				"WRENCH": { "line": "\"Off the books? Son, I sell cars. Everything I do is on the books.\" He smiles. Gus puts his coffee down.", "citation": "" }
+				"WRENCH": { "line": "\"Off the books? Kid, I sell cars. Everything I do is on the books.\" He smiles. Gus puts his coffee down.", "citation": "" }
 			}
 		},
 		"darrell_trade": {
@@ -80,11 +80,11 @@
 			"visits": [
 				{ "day": 1, "arrive": "8:50", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
 					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
-					"says": "SAFETY, PLEASE. I GOTTA BE AT THE WINDOW BY TEN. MOUNTAIN TIM BURTONS. I'VE SEEN THINGS, MAN. A GUY ORDERED FORTY BURTON BITS FOR HIS DOG. THE DOG WAS A CAT.",
+					"says": "SAFETY, PLEASE. I GOTTA BE AT THE WINDOW BY TEN. MOUNTAIN TIM BURTONS. I'VE SEEN THINGS. A GUY ORDERED FORTY BURTON BITS FOR HIS DOG. THE DOG WAS A CAT.",
 					"ask": { "fails_inspection": { "line": "THE BALD ONE? THAT'S MY LUCKY ONE. YOU DON'T TAKE A GUY'S LUCKY ONE." } },
 					"outcomes": {
 						"DENIED": { "line": "\"Yeah. Yeah, okay.\" He looks at the tire like it let him down personally. \"My manager says the same thing about my hairnet.\"" },
-						"APPROVED": { "line": "\"Sick. Thanks, man.\" He peels out of the lot. The bald tire is louder about it than the other three." }
+						"APPROVED": { "line": "\"Sick. Thanks.\" He peels out of the lot. The bald tire is louder about it than the other three." }
 					} },
 				{ "day": 11, "arrive": "9:15", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
 					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
@@ -104,7 +104,7 @@
 							} },
 						"APPROVED_WRONG": { "problem": "clean", "request": "BRAKE JOB",
 							"says": "REMEMBER THE BALD TIRE? IT LET GO ON THE CAUSEWAY. I'M FINE. THE RIM'S NOT. NOW THE BRAKES GRIND. MY BUDDY SAYS YOU'RE THE EASY STICKER. I TOLD HIM YOU'RE NOT.",
-							"outcomes": { "APPROVED": { "line": "\"Thanks, man. For real this time.\" He doesn't say what the first time was. He doesn't have to." } } }
+							"outcomes": { "APPROVED": { "line": "\"Thanks. For real this time.\" He doesn't say what the first time was. He doesn't have to." } } }
 					} },
 				{ "day": 18, "arrive": "10:40", "request": "OIL CHANGE", "problem": "insurance_vin",
 					"says": "OIL CHANGE, PLEASE. MY MOM TOOK ME OFF HER INSURANCE. SHE SAYS I'M A GROWN MAN NOW. I'VE GOT MY OWN POLICY. LOOK.",
@@ -162,13 +162,13 @@
 					},
 					"after": {
 						"DENIED": { "hello": "NEW MUFFLER, LIKE YOU SAID. THE CAT AT THE DRIVE-THRU CAME BACK. SHE STILL WON'T LOOK AT ME." },
-						"APPROVED_WRONG": { "hello": "THE CAN'S STILL ON. A COP FOLLOWED ME HOME FOR THE NOISE. HE ASKED WHO STICKERED IT. I SAID A GUY." }
+						"APPROVED_WRONG": { "hello": "THE CAN'S STILL ON. A COP FOLLOWED ME HOME FOR THE NOISE. HE ASKED WHO STICKERED IT. I SAID SOMEBODY." }
 					} }
 			],
 			"overtime": [
 				{ "season": [[12, 1], [4, 30]], "arrive": "9:20", "request": "SAFETY INSPECTION", "problem": "no_winter_tires",
 					"papers": { "reg": { "use": "RIDESHARE" }, "sheet": { "tires": "ALL-SEASON" } },
-					"says": "SAFETY, PLEASE. HOPP-IN SAYS MY STICKER'S DUE. I'M ON ALL-SEASONS. IT'S IN THE NAME, MAN. ALL. SEASONS.",
+					"says": "SAFETY, PLEASE. HOPP-IN SAYS MY STICKER'S DUE. I'M ON ALL-SEASONS. IT'S IN THE NAME. ALL. SEASONS.",
 					"ask": { "no_winter_tires": { "line": "THE APP DOESN'T ASK ABOUT TIRES. THE APP ASKS ABOUT MY RATING. MY RATING'S A 4.1. THE 1 IS DOING A LOT OF WORK." } },
 					"outcomes": {
 						"DENIED": { "line": "\"Winters. Okay. Winters.\" He opens the app. The app says he's late." },
@@ -198,7 +198,7 @@
 					"ask": { "expired_reg": { "line": "EXPIRED? LISA DOES THE REGISTRATION. LISA'S AT HER SISTER'S IN MIRAMICHI. CAN YOU JUST... HOCKEY?" } },
 					"outcomes": {
 						"DENIED": { "line": "\"Fine. Fine. The registry opens at nine. The puck drops at eight.\" He does the math out loud all the way to the van." },
-						"APPROVED": { "line": "\"You're a good man. Carter's gonna score one for you.\" Carter is seven. Carter has never scored." }
+						"APPROVED": { "line": "\"You're good people. Carter's gonna score one for you.\" Carter is seven. Carter has never scored." }
 					} },
 				{ "day": 15, "arrive": "9:45", "request": "SAFETY INSPECTION", "problem": "expired_reg",
 					"says": "SAFETY ON THE VAN, PLEASE. THE LEAGUE WANTS EVERY CARPOOL VAN STICKERED. THE LEAGUE IS MY WIFE.",
@@ -333,7 +333,7 @@
 					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. YOUR FATHER FAILED IT EVERY YEAR SINCE 2009. IT'S TRADITION. I BRING MUFFINS EITHER WAY.",
 					"ask": { "fails_inspection": { "line": "THE LIGHT? IT GOES OUT WHEN IT'S SAD, DEAR. IT'S BEEN SAD SINCE THE SPRING." } },
 					"outcomes": {
-						"DENIED": { "line": "\"That's Frank's boy. He'd have said the same thing. Slower.\" She leaves the muffins." },
+						"DENIED": { "line": "\"That's Frank's kid. He'd have said the same thing. Slower.\" She leaves the muffins." },
 						"APPROVED": { "line": "She looks at the sticker. She looks at you. \"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
 					} },
 				{ "day": 10, "arrive": "11:30", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
@@ -341,7 +341,7 @@
 					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. FRANK FAILED IT EVERY YEAR. I BRING MUFFINS EITHER WAY.",
 					"ask": { "fails_inspection": { "line": "THE LIGHT? IT GOES OUT WHEN IT'S SAD, DEAR." } },
 					"outcomes": {
-						"DENIED": { "line": "\"That's Frank's boy.\" She leaves the muffins." },
+						"DENIED": { "line": "\"That's Frank's kid.\" She leaves the muffins." },
 						"APPROVED": { "line": "\"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
 					},
 					"after": {
@@ -353,7 +353,7 @@
 							} },
 						"APPROVED_WRONG": { "says": "THE LIGHT'S STILL OUT, DEAR. A POLICEMAN TOLD ME. HE WAS VERY NICE ABOUT IT. HE ASKED WHERE I GOT MY STICKER. CAN YOU LOOK AGAIN? PROPERLY, THIS TIME.",
 							"outcomes": {
-								"DENIED": { "line": "\"There. That's Frank's boy.\" She leaves the muffins." },
+								"DENIED": { "line": "\"There. That's Frank's kid.\" She leaves the muffins." },
 								"APPROVED": { "line": "\"Twice, dear?\" She takes the muffins back. Just one of them." }
 							} }
 					} },
@@ -383,7 +383,7 @@
 					"says": "MON CHAR FAIT UN DROLE DE NOISE, LA. COMME UNE OUTARDE. UNE OUTARDE TRISTE. SAFETY, PLEASE, DEAR.",
 					"ask": { "noise": { "line": "IT HONKS, DEAR. FROM THE BACK. LIKE A GOOSE. A SAD GOOSE. GUS SAYS IT'S THE MUFFLER. GUS SAYS A LOT OF THINGS ABOUT MY CAR." } },
 					"outcomes": {
-						"DENIED": { "line": "\"Frank's boy.\" She pats the counter twice. She leaves the muffins." },
+						"DENIED": { "line": "\"Frank's kid.\" She pats the counter twice. She leaves the muffins." },
 						"APPROVED": { "line": "The Cava-lame honks out of the lot like a goose leaving for the winter. A sad goose." }
 					},
 					"after": {
@@ -395,7 +395,7 @@
 					"says": "GOOD AFTERNOON, DEAR. SAFETY ON THE CAVA-LAME. IT HONKS NOW. FROM THE BACK.",
 					"ask": { "noise": { "line": "LIKE A GOOSE, DEAR. GUS SAYS IT'S THE MUFFLER." } },
 					"outcomes": {
-						"DENIED": { "line": "\"Frank's boy.\" She leaves the muffins." },
+						"DENIED": { "line": "\"Frank's kid.\" She leaves the muffins." },
 						"APPROVED": { "line": "The Cava-lame honks out of the lot. Hachey, by the coffee, watches it go." }
 					},
 					"after": {
@@ -429,14 +429,14 @@
 					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. THE LIGHT'S OUT AGAIN. IT GETS SAD IN THE COLD. SO DO I. I BROUGHT MUFFINS.",
 					"ask": { "fails_inspection": { "line": "IT'S THE COLD, DEAR. IT GOES OUT IN NOVEMBER AND COMES BACK FOR EASTER." } },
 					"outcomes": {
-						"DENIED": { "line": "\"That's Frank's boy.\" She leaves the muffins." },
+						"DENIED": { "line": "\"That's Frank's kid.\" She leaves the muffins." },
 						"APPROVED": { "line": "\"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
 					} },
 				{ "season": [[5, 1], [10, 14]], "arrive": "10:30", "request": "SAFETY INSPECTION", "problem": "studs_out_of_season",
 					"says": "SAFETY ON THE CAVA-LAME, DEAR. MY NEPHEW SAID THE STUDS WERE GOOD TILL APRIL. HE DIDN'T SAY WHICH APRIL.",
 					"ask": { "studs_out_of_season": { "line": "THE NEPHEW'S IN ALBERTA, DEAR. THE STUDS ARE HERE. I'M HERE. IT'S A WHOLE SITUATION." } },
 					"outcomes": {
-						"DENIED": { "line": "\"Frank's boy.\" She leaves the muffins. She'll call the nephew. In Alberta." },
+						"DENIED": { "line": "\"Frank's kid.\" She leaves the muffins. She'll call the nephew. In Alberta." },
 						"APPROVED": { "line": "The Cava-lame crunches off down Main St in the sunshine like it's walking on gravel." }
 					},
 					"after": {

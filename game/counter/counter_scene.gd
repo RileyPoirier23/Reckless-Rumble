@@ -31,6 +31,11 @@
 ## The room makes a few quiet sounds (DeskAudio): the horn from the lot, the stamp, paper, the
 ## wall clock, and the till when somebody takes money off the shop.
 ##
+## GUS'S TOOL DRAWER (off the day-end sheet): a tread gauge, a date wheel, a loupe and a UV lamp,
+## paid out of the till (in the story, out of Leo's own money). Each one reads one kind of fact
+## when Leo picks it twice (DeskTools); none of them stamps anything. The RELAXED CLOCK (on the
+## morning brief, next to the week picker) runs the same day half as long again in real time.
+##
 ## Mouse; keyboard alone (arrows move a cursor, Space clicks and drags); or a controller (left
 ## stick moves the cursor, D-pad left/right jumps to the next thing, A clicks and drags, Y
 ## inspects, X asks, B cancels, LB/RB turn the binder's tabs, D-pad up/down the books).
@@ -78,7 +83,12 @@ const ACTIONS := {
 	"desk_snap_prev": [KEY_PAGEUP, JOY_BUTTON_DPAD_LEFT],
 	"desk_snap_next": [KEY_TAB, JOY_BUTTON_DPAD_RIGHT],
 	"desk_approve": [KEY_1], "desk_deny": [KEY_2], "desk_report": [KEY_3], "desk_wrench": [KEY_4],
+	"desk_relax": [KEY_R, JOY_BUTTON_START],
 }
+## The relaxed clock: a day at the counter takes this many times as long in real time.
+const RELAXED_STRETCH := 1.5
+## The UV lamp's light.
+const UV := Color("b49cff")
 
 ## Gus, the first morning. Fix 3: Frank ran the shop; the counter was somebody else's.
 const BRIEFS := {
@@ -177,7 +187,7 @@ const BOX_WORD := { "APPROVED": "SIGNED FOR", "DENIED": "REFUSED", "REPORT": "RE
 var rules: CounterRules
 var day := 0
 var c: Dictionary = {}               # the customer at the window
-var phase := "brief"                  # brief, idle, counter, stamping, result, day_end, week_end, month_end, revoked
+var phase := "brief"                  # brief, idle, counter, stamping, result, day_end, drawer, week_end, month_end, revoked
 var docs: Array = []                  # [{id, pos, fresh}] back to front
 var drag := -1
 var drag_off := Vector2.ZERO
@@ -226,6 +236,12 @@ var log_old := false                  # the log is open at last fall's pages
 var week_pick := 0                    # free play: which week to start in
 var fresh := true                     # nothing played yet this session
 var overtime := false                 # the job after the run (DeskBook.overtime keeps the record)
+
+# Gus's tool drawer (DeskTools; what's bought is in DeskBook.tools)
+var drawer_sel := 0                   # the tool the cursor's on
+var drawer_line := ""                 # what Gus said last
+var drawer_armed := false             # the cursor's been off the drawer since the sheet came up (a click straight through goes home)
+var lit := {}                         # the UV lamp: doc -> it glowed (true) or didn't, for this customer
 
 # the books of the shop
 var cash := CounterRules.START_CASH
@@ -333,8 +349,7 @@ func _filed() -> bool:
 ## The shift clock: arrivals join the line, the next one honks, six o'clock empties the lot.
 func tick(dt: float) -> void:
 	if not phase in ["idle", "counter", "stamping", "result"]: return
-	var rate := CounterRules.SHIFT_LEN / CounterRules.REAL_SECONDS
-	if tutorial: rate *= 0.5
+	var rate := clock_rate()
 	if phase == "idle":
 		# nobody at the window: the afternoon drags by fast (and if nobody else is coming, faster)
 		rate *= 12.0 if not arrivals.is_empty() else 60.0
@@ -371,6 +386,21 @@ func tick(dt: float) -> void:
 		next_honk = clock + 25.0
 		sfx("honk", 0.97 + 0.06 * float(int(clock) % 3) / 2.0)
 	honk_t = maxf(0.0, honk_t - dt)
+
+## Minutes on the wall clock per real second with somebody at the window: ten real minutes a
+## day, fifteen on the relaxed clock (and the first morning goes at half speed). Only the pace:
+## the line, the honking and every rule are counted in the clock's own minutes.
+func clock_rate() -> float:
+	var rate := CounterRules.SHIFT_LEN / CounterRules.REAL_SECONDS
+	if tutorial: rate *= 0.5
+	if DeskBook.relaxed: rate /= RELAXED_STRETCH
+	return rate
+
+## RELAXED CLOCK on the morning brief: on or off, kept in the book.
+func toggle_relaxed() -> void:
+	if phase != "brief": return
+	DeskBook.relaxed = not DeskBook.relaxed
+	sfx("page", 1.1 if DeskBook.relaxed else 0.95, -4.0)
 
 ## Hachey's turn at the cabinet: he pulls one of Leo's old work orders and brings it to the
 ## window. Nothing to pull yet, and he comes back in an hour (once, before the afternoon's out).
@@ -411,6 +441,7 @@ func next_customer() -> void:
 	asked = []
 	said = {}
 	book = ""
+	lit = {}
 	# a pulled file has no car in the bay: it's long gone
 	if c.kind != "audit":
 		var spec := { "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
@@ -522,6 +553,8 @@ func close_up() -> void:
 	inspecting = false
 	car_view.visible = false
 	phase = "day_end"
+	# the stamps were where the drawer is: a click that lands there before the cursor's moved off goes home
+	drawer_armed = not DRAWER_HANDLE.has_point(cur)
 
 func end_day() -> void:
 	if not story.is_empty():
@@ -587,23 +620,29 @@ func _quit() -> void:
 ## December 2 with a fresh book (the bests stay on the record).
 func _pick_overtime() -> void:
 	overtime = true
+	# (the overtime on file keeps its own clock and tools; a new one keeps the clock on the picker)
+	var clock_was := DeskBook.relaxed
 	var had := DeskBook.load_overtime()
 	if not had or bool(DeskBook.overtime.get("ended", false)):
 		var record: Dictionary = DeskBook.overtime.duplicate(true) if had else {}
 		DeskBook.reset()
 		DeskBook.book_seed = randi()
 		DeskBook.overtime = record
+		DeskBook.relaxed = clock_was
 		DeskBook.start_overtime(CounterRules.OVERTIME_START, CounterRules.START_CASH)
 	cash = int(DeskBook.overtime.cash)
 	_new_week()
 	week.merge(DeskBook.overtime.get("week", {}), true)
 	start_day(int(DeskBook.overtime.day))
 
-## Back to the eight weeks on the picker: a fresh book and a fresh till.
+## Back to the eight weeks on the picker: a fresh book (no tools in the drawer) and a fresh till,
+## on whichever clock the picker shows.
 func _leave_overtime() -> void:
 	if not overtime: return
 	overtime = false
+	var clock_was := DeskBook.relaxed
 	DeskBook.reset()
+	DeskBook.relaxed = clock_was
 	DeskBook.book_seed = randi()
 	cash = CounterRules.START_CASH
 	_new_week()
@@ -617,6 +656,85 @@ func _continue_overtime() -> void:
 	overtime = true
 	_new_week()
 	start_day(CounterRules.next_open(day))
+
+# ------------------------------------------------------------------ Gus's tool drawer
+
+## The front of the drawer under the desk, below the day-end sheet (where the stamps sit by day).
+const DRAWER_HANDLE := Rect2(150, 330, 320, 29)
+
+## What pays for a tool: the till, or in the story Leo's own money (the shop's till there is
+## only the day's).
+func purse() -> int:
+	return StoryState.cash if not story.is_empty() else cash
+
+func purse_label() -> String:
+	return "YOUR OWN MONEY" if not story.is_empty() else "IN THE TILL"
+
+## What's in the drawer tonight (a tool turns up once its check is on the wall).
+func drawer_tools() -> Array:
+	return DeskTools.offered(day)
+
+## Off the day-end sheet: Gus pulls the drawer open, at the first tool Leo hasn't got.
+func open_drawer() -> void:
+	var ts := drawer_tools()
+	if phase != "day_end" or ts.is_empty(): return
+	phase = "drawer"
+	drawer_sel = 0
+	for i in ts.size():
+		if not DeskBook.tools.has(String(ts[i].id)):
+			drawer_sel = i
+			break
+	# (the keys and the pad buy whatever the cursor's on; a mouse click puts the cursor where it clicks)
+	cur = _drawer_rect(drawer_sel).get_center()
+	drawer_line = "GUS: \"FRANK BOUGHT HIS OFF THE TOOL TRUCK. I KNOW THE GUY. PAY TONIGHT, IT'S IN THE DRAWER IN THE MORNING.\"" if DeskBook.tools.is_empty() \
+		else "GUS: \"SHOPPING AGAIN? THE TRUCK GUY'S GOING TO NAME A BOAT AFTER YOU.\""
+	sfx("page", 0.8, -2.0)
+
+## Buy tool `id`: false (and Gus says why) if Leo's got one or can't cover it.
+func buy_tool(id: String) -> bool:
+	var t := DeskTools.tool(id)
+	if t.is_empty() or not drawer_tools().any(func(x): return String(x.id) == id): return false
+	if DeskBook.tools.has(id):
+		drawer_line = "GUS: \"YOU'VE GOT ONE. IT'S IN THE DRAWER. THE DRAWER'S RIGHT THERE.\""
+		return false
+	var price := int(t.price)
+	if purse() < price:
+		drawer_line = "GUS: \"YOU'RE $%d SHORT, KID. IT'LL STILL BE HERE.\"" % (price - purse())
+		return false
+	if story.is_empty(): cash -= price
+	else: StoryState.cash -= price
+	DeskBook.tools.append(id)
+	drawer_line = String(t.gus)
+	sfx("till")
+	return true
+
+## A row of the drawer, and which row is under `p` (-1 for none).
+func _drawer_rect(i: int) -> Rect2:
+	return Rect2(122, 84 + i * 45, 396, 41)
+
+func _drawer_row_at(p: Vector2) -> int:
+	for i in drawer_tools().size():
+		if _drawer_rect(i).has_point(p): return i
+	return -1
+
+func _drawer_shut_rect() -> Rect2:
+	return Rect2(220, 308, 200, 13)
+
+## A click in the drawer: on a tool, buy it; on SHUT IT, back to the sheet.
+func _drawer_press() -> void:
+	var i := _drawer_row_at(cur)
+	if i >= 0:
+		drawer_sel = i
+		buy_tool(String(drawer_tools()[i].id))
+	elif _drawer_shut_rect().has_point(cur): phase = "day_end"
+
+## The cursor moved: in the drawer, the tool it's over is the one picked; on the day-end sheet,
+## once it's been off the drawer's front, a click on the front opens it.
+func _drawer_hover() -> void:
+	if phase == "day_end" and not DRAWER_HANDLE.has_point(cur): drawer_armed = true
+	if phase != "drawer": return
+	var i := _drawer_row_at(cur)
+	if i >= 0: drawer_sel = i
 
 # ------------------------------------------------------------------ ASK
 
@@ -674,6 +792,15 @@ func _tab_step(dir: int) -> void:
 	if book == "log" and DeskBook.old_log:
 		log_old = not log_old
 		return
+	# the day-end sheet: LB/RB pull Gus's drawer open; in it, they move along the tools
+	if phase == "day_end":
+		open_drawer()
+		return
+	if phase == "drawer":
+		drawer_sel = posmod(drawer_sel + dir, maxi(1, drawer_tools().size()))
+		cur = _drawer_rect(drawer_sel).get_center()
+		pad_cursor = true
+		return
 	if phase == "month_end":
 		if dir > 0: _continue_overtime()
 		return
@@ -702,6 +829,7 @@ func _input(e: InputEvent) -> void:
 		cur = get_global_mouse_position()
 		pad_cursor = false
 		if drag >= 0: _drag_to(cur)
+		_drawer_hover()
 	elif e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 		cur = get_global_mouse_position()
 		if e.pressed: press()
@@ -722,10 +850,11 @@ func _process(dt: float) -> void:
 	if Input.is_action_just_pressed("desk_tab_next"): _tab_step(1)
 	if Input.is_action_just_pressed("desk_snap_next"): snap(1)
 	if Input.is_action_just_pressed("desk_snap_prev"): snap(-1)
+	if Input.is_action_just_pressed("desk_relax"): toggle_relaxed()
 	for b in BUTTONS:
 		if b.id != "INSPECT" and Input.is_action_just_pressed(b.key): stamp(b.id)
 	if Input.is_action_just_pressed("menu_back") or Input.is_action_just_pressed("ui_back_pad"):
-		if inspecting or book != "": _cancel()
+		if inspecting or book != "" or phase == "drawer": _cancel()
 		else: _quit()
 	tick(dt)
 	if phase == "stamping":
@@ -749,6 +878,7 @@ func _move_cursor(dt: float) -> void:
 	pad_cursor = true
 	cur = (cur + move * dt).clamp(Vector2.ZERO, Vector2(639, 359))
 	if drag >= 0: _drag_to(cur)
+	_drawer_hover()
 
 func press() -> void:
 	match phase:
@@ -761,7 +891,11 @@ func press() -> void:
 			else: next_customer()
 			return
 		"day_end":
-			end_day()
+			if drawer_armed and DRAWER_HANDLE.has_point(cur) and not drawer_tools().is_empty(): open_drawer()
+			else: end_day()
+			return
+		"drawer":
+			_drawer_press()
 			return
 		"week_end":
 			_after_week()
@@ -824,6 +958,7 @@ func _cancel() -> void:
 	if inspecting and not pick_a.is_empty(): pick_a = {}
 	elif inspecting: inspecting = false
 	elif book != "": book = ""
+	elif phase == "drawer": phase = "day_end"
 
 ## Jump the cursor to the next (or previous) thing worth pointing at, in reading order.
 func snap(dir: int) -> void:
@@ -844,6 +979,7 @@ func snap(dir: int) -> void:
 				break
 	cur = to
 	pad_cursor = true
+	_drawer_hover()
 
 func _order_key(p: Vector2) -> float:
 	return floorf(p.y / 10.0) * 1000.0 + p.x
@@ -851,6 +987,10 @@ func _order_key(p: Vector2) -> float:
 ## Everything the cursor can usefully land on right now.
 func targets() -> Array:
 	var out: Array = []
+	if phase == "drawer":
+		for i in drawer_tools().size(): out.append(_drawer_rect(i).get_center())
+		out.append(_drawer_shut_rect().get_center())
+		return out
 	if inspecting:
 		for f in fields(): out.append((f.r as Rect2).get_center().round())
 		return out
@@ -929,14 +1069,33 @@ func pick(f: Dictionary) -> void:
 		pick_a = f
 		return
 	if pick_a.r == f.r:
+		# the same thing twice: a tool out of Gus's drawer reads it (or, with nothing that reads
+		# it, Leo puts it back down)
+		use_tool(f)
 		pick_a = {}
 		return
 	var v := compare(pick_a, f)
-	verdict = { "a": pick_a, "b": f, "text": v[0], "good": v[1], "t": 4.0 }
+	_say(v, { "a": pick_a, "b": f })
+	pick_a = {}
+
+## A verdict on the desk (and a red one puts its question on the ASK list).
+func _say(v: Array, at: Dictionary) -> void:
+	verdict = { "a": at.a, "b": at.b, "text": v[0], "good": v[1], "t": 4.0 }
+	if v.size() > 3: verdict.tool = String(v[3])
 	if v[1] == false and String(v[2]) != "":
 		topics.erase(v[2])
 		topics.push_front(v[2])
-	pick_a = {}
+
+## A tool on one fact: the tread gauge, the date wheel, the loupe or the UV lamp, whichever
+## reads it (DeskTools). False if none of Leo's does.
+func use_tool(f: Dictionary) -> bool:
+	if c.is_empty(): return false
+	var v := DeskTools.read(c, jday(), bolo_now(), f, DeskBook.tools)
+	if v.is_empty(): return false
+	_say(v, { "a": f, "b": f })
+	if String(f.key) == "seal": lit[String(f.val)] = v[1] == true
+	sfx("page", 1.3, -8.0)
+	return true
 
 ## Leo reads two things side by side: [what he concludes, good (true/false/null), ASK topic].
 ## The papers, the wall and the window go to the rules; what people say goes in the notebook;
@@ -1007,6 +1166,10 @@ func _doc_fields(d: Dictionary) -> Array:
 	var rows := _rows(d.id)
 	var x0 := _row_x(d.id)
 	var size := _doc_size(d.id)
+	# with the UV lamp, the seal's a thing to pick too (first, so it's what's under the cursor)
+	if DeskBook.tools.has("lamp") and DeskTools.SEALED.has(String(d.id)):
+		out.append({ "r": Rect2(d.pos + _seal_at(size) - Vector2(8, 8), Vector2(16, 16)), "key": "seal", "val": String(d.id),
+			"label": "THE SEAL ON THE %s" % _title(d.id).split(" - ")[0], "doc": d.id, "row": "SEAL" })
 	for i in rows.size():
 		if rows[i][2] == "": continue
 		out.append({ "r": Rect2(d.pos + Vector2(x0, 12 + i * 9), Vector2(size.x - x0 - 4, 8)), "key": rows[i][2], "val": rows[i][3],
@@ -1051,9 +1214,32 @@ func _draw_doc(d: Dictionary) -> void:
 			draw_rect(Rect2(r.position + Vector2(3, 12), Vector2(34, 34)), paper.darkened(0.3))
 			draw_texture(_face_tex(c.licence.face, true), r.position + Vector2(4, 13))
 		"permit", "cert", "door_inv", "bos", "glovebox", "exempt", "notice", "customs", "invoice":
-			# a stamp or a seal: real ones and fakes look the same from here
-			draw_circle(r.position + Vector2(size.x - 14, size.y - 12), 7.0, Color(paper.darkened(0.35), 0.5), false, 1.0)
+			# a stamp or a seal: real ones and fakes look the same from here (under the UV lamp, they don't)
+			_draw_seal(r.position + _seal_at(size), paper, String(d.id))
 	if String(d.id) == _stamp_doc(): _draw_stamp_box(r, paper)
+
+## Where a paper's seal sits, from its top-left corner.
+func _seal_at(size: Vector2) -> Vector2:
+	return Vector2(size.x - 14, size.y - 12)
+
+## A seal: a faint ring; a violet one once the UV lamp's in the drawer; lit up (or dead) once
+## the lamp's been on it.
+func _draw_seal(at: Vector2, paper: Color, id: String) -> void:
+	if lit.has(id):
+		if lit[id]:
+			draw_circle(at, 10.0, Color(UV, 0.25))
+			draw_circle(at, 7.0, Color(UV, 0.85))
+			for k in 8:
+				var a := TAU * k / 8.0
+				draw_line(at + Vector2(cos(a), sin(a)) * 8.0, at + Vector2(cos(a), sin(a)) * 11.0, Color(UV, 0.7), 1.0)
+			draw_circle(at, 7.0, Color.WHITE, false, 1.0)
+		else:
+			draw_circle(at, 7.0, Color(0.16, 0.14, 0.2, 0.75))
+			draw_line(at + Vector2(-4, -4), at + Vector2(4, 4), RED, 1.0)
+			draw_line(at + Vector2(4, -4), at + Vector2(-4, 4), RED, 1.0)
+		return
+	var ring := Color(UV.darkened(0.2), 0.8) if DeskBook.tools.has("lamp") else Color(paper.darkened(0.35), 0.5)
+	draw_circle(at, 7.0, ring, false, 1.0)
 
 ## The box the stamp lands in. On a pulled file, Hachey's thumb is over the old one.
 func _draw_stamp_box(r: Rect2, paper: Color) -> void:
@@ -1157,14 +1343,24 @@ func _draw_book() -> void:
 ## person's sex and the age on the date of birth.
 func _face_tex(face_seed: int, small := false) -> ImageTexture:
 	var fem := int(c.person.get("fem", 0))
-	var age := CounterRules.YEAR - int(c.person.dob[0])
+	var age := face_age()
 	return Face.small_texture(face_seed, fem, age) if small else Face.texture(face_seed, fem, age)
+
+## How old the customer looks: their age on the date on the papers (in overtime, a year or two
+## on from the run, and a birthday at a time).
+func face_age() -> int:
+	return CounterRules.age_on(c.person.dob, jday())
 
 ## Who's at the window: the customer, or (with a pulled file) Inspector Hachey.
 func _window_tex() -> ImageTexture:
 	var w: Dictionary = c.get("window", {})
 	if w.is_empty(): return _face_tex(c.face_shown)
-	return Face.texture(int(w.face), int(w.fem), CounterRules.YEAR - int(w.dob[0]))
+	return Face.texture(int(w.face), int(w.fem), window_age())
+
+## How old whoever's at the window looks: the customer, or Hachey as old as he is today.
+func window_age() -> int:
+	var w: Dictionary = c.get("window", {})
+	return face_age() if w.is_empty() else CounterRules.age_on(w.dob, day)
 
 func _face_rect() -> Rect2:
 	return Rect2(11, 10, 128, 128)   # the 64px portrait at 2x, above the counter top (y 142)
@@ -1195,6 +1391,7 @@ func _draw() -> void:
 		"brief": _draw_brief()
 		"result": _draw_result()
 		"day_end": _draw_day_end()
+		"drawer": _draw_drawer()
 		"week_end": _draw_week_end()
 		"month_end": _draw_month_end()
 		"revoked": _draw_revoked()
@@ -1229,7 +1426,7 @@ func _speech() -> String:
 	if s == "":
 		match c.kind:
 			"familia": s = "DOM SENT ME. HE SAYS YOU'D UNDERSTAND THE NAPKIN."
-			"sting": s = "HEY MAN. A BUDDY SAID YOU CAN HELP ME OUT. I GOT CASH."
+			"sting": s = "HEY. A BUDDY SAID YOU CAN HELP ME OUT. I GOT CASH."
 			_:
 				var asks := { "SAFETY INSPECTION": "HI. I NEED A SAFETY INSPECTION.", "FULL INSPECTION": "HI. THE REGISTRY SAYS I NEED THE FULL INSPECTION.",
 					"OIL CHANGE": "JUST AN OIL CHANGE, PLEASE.", "BRAKE JOB": "MY BRAKES ARE GRINDING. CAN YOU DO A BRAKE JOB?",
@@ -1564,6 +1761,13 @@ func _draw_inspect() -> void:
 		var w := PixelFont.width(tip) + 10
 		_panel(Rect2(310 - w / 2.0, 113, w, 11))
 		PixelFont.draw_centered(self, 310, 116, tip, GOLD)
+		# ...or the same thing again, for a tool out of the drawer that reads it
+		var tool_id := DeskTools.tool_for(pick_a, DeskBook.tools) if not pick_a.is_empty() else ""
+		if tool_id != "":
+			var again := "...OR PICK IT AGAIN: THE %s" % String(DeskTools.tool(tool_id).name)
+			var aw := PixelFont.width(again) + 10
+			_panel(Rect2(310 - aw / 2.0, 125, aw, 11))
+			PixelFont.draw_centered(self, 310, 128, again, UV)
 	if not verdict.is_empty():
 		var col: Color = GREEN if verdict.good == true else (RED if verdict.good == false else ASH)
 		var a: Dictionary = verdict.a
@@ -1572,11 +1776,21 @@ func _draw_inspect() -> void:
 		draw_rect(b.r.grow(2), col, false, 2.0)
 		draw_line(a.r.get_center(), b.r.get_center(), col, 1.0)
 		var mid: Vector2 = (a.r.get_center() + b.r.get_center()) / 2.0
+		# a tool reading one thing: the reading sits just under it (so the thing stays in sight),
+		# the tool's name to its left
+		var tool_name := String(verdict.get("tool", ""))
+		var tw := PixelFont.width(tool_name) + 8.0 if tool_name != "" else 0.0
+		if a.r == b.r: mid.y = a.r.end.y + 11.0
 		var w := PixelFont.width(verdict.text, 2) + 12
-		mid.x = clampf(mid.x, w / 2.0 + 2, 638 - w / 2.0)
+		mid.x = clampf(mid.x, w / 2.0 + 4.0 + tw, 638 - w / 2.0)
 		draw_rect(Rect2(mid.x - w / 2.0, mid.y - 8, w, 16), Color(col.darkened(0.55), 0.95))
 		draw_rect(Rect2(mid.x - w / 2.0, mid.y - 8, w, 16), col, false, 1.0)
 		PixelFont.draw_centered(self, mid.x, mid.y - 4, verdict.text, BONE, 2)
+		if tool_name != "":
+			var tr := Rect2(mid.x - w / 2.0 - tw - 2.0, mid.y - 6, tw, 12)
+			draw_rect(tr, Color(0.1, 0.07, 0.18, 0.95))
+			draw_rect(tr, UV, false, 1.0)
+			PixelFont.draw_centered(self, tr.get_center().x, tr.position.y + 4, tool_name, UV)
 		if verdict.good == false and not topics.is_empty() and phase == "counter":
 			var hint := Hints.fmt("{desk_ask}: ASK ABOUT IT")
 			var hw := PixelFont.width(hint) + 8
@@ -1653,10 +1867,20 @@ func _draw_brief() -> void:
 		PixelFont.draw_centered(self, 320, 286, _record_line(), GOLD)
 	elif story.is_empty() and fresh and day == WEEK_DAYS[WEEK_DAYS.size() - 1]:
 		PixelFont.draw_centered(self, 320, 286, "AFTER WEEK 8: OVERTIME. DECEMBER, THE WINTER, THE SPRING, AND ON.", ASH)
+	# the week picker (free play's first morning) and, next to it, the wall clock's pace
+	var relax := relax_line()
+	var relax_col := GOLD if DeskBook.relaxed else ASH
 	if story.is_empty() and fresh:
 		var pick := "< OVERTIME >" if overtime else "< WEEK %d OF %d >" % [CounterRules.week_of(day), CounterRules.WEEKS]
-		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  %s  {desk_tab_next}" % pick), GOLD)
+		PixelFont.draw_centered(self, 210, 300, Hints.fmt("{desk_tab_prev}  %s  {desk_tab_next}" % pick), GOLD)
+		PixelFont.draw_centered(self, 440, 300, relax, relax_col)
+	else: PixelFont.draw_centered(self, 320, 300, relax, relax_col)
 	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
+
+## The relaxed clock's line on the brief: what it is, and the button that flips it.
+func relax_line() -> String:
+	var mins := roundi(CounterRules.SHIFT_LEN / clock_rate() / 60.0)
+	return Hints.fmt("{desk_relax}: RELAXED CLOCK %s (%d MIN A DAY)" % ["ON" if DeskBook.relaxed else "OFF", mins])
 
 func _draw_result() -> void:
 	var r := Rect2(164, 126, 292, 174)
@@ -1756,6 +1980,85 @@ func _draw_day_end() -> void:
 	else:
 		var friday := CounterRules.week_closes(day)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: PAY THE BILLS") if friday else Hints.fmt("{desk_click}: GO HOME"), Color(BONE, 0.7))
+	_draw_drawer_handle()
+
+## Under the day-end sheet: the front of Gus's tool drawer, and how to pull it open (pulled
+## out, with no label, while it's open).
+func _draw_drawer_handle(open := false) -> void:
+	var ts := drawer_tools()
+	if ts.is_empty(): return
+	var h := DRAWER_HANDLE
+	var hot: bool = drawer_armed and h.has_point(cur) and not open
+	draw_rect(h, Color("6a4e38") if hot else Color("5a4232"))
+	for i in 3: draw_line(Vector2(h.position.x + 2, h.position.y + 6 + i * 8), Vector2(h.end.x - 2, h.position.y + 7 + i * 8), Color("4e382a"), 1.0)
+	draw_rect(h, Color("2e2018"), false, 2.0)
+	if open: return
+	# the pull, brass when there's something in there Leo hasn't got and can pay for
+	var can := ts.any(func(t): return not DeskBook.tools.has(String(t.id)) and purse() >= int(t.price))
+	var label := Hints.fmt("{desk_tab_next}: GUS'S TOOL DRAWER")
+	var pull := Rect2(h.get_center().x - PixelFont.width(label) / 2.0 - 8, h.position.y + 7, PixelFont.width(label) + 16, 13)
+	draw_rect(pull, Color("2e2018"))
+	draw_rect(pull, GOLD if can else ASH, false, 1.0)
+	PixelFont.draw_centered(self, h.get_center().x, pull.position.y + 4, label, GOLD if can else BONE)
+
+## Gus's tool drawer: what's in it tonight, what it does, what it costs, and the money to pay.
+func _draw_drawer() -> void:
+	_draw_drawer_handle(true)
+	var r := Rect2(110, 30, 420, 300)
+	_panel(r, 0.97)
+	# the inside of the drawer: a wooden lip along the top
+	draw_rect(Rect2(r.position.x + 8, r.position.y + 6, r.size.x - 16, 24), Color("5a4232"))
+	draw_rect(Rect2(r.position.x + 8, r.position.y + 28, r.size.x - 16, 2), Color("3e2c20"))
+	PixelFont.draw_centered(self, 320, 40, "GUS'S TOOL DRAWER", GOLD, 3, INK)
+	var money := purse()
+	PixelFont.draw_centered(self, 320, 66, "%s: $%d" % [purse_label(), money], GREEN if money >= 0 else RED, 2)
+	var ts := drawer_tools()
+	for i in ts.size():
+		var t: Dictionary = ts[i]
+		var row := _drawer_rect(i)
+		var owned := DeskBook.tools.has(String(t.id))
+		var on := i == drawer_sel
+		draw_rect(row, Color(1, 1, 1, 0.07) if on else Color(1, 1, 1, 0.03))
+		draw_rect(row, GOLD if on else Color(1, 1, 1, 0.12), false, 1.0)
+		_draw_tool_icon(String(t.id), row.position + Vector2(16, 20))
+		PixelFont.draw(self, row.position + Vector2(34, 5), String(t.name), BONE if not owned else Color(BONE, 0.6), 2)
+		var tag := "OWNED" if owned else "$%d" % int(t.price)
+		var tag_col: Color = GREEN if owned else (BONE if money >= int(t.price) else RED.lightened(0.2))
+		PixelFont.draw(self, Vector2(row.end.x - 6 - PixelFont.width(tag, 2), row.position.y + 5), tag, tag_col, 2)
+		var ls := wrap_text(String(t.what), 88)
+		for k in mini(2, ls.size()): PixelFont.draw(self, row.position + Vector2(34, 20 + k * 8), ls[k], Color(BONE, 0.5) if owned else ASH)
+	var y := 84.0 + ts.size() * 45.0 + 4.0
+	for l in wrap_text(drawer_line, 94):
+		PixelFont.draw(self, Vector2(124, y), l, Color("c8c0a8"))
+		y += 8
+	PixelFont.draw_centered(self, 320, 296, Hints.fmt("{desk_tab_prev}/{desk_tab_next}: PICK  {desk_click}: BUY IT"), GOLD)
+	var shut := _drawer_shut_rect()
+	PixelFont.draw_centered(self, shut.get_center().x, shut.position.y + 4, Hints.fmt("{desk_cancel}: SHUT THE DRAWER"), Color(BONE, 0.85) if shut.has_point(cur) else Color(BONE, 0.6))
+
+## A tool, drawn small, centred on `at`.
+func _draw_tool_icon(id: String, at: Vector2) -> void:
+	match id:
+		"gauge":
+			# a pen-shaped depth gauge: the barrel with its scale, the pin out the bottom, a tire's tread under it
+			draw_rect(Rect2(at + Vector2(-3, -11), Vector2(6, 15)), Color("c8a030"))
+			for k in 4: draw_rect(Rect2(at + Vector2(-3, -9 + k * 3), Vector2(3, 1)), INK)
+			draw_rect(Rect2(at + Vector2(-1, 4), Vector2(2, 5)), Color("d8d8d0"))
+			for k in 4: draw_rect(Rect2(at + Vector2(-11 + k * 6, 9), Vector2(4, 3)), Color("3a3438"))
+		"wheel":
+			draw_circle(at, 10.0, Color("e8e0c8"))
+			draw_circle(at, 6.5, Color("c8342c"))
+			draw_circle(at, 2.0, INK)
+			for k in 12:
+				var a := TAU * k / 12.0
+				draw_line(at + Vector2(cos(a), sin(a)) * 8.0, at + Vector2(cos(a), sin(a)) * 10.0, INK, 1.0)
+		"loupe":
+			draw_circle(at + Vector2(-2, -2), 7.0, Color("9ab8d0"))
+			draw_circle(at + Vector2(-2, -2), 7.0, Color("2a2a30"), false, 2.0)
+			draw_line(at + Vector2(3, 3), at + Vector2(9, 9), Color("2a2a30"), 3.0)
+		"lamp":
+			draw_rect(Rect2(at + Vector2(-10, -4), Vector2(20, 8)), Color("2a2430"))
+			draw_rect(Rect2(at + Vector2(-8, -2), Vector2(16, 4)), UV)
+			draw_rect(Rect2(at + Vector2(-12, 4), Vector2(24, 6)), Color(UV, 0.25))
 
 ## What the Ministry wrote down today, wrapped to the sheet: four lines at most.
 func _small_print() -> Array:
@@ -1852,7 +2155,7 @@ func _draw_revoked() -> void:
 	PixelFont.draw_centered(self, 320, 102, "ITS INSPECTION LICENCE", INK, 2)
 	var y := 126.0
 	var when := "" if overtime else " IN A MONTH"
-	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS%s. \"WE GAVE THE YOUNG MAN EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % [DeskBook.citations, when], 70):
+	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS%s. \"WE GAVE THE COVINGTON KID EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % [DeskBook.citations, when], 70):
 		PixelFont.draw(self, Vector2(140, y), l, PAPER_INK)
 		y += 9
 	if overtime: PixelFont.draw_centered(self, 320, 296, "OVERTIME: %d DAYS KEPT. BEST STREAK %d." % [int(DeskBook.overtime.get("days", 0)), int(DeskBook.overtime.get("best", 0))], PAPER_INK)

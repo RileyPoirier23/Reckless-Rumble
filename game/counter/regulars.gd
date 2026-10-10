@@ -52,6 +52,9 @@ const FOUND := ["ME AGAIN. I FOUND THE PAPER. IT WAS IN THE GLOVEBOX THE WHOLE T
 ## Turned away for nothing.
 const WRONGED := ["LINDSAY PASSED IT IN TEN MINUTES. SHE GAVE ME A SUCKER. I'M ONLY HERE BECAUSE SHE DOESN'T DO OIL.",
 	"YOU SENT ME AWAY FOR NOTHING LAST TIME. I'M GIVING YOU ONE MORE CHANCE. OIL CHANGE. DON'T FIND ANYTHING."]
+## ...in a car from away, which can't book anything here but the full inspection.
+const WRONGED_AWAY := ["YOU SENT ME AWAY FOR NOTHING. SAME CAR, SAME PAPERS, SAME FULL INSPECTION. READ 'EM SLOWER THIS TIME.",
+	"BACK FOR THE FULL ONE. I WENT THROUGH EVERY PAPER AT THE KITCHEN TABLE LAST NIGHT. THEY WERE FINE THEN TOO."]
 ## When a branch changes the problem, the visit's own papers, proof and lines go with it.
 const RESETS := ["papers", "excuse", "forged", "ask", "outcomes", "from_away"]
 
@@ -171,8 +174,8 @@ static func back_spec(rec: Dictionary) -> Dictionary:
 	var h := absi(int(rec.seed) >> 7)
 	var probs: Array = rec.get("probs", [])
 	var p := String(probs[0]) if not probs.is_empty() else ""
-	# a stolen car, or a car with a stolen part on it, is the police's now
-	for x in probs: if CounterRules.LISTED.has(String(x)): return {}
+	# a stolen car, or a car with a stolen part on it, is the police's now (and a washed title the Ministry's)
+	for x in probs: if CounterRules.LISTED.has(String(x)) or String(x) == "title_washed": return {}
 	var car: Dictionary = (orig.car as Dictionary).duplicate(true)
 	car.odo = int(car.odo) + 60 + h % 900
 	var day := due(rec)
@@ -182,19 +185,25 @@ static func back_spec(rec: Dictionary) -> Dictionary:
 	# a cab's still a cab
 	if (orig.reg as Dictionary).has("use"): spec.papers.reg = { "use": String(orig.reg.use) }
 	# ...and what was on the car is still on it: a part put on somewhere else, with its invoice,
-	# and a salvage brand with its certificate (unless the certificate is what they went to get)
+	# and a salvage brand with its certificate (unless the certificate is what they went to get).
+	# A car that came from another province is still from there, on the same old ownership: that
+	# one doesn't go away by fixing something else
 	var kept := {}
 	if orig.has("invoice"):
 		kept.merge({ "part": String(orig.sheet.get("part", "")), "serial": String(orig.sheet.get("serial", "")),
 			"invoice": (orig.invoice as Dictionary).duplicate(true) })
 	if orig.has("cert") and p != "salvage_no_cert": kept.cert = (orig.cert as Dictionary).duplicate(true)
+	if orig.has("old_reg"): kept.old_reg = (orig.old_reg as Dictionary).duplicate(true)
 	if not kept.is_empty(): spec.kept = kept
 	if p == "":
-		# turned away for nothing: back for something else, and not happy about it
+		# turned away for nothing: back for something else, and not happy about it (from away,
+		# back for the full inspection: an oil change on it would be the same problem all over)
 		if h % 10 >= 5: return {}
-		spec.request = "OIL CHANGE"
 		spec.problem = "clean"
-		spec.says = WRONGED[h % WRONGED.size()]
+		if kept.has("old_reg"): spec.says = WRONGED_AWAY[h % WRONGED_AWAY.size()]
+		else:
+			spec.request = "OIL CHANGE"
+			spec.says = WRONGED[h % WRONGED.size()]
 		return spec
 	if not FIXED.has(p): return {}
 	var mode := h % 20
