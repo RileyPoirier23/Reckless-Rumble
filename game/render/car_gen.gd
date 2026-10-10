@@ -1,7 +1,7 @@
 ## Side-view cars, generated the CAGE BOSS way (src/art/portrait.ts there, counter/face.gd here):
 ## a car's catalogue facts (year, class, body, length, height, wheelbase, tyres, where the engine
 ## sits, its art cues) plus a seed from its id become a design, the car's DNA: dozens of
-## independent proportions and details. paint() draws a design layer by layer into a pixel
+## independent proportions and details. render() draws a design layer by layer into a pixel
 ## canvas: the silhouette, paint with a shoulder highlight, a sky band, the horizon and the ground
 ## reflected in it, glass with the seats behind it, trim, lamps and bumpers by era, and the wheels
 ## with their brakes behind the spokes. Same car, same picture, every time. No image files.
@@ -28,7 +28,6 @@ const LAMP_RED := Color("c42630")
 const STEEL := Color("5a5f67")
 ## Chrome, dark to bright: the ground reflected low, the sky high.
 const CHROME: Array[Color] = [Color("3c434c"), Color("7a848f"), Color("b9c3cd"), Color("e6edf4"), Color("ffffff")]
-const BAYER: Array[int] = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 ## Windshield rake (degrees back from upright) by decade, 1950s to 2010s.
 const RAKE: Array[float] = [33.0, 40.0, 50.0, 56.0, 60.0, 62.0, 63.0]
 
@@ -129,7 +128,7 @@ static func _height(f: Dictionary, fam: String, era: int) -> float:
 			elif f.art.get("cab", "") == "cabover": h = 1.76
 			elif L < 5.05: h = 1.62
 			else: h = [1.8, 1.82, 1.83, 1.84, 1.85, 1.9, 1.95][era] + (0.08 if cls in ["hd_pickup", "work_truck"] else 0.0)
-		"van": h = 2.05 if year < 2005 else 2.5
+		"van": h = 2.05
 		"minivan": h = 1.72
 		"kei": h = 1.64
 		"bubble": h = 1.42
@@ -159,6 +158,7 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 		"c_top": 0.12, "c_bot": -0.06, "soft": 0.8, "nose_drop": 0.2, "nose_round": 0.06, "nose_lean": 0.0,
 		"nose_bot": 0.2, "tail_bot": 0.24, "tail_mid": 0.55, "ff": 0.44, "rear_d": 0.06, "d_w": 0.16,
 		"cab_d": 0.0, "bed_h": 0.0, "box_d": 0.0, "cab": "", "fin": 0.0, "doors": 4, "quarter": true,
+		"brow_d": 0.0, "brow_h": 0.0,
 	}
 	match fam:
 		"sedan", "wagon":
@@ -335,14 +335,15 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.cowl_rise = 0.12
 			g.cowl_d = L * (0.22 if not rear_eng else 0.05)
 			g.rake = 48.0 if not modern else 58.0
-			if rear_eng:
+			if rear_eng or year < 1975:
+				g.cowl_d = L * 0.05
 				g.rake = 18.0
 				g.hood_h = 0.92
 				g.cowl_rise = 0.06
 			g.rear = "box"
 			g.rear_d = 0.02
 			g.d_w = 0.14
-			g.rt = 0.22 if modern else 0.15
+			g.rt = 0.12 if modern else 0.15
 			g.soft = 0.4 if not modern else 0.7
 			g.ff = 0.38
 			g.nose = "blunt" if not modern else "round"
@@ -470,9 +471,9 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.c_top = 0.08
 			g.c_bot = -0.1
 			g.nose = "wedge"
-			g.nose_drop = 0.12
-			g.nose_round = 0.08
-			g.nose_lean = 0.03
+			g.nose_drop = 0.16
+			g.nose_round = 0.2
+			g.nose_lean = 0.04
 			g.nose_bot = 0.17
 		"boxtruck":
 			var model := String(f.model).to_lower()
@@ -537,6 +538,7 @@ static func _dna(f: Dictionary) -> Dictionary:
 	var era := clampi((year - 1950) / 10, 0, 6)
 	var fam := _family(f)
 	var icon: Dictionary = ICONS.get(String(f.id), {})
+	if icon.has("art"): (f.art as Dictionary).merge(icon.art, true)
 	var H := float(icon.get("H", _height(f, fam, era) * (1.0 + r.randf_range(-0.015, 0.015))))
 	var g := _skeleton(f, fam, era, L, H, r)
 	for k in icon:
@@ -591,6 +593,9 @@ static func _dna(f: Dictionary) -> Dictionary:
 	d.belt_f = (cowl_h + float(g.belt_up)) / L
 	d.belt_r = float(d.belt_f) + float(g.kick) / L
 	d.nose_x = 1.0 - float(g.nose_round) / L
+	# a front fender that crests above the hood line (a lamp on top of it), as [x, y]
+	d.brow_x = 1.0 - float(g.brow_d) / L if float(g.brow_d) > 0.0 else 0.0
+	d.brow_h = float(g.brow_h) / L
 	d.nose_mid = maxf(float(g.nose_bot) + 0.06, hood_h - float(g.nose_drop)) / L
 	d.nose_bot = float(g.nose_bot) / L
 	d.nose_lean = float(g.nose_lean) / L
@@ -631,7 +636,7 @@ static func _dna(f: Dictionary) -> Dictionary:
 		d.cab_x = float(d.roof_f) - 0.6 / L
 		d.roof_r = float(d.cab_x) + 0.03 / L
 	# keep some roof between the glass at either end
-	var min_roof := 0.1 if fam in ["sedan", "coupe", "muscle", "wagon"] else 0.05
+	var min_roof := 0.1 if fam in ["sedan", "coupe", "muscle", "wagon"] else (0.14 if fam == "bubble" else 0.05)
 	if g.rear in ["notch", "fast", "hatch"] and float(d.roof_f) - float(d.roof_r) < min_roof:
 		var mid := (float(d.roof_f) + float(d.roof_r)) * 0.5
 		d.roof_f = mid + min_roof * 0.5
@@ -639,8 +644,7 @@ static func _dna(f: Dictionary) -> Dictionary:
 	_glass_and_doors(d, g, L, r)
 	_details(d, f, fam, era, r)
 	for k in icon:
-		if k == "art": (d.art as Dictionary).merge(icon.art, true)
-		elif not g.has(k) and k != "H": d[k] = icon[k]
+		if not g.has(k) and not k in ["H", "art"]: d[k] = icon[k]
 	return d
 
 ## The side glass (the daylight opening), the pillars on it and the door shut lines.
@@ -841,7 +845,7 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 	if cls == "rally" or art.has("dually") or (fam == "offroad" and year < 2000 and r.randf() < 0.3): d.flare = "box" if cls == "rally" else "bulge"
 	else: d.flare = "none"
 	d.arch = arch
-	d.arch_gap = (0.045 if fam in ["pickup", "suv", "offroad", "boxtruck"] else (0.008 if fam in ["sports", "mid", "wedge"] or cls == "exotic" else 0.018)) / float(d.L)
+	d.arch_gap = (0.045 if fam in ["pickup", "suv", "offroad", "boxtruck"] else (0.006 if fam in ["sports", "mid", "wedge"] or cls == "exotic" else 0.012)) / float(d.L)
 	# --- wheels
 	var rim := "fivespoke"
 	var wall := "none"
@@ -956,15 +960,18 @@ static func profile(d: Dictionary) -> Array:
 		var top: float = d.cab_top
 		if rear == "box" and h > top + 0.01:
 			# a high-roof van: the roof steps up behind the windshield
-			pts.append([rf - 0.06, h, 0.03])
-			pts.append([rf - 0.01, top + 0.004, 0.02])
+			pts.append([rf - 0.13, h, 0.07])
+			pts.append([rf - 0.02, top + 0.01, 0.05])
 		else:
 			pts.append([rr + (rf - rr) * 0.55, top, (rf - rr) * 0.45 if crown > 0.004 else 0.0])
 		pts.append([rf, top - crown, 0.02 * s + 0.004])
 	pts.append([float(d.cowl_x), float(d.cowl_h), 0.012 * s + 0.002])
+	if float(d.brow_x) > 0.0: pts.append([float(d.brow_x), float(d.brow_h), 0.03 * s + 0.01])
 	var nose_lean: float = d.nose_lean
-	pts.append([float(d.nose_x) - nose_lean * 0.5, float(d.hood_h), 0.014 * s + 0.002])
-	pts.append([1.0, float(d.nose_mid), 0.014 * s + 0.002])
+	# blunt noses (trucks, boxes) keep tight corners; a wedge comes to a point
+	var nr := (0.014 * s + 0.002) * (0.35 if d.nose == "blunt" else 1.0)
+	pts.append([float(d.nose_x) - nose_lean * 0.5, float(d.hood_h), nr])
+	pts.append([1.0, float(d.nose_mid), nr if d.nose != "wedge" else 0.003])
 	pts.append([1.0 - 0.012 - nose_lean, float(d.nose_bot), 0.003])
 	pts.append([float(d.wf), float(d.nose_bot), 0.0])
 	pts.append([float(d.wf), float(d.clear), 0.0])
@@ -1051,9 +1058,17 @@ static func ramp(paint: Color, finish: String) -> Dictionary:
 	match finish:
 		"matte": k = [0.45, 0.26, 0.11, 0.0, 0.05, 0.11, 0.16]
 		"metallic": k = [0.6, 0.38, 0.18, 0.0, 0.2, 0.42, 0.8]
+	# dark paint shows the sky in its highlights; pale paint goes blue-grey in its shadows
+	var lum := paint.get_luminance()
+	var dark := clampf((0.32 - lum) / 0.32, 0.0, 1.0)
+	var pale := clampf((lum - 0.6) / 0.4, 0.0, 1.0)
+	var sky := Color(0.74, 0.81, 0.92)
+	var shade := cool.lerp(Color(0.3, 0.34, 0.46), pale)
 	var out := {
-		"deep": paint.lerp(cool, k[0]), "sh": paint.lerp(cool, k[1]), "mid": paint.lerp(cool, k[2]), "base": paint,
-		"lt": paint.lerp(warm, k[4]), "hi": paint.lerp(warm, k[5]), "spec": paint.lerp(warm, k[6]),
+		"deep": paint.lerp(shade, k[0]), "sh": paint.lerp(shade, k[1]), "mid": paint.lerp(shade, k[2]), "base": paint,
+		"lt": paint.lerp(warm, k[4]).lerp(sky.darkened(0.5), dark * 0.32),
+		"hi": paint.lerp(warm, k[5]).lerp(sky.darkened(0.3), dark * 0.48),
+		"spec": paint.lerp(warm, k[6]).lerp(sky, dark * 0.6),
 	}
 	if finish == "pearl":
 		var shift := Color.from_hsv(fposmod(paint.h + 0.14, 1.0), 0.35, 1.0)
@@ -1321,7 +1336,7 @@ class _Car:
 						gm[row + xx] = 0
 
 	func skirted(wv: Array) -> bool:
-		return d.skirt and wv[0] == "rear" and not mods.has("rim") and String(dmg.get("flat", "")) != "rear" and String(dmg.get("wheel_off", "")) != "rear"
+		return d.skirt and d.flare == "none" and String(mods.get("fenders", "stock")) != "flared" and wv[0] == "rear" and not mods.has("rim") and String(dmg.get("flat", "")) != "rear" and String(dmg.get("wheel_off", "")) != "rear"
 
 	func _columns() -> void:
 		x_lo = w
@@ -1447,9 +1462,9 @@ class _Car:
 		var tint := clampf(float(mods.get("tint", 0.0)), 0.0, 1.0)
 		var gx0 := int(X(float(d.dlo_r)))
 		var gx1 := int(X(float(d.a_bot)))
-		var cols := [GLASS_TOP_C.darkened(tint * 0.55), GLASS_C.darkened(tint * 0.55), GLASS_LO_C.darkened(tint * 0.6)]
-		var cab := GLASS_C.darkened(0.42 + tint * 0.3).lerp(CarGen.CABIN, 0.25)
-		var streak := GLASS_TOP_C.lightened(0.12).darkened(tint * 0.4)
+		var cols := [CarGen.GLASS_TOP.darkened(tint * 0.55), CarGen.GLASS.darkened(tint * 0.55), CarGen.GLASS_LO.darkened(tint * 0.6)]
+		var cab := CarGen.GLASS.darkened(0.42 + tint * 0.3).lerp(CarGen.CABIN, 0.25)
+		var streak := CarGen.GLASS_TOP.lightened(0.12).darkened(tint * 0.4)
 		var belt := Y(float(d.belt_f))
 		var gt := Y(float(d.glass_top))
 		var seats := _seats()
@@ -1471,9 +1486,6 @@ class _Car:
 				if tint < 0.95 and ((s > 0.3 and s < 0.33) or (s > 0.37 and s < 0.45)) and f < 0.92: c = streak
 				buf[i] = c.to_abgr32()
 
-	const GLASS_TOP_C := Color("7b9cc0")
-	const GLASS_C := Color("33547a")
-	const GLASS_LO_C := Color("1f3550")
 
 	## Seat backs and headrests behind the glass, and the wheel up front: [x0, x1, top, kind].
 	func _seats() -> Array:
@@ -1572,7 +1584,7 @@ class _Car:
 		var stripes := String(mods.get("stripes", "none"))
 		if stripes == "none" and d.art.has("stripes") and not mods.has("stripes"): stripes = String(d.stripe_kind)
 		var livery := String(mods.get("livery", "none"))
-		var sc: Color = CarGen._col(mods.get("stripe_color", null), Color("f0f0ec") if paint_c.get_luminance() < 0.6 else Color("1e1e24"))
+		var sc: Color = CarGen._col(mods.get("stripe_color", null), Color("f0f0ec") if mods.has("stripes") or paint_c.get_luminance() < 0.6 else Color("1e1e24"))
 		if stripes == "none" and livery == "none": return
 		var scd := sc.darkened(0.25)
 		for xx in range(x_lo, x_hi + 1):
@@ -1835,7 +1847,7 @@ class _Car:
 			"portholes_roof":
 				var phx := int(X(float(d.dlo_r))) - int(lf * 0.035)
 				var phy := int(Y(float(d.glass_top))) + int(lf * 0.025)
-				p.disc(phx, phy, maxf(1.5, lf * 0.012), GLASS_C)
+				p.disc(phx, phy, maxf(1.5, lf * 0.012), CarGen.GLASS)
 				p.ring(phx, phy, maxf(1.5, lf * 0.012) + 0.6, CarGen.CHROME[2])
 			"portholes":
 				var px0 := int(fa.x - arch_r * 0.2)
@@ -1848,7 +1860,7 @@ class _Car:
 			var mx := int(fa.x + arch_r * 1.15)
 			var my := int(belt + (rock - belt) * 0.3)
 			if on_paint(mx, my) and on_paint(mx + 2 * u, my):
-				p.rect(mx, my, 2 * u + 1, u + 1, AMBER_C)
+				p.rect(mx, my, 2 * u + 1, u + 1, CarGen.AMBER)
 		if year >= 1968 and rear < 0.4:
 			var mx2 := int(ra.x - arch_r * 1.15) - 2 * u
 			var my2 := int(Y(float(d.belt_r)) + (rock - Y(float(d.belt_r))) * 0.3)
@@ -1874,7 +1886,6 @@ class _Car:
 				p.hline(qx, qy, 3 * u, CarGen.CHROME[3])
 				p.px(qx + 3 * u + 1, qy, CarGen.CHROME[2])
 
-	const AMBER_C := Color("f0a020")
 
 	# ------------------------------------------------------------ lamps
 
@@ -1920,7 +1931,7 @@ class _Car:
 						gap_px(px0, _first_body(px0) + u)
 					# the turn signal and parking lamp low in the bumper
 					var sy := int(Y(float(d.nose_mid))) + u
-					_lens(nose - 3 * u, sy, 3 * u, 2 * u, AMBER_C)
+					_lens(nose - 3 * u, sy, 3 * u, 2 * u, CarGen.AMBER)
 				"round", "quad":
 					var ry := col_top + maxi(2, int(lf * 0.022))
 					var rr := maxf(1.5, lf * 0.016)
@@ -1936,30 +1947,42 @@ class _Car:
 					var ly := col_top + maxi(2, int(lf * 0.01))
 					_lens(nose - lw, ly, lw, lh, lens)
 					p.frame(nose - lw - 1, ly - 1, lw + 2, lh + 2, CarGen.CHROME[2] if year < 1985 else CarGen.INK)
-					_lens(nose - lw - 2 * u - 1, ly + lh - 2 * u, 2 * u, 2 * u, AMBER_C)
+					_lens(nose - lw - 2 * u - 1, ly + lh - 2 * u, 2 * u, 2 * u, CarGen.AMBER)
 				"flush", "jewel", "swept":
-					# a lamp wrapped round the corner, following the hood's line back
-					var lw2 := int(lf * (0.06 if d.head == "flush" else (0.075 if d.head == "jewel" else 0.1)))
-					var lh2 := maxi(2, int(lf * (0.02 if d.head != "swept" else 0.016)))
+					# a lamp wrapped round the corner, following the hood's line back: a clear lens
+					# over a chrome reflector, the indicator at its back end, a projector in the jewels
+					var lw2 := int(lf * (0.06 if head == "flush" else (0.075 if head == "jewel" else 0.1)))
+					var lh2 := maxi(2, int(lf * (0.022 if head != "swept" else 0.018)))
+					var reflector := Color("8c9aaa") if not lights_on else Color("fff0c0")
+					var first := -1
 					var last := nose
 					for xx in range(nose - lw2, nose + 1):
-						var ty := _first_body(xx) + u + (1 if d.head == "flush" else 0)
+						if top_y[clampi(xx, 0, w - 1)] < 0: continue
+						var ty := _first_body(xx) + u + (1 if head == "flush" else 0)
 						var t := float(xx - (nose - lw2)) / float(maxi(1, lw2))
 						var hh := lh2 + int(t * lf * 0.008)
-						if d.head == "swept": hh = maxi(2, int(float(lh2) * (0.5 + t)))
+						if head == "swept": hh = maxi(2, int(float(lh2) * (0.55 + t * 0.9)))
 						if not on_paint(xx, ty + hh): continue
+						if first < 0: first = xx
 						for k in hh:
-							var c := lens if k > 0 else lens.lightened(0.5)
-							if d.head != "flush" and t < 0.22: c = AMBER_C if k > 0 else AMBER_C.lightened(0.3)
+							var c := lens if k == 0 or k < hh - 1 else reflector
+							if k == 0: c = lens.lightened(0.5)
+							if head != "flush" and t < 0.2: c = CarGen.AMBER.lightened(0.3) if k == 0 else CarGen.AMBER
 							p.img.set_pixel(xx, ty + k, c)
 						p.px(xx, ty - 1, CarGen.INK)
 						p.px(xx, ty + hh, CarGen.INK)
 						last = xx
-					if top_y[clampi(nose - lw2, 0, w - 1)] >= 0: p.vline(nose - lw2 - 1, _first_body(nose - lw2) + u - 1, lh2 + 2, CarGen.INK)
-					if d.head == "jewel" and lod >= 2:
-						p.disc(last - int(lf * 0.015), _first_body(last - int(lf * 0.015)) + u + lh2 / 2 + 1, maxf(1.0, lf * 0.006), Color.WHITE)
-					if d.head == "swept" and year >= 2012 and lod >= 1:
-						p.hline(nose - lw2 + 2, _first_body(nose - lw2 / 2) + u + lh2 + 1, lw2 - 4, Color("eaf4ff"))
+					if first >= 0:
+						var fy0 := _first_body(first) + u
+						p.vline(first - 1, fy0 - 1, lh2 + 2, CarGen.INK)
+						if head != "flush" and lod >= 1: p.vline(first + int(float(lw2) * 0.2), fy0, lh2 - 1, CarGen.INK.lerp(lens, 0.5))
+					if head in ["jewel", "swept"] and lod >= 2 and first >= 0:
+						var bx := last - int(lf * 0.02)
+						var by := _first_body(bx) + u + lh2 / 2 + 1
+						p.disc(bx, by, maxf(1.0, lf * 0.007), Color("3a4250"))
+						p.px(bx, by, Color.WHITE)
+					if head == "swept" and year >= 2012 and lod >= 1 and first >= 0:
+						p.hline(first + 2, _first_body(first + lw2 / 2) + u + lh2 + 1, maxi(2, last - first - 3), Color("eaf4ff"))
 			if lights_on: p.glow(nose + 3, col_top + int(lf * 0.03), maxf(6.0, lf * 0.05), Color("fff4c8"), 0.8)
 		else:
 			p.rect(nose - 2 * u, int(Y(float(d.hood_h))) + u, 3 * u, 3 * u, CarGen.WELL)
@@ -1979,7 +2002,7 @@ class _Car:
 				"tall":
 					var th := maxi(4, int(lf * 0.065))
 					_lens(tail, ty2 + u, tw, th, CarGen.LAMP_RED)
-					p.rect(tail, ty2 + u + th - 2 * u, tw, 2 * u, AMBER_C)
+					p.rect(tail, ty2 + u + th - 2 * u, tw, 2 * u, CarGen.AMBER)
 				"block":
 					_lens(tail, ty2, maxi(4, int(lf * 0.04)), maxi(3, int(lf * 0.03)), CarGen.LAMP_RED)
 				"racetrack":
@@ -1992,17 +2015,23 @@ class _Car:
 						p.img.set_pixel(xx, top + 1, CarGen.LAMP_RED)
 						p.px(xx, top + 2, CarGen.INK)
 				_:
-					# wraps round onto the quarter panel
-					var ww := int(lf * (0.05 if d.tail_lamp == "wrap" else 0.075))
-					var hh2 := maxi(3, int(lf * 0.026))
+					# a block on the rear corner that wraps round onto the quarter panel
+					var ww := int(lf * (0.045 if d.tail_lamp == "wrap" else 0.07))
+					var hh2 := maxi(3, int(lf * 0.028))
+					var ty0 := int(Y(float(d.tail_h))) + maxi(1, u)
 					for xx in range(tail, tail + ww):
-						var top := _first_body(xx) + u
 						var t2 := float(xx - tail) / float(maxi(1, ww))
-						var hh3 := maxi(2, int(float(hh2) * (1.0 - t2 * 0.6)))
+						var hh3 := maxi(2, int(float(hh2) * (1.0 - t2 * (0.55 if d.tail_lamp == "wrap" else 0.75))))
+						var top := maxi(ty0, _first_body(xx) + u)
 						if not on_paint(xx, top + hh3): continue
-						for k in hh3: p.img.set_pixel(xx, top + k, CarGen.LAMP_RED if k > 0 else Color("ff7a7a"))
+						for k in hh3:
+							var c := CarGen.LAMP_RED
+							if k == 0: c = Color("ff7a7a")
+							elif k == hh3 - 1 and hh3 > 3: c = CarGen.LAMP_RED.darkened(0.3)
+							p.img.set_pixel(xx, top + k, c)
+						p.px(xx, top - 1, CarGen.INK)
 						p.px(xx, top + hh3, CarGen.INK)
-					p.vline(tail + ww, _first_body(tail + ww) + u, maxi(2, hh2 / 2), CarGen.INK)
+					p.vline(tail + ww, maxi(ty0, _first_body(tail + ww) + u), maxi(2, hh2 / 2), CarGen.INK)
 
 	func _first_body(xx: int) -> int:
 		if xx < 0 or xx >= w: return gy
@@ -2056,12 +2085,12 @@ class _Car:
 			var tx1 := int(X(float(d.a_top))) - int(lf * 0.14)
 			for xx in range(tx1, tx0):
 				var ty := _first_body(xx)
-				p.img.set_pixel(xx, ty, GLASS_TOP_C)
-				if xx % 3 == 0: p.img.set_pixel(xx, ty + 1, GLASS_C)
+				p.img.set_pixel(xx, ty, CarGen.GLASS_TOP)
+				if xx % 3 == 0: p.img.set_pixel(xx, ty + 1, CarGen.GLASS)
 		if d.art.has("sunroof") and lod >= 1:
 			var sx0 := int(X(float(d.a_top))) - int(lf * 0.05)
 			for xx in range(sx0 - int(lf * 0.1), sx0):
-				p.px(xx, _first_body(xx) - 1, GLASS_C)
+				p.px(xx, _first_body(xx) - 1, CarGen.GLASS)
 			p.px(sx0, _first_body(sx0) - 1, CarGen.INK)
 
 	# ------------------------------------------------------------ open cars
@@ -2089,7 +2118,7 @@ class _Car:
 		p.line(int(cx - lf * 0.06), int(belt - lf * 0.03), int(cx - lf * 0.045), int(belt - lf * 0.005), Color("1a1a1e"))
 		# the windshield: glass in a frame
 		var gpts := PackedVector2Array([Vector2(cx, cy), Vector2(tx, ty), Vector2(tx - u * 2.0, ty), Vector2(cx - lf * 0.03, cy)])
-		p.poly(gpts, Color(GLASS_TOP_C, 0.55))
+		p.poly(gpts, Color(CarGen.GLASS_TOP, 0.55))
 		p.line(int(cx), int(cy), int(tx), int(ty), frame)
 		p.line(int(cx) - 1, int(cy), int(tx) - 1, int(ty), CarGen.INK)
 		p.hline(int(tx) - 2 * u, int(ty), 3 * u, frame)
@@ -2173,7 +2202,6 @@ class _Car:
 				continue
 			var bw := int(lf * (0.07 if style != "steel" else 0.05))
 			var bh := maxi(3, int(lf * (0.03 if style == "chrome" else 0.04)))
-			var x0 := at - 1 if end == 1 else at - 2 * u
 			var stick := maxi(1, int(lf * (0.008 if style == "chrome" else 0.014)))
 			var bx := (at - bw + stick) if end == 1 else (at - stick)
 			var top := by - bh
@@ -2204,7 +2232,6 @@ class _Car:
 					_valance(end, at, by)
 				_:
 					_valance(end, at, by)
-			x0 = x0
 
 	## A painted bumper: its seam, and the black intake or diffuser in its bottom edge.
 	func _valance(end: int, at: int, by: int) -> void:
@@ -2307,7 +2334,7 @@ class _Car:
 			# the opera window in the C-pillar
 			if d.doors == 2 and lod >= 1:
 				var ow := X(float(d.dlo_r)) - lf * 0.05
-				p.rect(int(ow), int(Y(float(d.glass_top))) + 2 * u, int(lf * 0.025), int(lf * 0.03), GLASS_C)
+				p.rect(int(ow), int(Y(float(d.glass_top))) + 2 * u, int(lf * 0.025), int(lf * 0.03), CarGen.GLASS)
 				p.frame(int(ow) - 1, int(Y(float(d.glass_top))) + 2 * u - 1, int(lf * 0.025) + 2, int(lf * 0.03) + 2, CarGen.CHROME[2])
 
 	func _roof_lights() -> void:
@@ -2315,8 +2342,8 @@ class _Car:
 		var mid := int((X(float(d.roof_f)) + X(float(d.roof_r))) * 0.5)
 		var top := _first_body(mid)
 		if art.has("beacon"):
-			p.rect(mid - 2 * u, top - 3 * u, 4 * u, 3 * u, AMBER_C)
-			p.hline(mid - 2 * u, top - 3 * u, 4 * u, AMBER_C.lightened(0.4))
+			p.rect(mid - 2 * u, top - 3 * u, 4 * u, 3 * u, CarGen.AMBER)
+			p.hline(mid - 2 * u, top - 3 * u, 4 * u, CarGen.AMBER.lightened(0.4))
 			p.frame(mid - 2 * u - 1, top - 3 * u - 1, 4 * u + 2, 3 * u + 1, CarGen.INK)
 		if art.has("topper"):
 			var tw := int(lf * 0.12)
@@ -2356,12 +2383,13 @@ class _Car:
 			p.rect(rx + int(lf * 0.06) - 2 * u, rt - rh + u, 2 * u, rh - u, CarGen.WELL)
 			p.hline(rx, rt - rh, int(lf * 0.06), (pal.hi as Color))
 			p.frame(rx - 1, rt - rh - 1, int(lf * 0.06) + 2, rh + 2, CarGen.INK)
+		if rear > 0.5 and not mods.has("spoiler"): spoiler = "none"
 		if spoiler != "none" and not d.family in ["pickup", "van", "boxtruck"]:
-			var dx0 := X(float(d.tail_x)) + lf * 0.01
+			var dx0 := X(float(d.tail_x) + rear * 0.16) + lf * 0.01
 			var dtop := float(_first_body(int(dx0 + lf * 0.05)))
 			match spoiler:
 				"lip":
-					var lx := int(X(float(d.tail_x))) + u
+					var lx := int(X(float(d.tail_x) + rear * 0.16)) + u
 					var ly := _first_body(lx + int(lf * 0.02))
 					var pts0 := PackedVector2Array([Vector2(lx - u, ly - 2 * u), Vector2(lx + lf * 0.05, ly), Vector2(lx, ly + u)])
 					p.poly(pts0, (pal.base as Color))
@@ -2588,26 +2616,33 @@ class _Car:
 				var fy2 := _bottom(fx2) + 2
 				p.vline(fx2, fy2, 3 * u, CarGen.INK)
 		var ex := String(mods.get("exhaust", d.get("exhaust", "single")))
-		var tip_r := maxf(1.5, 1.6 * float(u))
 		if ex == "side":
-			var sx := int(wheels[0][1] + arch_r) + 3 * u
-			for k in 2:
-				var tx2 := sx + k * int(tip_r * 2.0 + float(u))
-				var ty3 := _bottom(tx2) + int(tip_r * 0.6)
-				p.disc(tx2, ty3, tip_r + 1.0, CarGen.INK)
-				p.disc(tx2, ty3, tip_r, CarGen.CHROME[2])
-				p.disc(tx2, ty3, tip_r * 0.5, Color("2a2e36"))
-		elif ex == "single":
-			var tx := tail + 3 * u
-			p.rect(tx, _bottom(tx) + 1, 3 * u, u + 1, CarGen.TRIM)
+			# side pipes along the rocker, heat shields and all, out just ahead of the rear wheel
+			var sx0 := int(ra.x + arch_r) + 2 * u
+			var sx1 := int(fa.x - arch_r) - 2 * u
+			var sy := int(sill) + 1
+			var th := maxi(2, 2 * u)
+			p.rect(sx0, sy, sx1 - sx0, th, CarGen.CHROME[2])
+			p.hline(sx0, sy, sx1 - sx0, CarGen.CHROME[4])
+			if th > 2: p.hline(sx0, sy + th - 1, sx1 - sx0, CarGen.CHROME[1])
+			if lod >= 2:
+				for k in range(sx0 + 3 * u, sx1 - 2 * u, 3 * u): p.px(k, sy + th / 2, CarGen.CHROME[0])
+			p.rect(sx0 - 1, sy, 2, th, CarGen.WELL)
+			p.frame(sx0 - 2, sy - 1, sx1 - sx0 + 3, th + 2, CarGen.INK)
 		else:
-			var tips := 2 if ex == "dual" else 3
+			# round tips poking out from under the rear bumper
+			var tips := { "single": 1, "dual": 1, "quad": 2 }.get(ex, 1) as int
+			var tr := maxi(2, u + 1)
+			var ty := int(Y(float(d.tail_bot))) - tr + u
 			for k in tips:
-				var tx := tail + 3 * u + k * int(tip_r * 2.0 + float(u))
-				var ty3 := _bottom(tx) + int(tip_r * 0.6)
-				p.disc(tx, ty3, tip_r + 1.0, CarGen.INK)
-				p.disc(tx, ty3, tip_r, CarGen.CHROME[2])
-				p.disc(tx, ty3, tip_r * 0.5, Color("2a2e36"))
+				var tx := tail - 2 * u + k * (tr + 2 * u + 1)
+				if ex == "single":
+					p.rect(tx + 2 * u, ty + 1, 3 * u, tr - 1, CarGen.TRIM)
+					continue
+				p.rect(tx, ty, 3 * u + 1, tr, CarGen.CHROME[2])
+				p.hline(tx, ty, 3 * u + 1, CarGen.CHROME[4])
+				p.vline(tx, ty, tr, CarGen.WELL)
+				p.frame(tx - 1, ty - 1, 3 * u + 3, tr + 2, CarGen.INK)
 
 	func _bottom(xx: int) -> int:
 		if xx < 0 or xx >= w: return gy
@@ -2653,26 +2688,35 @@ class _Car:
 		if String(mods.get("fenders", "stock")) == "flared": style = "bolt"
 		elif d.flare != "none": style = String(d.flare)
 		if style == "none": return
+		var box := style == "box"
+		var sx := 1.1 if box else 1.0
+		var c_hi := (pal.hi as Color)
+		var c_lt := (pal.lt as Color)
+		var c_base := (pal.base as Color)
+		var c_mid := (pal.mid as Color)
+		var c_sh := (pal.sh as Color)
 		for wv: Array in wheels:
 			if style == "bulge" and wv[0] == "front" and d.art.has("dually"): continue
 			var ac: Vector2 = wv[3]
-			var fr := arch_r + (3.0 if style != "box" else 4.0) * float(u)
-			var c: Color = (pal.base as Color) if style != "bolt" else (pal.base as Color)
-			for k in 64:
-				var a := PI + PI * float(k) / 63.0
-				for t2 in 3 * u + 1:
-					var rr := fr - float(t2)
-					var qx := int(ac.x + cos(a) * rr * (1.08 if style == "box" else 1.0))
-					var qy := int(ac.y + sin(a) * rr)
-					if float(qy) <= sill + float(u):
-						var shade := c if t2 > 0 else (pal.hi as Color)
-						p.px(qx, qy, CarGen.INK if t2 == 3 * u else shade)
-			# and an ink line on the outside of the flare
-			for k in 64:
-				var a2 := PI + PI * float(k) / 63.0
-				var qx2 := int(ac.x + cos(a2) * (fr + 1.0) * (1.08 if style == "box" else 1.0))
-				var qy2 := int(ac.y + sin(a2) * (fr + 1.0))
-				if float(qy2) <= sill + float(u) and p.get_px(qx2, qy2).a < 0.5: p.px(qx2, qy2, CarGen.INK)
+			var fr := arch_r + (3.0 if not box else 4.0) * float(u) + lf * 0.006
+			for yy in range(int(ac.y - fr) - 2, int(sill) + 1):
+				for xx in range(int(ac.x - fr * sx) - 2, int(ac.x + fr * sx) + 3):
+					if xx < 0 or yy < 0 or xx >= w or yy >= hgt: continue
+					var dx := (float(xx) + 0.5 - ac.x) / sx
+					var dy := float(yy) + 0.5 - ac.y
+					var dd := sqrt(dx * dx + dy * dy)
+					if box: dd = maxf(absf(dx), -dy) * 0.55 + dd * 0.45
+					if dd < arch_r - 0.2 or dd > fr + 1.2: continue
+					if dd > fr + 0.2:
+						# the flare stands proud: a shadow round it on the panel, ink where it sticks out
+						if on_paint(xx, yy): p.img.set_pixel(xx, yy, c_sh)
+						elif p.img.get_pixel(xx, yy).a < 0.5: p.img.set_pixel(xx, yy, CarGen.INK)
+						continue
+					var up := -dy / maxf(0.5, dd)
+					var c := c_lt if up > 0.7 else (c_base if up > 0.25 else c_mid)
+					if dd > fr - 1.0: c = c_hi if up > 0.45 else c_lt
+					elif dd < arch_r + 1.0: c = c_mid
+					p.img.set_pixel(xx, yy, c)
 			if style == "bolt":
 				for k in 5:
 					var a3 := PI + PI * (0.15 + 0.7 * float(k) / 4.0)
@@ -2717,10 +2761,10 @@ class _Car:
 		p.hline(int(ac.x - ra) - 1, bottom + 1, int(ra * 2.0) + 3, CarGen.INK)
 		# the skirt's edge: a shut line round the arch, and a chrome lip along the bottom
 		for k in 40:
-			var a := PI + PI * float(k) / 39.0
+			var a := PI * 1.12 + PI * 0.76 * float(k) / 39.0
 			var qx := int(ac.x + cos(a) * ra)
 			var qy := int(ac.y + sin(a) * ra)
-			if qy < bottom: gap_px(qx, qy)
+			if qy < bottom and on_paint(qx, qy): p.img.set_pixel(qx, qy, (pal.sh as Color))
 		p.hline(int(ac.x - ra), bottom, int(ra * 2.0) + 1, CarGen.CHROME[2])
 
 	# ------------------------------------------------------------ crashes
@@ -2759,16 +2803,30 @@ class _Car:
 				p.glow(sx2 - k * 2 + int(sin(float(k)) * 3.0), int(by) - 3 - k * 3, (2.0 + float(k) * 0.6) * u, Color(0.82, 0.82, 0.84), 1.0 - float(k) * 0.04)
 		var drv: Dictionary = dmg.get("driver", {})
 		if not drv.is_empty():
+			# slumped over the door: the head on the sill, an arm hanging down the outside
 			var cuts: Array = d.door_cuts
-			var wx := int(X(float(cuts[0][1]) + 0.05)) if cuts.size() > 0 else int(X(0.5))
+			var wx := int(X(lerpf(float(cuts[0][1]), float(cuts[0][0]), 0.3))) if cuts.size() > 0 else int(X(0.5))
 			var wy := int(Y(float(d.belt_f)))
 			var sk: Color = drv.get("skin", Color("dcae88"))
 			var hc: Color = drv.get("hair", Color("3b2a1e"))
-			p.rect(wx - 5 * u, wy - 6 * u, 6 * u, 6 * u, hc)
-			if drv.get("long_hair", false): p.rect(wx - 3 * u, wy, 3 * u, int(lf * 0.1), hc)
-			if drv.get("sleeve", null) != null: p.rect(wx - u, wy - u, 3 * u, 3 * u, drv.sleeve)
-			p.rect(wx - u, wy + 2 * u, 3 * u, int(lf * 0.1), sk)
-			p.rect(wx - u, wy + 2 * u + int(lf * 0.1), 3 * u, 3 * u, sk.darkened(0.08))
+			var hr := maxf(2.0, lf * 0.022)
+			var arm := maxi(2, int(lf * 0.016))
+			var arm_l := int(lf * 0.085)
+			var ax := wx + int(hr * 0.8)
+			if drv.get("sleeve", null) != null:
+				p.rect(ax - 1, wy - 1, arm + 2, arm + 2, CarGen.INK)
+			p.rect(ax - 1, wy, arm + 2, arm_l + 2, CarGen.INK)
+			p.rect(ax, wy, arm, arm_l, sk)
+			p.vline(ax, wy, arm_l, sk.lightened(0.12))
+			p.rect(ax, wy + arm_l - arm, arm, arm, sk.darkened(0.12))
+			if drv.get("sleeve", null) != null: p.rect(ax, wy, arm, arm, drv.sleeve)
+			p.disc(wx, wy - int(hr * 0.5), hr + 1.0, CarGen.INK)
+			p.disc(wx, wy - int(hr * 0.5), hr, sk)
+			p.disc(wx - int(hr * 0.3), wy - int(hr * 0.9), hr * 0.8, hc)
+			if drv.get("long_hair", false):
+				p.rect(wx - int(hr), wy - int(hr * 0.2), int(hr * 1.4), int(lf * 0.07), CarGen.INK)
+				p.rect(wx - int(hr) + 1, wy - int(hr * 0.2), int(hr * 1.4) - 2, int(lf * 0.07) - 1, hc)
+				p.vline(wx - int(hr) + 2, wy, int(lf * 0.06), hc.lightened(0.15))
 
 # ================================================================== wheels
 
@@ -2833,7 +2891,6 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 						if sa < 0.55 and int((a - spin) * 30.0 / TAU) % 4 != 3: c = Color("e8e4d8")
 				p.px(xx, yy, c)
 				continue
-			if flat: dy = float(yy) - ccy
 			var rt := dist / rr
 			var ang := a - spin
 			var c2: Color
@@ -2875,10 +2932,12 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			var sa2 := spin + PI * float(k) + 0.4
 			p.line(cx, int(ccy), cx + int(cos(sa2) * rr * 0.32), int(ccy + sin(sa2) * rr * 0.32), Color("f4f6f8"))
 	var cap := maxf(1.0, rr * 0.13)
-	p.disc(cx, int(ccy), cap, rc.lerp(Color.WHITE, 0.2) if rim != "beadlock" else Color("3a3e46"))
-	p.px(cx - 1, int(ccy) - 1, Color.WHITE)
+	if simple:
+		p.px(cx, int(ccy), rc.darkened(0.2))
+	else:
+		p.disc(cx, int(ccy), cap, rc.lerp(Color.WHITE, 0.2) if rim != "beadlock" else Color("3a3e46"))
+		p.px(cx - 1, int(ccy) - 1, Color.WHITE)
 	if not simple and cap > 1.5: p.ring(cx, int(ccy), cap + 0.5, lo)
-	p.ellipse(cx, int(ccy), r + 1.0, ry + 1.0, Color(0, 0, 0, 0))
 	if mods.get("dually", false) and not simple:
 		# the dually's hub sticks out past the tyre
 		p.disc(cx, int(ccy), rr * 0.42, Color("b8c0c8"))
@@ -3034,8 +3093,8 @@ const ICONS := {
 		"bumper": "rubber", "rim_style": "turbofan", "trim": ["moulding"], "art": { "louvers": true } },
 	"fjord_gt_fourty_ish_2005": { "H": 1.12, "hood_h": 0.64, "cowl_rise": 0.2, "cowl_d": 1.72, "rake": 64.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 80.0,
 		"soft": 1.0, "nose": "round", "head": "jewel", "tail_lamp": "round", "rim_style": "tenspoke", "art": { "louvers": true, "stripes": true } },
-	"porch_neuner_1973": { "head": "round", "tail_lamp": "bar", "bumper": "chrome", "rim_style": "fivespoke" },
-	"porch_neuner_turbo_1986": { "kick": 0.06, "head": "round", "tail_lamp": "bar", "bumper": "body", "rim_style": "fivespoke", "flare": "bulge",
+	"porch_neuner_1973": { "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "head": "round", "tail_lamp": "bar", "bumper": "chrome", "rim_style": "fivespoke" },
+	"porch_neuner_turbo_1986": { "brow_d": 0.34, "brow_h": 0.76, "hood_h": 0.6, "nose_drop": 0.14, "kick": 0.06, "head": "round", "tail_lamp": "bar", "bumper": "body", "rim_style": "fivespoke", "flare": "bulge",
 		"wing_kind": "whale", "tire": 1.04 },
 	"ferraree_testosterona_1987": { "H": 1.13, "hood_h": 0.6, "cowl_rise": 0.2, "cowl_d": 1.5, "rake": 66.0, "deck": 1.0, "tail_h": 0.98, "bl_rake": 82.0,
 		"c_bot": -0.05, "soft": 0.15, "head": "popup", "tail_lamp": "block", "rim_style": "fivespoke" },
@@ -3044,8 +3103,8 @@ const ICONS := {
 	"ferraree_three_oh_ate_1984": { "soft": 0.5, "head": "popup", "tail_lamp": "round", "rim_style": "fivespoke" },
 	"ferraree_two_fifty_gee_tee_oh_no_1962": { "H": 1.2, "hood_h": 0.62, "cowl_rise": 0.2, "cowl_d": 2.0, "rake": 56.0, "tail_h": 0.88, "bl_rake": 70.0,
 		"soft": 1.2, "side_vent": "vent", "head": "round", "tail_lamp": "round", "rim_style": "wire", "art": { "spoiler": true } },
-	"lamberghini_coontash_1985": { "H": 1.07, "hood_h": 0.62, "cowl_rise": 0.2, "cowl_d": 1.25, "rake": 72.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 84.0,
-		"c_top": 0.04, "c_bot": -0.04, "soft": 0.04, "nose_drop": 0.1, "nose_round": 0.03, "arch": "square", "head": "popup", "tail_lamp": "block",
+	"lamberghini_coontash_1985": { "H": 1.07, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.3, "rake": 72.0, "deck": 0.95, "tail_h": 0.98, "bl_rake": 84.0,
+		"c_top": 0.04, "c_bot": -0.04, "soft": 0.04, "nose_drop": 0.2, "nose_round": 0.32, "nose_lean": 0.05, "arch": "square", "head": "popup", "tail_lamp": "block",
 		"rim_style": "steel", "rim_color": "c8ccd4" },
 	"lamberghini_diabloh_1995": { "soft": 0.7, "rake": 70.0 },
 	"lamberghini_meeura_1968": { "H": 1.06, "hood_h": 0.6, "cowl_rise": 0.18, "cowl_d": 1.55, "rake": 64.0, "deck": 0.95, "tail_h": 0.92, "bl_rake": 82.0,
@@ -3096,7 +3155,7 @@ const ICONS := {
 		"bl_rake": 22.0, "c_top": 0.08, "c_bot": 0.02, "soft": 0.6, "ff": 0.5, "head": "round", "tail_lamp": "block", "bumper": "chrome", "rim_style": "steel" },
 	"volkswagon_beetel_1967": { "H": 1.5, "rear": "fast", "hood_h": 0.74, "cowl_rise": 0.26, "cowl_d": 1.45, "rake": 32.0, "tail_h": 0.62, "bl_rake": 52.0,
 		"clear": 0.3, "crown": 0.12, "soft": 3.0, "c_top": 0.08, "c_bot": -0.04, "head": "round", "tail_lamp": "round", "bumper": "chrome",
-		"fenders": "separate", "rim_style": "dish", "wall": "none" },
+		"brow_d": 0.36, "brow_h": 0.82, "fenders": "separate", "rim_style": "dish", "wall": "none" },
 	"citrowen_deux_chevals_1975": { "H": 1.6, "rear": "fast", "hood_h": 0.78, "cowl_rise": 0.2, "cowl_d": 1.2, "rake": 28.0, "tail_h": 0.66,
 		"bl_rake": 40.0, "clear": 0.32, "crown": 0.1, "soft": 2.0, "doors": 4, "head": "round", "fenders": "separate", "rim_style": "steel" },
 	"citrowen_goddess_1970": { "rear": "fast", "H": 1.47, "hood_h": 0.66, "cowl_rise": 0.26, "cowl_d": 1.72, "rake": 56.0, "tail_h": 0.86, "bl_rake": 62.0,
@@ -3121,10 +3180,17 @@ const ICONS := {
 		"arch": "square", "head": "round", "rim_style": "beadlock", "tire": 1.1 },
 	"volkswagon_hippie_buss_1972": { "H": 1.95, "hood_h": 0.95, "cowl_rise": 0.06, "cowl_d": 0.12, "rake": 16.0, "rear_d": 0.12, "soft": 1.6, "crown": 0.06,
 		"nose_drop": 0.55, "nose_round": 0.25, "head": "round", "bumper": "chrome", "rim_style": "hubcap" },
+	"dodgy_sprintur_2008": { "H": 2.6 },
+	"fjord_transitory_2016": { "H": 2.5 },
+	"ramm_promastur_2017": { "H": 2.5 },
 	"toyoda_previous_1993": { "hood_h": 0.86, "cowl_rise": 0.22, "cowl_d": 0.75, "rake": 64.0, "rear_d": 0.06, "soft": 1.6 },
 	"gmz_sy_clone_1991": { "H": 1.52, "clear": 0.14, "hood_h": 0.86, "rim_style": "multispoke" },
 	"fjord_crown_victorious_2005": { "rim_style": "steel", "rim_color": "2a2e36" },
 	# --- the odd ones
-	"cadillak_fleetwould_hearse_1985": { "rear_d": 0.08, "art": { "hearse": true, "vinyl": true } },
+	"peeled_pee_fifty_1963": { "H": 1.2, "rear": "fast", "hood_h": 0.55, "cowl_rise": 0.2, "cowl_d": 0.3, "rake": 30.0, "tail_h": 0.55,
+		"bl_rake": 40.0, "crown": 0.05, "soft": 1.6, "c_top": 0.05, "c_bot": 0.0, "doors": 2, "tire": 0.7, "head": "round" },
+	"beemer_werke_isette_1958": { "H": 1.34, "rear": "fast", "hood_h": 0.6, "cowl_rise": 0.3, "cowl_d": 0.35, "rake": 38.0, "tail_h": 0.62,
+		"bl_rake": 52.0, "crown": 0.1, "soft": 2.5, "c_top": 0.06, "c_bot": -0.02, "head": "round", "bumper": "chrome" },
+	"cadillak_fleetwould_hearse_1985": { "H": 1.64, "rear_d": 0.08, "art": { "hearse": true, "vinyl": true } },
 	"aston_martian_lagonduh_1980": { "hood_h": 0.62, "cowl_rise": 0.26, "rake": 64.0, "deck": 0.95, "bl_rake": 64.0, "soft": 0.04, "nose": "wedge" },
 }
