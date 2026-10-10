@@ -24,7 +24,7 @@ Port Rumble (our Moncton) to Salisbury and Havelock, laid out from the real geog
 - **Landmarks:**
   - Covington Auto, the Rumble Centre, Tidal Bore Park, Champagne Place and Airstrip 7.
   - Magnet Hill, where the car rolls "uphill" if you let it, and the casino.
-  - The Big Stop, the Lutes Mountain towers, the Havelock airfield and the lime quarry.
+  - The Large Stop, the Lutes Mountain towers, the Havelock airfield and the lime quarry.
   - A Tim Burtons on every corner.
 - **Country:** farms with barns and yard lights, spruce and maple woods, and fields that change colour with the seasons.
 
@@ -64,7 +64,7 @@ A gig on the phone, any time of day. A request comes in from a house nearby; pic
 
 ## Gas
 
-Your car burns fuel by the work the engine does: about 45 minutes of steady highway driving on a tank, a lot less flat out. The FUEL light comes on under a seventh of a tank, and the dash gauges show what's left. Fill up at the pumps at the Gas Bars, the Ultramarge in Dieppe or the Big Stop (they're on the GPS): regular at $1.62 a litre, premium at $1.89, or twenty bucks' worth. Premium keeps a hot tune from knocking (it goes by how much of what's in the tank is premium). Run dry and the car coughs and stops; Toby brings a jerry can for $60. Each car's fuel is saved with it, and nobody else's car ever runs out.
+Your car burns fuel by the work the engine does: about 45 minutes of steady highway driving on a tank, a lot less flat out. The FUEL light comes on under a seventh of a tank, and the dash gauges show what's left. Fill up at the pumps at the Gas Bars, the Ultramarge in Dieppe or the Large Stop (they're on the GPS): regular at $1.62 a litre, premium at $1.89, or twenty bucks' worth. Premium keeps a hot tune from knocking (it goes by how much of what's in the tank is premium). Run dry and the car coughs and stops; Toby brings a jerry can for $60. Each car's fuel is saved with it, and nobody else's car ever runs out.
 
 ## Moose and deer
 

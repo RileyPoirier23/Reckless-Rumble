@@ -116,7 +116,7 @@ func _init() -> void:
 	check("four places to buy gas, paved and routable", st.size() >= 4 and st_bad.is_empty(), "%d, bad %s" % [st.size(), str(st_bad)])
 	var named := 0
 	for l in map.landmarks:
-		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE BIG STOP": named += 1
+		if String(l.name).begins_with("GAS BAR") or String(l.name).begins_with("ULTRAMARGE") or String(l.name) == "THE LARGE STOP": named += 1
 	check("the gas stations are on the GPS", named >= 4, "%d" % named)
 	check("the till rounds up to the dollar", FuelStop.bill(10.0, false) == 17 and FuelStop.bill(10.0, true) == 19, "%d, %d" % [FuelStop.bill(10.0, false), FuelStop.bill(10.0, true)])
 	# the meet

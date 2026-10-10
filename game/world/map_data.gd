@@ -276,18 +276,18 @@ func _landmarks() -> void:
 		lights.append({ "p": Vector2(x, 1008), "type": "runway", "seed": x })
 		lights.append({ "p": Vector2(x, 1036), "type": "runway", "seed": x + 1 })
 	landmarks.append({ "name": "AIRSTRIP 7", "p": Vector2(6640, 1022), "dest": true })
-	# the Big Stop at the Salisbury exit: diesel, fries, truckers
+	# the Large Stop at the Salisbury exit: diesel, fries, truckers
 	lots.append({ "r": Rect2(3510, 1960, 100, 70), "kind": "asphalt", "name": "", "lines": false })
-	buildings.append({ "r": Rect2(3560, 1966, 44, 22), "h": 7.0, "kind": "shop", "name": "THE BIG STOP", "zone": "" })
-	add_road("BIG STOP RD", "ramp", [Vector2(3480, 2050), Vector2(3530, 2000)], "")
+	buildings.append({ "r": Rect2(3560, 1966, 44, 22), "h": 7.0, "kind": "shop", "name": "THE LARGE STOP", "zone": "" })
+	add_road("LARGE STOP RD", "ramp", [Vector2(3480, 2050), Vector2(3530, 2000)], "")
 	for i in 3: lights.append({ "p": Vector2(3522 + i * 14, 2004), "type": "canopy", "seed": i })
-	landmarks.append({ "name": "THE BIG STOP", "p": Vector2(3540, 2010), "dest": true })
+	landmarks.append({ "name": "THE LARGE STOP", "p": Vector2(3540, 2010), "dest": true })
 	landmarks.append({ "name": "SALISBURY", "p": Vector2(3440, 2120), "dest": true })
 	# gas bars
 	_gas(Rect2(5640, 1210, 44, 34), "GAS BAR", "", "GAS BAR (NORTH END)")
 	_gas(Rect2(6420, 1420, 44, 30), "ULTRAMARGE", "dieppe", "ULTRAMARGE (DIEPPE)")
 	_gas(Rect2(3580, 2060, 40, 28), "GAS BAR", "salisbury", "GAS BAR (SALISBURY)")
-	# the Big Stop's diesel and regular islands, out front of the restaurant
+	# the Large Stop's diesel and regular islands, out front of the restaurant
 	buildings.append({ "r": Rect2(3534, 2012, 34, 3), "h": 1.0, "kind": "pumps", "name": "", "zone": "" })
 	# the Lutes Mountain towers: red lights you can see from everywhere
 	for i in 3:

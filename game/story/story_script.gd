@@ -108,10 +108,10 @@ const SCENES := {
 		["ARIES", "thats the mafia leo"],
 		["ARIES", "also we have no milk. and no car. and i have practice at 7 tomorrow"],
 		["*", "ANOTHER BUZZ. MIKEY."],
-		["MIKEY", "found u a car on MarketThing. $900. 'RUNS GREAT.' guy says meet at the Tims on Mountain Rd. bring cash. i put in $500 from my college fund (the jar)"],
+		["MIKEY", "found u a car on MarketThing. $900. 'RUNS GREAT.' guy says meet at the tim burtons on Mountain Rd. bring cash. i put in $500 from my college fund (the jar)"],
 		["LEO", "Mikey, that jar is for college."],
 		["MIKEY", "bro the jar is for emergencies. u are an emergency"],
-		["TOBY", "Heard you need a ride to the Tim's. Take the wrecker. Don't touch the boom. Don't touch the radio. Don't eat the timbits on the dash, they're evidence."],
+		["TOBY", "Heard you need a ride to the Tim Burtons. Take the wrecker. Don't touch the boom. Don't touch the radio. Don't eat the Burton Bits on the dash, they're evidence."],
 	]},
 	"runs_great": { "set": "tims", "cast": [["LEO", 124, 1, "stand"], ["DARRELL", 172, -1, "hips"]], "lines": [
 		["*", "TIM BURTONS, MOUNTAIN ROAD. A '91 NISSUN SILVIO UNDER THE ONLY LAMP THAT WORKS."],
@@ -157,7 +157,7 @@ const SCENES := {
 		["MIA", "Nothing's wrong with it. Something's wrong with its paperwork. That's your department now."],
 		["MIA", "Not a scratch on it, Leo. Every scratch comes off your forty-two hundred. In the wrong direction."],
 		["LEO", "Mia, I'm sorry about your car."],
-		["MIA", "...It was a good car. My dad built it. Don't make me cry in front of the Tim's."],
+		["MIA", "...It was a good car. My dad built it. Don't make me cry in front of the Tim Burtons."],
 	]},
 	"bay_three": { "set": "bay", "cast": [["LEO", 100, 1, "pockets"], ["GUS", 160, -1, "stand"]], "lines": [
 		["*", "BAY 3. THE CHARJER SITS UNDER A TARP. GUS IS NOT LOOKING AT IT VERY HARD."],

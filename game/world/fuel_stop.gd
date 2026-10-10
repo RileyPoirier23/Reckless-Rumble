@@ -1,4 +1,4 @@
-## Gas: the pumps at the gas bars and the Big Stop, what a litre costs, and Toby with a jerry
+## Gas: the pumps at the gas bars and the Large Stop, what a litre costs, and Toby with a jerry
 ## can when you run dry. The car burns it (CarSim); this is where you buy it.
 class_name FuelStop
 extends Node

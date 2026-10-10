@@ -45,7 +45,7 @@ const CATALOG := {
 	# ---------------------------------------------------------------- ECU
 	"ecu_cobbled": ["ecu", "COBBLED ACCESSPORT TUNE", 750, 2, { "torque": 1.06, "redline": 200 }, "PLUG IT INTO THE OBD PORT. FEEL SMARTER THAN YOU ARE."],
 	"ecu_apexii": ["ecu", "APEXII POWER FC STANDALONE", 1590, 4, { "torque": 1.09, "redline": 400 }, "A WHOLE NEW BRAIN FOR THE CAR. THE CAR DIDN'T ASK."],
-	"ecu_laptop": ["ecu", "TOBY'S COUSIN'S LAPTOP TUNE", 150, 0, { "torque": 1.11, "redline": 500, "wear": 2.5 }, "HE DID IT IN THE TIM'S LOT. THE LAPTOP HAD STICKERS. WHAT COULD GO WRONG."],
+	"ecu_laptop": ["ecu", "TOBY'S COUSIN'S LAPTOP TUNE", 150, 0, { "torque": 1.11, "redline": 500, "wear": 2.5 }, "HE DID IT IN THE TIM BURTONS LOT. THE LAPTOP HAD STICKERS. WHAT COULD GO WRONG."],
 	# ---------------------------------------------------------------- forced induction
 	"ind_garrette": ["induction", "GARRETTE GT28 TURBO KIT", 3990, 6, { "torque": 1.38, "turbo": { "spool_rpm": 3300, "lag": 0.5, "no_boost": 0.72 } }, "FREE POWER. EXCEPT THE $3,990. AND THE LAG. AND YOUR MARRIAGE."],
 	"ind_greddy": ["induction", "GREDDDY T518Z KIT", 5290, 7, { "torque": 1.55, "turbo": { "spool_rpm": 3900, "lag": 0.7, "no_boost": 0.65 } }, "BIGGER TURBO, BIGGER NUMBERS, BIGGER PAUSE BEFORE THE NUMBERS."],
@@ -72,7 +72,7 @@ const CATALOG := {
 	"susp_springs": ["suspension", "EIBACHH LOWERING SPRINGS", 390, 2, { "cg": -0.03, "grip": 1.02, "drop": 0.5 }, "THIRTY MILLIMETRES CLOSER TO THE ROAD AND TO GOD."],
 	"susp_coilover": ["suspension", "TEENZ FLEX Z COILOVERS", 1290, 4, { "cg": -0.05, "grip": 1.05, "drop": 0.7 }, "ADJUSTABLE. YOU WON'T ADJUST THEM. NOBODY DOES."],
 	"susp_race": ["suspension", "BC RACING-ISH BR COILOVERS", 1690, 5, { "cg": -0.06, "grip": 1.07, "drop": 0.85 }, "STIFF ENOUGH TO READ A COIN. HEADS."],
-	"susp_air": ["suspension", "AIR RIDE (SLAMMED)", 3490, 6, { "cg": -0.07, "grip": 0.98, "drop": 1.0 }, "AIRED OUT AT THE TIM'S. DOESN'T CORNER. DOESN'T HAVE TO."],
+	"susp_air": ["suspension", "AIR RIDE (SLAMMED)", 3490, 6, { "cg": -0.07, "grip": 0.98, "drop": 1.0 }, "AIRED OUT AT THE TIM BURTONS. DOESN'T CORNER. DOESN'T HAVE TO."],
 	"susp_lift": ["suspension", "3-INCH LIFT KIT", 1190, 4, { "cg": 0.08, "grip": 0.96, "drop": -0.8 }, "FOR WHEN YOU NEED TO SEE OVER EVERYONE'S OPINIONS."],
 	"sway_rear": ["swaybar", "WHITELINEZ REAR SWAY BAR", 320, 2, { "rear_grip": -0.03, "grip": 1.01 }, "MORE ROTATION. THE BACK END WANTS TO BE THE FRONT END."],
 	"sway_front": ["swaybar", "FRONT + REAR SWAY BAR SET", 560, 3, { "grip": 1.03 }, "FLAT THROUGH THE CORNERS. LIKE THE MARITIMES."],
@@ -97,7 +97,7 @@ const CATALOG := {
 	"aero_lip": ["aero", "FRONT SPLITTER", 390, 3, { "cl": 0.08, "cda": 0.01, "kit_lip": true }, "SCRAPES ON EVERY DRIVEWAY. WORTH IT. PROBABLY."],
 	"aero_ducktail": ["aero", "DUCKTAIL SPOILER", 450, 3, { "cl": 0.1, "cda": 0.01, "spoiler": "ducktail" }, "SUBTLE. SAYS 'I KNOW A GUY.'"],
 	"aero_wing": ["aero", "STREET WING", 690, 4, { "cl": 0.2, "cda": 0.03, "spoiler": "wing" }, "SAYS 'I HAVE A GUY.'"],
-	"aero_gt": ["aero", "GT WING + SPLITTER", 1890, 6, { "cl": 0.42, "cda": 0.07, "spoiler": "gt", "kit_lip": true }, "SAYS 'I AM THE GUY.' MORE GRIP ABOVE 100 KM/H. MORE LOOKS AT THE TIM'S."],
+	"aero_gt": ["aero", "GT WING + SPLITTER", 1890, 6, { "cl": 0.42, "cda": 0.07, "spoiler": "gt", "kit_lip": true }, "SAYS 'I AM THE GUY.' MORE GRIP ABOVE 100 KM/H. MORE LOOKS AT THE TIM BURTONS."],
 }
 
 ## Performance stages, the way the shop talks about them: 1 bolt-ons, 2 serious, 3 race, 4 all-in.
