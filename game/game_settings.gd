@@ -23,7 +23,7 @@ const DEFAULTS := {
 	"display": { "mode": "windowed", "size": "1280x720", "vsync": true, "max_fps": 0, "stretch": "integer" },
 	"ui": { "messages": "all", "tips": true, "scan_tool": true, "camera_zoom": 1.0, "controls_card": false },
 	"difficulty": { "preset": "normal", "assist": "street", "police": "normal", "wildlife": "normal" },
-	"graphics": { "lights": 56, "weather": "full", "clouds": true, "smoke": true, "skids": true, "flashes": true, "blur": true },
+	"graphics": { "lights": 56, "weather": "full", "clouds": true, "smoke": true, "skids": true, "flashes": true, "blur": true, "sight": true },
 	"audio": { "master": 1.0, "engine": 1.0, "effects": 1.0, "mute_unfocused": false },
 }
 

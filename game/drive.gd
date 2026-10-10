@@ -27,6 +27,7 @@ var fog_rect: ColorRect
 var flash_rect: ColorRect
 var white_out := 0.0             # a white flash that fades on its own (a black-out in the prologue)
 var clouds: Node2D
+var sight: Sight                # what Leo can see past the buildings
 var car_i := 0
 var _light_t := 0.0
 var _water_t := 0.0
@@ -74,6 +75,9 @@ func _ready() -> void:
 	skids = Skids.new()
 	skids.z_index = -3993
 	add_child(skids)
+	sight = Sight.new()
+	sight.drive = self
+	add_child(sight)
 	ysort = Node2D.new()          # cars and buildings: sorted by depth toward the camera each frame
 	add_child(ysort)
 	world.setup(sky, ysort)
@@ -250,6 +254,10 @@ void fragment() {
 		var md: Node = load("res://tests/market_demo.gd").new()
 		md.main = self
 		add_child(md)
+	elif OS.get_cmdline_user_args().has("--sight-demo"):
+		var sd: Node = load("res://tests/sight_demo.gd").new()
+		sd.main = self
+		add_child(sd)
 	elif OS.get_cmdline_user_args().has("--wild-demo"):
 		var wd2: Node = load("res://tests/wild_demo.gd").new()
 		wd2.main = self
@@ -661,6 +669,7 @@ func _apply_settings(_section := "") -> void:
 		if fx.amount != n: fx.amount = n
 	clouds.visible = bool(GameSettings.get_v("graphics", "clouds"))
 	skids.visible = bool(GameSettings.get_v("graphics", "skids"))
+	sight.on = bool(GameSettings.get_v("graphics", "sight"))
 	if car: _apply_car_settings()
 
 ## The car you're in: the driving aids and the gearbox you picked.
@@ -912,6 +921,7 @@ func _process(dt: float) -> void:
 		_store_car()
 		SaveGame.write(save)
 	_depth_sort(up)
+	sight.update_sight(dt, car.global_position, r)
 	# the blinker relay clicks
 	var b_on := CarView.blink_on() and (car.view.blink_left or car.view.blink_right)
 	if b_on != _blink_was:

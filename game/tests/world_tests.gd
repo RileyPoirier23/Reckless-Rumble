@@ -116,5 +116,23 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- line of sight: a building's shadow, and a building in the way
+	var sq := PackedVector2Array([Vector2(0, 0), Vector2(100, 0), Vector2(100, 100), Vector2(0, 100)])
+	var sh := Sight.shadow_of(sq, Vector2(-200, 50), 2000.0)
+	check("behind a building is in its shadow", Geometry2D.is_point_in_polygon(Vector2(400, 50), sh) and Geometry2D.is_point_in_polygon(Vector2(400, 150), sh))
+	check("beside it and in front of it aren't", not Geometry2D.is_point_in_polygon(Vector2(50, 600), sh) and not Geometry2D.is_point_in_polygon(Vector2(-100, 50), sh))
+	check("no shadow from inside the building", Sight.shadow_of(sq, Vector2(50, 50), 2000.0).is_empty())
+	CarView.screen_up = Vector2(0, -1)
+	var bn := BuildingNode.new()
+	bn.setup({ "r": Rect2(0, 0, 10, 10), "h": 30, "kind": "shop" })
+	var top := bn.global_position + bn.fp.position          # the north-west corner, world px
+	check("a car just behind a building is under it", bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx * 0.5)))
+	check("a car in front of it isn't", not bn.covers(bn.global_position + Vector2(bn.fp.size.x / 2.0, 20.0)))
+	check("a car well behind it isn't", not bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx - 60.0)))
+	var pumps := BuildingNode.new()
+	pumps.data = { "kind": "pumps" }
+	check("gas pumps don't block sight", not pumps.blocks_sight() and bn.blocks_sight())
+	pumps.free()
+	bn.free()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

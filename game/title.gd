@@ -43,7 +43,7 @@ func _ready() -> void:
 	Controls.setup()
 	_items()
 	var args := OS.get_cmdline_user_args()
-	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo") or args.has("--crash-demo") or args.has("--veg-demo") or args.has("--jobs-demo") or args.has("--market-demo") or args.has("--race-test") or args.has("--race-demo") or args.has("--fuel-demo") or args.has("--wild-demo") or args.has("--salvage-demo") or args.has("--meet-demo") or args.has("--auction-demo") or args.has("--pause-demo") or args.has("--furniture-demo") or args.has("--crew-demo"):
+	if args.has("--demo") or args.has("--world-demo") or args.has("--traffic-test") or args.has("--traffic-demo") or args.has("--crash-demo") or args.has("--veg-demo") or args.has("--jobs-demo") or args.has("--market-demo") or args.has("--race-test") or args.has("--race-demo") or args.has("--fuel-demo") or args.has("--wild-demo") or args.has("--sight-demo") or args.has("--salvage-demo") or args.has("--meet-demo") or args.has("--auction-demo") or args.has("--pause-demo") or args.has("--furniture-demo") or args.has("--crew-demo"):
 		get_tree().change_scene_to_file.call_deferred("res://drive.tscn")
 		return
 	if args.has("--counter-demo"):

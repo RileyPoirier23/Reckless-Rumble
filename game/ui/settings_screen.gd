@@ -119,6 +119,7 @@ func rows() -> Array:
 		"GRAPHICS":
 			out.append({ "kind": "choice", "sec": "graphics", "key": "lights", "label": "STREETLIGHTS", "opts": [16, 32, 56], "desc": "HOW MANY STREETLIGHTS CAST LIGHT AT ONCE. FEWER IS FASTER." })
 			out.append({ "kind": "choice", "sec": "graphics", "key": "weather", "label": "RAIN AND SNOW", "opts": ["off", "half", "full"], "desc": "THE FALLING RAIN AND SNOW (THE ROAD STILL GETS WET)." })
+			out.append({ "kind": "toggle", "sec": "graphics", "key": "sight", "label": "LINE OF SIGHT", "desc": "BUILDINGS BLOCK WHAT LEO CAN SEE: TRAFFIC BEHIND THEM FADES OUT, AND A BUILDING IN FRONT OF THE CAR GOES SEE-THROUGH." })
 			out.append({ "kind": "toggle", "sec": "graphics", "key": "clouds", "label": "CLOUD SHADOWS", "desc": "SHADOWS OF THE CLOUDS DRIFTING OVER." })
 			out.append({ "kind": "toggle", "sec": "graphics", "key": "smoke", "label": "TIRE SMOKE", "desc": "SMOKE OFF SPINNING TIRES." })
 			out.append({ "kind": "toggle", "sec": "graphics", "key": "skids", "label": "SKID MARKS", "desc": "RUBBER LEFT ON THE ROAD." })

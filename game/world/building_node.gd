@@ -60,6 +60,24 @@ func corners() -> PackedVector2Array:
 func sort_point() -> Vector2:
 	return global_position + fp.get_center()
 
+## Does this building stand between the camera and a point (world px)? Its walls and roof are
+## drawn lifted toward the top of the screen, so a car just behind it (further up the screen)
+## disappears under it.
+func covers(p: Vector2) -> bool:
+	var up := CarView.screen_up
+	if (p - sort_point()).dot(-up) >= 0.0: return false       # in front of it: drawn over it
+	var pts := PackedVector2Array()
+	for c in corners():
+		pts.append(global_position + c)
+		pts.append(global_position + c + up * hpx)
+	var hull := Geometry2D.convex_hull(pts)
+	# the car stands up off the road a little: any of it under the roof counts
+	return Geometry2D.is_point_in_polygon(p, hull) or Geometry2D.is_point_in_polygon(p + up * 10.0, hull)
+
+## Can you see past it? Gas pumps under a canopy and a radio mast don't block anything.
+func blocks_sight() -> bool:
+	return not String(data.get("kind", "")) in ["pumps", "tower"]
+
 func _process(_dt: float) -> void:
 	queue_redraw()
 	windows.queue_redraw()
