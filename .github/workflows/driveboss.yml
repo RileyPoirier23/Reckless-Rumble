@@ -113,6 +113,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/furniture_tests.gd | tee furniture.log
           grep -q "^0 failed" furniture.log
+      - name: 1ton and the Luchadooros tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/crew_tests.gd | tee crew.log
+          grep -q "^0 failed" crew.log
       - name: Export
         working-directory: game
         run: |

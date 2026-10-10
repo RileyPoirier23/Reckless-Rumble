@@ -18,6 +18,10 @@ var smoke: Array[CPUParticles2D] = []
 var steam: CPUParticles2D
 var engine_smoke: CPUParticles2D
 var smoke_on := true           # Settings > Graphics: tire smoke
+var hyd := 0                    # 1ton's hydraulics kit (0 none .. 3 four pumps)
+var stance := Vector2.ZERO      # 1ton's donk: [pixels up off the ground, front wheel scale]
+var hop := 0.0                  # metres off the ground mid-hop
+var _hop_v := 0.0
 var head_light: PointLight2D
 var tail_light: PointLight2D
 var damage_bucket := 0
@@ -376,6 +380,13 @@ func _update_look(dt: float, br: float) -> void:
 	view.heading = sim.heading
 	view.steer = sim.steer
 	view.lean = view.lean.lerp(Vector2(clampf(-sim.ax * 0.22, -2.0, 2.0), clampf(-sim.ay * 0.18, -2.0, 2.0)), 0.2)
+	# hydraulics: the button dumps the pumps and up it goes (slow, or stopped: it's a show, not a jump)
+	if hyd > 0:
+		var r := OneTon.hop_step(hop, _hop_v, dt, Input.is_action_pressed("hydraulics") and not locked and not quiet and sim.speed() < 6.0, hyd)
+		hop = float(r[0])
+		_hop_v = float(r[1])
+	view.lift = stance.x + hop * PX
+	if stance.y > 0.0: view.wheel_k = stance.y
 	view.braking = (br > 0.05 and sim.gear >= 0) or (sim.gear < 0 and throttle_in > 0.05)
 	view.reversing = sim.gear < 0
 	view.wheel_turn += sim.vx * dt * 3.0

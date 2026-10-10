@@ -16,6 +16,8 @@ var headlights := false
 var wheel_turn := 0.0              # for the tread flicker
 var blink_left := false            # the turn signal switch (the lamp pulses on its own)
 var blink_right := false
+var lift := 0.0                    # pixels the whole car sits up off its shadow (a donk; a hop)
+var wheel_k := 1.0                 # how big the front wheels draw (big rims)
 
 ## Which way is "up" on the screen, in world space. The chase camera turns, so the stack
 ## has to rise toward the top of the screen, not toward north. Set once a frame by the scene.
@@ -53,7 +55,7 @@ func _draw() -> void:
 	for z in CarArt.SLICES:
 		# only the body leans; the tires stay planted
 		var body_k := maxf(0.0, (float(z) - 1.5) / float(CarArt.SLICES - 1))
-		var off := screen_up * (z * STEP) + (fwd * lean.x + rt * lean.y) * body_k
+		var off := screen_up * (z * STEP + lift) + (fwd * lean.x + rt * lean.y) * body_k
 		draw_set_transform(off, heading, Vector2.ONE)
 		draw_texture(art.slices[z], -half)
 		if _lamps == null: _lamp_slice(self, z, off, half, bl, br)
@@ -86,7 +88,7 @@ class LampLayer extends Node2D:
 		# the lamps sit on slices 6 and 7 (the 4th and 5th layers of the recipe)
 		for z in range(5, 9):
 			var body_k := maxf(0.0, (float(z) - 1.5) / float(CarArt.SLICES - 1))
-			var off := CarView.screen_up * (z * CarView.STEP) + (fwd * view.lean.x + rt * view.lean.y) * body_k
+			var off := CarView.screen_up * (z * CarView.STEP + view.lift) + (fwd * view.lean.x + rt * view.lean.y) * body_k
 			view._lamp_slice(self, z, off, half, bl, br)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -95,7 +97,7 @@ func _front_wheels(off: Vector2, z: int) -> void:
 	var hw := art.width_px / 2.0
 	for side in [-1.0, 1.0]:
 		var centre := Vector2(wf, side * (hw - 1.0 * art.k)).rotated(heading) + off
-		draw_set_transform(centre, heading + steer, Vector2.ONE)
+		draw_set_transform(centre, heading + steer, Vector2(wheel_k, 1.0))
 		var k := art.k
 		draw_rect(Rect2(-3 * k, -1.5 * k, 6 * k, 3 * k), CarArt.TIRE)
 		if z >= 1:

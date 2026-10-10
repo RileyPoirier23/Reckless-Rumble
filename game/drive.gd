@@ -50,6 +50,7 @@ var fuel: FuelStop
 var salvage: SalvageYard
 var auction: Auction
 var wildlife: Wildlife
+var luchadooros: Luchadooros
 var pause_menu: PauseMenu
 var award_card: AwardCard
 var _award_t := 2.0
@@ -195,6 +196,9 @@ void fragment() {
 	wildlife = Wildlife.new()
 	add_child(wildlife)
 	wildlife.setup(self)
+	luchadooros = Luchadooros.new()
+	add_child(luchadooros)
+	luchadooros.setup(self)
 	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
 	for arg in OS.get_cmdline_user_args():
 		if arg.ends_with("-test") or arg.ends_with("-demo"):
@@ -255,6 +259,10 @@ void fragment() {
 		var sd: Node = load("res://tests/salvage_demo.gd").new()
 		sd.main = self
 		add_child(sd)
+	elif OS.get_cmdline_user_args().has("--crew-demo"):
+		var cd: Node = load("res://tests/crew_demo.gd").new()
+		cd.main = self
+		add_child(cd)
 	elif OS.get_cmdline_user_args().has("--furniture-demo"):
 		var fd2: Node = load("res://tests/furniture_demo.gd").new()
 		fd2.main = self
@@ -293,6 +301,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car_i = i
 	var entry: Dictionary = save.garage[i] if i < (save.garage as Array).size() else { "id": CARS[i % CARS.size()], "paint": "", "damage": {} }
 	var spec: Dictionary = SaveGame.car_spec(entry)
+	var kit := { "hyd": OneTon.hyd_of(entry), "stance": OneTon.stance(entry) }
 	if String(entry.get("paint", "")) != "": spec.paint = entry.paint
 	var old_v := Vector2.ZERO
 	if car:
@@ -301,6 +310,8 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	car = PlayerCar.new()
 	ysort.add_child(car)
 	car.setup(spec, world, skids, hud, at, heading)
+	car.hyd = int(kit.hyd)
+	car.stance = kit.stance
 	car.fatal.connect(_on_fatal)
 	car.sim.set_world_velocity(old_v)
 	hud.sim = car.sim
@@ -681,7 +692,7 @@ func _quit_to_title() -> void:
 ## Whether a menu or a panel has the screen (the HUD hides under it).
 func modal_open() -> bool:
 	return job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or fuel.open() or salvage.open() or auction.open() or (jobs.meet != null and jobs.meet.state == "results") \
+		or fuel.open() or salvage.open() or auction.open() or luchadooros.open() or (jobs.meet != null and jobs.meet.state == "results") \
 		or map_screen.visible or death.visible or (garage != null and garage.visible) or pause_menu.visible or award_card.visible
 
 ## First-run tips, once a save: after a few seconds of plain driving (no job, no race, no chase),
@@ -876,10 +887,10 @@ func _teleport(at: Vector2, heading: float) -> void:
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
-		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() or auction.open() \
+		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() or auction.open() or luchadooros.open() \
 		or (jobs.meet != null and jobs.meet.state == "results")
 	if garage.visible or death.visible or car.dead: return
-	if job_board.visible or market.panel_open() or fuel.open() or salvage.open() or auction.open(): return
+	if job_board.visible or market.panel_open() or fuel.open() or salvage.open() or auction.open() or luchadooros.open(): return
 	if Input.is_action_just_pressed("jobs") and not StoryState.active and jobs.strip == null and market.stage != "test":
 		_tip_used("jobs")
 		job_board.open(sky, save, jobs.kind, Market.places(world.map))

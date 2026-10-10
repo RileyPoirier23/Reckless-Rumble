@@ -49,6 +49,9 @@ const LIST := [
 	{ "id": "sold", "name": "FLIPPED IT", "desc": "SELL A CAR ON MARKETTHING.", "bg": "lot", "prop": "sign" },
 	{ "id": "ran_dry", "name": "RUNNING ON FUMES", "desc": "RUN OUT OF GAS.", "bg": "pumps", "prop": "gascan" },
 	{ "id": "totaled", "name": "WRITTEN OFF", "desc": "TOTAL A CAR.", "bg": "road", "prop": "wreck" },
+	{ "id": "luchadooro", "name": "BAY THREE", "desc": "GET 1TON OF THE LUCHADOOROS INTO YOUR CREW.", "bg": "shop", "prop": "mask" },
+	{ "id": "hydraulics", "name": "LOW AND SLOW", "desc": "HAVE 1TON PUT HYDRAULICS IN A CAR.", "bg": "night", "prop": "pump" },
+	{ "id": "donk", "name": "SKY HIGH", "desc": "PUT A CAR ON 26-INCH RIMS OR BIGGER.", "bg": "lot", "prop": "rim" },
 ]
 
 const MONTHS := ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
@@ -165,6 +168,15 @@ static func met(id: String, save: Dictionary) -> bool:
 		"sold": return stat(save, "cars_sold") >= 1
 		"ran_dry": return stat(save, "ran_dry") >= 1
 		"totaled": return stat(save, "totaled") >= 1
+		"luchadooro": return OneTon.in_crew(save)
+		"hydraulics":
+			for c in save.get("garage", []):
+				if OneTon.hyd_of(c) > 0: return true
+			return false
+		"donk":
+			for c in save.get("garage", []):
+				if OneTon.donk_of(c) >= 2: return true
+			return false
 	return false
 
 ## Check every award against a save; returns the ids just won (and keeps them).

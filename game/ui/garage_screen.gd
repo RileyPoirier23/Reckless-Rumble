@@ -20,6 +20,7 @@ const RED := Color("e0402e")
 const GREEN := Color("6fbf5a")
 
 const TABS := ["CARS", "UPGRADES", "LOOKS", "ROCKAUTTO.CA", "DYNO"]
+const BAY := "1TON'S BAY"            # once 1ton's in your crew
 const PAINTS := ["#c8342c", "#e0402e", "#7a1a1a", "#e8a020", "#f0d040", "#2a6a3a", "#4e8a3a", "#2c5a8a", "#3a8ad8", "#1a2a5a",
 	"#6a2a4a", "#a83a8a", "#e8e4dc", "#f4f4f4", "#b8b0a0", "#8a8e94", "#4a4e54", "#1e1e24", "#6a4a2a", "#d8a878"]
 const FINISHES := ["gloss", "metallic", "pearl", "matte", "chrome"]
@@ -95,6 +96,7 @@ func _reset_trial() -> void:
 	trial = (_car().get("looks", {}) as Dictionary).duplicate(true)
 	trial_paint = String(_car().paint)
 	opt.clear()
+	bay = {}
 
 # ------------------------------------------------------------------ input
 
@@ -116,16 +118,21 @@ func _process(dt: float) -> void:
 	if Input.is_action_just_pressed("ui_right"): dx = 1
 	if Input.is_action_just_pressed("ui_left"): dx = -1
 	var go := Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("use")
-	match TABS[tab]:
+	match tabs()[tab]:
 		"CARS": _cars_input(dx, go)
 		"UPGRADES": _upgrades_input(dy, dx, go)
 		"LOOKS": _looks_input(dy, dx, go)
 		"ROCKAUTTO.CA": _site_input(dy, dx, go)
 		"DYNO": _dyno_input(dy, dx, go)
+		BAY: _bay_input(dy, dx, go)
 	queue_redraw()
 
+## The tabs: 1ton's bay once he's in your crew.
+func tabs() -> Array:
+	return TABS + ([BAY] if OneTon.in_crew(data) else [])
+
 func _tab(d: int) -> void:
-	tab = (tab + d + TABS.size()) % TABS.size()
+	tab = (tab + d + tabs().size()) % tabs().size()
 	row = 0
 	scroll = 0
 	_reset_trial()
@@ -155,7 +162,7 @@ func _options(sl: String) -> Array:
 ## The parts as they'd be if you installed what you're looking at (so the numbers preview it).
 func _shown_parts() -> Dictionary:
 	var parts: Dictionary = (_car().parts as Dictionary).duplicate()
-	if TABS[tab] != "UPGRADES": return parts
+	if tabs()[tab] != "UPGRADES": return parts
 	var sl: String = Parts.SLOTS[row]
 	if opt.has(sl):
 		var ops := _options(sl)
@@ -313,29 +320,32 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 0, 640, 360), Color("16141a"))
 	# tabs
 	var x := 10.0
-	for i in TABS.size():
-		var w := PixelFont.width(TABS[i], 1) + 14.0
+	var ts := tabs()
+	for i in ts.size():
+		var w := PixelFont.width(ts[i], 1) + 14.0
 		var on := i == tab
 		draw_rect(Rect2(x, 6, w, 15), Color(0.85, 0.64, 0.25, 0.35) if on else Color(1, 1, 1, 0.05))
-		PixelFont.draw(self, Vector2(x + 7, 11), TABS[i], GOLD if on else ASH)
+		PixelFont.draw(self, Vector2(x + 7, 11), ts[i], GOLD if on else ASH)
 		x += w + 4.0
 	PixelFont.draw(self, Vector2(x + 6, 11), Hints.fmt("{shift}: TABS"), Color(ASH, 0.6))
 	var cash := "$%s" % _money(int(data.cash))
 	PixelFont.draw(self, Vector2(630 - PixelFont.width(cash, 2), 8), cash, GREEN, 2)
 	_preview_box()
-	match TABS[tab]:
+	match ts[tab]:
 		"CARS": _draw_cars()
 		"UPGRADES": _draw_upgrades()
 		"LOOKS": _draw_looks()
 		"ROCKAUTTO.CA": _draw_site()
 		"DYNO": _draw_dyno()
+		BAY: _draw_bay()
 	if note_t > 0.0:
 		draw_rect(Rect2(10, 304, 620, 14), Color(0, 0, 0, 0.7))
 		PixelFont.draw(self, Vector2(16, 308), note, BONE)
 	else:
 		PixelFont.draw(self, Vector2(16, 308), "GUS: " + GUS[_line], Color(BONE, 0.7))
 	var hint := ""
-	match TABS[tab]:
+	match ts[tab]:
+		BAY: hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: 1TON PUTS IT IN  {ui_cancel}: CLOSE"
 		"CARS": hint = "{leftright}: PICK  {use}: TAKE IT OUT  {horn}: GUS FIXES IT  {ui_cancel}: CLOSE"
 		"UPGRADES": hint = "{updown}: SLOT  {leftright}: PART  {ui_accept}: INSTALL  {ui_cancel}: CLOSE"
 		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY THE BODY SHOP  {ui_cancel}: CLOSE"
@@ -359,7 +369,7 @@ func _preview_box() -> void:
 	draw_rect(Rect2(r.position.x, r.end.y - 41, r.size.x, 1), Color("c8a030"))
 	var spec := _base_spec()
 	var shown := _shown_parts()
-	var looks := SaveGame.car_looks({ "parts": shown, "looks": trial if tab == 2 else _car().get("looks", {}) })
+	var looks := SaveGame.car_looks({ "parts": shown, "looks": trial if tab == 2 else _car().get("looks", {}), "custom": _custom_shown() })
 	var paint := trial_paint if tab == 2 else String(_car().paint)
 	var key := "%s|%s|%s|%s" % [_car().id, paint, JSON.stringify(looks), JSON.stringify(_car().damage)]
 	if key != preview_key:
@@ -376,7 +386,7 @@ func _preview_box() -> void:
 	var name := "%s %s '%s" % [String(spec.make).to_upper(), String(spec.model).to_upper(), str(int(spec.get("year", 0)) % 100).pad_zeros(2)]
 	PixelFont.draw(self, r.position + Vector2(6, 6), name, GOLD, 2)
 	# the numbers, under the car
-	var cur := Parts.apply(spec, shown)
+	var cur := OneTon.apply(Parts.apply(spec, shown), { "custom": _custom_shown() })
 	var pf := Perf.estimate(cur)
 	var stock := Perf.estimate(spec)
 	var y := r.end.y + 8.0
@@ -483,6 +493,88 @@ func _draw_looks() -> void:
 			_: PixelFont.draw(self, Vector2(vx, y), (String(v) if String(v) != "" else "STOCK").to_upper(), BONE)
 		if on: PixelFont.draw(self, Vector2(vx - 12, y), "<", GOLD)
 		if on: PixelFont.draw(self, Vector2(r.end.x - 14, y), ">", GOLD)
+
+# ------------------------------------------------------------------ 1ton's bay
+
+var bay := {}                      # the hydraulics and donk kit being tried on
+
+## What the preview shows: what's being tried in 1ton's bay, or what's on the car.
+func _custom_shown() -> Dictionary:
+	if tabs()[tab] == BAY and not bay.is_empty(): return bay
+	return _car().get("custom", {})
+
+func _bay_cost() -> int:
+	var cur: Dictionary = _car().get("custom", {})
+	var cost := 0
+	if int(bay.get("hyd", 0)) != int(cur.get("hyd", 0)): cost += int(OneTon.HYD[int(bay.get("hyd", 0))].price)
+	if int(bay.get("donk", 0)) != int(cur.get("donk", 0)): cost += int(OneTon.DONK[int(bay.get("donk", 0))].price)
+	return cost
+
+func _bay_input(dy: int, dx: int, go: bool) -> void:
+	if bay.is_empty(): bay = (_car().get("custom", {}) as Dictionary).duplicate()
+	row = clampi(row + dy, 0, 2)
+	if not OneTon.on_list(_base_spec()):
+		if go or dx != 0: _say("1TON: \"NOT ON THE LIST. I DON'T PUT PUMPS IN THAT. MY MOTHER WOULD ASK QUESTIONS.\"")
+		return
+	if dx != 0:
+		match row:
+			0: bay.hyd = (int(bay.get("hyd", 0)) + dx + OneTon.HYD.size()) % OneTon.HYD.size()
+			1: bay.donk = (int(bay.get("donk", 0)) + dx + OneTon.DONK.size()) % OneTon.DONK.size()
+	if go and row == 2:
+		var cost := _bay_cost()
+		if cost == 0 and bay.hash() == (_car().get("custom", {}) as Dictionary).hash():
+			_say("1TON: \"NOTHING TO DO. I WILL SIT HERE. I AM GOOD AT SITTING.\"")
+		elif int(data.cash) < cost:
+			_say("1TON: \"THE PARTS ARE $%s. YOU HAVE $%s. I CANNOT PAY FOR THEM. MY MOTHER COULD. SHE WON'T.\"" % [_money(cost), _money(int(data.cash))])
+		else:
+			data.cash = int(data.cash) - cost
+			_car().custom = bay.duplicate()
+			_say("1TON: \"%s\"" % OneTon.BAY[(int(bay.get("hyd", 0)) * 3 + int(bay.get("donk", 0))) % OneTon.BAY.size()])
+
+func _draw_bay() -> void:
+	var r := _panel()
+	if bay.is_empty(): bay = (_car().get("custom", {}) as Dictionary).duplicate()
+	PixelFont.draw(self, r.position + Vector2(8, 8), "1TON'S BAY: HYDRAULICS AND DONKS", GOLD)
+	PixelFont.draw(self, r.position + Vector2(8, 18), "PARTS AT COST. LABOUR FREE (HIS MOTHER WOULD HEAR).", ASH)
+	var listed := OneTon.on_list(_base_spec())
+	var rows := [["HYDRAULICS", OneTon.HYD[int(bay.get("hyd", 0))]], ["DONK", OneTon.DONK[int(bay.get("donk", 0))]]]
+	for k in 3:
+		var y := r.position.y + 40 + k * 22
+		var on := k == row
+		draw_rect(Rect2(r.position.x + 4, y - 5, r.size.x - 8, 18), Color(0.55, 0.3, 0.7, 0.25) if on else Color(1, 1, 1, 0.02))
+		if k == 2:
+			var cost := _bay_cost()
+			PixelFont.draw(self, Vector2(r.position.x + 8, y), "PAY FOR THE PARTS: $%s" % _money(cost), GREEN if cost > 0 else ASH)
+			continue
+		PixelFont.draw(self, Vector2(r.position.x + 8, y), String(rows[k][0]), GOLD if on else ASH)
+		var it: Dictionary = rows[k][1]
+		var v := String(it.name) + (("  " + String(it.tire)) if it.has("tire") and String(it.tire) != "" else "")
+		PixelFont.draw(self, Vector2(r.position.x + 92, y), v, BONE if listed else ASH)
+		if int(it.price) > 0:
+			var pr := "$%s" % _money(int(it.price))
+			PixelFont.draw(self, Vector2(r.end.x - 20 - PixelFont.width(pr), y), pr, ASH)
+		if on:
+			PixelFont.draw(self, Vector2(r.position.x + 82, y), "<", GOLD)
+			PixelFont.draw(self, Vector2(r.end.x - 12, y), ">", GOLD)
+	# what it does
+	var h := int(bay.get("hyd", 0))
+	var d := int(bay.get("donk", 0))
+	var notes: Array = []
+	if h > 0: notes.append("HOPS %d CM. %s TO HOP (STOPPED OR CREEPING). +%d KG." % [int(float(OneTon.HYD[h].hop) * 100.0), Hints.key("hydraulics"), int(OneTon.HYD[h].kg)])
+	if d > 0: notes.append("TALLER GEARING, SLOWER OFF THE LINE, LESS GRIP, A LOT MORE ATTENTION.")
+	if not listed: notes = ["THIS CAR IS NOT ON THE LIST. 1TON WON'T TOUCH IT."]
+	var ny := r.position.y + 112
+	for n in notes:
+		for ln in Hud.wrap_lines(String(n), int((r.size.x - 16) / 4)):
+			PixelFont.draw(self, Vector2(r.position.x + 8, ny), ln, ASH)
+			ny += 10
+	# the man himself
+	var fr := Rect2(r.position.x + 8, r.end.y - 84, 56, 56)
+	draw_rect(fr, Color("6a4c72"))
+	draw_texture_rect(OneTon.face(), fr.grow(-3), false)
+	PixelFont.draw_centered(self, fr.get_center().x, fr.end.y + 4, "1TON", GOLD)
+	var said := Hud.wrap_lines(String(OneTon.BAY[_line % OneTon.BAY.size()]), int((r.end.x - fr.end.x - 16) / 4))
+	for k in mini(said.size(), 6): PixelFont.draw(self, Vector2(fr.end.x + 8, fr.position.y + 2 + k * 10), said[k], BONE)
 
 ## ROCKAUTTO.CA, in a browser window on the shop's beige computer.
 func _draw_site() -> void:

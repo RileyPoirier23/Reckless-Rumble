@@ -56,7 +56,7 @@ static func ensure(data: Dictionary) -> Dictionary:
 
 ## The spec the sim drives for a car in the garage: its base spec with every part bolted on.
 static func car_spec(entry: Dictionary) -> Dictionary:
-	return Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}), entry.get("tune", {}))
+	return OneTon.apply(Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}), entry.get("tune", {})), entry)
 
 ## Installs Gus has finished by now: they move from the bench onto the car. Returns
 ## [[car index, part id], ...] for the reveal.
@@ -88,4 +88,4 @@ static func car_looks(entry: Dictionary) -> Dictionary:
 	if m.has("caliper") and m.caliper is String: m.caliper = Color(String(m.caliper))
 	if m.has("rim_color") and m.rim_color is String: m.rim_color = Color(String(m.rim_color))
 	if m.has("stripe_color") and m.stripe_color is String: m.stripe_color = Color(String(m.stripe_color))
-	return m
+	return OneTon.looks(entry, m)          # 1ton's work: lifted on big rims, or laid out on the pumps

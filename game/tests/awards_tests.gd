@@ -20,6 +20,8 @@ func _veteran() -> Dictionary:
 	s.airstrip_king = true
 	s.meets = { "count": 3, "wins": 1 }
 	s.tickets = 6
+	s.crew = { "oneton": true }
+	s.garage[2].custom = { "hyd": 2, "donk": 3 }
 	s.stats = { "m_driven": 1200000, "paint_jobs": 1, "pizza_runs": 60, "tows": 5, "cruise_best_m": 30000, "escapes": 1,
 		"hit_moose": 1, "hit_deer": 2, "earned": 12000, "auction_wins": 1, "salvage_buys": 5, "cars_sold": 1, "ran_dry": 1, "totaled": 1 }
 	return s
@@ -34,7 +36,7 @@ func _init() -> void:
 		if ids.has(a.id): dup += String(a.id) + " "
 		ids[a.id] = true
 	check("every award has its own id", dup == "", dup)
-	check("the wall holds every award without scrolling", Awards.LIST.size() <= EmployeeWall.COLS * EmployeeWall.ROWS, "%d" % Awards.LIST.size())
+	check("the wall scrolls to every award", Awards.LIST.size() <= EmployeeWall.COLS * (EmployeeWall.ROWS + 2), "%d" % Awards.LIST.size())
 	# a fresh save has won nothing; one that's done it all has won everything
 	var fresh := SaveGame.default_data()
 	var early := ""

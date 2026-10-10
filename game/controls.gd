@@ -25,6 +25,7 @@ const DEFAULTS := {
 	"hazards": [KEY_V, JOY_BUTTON_DPAD_DOWN],
 	"high_beams": [KEY_B, JOY_BUTTON_DPAD_UP],
 	"reset": [KEY_R],
+	"hydraulics": [KEY_X, JOY_BUTTON_A],
 	"map": [KEY_TAB, KEY_M, JOY_BUTTON_BACK],
 	"jobs": [KEY_J, JOY_BUTTON_RIGHT_STICK],
 	"help": [KEY_F1],
@@ -44,7 +45,7 @@ const REBIND := [
 	["throttle", "GAS"], ["brake", "BRAKE / REVERSE"], ["steer_left", "STEER LEFT"], ["steer_right", "STEER RIGHT"],
 	["handbrake", "HANDBRAKE"], ["shift_up", "SHIFT UP"], ["shift_down", "SHIFT DOWN"], ["gearbox", "AUTO / MANUAL"],
 	["use", "USE"], ["horn", "HORN"], ["blink_left", "LEFT BLINKER"], ["blink_right", "RIGHT BLINKER"], ["hazards", "HAZARDS"],
-	["high_beams", "HIGH BEAMS"], ["map", "MAP"], ["jobs", "GIGS"], ["reset", "TOW HOME"], ["help", "CONTROLS CARD"], ["pause", "PAUSE"],
+	["high_beams", "HIGH BEAMS"], ["map", "MAP"], ["jobs", "GIGS"], ["reset", "TOW HOME"], ["hydraulics", "HYDRAULICS"], ["help", "CONTROLS CARD"], ["pause", "PAUSE"],
 ]
 const GEARS := [["gear_1", "1ST"], ["gear_2", "2ND"], ["gear_3", "3RD"], ["gear_4", "4TH"], ["gear_5", "5TH"], ["gear_6", "6TH"], ["gear_r", "REVERSE"]]
 

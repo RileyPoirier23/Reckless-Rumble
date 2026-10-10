@@ -281,6 +281,22 @@ static func _prop(ci: CanvasItem, r: Rect2, prop: String, k: float) -> void:
 		"gascan":
 			ci.draw_rect(Rect2(c.x - 5 * k, c.y - 5 * k, 10 * k, 12 * k), Color("c8342c"))
 			ci.draw_rect(Rect2(c.x + 2 * k, c.y - 8 * k, 3 * k, 3 * k), Color("e8c040"))
+		"mask":
+			# the Luchadooros' mask: purple, white round the eyes, gold trim
+			ci.draw_circle(c, 8 * k, Color("6a2a8a"))
+			for sx in [-1.0, 1.0]:
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(sx * 1.0, -2) * k, c + Vector2(sx * 6.0, -4) * k, c + Vector2(sx * 5.0, 1) * k, c + Vector2(sx * 1.5, 1) * k]), Color("f3ead2"))
+				ci.draw_circle(c + Vector2(sx * 3.2, -1.2) * k, 1.1 * k, INK)
+			ci.draw_rect(Rect2(c.x - 3 * k, c.y + 3.5 * k, 6 * k, 1.5 * k), Color("e8c040"))
+		"pump":
+			ci.draw_rect(Rect2(c.x - 3 * k, c.y - 7 * k, 6 * k, 13 * k), Color("c8ccd4"))
+			ci.draw_rect(Rect2(c.x - 2 * k, c.y - 9 * k, 4 * k, 2 * k), Color("e8c040"))
+			ci.draw_line(c + Vector2(3, -2) * k, c + Vector2(8, -2) * k, Color("c8342c"), k)
+		"rim":
+			ci.draw_circle(c, 9 * k, INK)
+			ci.draw_circle(c, 7 * k, Color("e8c040"))
+			for i in 6: ci.draw_line(c, c + Vector2.from_angle(i * PI / 3.0) * 6.5 * k, Color("8a6a20"), k)
+			ci.draw_circle(c, 1.5 * k, INK)
 		"wreck":
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-9, 4) * k, c + Vector2(-6, -3) * k, c + Vector2(2, -1) * k, c + Vector2(8, -5) * k, c + Vector2(9, 4) * k]), Color("8a8e94"))
 			ci.draw_circle(c + Vector2(-5, 5) * k, 2 * k, INK)
