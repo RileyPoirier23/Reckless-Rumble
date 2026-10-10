@@ -37,7 +37,33 @@ func _run() -> void:
 	pm.settings.tab = 4
 	await _wait(0.3)
 	await _shot("3_settings_in_game")
+	pm.settings.close()
+	# the wall, with some photos up
+	var some := ["first_day", "km_100", "pizza_10", "race_win", "ticket", "deer", "paint", "tows_5", "airstrip", "meet_win", "escape", "ran_dry", "moose", "sold"]
+	Awards.ensure()
+	for i in some.size(): Awards.won[some[i]] = { "at": 0, "n": i }
+	pm.wall.open()
+	pm.wall.sel = 3
+	await _wait(0.3)
+	await _shot("4_wall")
+	pm.wall.sel = 5
+	await _wait(0.2)
+	await _shot("5_wall_moose")
+	pm.wall.sel = 30
+	await _wait(0.2)
+	await _shot("6_wall_locked")
 	pm.close()
 	await _wait(0.3)
 	print("resumed: ", not get_tree().paused)
+	# winning one: the card comes up once you've stopped
+	Awards.won.erase("airstrip")
+	main.awards_on = true
+	main.save.airstrip_king = true
+	main.car.sim.vx = 0.0
+	await _wait(3.0)
+	print("card: ", main.award_card.visible, " ", main.award_card.id)
+	await _wait(0.6)
+	await _shot("7_award_card")
+	main.award_card.close()
+	main.save.erase("airstrip_king")
 	get_tree().quit()

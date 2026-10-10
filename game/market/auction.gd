@@ -218,6 +218,7 @@ func _win(l: Dictionary) -> String:
 	drive.save.cash = int(drive.save.get("cash", 0)) - cost
 	l.deal = bid
 	var entry := Market.to_garage(l)
+	Awards.bump("auction_wins")
 	entry.parts = (l.parts as Dictionary).duplicate()
 	(drive.save.garage as Array).append(entry)
 	var e := CarCatalog.entry(String(l.car))

@@ -16,6 +16,7 @@ func _items() -> void:
 	ITEMS.append(["NEW STORY", "OCTOBER 2019. LEO IS 19, DRUNK, AND ABOUT TO DRIVE THROUGH A FENCE.", "story:new"])
 	ITEMS.append(["THE COUNTER", "EIGHT WEEKS AT COVINGTON AUTO, THEN OVERTIME. READ THE PAPERS. STAMP THEM.", "res://counter.tscn"])
 	ITEMS.append(["THE LOT", "FREE DRIVE: PORT RUMBLE TO SALISBURY AND HAVELOCK, WITH TRAFFIC.", "res://drive.tscn"])
+	ITEMS.append(["EMPLOYEE OF THE MONTH", "THE WALL IN THE BREAK ROOM AT COVINGTON AUTO: A PHOTO FOR EVERYTHING YOU'VE DONE ON THE ROAD.", "wall"])
 	ITEMS.append(["SETTINGS", "CONTROLS AND REBINDING, A STEERING WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.", "settings"])
 	ITEMS.append(["QUIT", "SEE YOU TOMORROW.", ""])
 
@@ -23,6 +24,7 @@ var sel := 0
 var car: CarView
 var t := 0.0
 var settings: SettingsScreen
+var wall: EmployeeWall
 
 func _ready() -> void:
 	Controls.setup()
@@ -45,6 +47,10 @@ func _ready() -> void:
 	settings.size = Vector2(640, 360)
 	settings.visible = false
 	add_child(settings)
+	wall = EmployeeWall.new()
+	wall.size = Vector2(640, 360)
+	wall.visible = false
+	add_child(wall)
 	if args.has("--settings-shot"):
 		# every tab of the settings screen, one picture each, into the folder given
 		var dir: String = args[args.find("--settings-shot") + 1] if args.find("--settings-shot") + 1 < args.size() else "user://"
@@ -76,7 +82,7 @@ func _item_rect(i: int) -> Rect2:
 	return Rect2(24, ITEM_Y + i * ITEM_PITCH, 300, 20)
 
 func _input(e: InputEvent) -> void:
-	if settings and settings.visible: return
+	if (settings and settings.visible) or (wall and wall.visible): return
 	if e is InputEventMouseMotion:
 		for i in ITEMS.size():
 			if _item_rect(i).has_point(get_global_mouse_position()): sel = i
@@ -89,7 +95,7 @@ func _input(e: InputEvent) -> void:
 func _process(dt: float) -> void:
 	t += dt
 	if car: car.heading = t * 0.5
-	if settings and settings.visible:
+	if (settings and settings.visible) or (wall and wall.visible):
 		queue_redraw()
 		return
 	if Input.is_action_just_pressed("ui_down"): sel = (sel + 1) % ITEMS.size()
@@ -102,6 +108,7 @@ func _go() -> void:
 	match target:
 		"": get_tree().quit()
 		"settings": settings.open()
+		"wall": wall.open()
 		"story:continue":
 			StoryState.load_game()
 			StoryState.go(get_tree())
@@ -132,7 +139,7 @@ func _draw() -> void:
 	# the logo
 	PixelFont.draw_centered(self, 320, 16, "DRIVEBOSS", GOLD, 8, INK)
 	PixelFont.draw_centered(self, 320, 62, "PORT RUMBLE. EIGHT WINTERS. ONE GARAGE.", BONE, 2, INK)
-	if settings and settings.visible: return
+	if (settings and settings.visible) or (wall and wall.visible): return
 	for i in ITEMS.size():
 		var r := _item_rect(i)
 		var on := i == sel

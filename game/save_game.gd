@@ -45,6 +45,7 @@ static func ensure(data: Dictionary) -> Dictionary:
 	if not data.has("clock_h"): data.clock_h = 0.0          # game hours since the save began
 	if not data.has("orders"): data.orders = []              # [{ part, arrives_h }]
 	if not data.has("shelf"): data.shelf = []                # parts delivered, not installed
+	if not data.has("stats"): data.stats = {}                # what Employee of the Month counts (Awards)
 	for car in data.garage:
 		if not car.has("parts"): car.parts = {}             # slot -> part id
 		if not car.has("looks"): car.looks = {}

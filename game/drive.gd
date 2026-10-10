@@ -50,6 +50,10 @@ var salvage: SalvageYard
 var auction: Auction
 var wildlife: Wildlife
 var pause_menu: PauseMenu
+var award_card: AwardCard
+var _award_t := 2.0
+var awards_due: Array = []    # won, card not shown yet (it waits until you've stopped)
+var awards_on := true         # tests and demos stage their own scenes: no cards stopping them
 var hold_car := false          # a scene (or a test) has the car stopped
 var free_roam := true          # not a test, a demo or a story mission: the calendar carries over
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
@@ -57,6 +61,7 @@ const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto'
 func _ready() -> void:
 	Controls.setup()
 	save = SaveGame.read()
+	Awards.save_ref = save
 	sky = WorldSky.new()
 	sky.time_h = 17.5
 	sky.set_season("fall")
@@ -164,6 +169,8 @@ void fragment() {
 	pause_menu = PauseMenu.new()
 	pause_menu.quit_to_title.connect(_quit_to_title)
 	get_node("HudLayer").add_child(pause_menu)
+	award_card = AwardCard.new()
+	get_node("HudLayer").add_child(award_card)
 	jobs = JobRunner.new()
 	add_child(jobs)
 	jobs.setup(self)
@@ -193,6 +200,7 @@ void fragment() {
 			police.enabled = false
 			wildlife.enabled = false
 			free_roam = false
+			awards_on = false
 	if StoryState.active: free_roam = false
 	if free_roam: _restore_calendar()
 	if StoryState.active and String(StoryState.current().get("type", "")) == "drive":
@@ -378,6 +386,7 @@ func _on_fatal(info: Dictionary) -> void:
 	audio.horn = false
 	# slow motion while the camera pulls in on the wreck, then a freeze-frame without the HUD
 	_dying = true
+	Awards.bump("totaled")
 	cam.position_smoothing_enabled = false
 	Engine.time_scale = 0.25
 	await get_tree().create_timer(1.0, true, false, true).timeout
@@ -422,6 +431,7 @@ func _store_car() -> void:
 	save.garage[car_i].paint = "#" + car.paint.to_html(false)
 	save.garage[car_i].odo_km = float(save.garage[car_i].get("odo_km", 0.0)) + car.sim.odometer_m / 1000.0
 	save.garage[car_i].wear = car.sim.wear_state()
+	Awards.bump("m_driven", int(car.sim.odometer_m))
 	car.sim.odometer_m = 0.0
 
 func _on_garage_pick(i: int) -> void:
@@ -537,6 +547,7 @@ func lose_current_car() -> void:
 
 ## A car went out of the garage on MarketThing: everything after it moved up a slot.
 func _on_car_sold(index: int, text: String) -> void:
+	Awards.bump("cars_sold")
 	if car_i > index: car_i -= 1
 	hud.post(text, 6.0)
 	SaveGame.write(save)
@@ -620,6 +631,26 @@ func _apply_car_settings() -> void:
 	car.sim.auto_gearbox = not GameSettings.manual()
 	car.smoke_on = bool(GameSettings.get_v("graphics", "smoke"))
 
+## Employee of the Month: check now and then; a new one goes up on the HUD right away, and its
+## card comes up the next time you're stopped with nothing else going on.
+func _awards(dt: float) -> void:
+	if not awards_on: return
+	_award_t -= dt
+	if _award_t <= 0.0:
+		_award_t = 2.0
+		for id in Awards.check(save):
+			awards_due.append(id)
+			hud.notify("EMPLOYEE OF THE MONTH: %s" % String(Awards.by_id(id).name), "award", 2, 5.0)
+	if awards_due.is_empty() or _dying or StoryState.active: return
+	# stopped (an automatic creeps at idle), and nothing else going on
+	if car.sim.speed() > 1.5 or modal_open() or jobs.active() or police.chasing(): return
+	hud.stepped_aside = true
+	dash.visible = false
+	gps.visible = false
+	hud.queue_redraw()
+	police.hud_panel.queue_redraw()
+	award_card.open(String(awards_due.pop_front()))
+
 ## ESC / START: everything on the screen steps aside (the game stops, so it won't on its own).
 func _pause() -> void:
 	hud.stepped_aside = true
@@ -643,7 +674,7 @@ func _quit_to_title() -> void:
 func modal_open() -> bool:
 	return job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
 		or fuel.open() or salvage.open() or auction.open() or (jobs.meet != null and jobs.meet.state == "results") \
-		or map_screen.visible or death.visible or (garage != null and garage.visible) or pause_menu.visible
+		or map_screen.visible or death.visible or (garage != null and garage.visible) or pause_menu.visible or award_card.visible
 
 ## First-run tips, once a save: after a few seconds of plain driving (no job, no race, no chase),
 ## one at a time, and never one you've already used.
@@ -711,6 +742,7 @@ func _process(dt: float) -> void:
 	dash.visible = not modal
 	gps.visible = not modal
 	_tips(dt)
+	_awards(dt)
 	# the chase cam: behind the car and turning with it, so up on the screen is always ahead.
 	# It swings round a little slower than the car, so you can see a slide happen.
 	var target := car.sim.heading + PI / 2.0

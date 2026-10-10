@@ -199,6 +199,8 @@ On the controller the stick has a response curve (small movements, small correct
 
 **The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
 
+**Employee of the Month.** Thirty-two awards, each a framed photo of Leo on the wall of the break room at Covington Auto (from the title, or the pause menu). The wall fills a month at a time: the first photo you earn is October 2019, the next November, and so on. They're for the things you do on the road: kilometres, the cars and parts you collect, the gigs (pizzas, rides, tows, night drives), races, the meet and Drag Night, tickets and getting away, moose and deer, money, the auction, Northside Salvage, selling a car, running dry and writing one off. A new one goes up on the HUD straight away, and its card comes up the next time you've stopped with nothing else going on. What you've won is kept in `user://driveboss_awards.json`, apart from any save.
+
 **Burnout:** hold the gas and the brake together while stopped. The front brakes hold the car and the rear tires spin.
 
 **Reverse (automatic):** hold the brake at a stop.

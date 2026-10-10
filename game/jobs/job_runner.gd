@@ -155,7 +155,9 @@ func finish(done := true) -> void:
 		"ride": drive.hud.post("HOPP-IN: OFFLINE. %d RIDE%s, $%d. RATING %.1f." % [runs, "" if runs == 1 else "S", earned, Rides.average(drive.save)], 6.0)
 		"street": if done: drive.hud.post("RACE NIGHT: %s." % ("$%d UP" % earned if earned > 0 else "$%d DOWN" % -earned), 5.0)
 		"meet": if not done: drive.hud.post("YOU SKIP THE MEET. SOMEBODY ELSE GETS YOUR SPOT. IT'S A MINIVAN.", 4.0)
-		"cruise": drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
+		"cruise":
+			Awards.best("cruise_best_m", int(_cruise_m))
+			drive.hud.post("NIGHT DRIVE: %.1f KM. THE KNOT IN YOUR SHOULDERS IS GONE." % (_cruise_m / 1000.0), 6.0)
 	if k == "tow" and String(car().spec.get("id", "")) == "tow": drive.job_restore_car()
 	kind = ""
 	stage = ""
@@ -166,6 +168,7 @@ func finish(done := true) -> void:
 
 func pay(n: int) -> void:
 	earned += n
+	if n > 0: Awards.bump("earned", n)
 	drive.save.cash = int(drive.save.get("cash", 0)) + n
 	SaveGame.write(drive.save)
 
@@ -270,6 +273,7 @@ func _pizza(dt: float) -> void:
 		var payd := Jobs.pizza_pay(clock - limit, limit * 0.33, condition)
 		pay(int(payd.total))
 		runs += 1
+		Awards.bump("pizza_runs")
 		drive.hud.post("%s  +$%d (TIP $%d)" % [_customer(int(payd.tip)), int(payd.total), int(payd.tip)], 5.0)
 		stop_i += 1
 		if stop_i >= stops.size():
@@ -360,6 +364,7 @@ func _tow(dt: float) -> void:
 			var km := (c.sim.odometer_m - _odo0) / 1000.0
 			var n := Jobs.tow_pay(km, Jobs.is_night(drive.sky.time_h), Jobs.bad_weather(drive.sky.weather))
 			pay(n)
+			Awards.bump("tows")
 			drive.hud.post("DROPPED AT %s. %.1f KM TOWED. +$%d" % [tow_dest.name, km, n], 6.0)
 			finish(true)
 

@@ -166,6 +166,7 @@ func buy(i: int) -> String:
 		drive.save.orders = orders
 	drive.save.cash = int(drive.save.get("cash", 0)) - cost
 	(drive.save.salvage.bought as Array).append(i)
+	Awards.bump("salvage_buys")
 	SaveGame.write(drive.save)
 	if String(it.kind) == "wear":
 		return "THE NEPHEW PUTS IT IN. %s. $%d, AND $%d FOR THE NEPHEW." % [_took(float(WEAR[String(it.id)].h)), int(it.price), NEPHEW]

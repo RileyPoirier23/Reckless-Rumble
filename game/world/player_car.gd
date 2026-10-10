@@ -257,7 +257,9 @@ func _physics_process(dt: float) -> void:
 				var m1 := float(spec.mass)
 				var m2 := 1500.0
 				if other is PlayerCar: m2 = float(other.spec.mass)
-				elif other is Wildlife.Animal: m2 = (other as Wildlife.Animal).mass
+				elif other is Wildlife.Animal:
+					m2 = (other as Wildlife.Animal).mass
+					if (other as Wildlife.Animal).state != "hurt": Awards.bump("hit_" + (other as Wildlife.Animal).kind)
 				other.hit(-n * vn * (m1 / (m1 + m2)) * 1.6, col.get_position() / PX)
 				vw += n * vn * (m2 / (m1 + m2)) * 1.3
 			else:

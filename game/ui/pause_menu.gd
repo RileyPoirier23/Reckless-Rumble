@@ -4,14 +4,13 @@ class_name PauseMenu
 extends Control
 
 signal quit_to_title
-signal awards
 
 const BONE := Color("f3ead2")
 const GOLD := Color("d9a441")
 const ASH := Color("8a8478")
 const INK := Color("0b090d")
 
-const ITEMS := ["RESUME", "SETTINGS", "CONTROLS", "QUIT TO TITLE"]
+const ITEMS := ["RESUME", "SETTINGS", "CONTROLS", "EMPLOYEE OF THE MONTH", "QUIT TO TITLE"]
 const DESCS := {
 	"RESUME": "BACK ON THE ROAD.",
 	"SETTINGS": "CONTROLS, THE WHEEL, THE SCREEN, DIFFICULTY, GRAPHICS AND SOUND.",
@@ -25,6 +24,7 @@ const CARD := Rect2(150, 40, 340, 270)
 var sel := 0
 var card := false              # the controls card is up
 var settings: SettingsScreen
+var wall: EmployeeWall
 var _opened := -1               # the frame it opened on: the same press doesn't close it again
 var _back := -1                 # the frame the settings closed on
 
@@ -38,6 +38,11 @@ func _ready() -> void:
 	settings.visible = false
 	settings.closed.connect(func(): _back = Engine.get_process_frames())
 	add_child(settings)
+	wall = EmployeeWall.new()
+	wall.size = Vector2(640, 360)
+	wall.visible = false
+	wall.closed.connect(func(): _back = Engine.get_process_frames())
+	add_child(wall)
 
 func open() -> void:
 	visible = true
@@ -50,6 +55,7 @@ func open() -> void:
 func close() -> void:
 	visible = false
 	settings.visible = false
+	wall.visible = false
 	get_tree().paused = false
 
 func items() -> Array:
@@ -58,7 +64,7 @@ func items() -> Array:
 func _process(_dt: float) -> void:
 	if not visible: return
 	queue_redraw()
-	if settings.visible: return
+	if settings.visible or wall.visible: return
 	var f := Engine.get_process_frames()
 	if f == _opened or f == _back: return
 	if card:
@@ -78,7 +84,7 @@ func _pick(item: String) -> void:
 		"RESUME": close()
 		"SETTINGS": settings.open()
 		"CONTROLS": card = true
-		"EMPLOYEE OF THE MONTH": awards.emit()
+		"EMPLOYEE OF THE MONTH": wall.open()
 		"QUIT TO TITLE":
 			get_tree().paused = false
 			visible = false
@@ -98,7 +104,7 @@ static func card_lines() -> Array:
 	return out
 
 func _draw() -> void:
-	if not visible or settings.visible: return
+	if not visible or settings.visible or wall.visible: return
 	draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, 0.6))
 	if card:
 		_draw_card()

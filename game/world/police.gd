@@ -294,6 +294,7 @@ func _limit_here(c: PlayerCar) -> float:
 	return limit_kmh(String(road.cls)) if not road.is_empty() else 50.0
 
 func _lost() -> void:
+	Awards.bump("escapes")
 	drive.hud.post("YOU LOST THEM. FOR NOW. THEY KNOW THE CAR.", 5.0)
 	_stand_down()
 

@@ -257,6 +257,7 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			_say("THE BODY SHOP WANTS $%d. YOU HAVE $%d." % [cost, int(data.cash)])
 		else:
 			data.cash = int(data.cash) - cost
+			if trial_paint != String(_car().paint): Awards.bump("paint_jobs")
 			_car().looks = trial.duplicate(true)
 			_car().paint = trial_paint
 			_say("DONE. $%d. IT LOOKS LIKE A DIFFERENT CAR. IT IS NOT A DIFFERENT CAR." % cost)

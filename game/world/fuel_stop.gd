@@ -68,6 +68,7 @@ func _process(_dt: float) -> void:
 
 ## Out of gas on the side of the road: Toby comes out with a jerry can. Twenty minutes, sixty bucks.
 func jerry_can() -> void:
+	Awards.bump("ran_dry")
 	var sim: CarSim = drive.car.sim
 	sim.add_fuel(JERRY_L, false)
 	drive.save.cash = int(drive.save.get("cash", 0)) - JERRY_FEE

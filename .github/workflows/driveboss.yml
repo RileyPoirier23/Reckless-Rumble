@@ -103,6 +103,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/settings_tests.gd | tee settings.log
           grep -q "^0 failed" settings.log
+      - name: Employee of the Month tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/awards_tests.gd | tee awards.log
+          grep -q "^0 failed" awards.log
       - name: Export
         working-directory: game
         run: |
