@@ -353,11 +353,39 @@ func _physics_process(dt: float) -> void:
 			if vn > 6.0: _diag("CRUNCH: HIT AT %d KM/H" % int(vn * 3.6))
 		move_and_collide(col.get_remainder().slide(n))
 	sim.pos = position / PX
+	_unwedge(dt, th, br, col != null)
 	for m in sim.messages: _diag(m)
 	_update_look(dt, br)
 
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var _scrape_t := 0.0
+var _free_pos := Vector2.INF      # the last place it was moving freely (m)
+var _free_heading := 0.0
+var _wedged_t := 0.0
+
+## Jammed against something (a tree and a kerb, the corner of a building) with the gas or the
+## brake down and going nowhere for a few seconds: it comes loose, back where it last moved freely.
+## (The player's car; the AI has its own way out.)
+func _unwedge(dt: float, th: float, br: float, touching: bool) -> void:
+	if quiet: return
+	var v := sim.speed()
+	if not touching and v > 0.8:
+		_free_pos = sim.pos
+		_free_heading = sim.heading
+	var pushing := th > 0.3 or br > 0.3
+	var recent := Engine.get_physics_frames() - hit_frame < 20
+	_wedged_t = _wedged_t + dt if pushing and v < 0.3 and recent else 0.0
+	if _wedged_t > 3.0 and _free_pos != Vector2.INF and _free_pos.distance_to(sim.pos) < 20.0:
+		_wedged_t = 0.0
+		sim.vx = 0.0
+		sim.vy = 0.0
+		sim.yaw_rate = 0.0
+		sim.w_wheel = 0.0
+		sim.pos = _free_pos
+		sim.heading = _free_heading
+		position = _free_pos * PX
+		shape_node.rotation = sim.heading
+		_diag("YOU WIGGLE IT LOOSE.")
 
 ## Some hits you don't walk away from. What it was decides the death screen.
 const FATAL_KMH := { "tree": 70.0, "building": 76.0, "rail": 88.0, "traffic": 84.0, "edge": 76.0, "moose": 55.0, "deer": 150.0 }

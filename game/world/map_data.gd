@@ -79,6 +79,7 @@ func build() -> void:
 	_villages()
 	_landmarks()
 	_index_roads()
+	_driveways()
 	_wild_signs()
 	_find_bridges_and_crossings()
 	_buildings()
@@ -348,9 +349,29 @@ func _tims(p: Vector2, zone: String) -> void:
 	var r := Rect2(p - Vector2(14, 14), Vector2(28, 28))
 	_reserve(r)
 	buildings.append({ "r": Rect2(p - Vector2(10, 10), Vector2(18, 14)), "h": 6.0, "kind": "coffee", "name": "TIM BURTONS", "zone": zone })
-	lots.append({ "r": Rect2(p + Vector2(-14, 5), Vector2(28, 9)), "kind": "asphalt", "name": "", "lines": false })
+	lots.append({ "r": Rect2(p + Vector2(-14, 5), Vector2(28, 9)), "kind": "asphalt", "name": "", "lines": false, "driveway": true })
 	lights.append({ "p": p + Vector2(0, 5), "type": "neon_red", "seed": int(p.x) })
 	landmarks.append({ "name": "TIM BURTONS", "p": p, "dest": false })
+
+## A lot set back from the road gets a paved driveway out to it (squares stepped along the line
+## from the lot to the nearest bit of road, so it reads as one strip), kept clear of buildings.
+func _driveways() -> void:
+	for l in lots.duplicate():
+		if not l.get("driveway", false): continue
+		var r: Rect2 = l.r
+		var c := r.get_center()
+		var rd := nearest_road(c, 120.0)
+		if rd.is_empty(): continue
+		var to: Vector2 = rd.point
+		var from := _rect_point_toward(r, to)       # from the lot's edge, not through the building
+		var gap := from.distance_to(to)
+		if gap < r.size.length() * 0.5 + 4.0: continue
+		var steps := int(ceilf(gap / 1.5))
+		for i in steps + 1:
+			var q := from.lerp(to, float(i) / float(steps))
+			var sq := Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5))
+			_reserve(sq)
+			lots.append({ "r": sq, "kind": "asphalt", "name": "", "lines": false })
 
 func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
@@ -869,6 +890,58 @@ func nearest_node(p: Vector2) -> int:
 	return best
 
 ## A* from one point to another along the roads. Returns the points to drive through.
+## The nearest point of a rectangle to a point outside it.
+static func _rect_point_toward(r: Rect2, p: Vector2) -> Vector2:
+	return Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y))
+
+## The GPS's way somewhere: along the roads to the bit of road nearest the place (coming at it
+## from whichever end is shorter, not on to the junction past it), then in to the place itself.
+func route_to(from: Vector2, to: Vector2) -> PackedVector2Array:
+	var rd := nearest_road(to, 150.0)
+	if rd.is_empty(): return route(from, to)
+	var rp: Vector2 = rd.point
+	var pts: PackedVector2Array = rd.road.pts
+	# the graph nodes either side of that point on its road
+	var best: PackedVector2Array = route(from, to)
+	var best_len := INF
+	for end in [_end_node_toward(rd, -1), _end_node_toward(rd, 1)]:
+		if end < 0: continue
+		var r := route(from, g_pos[end])
+		if r.is_empty(): continue
+		var length := 0.0
+		for i in r.size() - 1: length += r[i].distance_to(r[i + 1])
+		length += r[r.size() - 1].distance_to(rp)
+		if length < best_len:
+			best_len = length
+			best = r
+	if best.is_empty(): return best
+	var out := best.duplicate()
+	if out[out.size() - 1].distance_to(rp) > 2.0: out.append(rp)
+	# a place with its own lot: in by the lot's edge on the road side (where its driveway is)
+	var lot := lot_at(to)
+	if not lot.is_empty():
+		var gate := _rect_point_toward(lot.r, rp)
+		if gate.distance_to(rp) > 3.0 and gate.distance_to(to) > 3.0: out.append(gate)
+	if rp.distance_to(to) > 3.0: out.append(to)
+	return out
+
+## The graph node at one end of the stretch of road a nearest_road() hit is on (dir -1: back
+## along the road, +1: on along it): the nearest node to the road's point that way.
+func _end_node_toward(rd: Dictionary, dir: int) -> int:
+	var rp: Vector2 = rd.point
+	var d: Vector2 = rd.dir * float(dir)
+	var best := -1
+	var best_d := INF
+	for n in g_pos.size():
+		var off := g_pos[n] - rp
+		var along := off.dot(d)
+		if along <= 0.5: continue
+		if absf(off.dot(d.orthogonal())) > 12.0: continue
+		if along < best_d:
+			best_d = along
+			best = n
+	return best
+
 func route(from: Vector2, to: Vector2) -> PackedVector2Array:
 	var s := nearest_node(from)
 	var t := nearest_node(to)

@@ -357,7 +357,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	save.current = i
 	cam_rot = heading + PI / 2.0
 	cam.global_position = car.global_position
-	if dest.name != "": gps.set_route(world.map.route(at, dest.p), dest.name)
+	if dest.name != "": gps.set_route(world.map.route_to(at, dest.p), dest.name)
 
 ## A story mission: its car, its time and weather, and the runner that checks the objectives.
 func _start_mission(m: Dictionary) -> void:
@@ -629,7 +629,7 @@ func clear_route() -> void:
 
 func _on_dest(name: String, at: Vector2, quiet := false) -> void:
 	dest = { "name": name, "p": at }
-	gps.set_route(world.map.route(car.sim.pos, at), name)
+	gps.set_route(world.map.route_to(car.sim.pos, at), name)
 
 func _weather(col: Color, vel: Vector2, amount: int, size: float) -> CPUParticles2D:
 	var p := CPUParticles2D.new()
@@ -757,7 +757,7 @@ func _gps_upkeep(dt: float) -> void:
 	for i in r.size() - 1: off = minf(off, p.distance_to(Geometry2D.get_closest_point_to_segment(p, r[i], r[i + 1])))
 	# off the route, but on a road (off-road in a field there's no better way to give)
 	if off > 35.0 and not world.map.nearest_road(p, 20.0).is_empty():
-		gps.set_route(world.map.route(p, dest.p), String(dest.name))
+		gps.set_route(world.map.route_to(p, dest.p), String(dest.name))
 		hud.diag_event("GPS: REROUTING")
 
 ## In the story, people notice when Leo turns into somebody else: say so when his tier changes.

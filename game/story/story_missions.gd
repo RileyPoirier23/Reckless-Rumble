@@ -204,7 +204,7 @@ class MissionRunner extends Node2D:
 		# his road starts where he is: the router starts at the nearest junction, which can be
 		# behind him (and he'd turn round for it)
 		var fwd := Vector2.from_angle(float(c.get("heading", 0.0)))
-		var r: PackedVector2Array = drive.world.map.route(c.start, o.to)
+		var r: PackedVector2Array = drive.world.map.route_to(c.start, o.to)
 		var path := PackedVector2Array([c.start])
 		var ahead := false
 		for p in r:
