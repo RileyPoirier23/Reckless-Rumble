@@ -119,9 +119,14 @@ func _draw() -> void:
 
 # ====================================================================== the picture
 
+## Where each car in the last painted picture stands (Rect2i, picture px), so the tests can see
+## that two cars in one crash meet where they hit and never sit in each other.
+static var cars: Array = []
+
 ## Paint the wreck. Static so the tests and the screenshot pass can call it.
 static func paint_scene(info: Dictionary, seed := 1) -> Image:
 	var p := Pix.new(SW, SH, seed)
+	cars = []
 	var hour := float(info.get("time_h", 13.0))
 	var night := hour < 6.0 or hour > 20.5
 	var dusk := not night and (hour > 17.5 or hour < 7.5)
@@ -368,14 +373,14 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			x = 40
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			_skids(p, x, gy, night)
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			_car(p, x, gy, len, body, paint, dmg, false, tilt)
 			_tree(p, nose + 1, gy + 2, night, season)
 			_glass(p, nose, gy, seed)
 		"building":
 			x = 60
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			_wall(p, nose - 6, night)
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			_car(p, x, gy, len, body, paint, dmg, false, tilt)
 			_rubble(p, nose - 8, gy, night)
 		"traffic":
 			var sub := String(info.get("sub", "tbone"))
@@ -384,24 +389,25 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			var other_paint: Color = info.get("other_paint", Color("d8d4c8"))
 			var olen := 76 if other_body in ["van", "suv", "pickup"] else 68
 			x = 30
-			var nose := x + int(len * (1.0 - crush * 0.2))
+			# the other car goes where Leo's nose really ends: they meet there, one column shared
+			var nose := _reach(x, gy, len, body, paint, dmg, false, tilt).end.x
 			match sub:
 				"headon":
 					var od := { "front": crush * 0.9, "glass": true, "smoke": 0.5, "bumper": "gone" }
-					PixCars.draw(p, nose + 2 - int(olen * crush * 0.9 * 0.2), gy, olen, other_body, other_paint, od, true)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					_car(p, _meet(nose, gy, olen, other_body, other_paint, od, true), gy, olen, other_body, other_paint, od, true)
+					_car(p, x, gy, len, body, paint, dmg, false, tilt)
 				"rear":
 					var od := { "rear": crush, "glass": true, "smoke": 0.0 }
-					PixCars.draw(p, nose - int(olen * crush * 0.16) - 2, gy, olen, other_body, other_paint, od, false)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					_car(p, _meet(nose, gy, olen, other_body, other_paint, od, false), gy, olen, other_body, other_paint, od, false)
+					_car(p, x, gy, len, body, paint, dmg, false, tilt)
 				_:
-					var od := { "roof": 0.6, "glass": true, "smoke": 0.0 }
-					PixCars.draw(p, nose - olen / 2 - 6, gy - 8, olen, other_body, other_paint.darkened(0.08), od, true)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					# T-boned so hard it rolled: on its roof, up against Leo's nose, wheels in the air
+					_rolled(p, nose, gy, olen, other_body, other_paint.darkened(0.08), { "roof": 0.6, "glass": true })
+					_car(p, x, gy, len, body, paint, dmg, false, tilt)
 			_glass(p, nose, gy, seed)
 		"rail":
 			x = 190 - int(len * 0.19)
-			PixCars.draw(p, x, 64, len, body, paint, dmg, false, 0.5)
+			_car(p, x, 64, len, body, paint, dmg, false, 0.5)
 			_splash(p, x + int(len * 0.95), 96, night)
 		"water":
 			x = 100
@@ -410,17 +416,49 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			dmg.front = 0.1
 			dmg.lights = night
 			_bank(p, night, x)
-			PixCars.draw(p, x, 100, len, body, paint, dmg, false, 0.16)
+			_car(p, x, 100, len, body, paint, dmg, false, 0.16)
 			_waterline(p, x - 8, x + len + 14, 90, night)
 		"edge":
 			x = 186 - int(len * 0.19)
-			PixCars.draw(p, x, 92, len, body, paint, dmg, false, 0.38)
+			_car(p, x, 92, len, body, paint, dmg, false, 0.38)
 		_:
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			_car(p, x, gy, len, body, paint, dmg, false, tilt)
 	if wheel_off and cause != "water":
+		# the wheel that came off, with the same rims as the ones still on
 		var r := float(PixCars.BODIES[body].wheel) * len
-		PixCars.wheel(p, 262, gy - 4 - int(r), r, String(PixCars.BODIES[body].rim))
+		var rim := PixCars._default_rim(body, int(PixCars.BODIES[body].get("year", 2000)))
+		PixCars.wheel(p, 262, gy - 4 - int(r), r, rim)
 		p.hline(254, gy - 3, 18, Color(0, 0, 0, 0.35))
+
+## A car in the picture: painted, and where it stands remembered.
+static func _car(p: Pix, x: int, gy: int, len: int, body: String, paint: Color, dmg: Dictionary, flip := false, tilt := 0.0) -> void:
+	cars.append(_reach(x, gy, len, body, paint, dmg, flip, tilt))
+	PixCars.draw(p, x, gy, len, body, paint, dmg, flip, tilt)
+
+## Where a car drawn at x stands: the car itself, not its smoke, the glow off its lamps or a
+## bumper hanging off it (that goes under whatever it hit).
+static func _reach(x: int, gy: int, len: int, body: String, paint: Color, dmg: Dictionary, flip := false, tilt := 0.0) -> Rect2i:
+	var bare := dmg.duplicate()
+	bare.erase("smoke")
+	bare.erase("lights")
+	if bare.get("bumper", "") == "hang": bare.bumper = "gone"
+	var probe := Pix.new(SW, SH, 1)
+	PixCars.draw(probe, x, gy, len, body, paint, bare, flip, tilt)
+	return probe.img.get_used_rect()
+
+## The x that puts a car's near end on Leo's nose: one column shared, touching, never inside.
+static func _meet(nose: int, gy: int, len: int, body: String, paint: Color, dmg: Dictionary, flip: bool) -> int:
+	return nose - 1 - (_reach(SW / 2, gy, len, body, paint, dmg, flip).position.x - SW / 2)
+
+## A car on its roof with its near end against Leo's nose, its shadow under it.
+static func _rolled(p: Pix, nose: int, gy: int, len: int, body: String, paint: Color, dmg: Dictionary) -> void:
+	var img := PixCars.image(len, body, paint, { "shadow": false }, dmg)
+	img.flip_y()
+	var u := img.get_used_rect()
+	var at := Vector2i(nose - 1 - u.position.x, gy - u.end.y + 1)
+	p.shadow(nose + u.size.x / 2, gy + 1, u.size.x * 0.42, maxf(2.0, len * 0.03))
+	p.stamp(img, at.x, at.y)
+	cars.append(Rect2i(u.position + at, u.size))
 
 static func _tree(p: Pix, x: int, gy: int, night: bool, season: String) -> void:
 	var bark := Color("4a3a2c") if not night else Color("161210")

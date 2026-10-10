@@ -902,10 +902,15 @@ func _depth_sort(up: Vector2) -> void:
 		var p: Vector2 = n.sort_point() if n.has_method("sort_point") else n.global_position
 		n.z_index = 1000 + clampi(int((p - c).dot(-up) / 2.0), -950, 950)
 
+## Put the car somewhere, stopped dead: the body and the wheels too (wheels left spinning from
+## before would drive it off again, or creep it out of a parking spot with the handbrake on).
 func _teleport(at: Vector2, heading: float) -> void:
 	car.sim.vx = 0.0
 	car.sim.vy = 0.0
 	car.sim.yaw_rate = 0.0
+	car.sim.w_wheel = 0.0
+	car.sim.front_w = 0.0
+	car.sim.clutch_locked = false
 	car.sim.pos = at
 	car.sim.heading = heading
 	cam_rot = heading + PI / 2.0
