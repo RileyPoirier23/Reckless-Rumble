@@ -21,6 +21,7 @@ var t := 0.0
 var history: Array = []           # [set, cast poses] at each line (so going back restores both)
 var demo := false
 var cast := {}                     # who -> { x, facing, pose } for the people standing in the set
+var _paid := {}                    # "cash" lines already counted (going back and forward again doesn't pay twice)
 
 func _ready() -> void:
 	Controls.setup()
@@ -38,19 +39,24 @@ func _ready() -> void:
 
 func _process(dt: float) -> void:
 	t += dt
-	if step.type == "scene" and i < lines.size():
-		shown += dt * CPS
+	if step.type == "scene" and i < lines.size(): shown += dt * CPS
+	# instructions run as soon as they come up (a run of them all at once: two people bow together)
+	while step.type == "scene" and i < lines.size() and String(lines[i][0]) in ["set", "cash", "flag", "pose"]:
 		var ln: Array = lines[i]
-		# instructions run as soon as they come up
 		match String(ln[0]):
 			"set":
 				set_name = ln[1]
 				_next()
 			"cash":
-				StoryState.cash += int(ln[1])
+				if not _paid.has(i):
+					_paid[i] = true
+					StoryState.cash += int(ln[1])
 				_next()
 			"flag":
 				StoryState.set_flag(ln[1])
+				_next()
+			"pose":
+				if cast.has(String(ln[1])): cast[String(ln[1])].pose = String(ln[2])
 				_next()
 	if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("click") or Input.is_action_just_pressed("use"):
 		press()
@@ -88,6 +94,8 @@ func press() -> void:
 		return
 	if i >= lines.size(): return
 	if _is_choice():
+		# back up and pick again: only the last pick counts
+		for o in lines[i][1]: StoryState.flags.erase(String(o[1]))
 		var opt: Array = lines[i][1][choice_sel]
 		StoryState.set_flag(opt[1])
 		_next()

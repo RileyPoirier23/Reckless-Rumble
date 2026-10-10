@@ -98,6 +98,13 @@ static func rep_after(rep: int, finished: bool, place: int, pinks: bool) -> int:
 	if place == 1: return rep + (2 if pinks else 1)
 	return rep
 
+## A race into the street record: races, wins, rep. (A record the meet started has only rep in it.)
+static func tally(st: Dictionary, won: bool, finished: bool, at: int, pinks: bool) -> Dictionary:
+	st.races = int(st.get("races", 0)) + 1
+	if won: st.wins = int(st.get("wins", 0)) + 1
+	st.rep = rep_after(int(st.get("rep", 0)), finished, at, pinks)
+	return st
+
 ## What the winner takes home: the pot, less Marco's cut.
 static func purse(buy_in: int, field: int) -> int:
 	return int(round(buy_in * field * (1.0 - CUT)))
@@ -315,17 +322,15 @@ func _end() -> void:
 	t = 0.0
 	drive.clear_route()
 	var won := _winnings()
-	var st: Dictionary = drive.save.get("street", { "races": 0, "wins": 0 })
-	st.races = int(st.races) + 1
-	if won > 0 or won_pinks(): st.wins = int(st.wins) + 1
+	var st: Dictionary = drive.save.get("street", {})
 	var was := int(st.get("rep", 0))
-	st.rep = rep_after(was, finish_t.has(-1), place(), not rival.is_empty())
+	tally(st, won > 0 or won_pinks(), finish_t.has(-1), place(), not rival.is_empty())
 	drive.save.street = st
 	if int(st.rep) > was: drive.hud.post("STREET REP %d. PEOPLE ARE STARTING TO SAY YOUR NAME RIGHT." % int(st.rep), 5.0)
 	if not rival.is_empty():
 		var e := CarCatalog.entry(String(rival.car))
 		var nm := "%s %s" % [String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
-		if won_pinks(): drive.hud.post("%s HANDS OVER THE KEYS TO THE %s. HIS HANDS ARE SHAKING." % [String(rival.name), nm], 7.0)
+		if won_pinks(): drive.hud.post("%s HANDS OVER THE KEYS TO THE %s. THE KEYS ARE SHAKING." % [String(rival.name), nm], 7.0)
 		else: drive.hud.post("%s TAKES YOUR KEYS. MARCO: \"THAT'S PINKS, BUD.\"" % String(rival.name), 7.0)
 	elif won > 0: drive.hud.post("YOU WIN. MARCO COUNTS OUT $%d LIKE IT HURTS HIM." % won, 6.0)
 	elif finish_t.has(-1): drive.hud.post("P%d. MARCO: \"THERE'S ALWAYS NEXT FRIDAY.\"" % place(), 5.0)

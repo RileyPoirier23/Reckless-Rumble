@@ -74,6 +74,33 @@ func _init() -> void:
 	Hints.playstation = true
 	check("PlayStation names", Hints.key("ui_accept") == "CROSS", Hints.key("ui_accept"))
 	Hints.pad = false
+	# a cutscene's instructions: poses happen, money changes hands once, and a choice made again
+	# only keeps the last pick
+	StoryState.cash = 340
+	StoryState.flags = {}
+	var sc: Variant = load("res://story/story_scene.gd").new()
+	sc.step = { "type": "scene" }
+	sc.cast = { "DOM": { "x": 200, "facing": -1, "pose": "crossed" }, "SAL": { "x": 250, "facing": -1, "pose": "pockets" } }
+	sc.lines = [["DOM", "Everybody. Quiet."], ["pose", "DOM", "bow"], ["pose", "SAL", "bow"], ["DOM", "Lord."], ["cash", -340],
+		["choice", [["Yes.", "said_yes"], ["No.", "said_no"]]], ["DOM", "Amen."]]
+	sc.press()
+	sc.press()
+	sc._process(0.0)
+	check("pose lines change poses and take no press", int(sc.i) == 3 and String(sc.cast.DOM.pose) == "bow" and String(sc.cast.SAL.pose) == "bow", "line %d, %s/%s" % [int(sc.i), sc.cast.DOM.pose, sc.cast.SAL.pose])
+	sc.shown = 99.0
+	sc.press()
+	sc._process(0.0)
+	sc.back()
+	check("back skips the instructions and puts the poses back", int(sc.i) == 3 and String(sc.cast.DOM.pose) == "bow", "line %d" % int(sc.i))
+	sc.press()
+	sc._process(0.0)
+	check("going back over a cash line doesn't pay it twice", StoryState.cash == 0, "$%d" % StoryState.cash)
+	sc.press()
+	sc.back()
+	sc.choice_sel = 1
+	sc.press()
+	check("a choice made again keeps only the last pick", StoryState.flag("said_no") and not StoryState.flag("said_yes"), str(StoryState.flags))
+	sc.free()
 	# the save round-trips
 	StoryState.new_game()
 	StoryState.step = 7

@@ -591,6 +591,7 @@ func set_wear(w: Dictionary) -> void:
 	pads_mm = float(w.get("pads", 10.0))
 	fluid = float(w.get("fluid", 1.0))
 	engine_health = minf(engine_health, float(w.get("engine", 1.0)))
+	if engine_health <= 0.0: engine_blown = true          # it was blown when it went in the garage
 	if bool(w.get("gasket", false)): head_gasket = true
 	if w.has("tread"):
 		for t in tires: t.tread = minf(float(t.tread), float(w.tread))

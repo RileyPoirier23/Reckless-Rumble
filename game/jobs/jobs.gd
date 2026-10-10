@@ -47,12 +47,18 @@ static func street_route(day: int, rep := 99) -> Dictionary:
 static func pinks_tonight(day: int, rep: int) -> bool:
 	return rep >= StreetRace.PINKS_REP and weekday(day) in ["FRIDAY", "SATURDAY"]
 
-## The street gig's line on the phone: tonight, and where you stand.
-static func street_line(save: Dictionary, day: int) -> String:
+## The street gig's line on the phone: tonight, and where you stand. (Past midnight it's still
+## the night before: pass the hour.)
+static func street_line(save: Dictionary, day: int, hour := 12.0) -> String:
 	var st: Dictionary = save.get("street", {})
 	var rep := int(st.get("rep", 0))
-	if pinks_tonight(day, rep) and int(st.get("pinks", 0)) < StreetRace.RIVALS.size(): return "PINK SLIPS TONIGHT.  REP %d" % rep
-	return "%s.  REP %d" % [String(street_route(day, rep).name), rep]
+	var night := night_of(day, hour)
+	if pinks_tonight(night, rep) and int(st.get("pinks", 0)) < StreetRace.RIVALS.size(): return "PINK SLIPS TONIGHT.  REP %d" % rep
+	return "%s.  REP %d" % [String(street_route(night, rep).name), rep]
+
+## Which night it is: from midnight to six it's still the night before.
+static func night_of(day: int, hour: float) -> int:
+	return day - (1 if hour < 6.0 else 0)
 
 ## The drag ladder at Airstrip 7, slowest crew first. Each racer: car, how fast they react,
 ## how close they run to their dial-in, entry fee, and what they say.
@@ -82,7 +88,7 @@ static func open_now(kind: String, hour: float, day := -1) -> bool:
 
 ## The meet's on Friday and Saturday nights (after midnight it's still the night before).
 static func meet_night(day: int, hour: float) -> bool:
-	return weekday(day - (1 if hour < 6.0 else 0)) in ["FRIDAY", "SATURDAY"]
+	return weekday(night_of(day, hour)) in ["FRIDAY", "SATURDAY"]
 
 static func opens_at(kind: String) -> String:
 	var from: float = KINDS[kind].open[0]

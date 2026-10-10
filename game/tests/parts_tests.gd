@@ -63,6 +63,10 @@ func _init() -> void:
 	forged.internals = "int_built"
 	check("a built bottom end opens up the boost range", float(Parts.tune_range(forged, t0).boost) > float(Parts.tune_range(turbo_parts, t0).boost) + 0.3)
 	check("a stock tune is safe", Parts.knock_risk(turbo_parts, {}) <= 0.0)
+	# the garage reads the range off the stock spec: a kit on a car that came without a turbo still gets boost
+	check("a turbo kit opens up the boost range on the stock spec", float(Parts.tune_range({ "induction": "ind_garrette" }, na).boost) > 0.0
+		and float(Parts.tune_range({}, na).boost) == 0.0, "%.2f" % float(Parts.tune_range({ "induction": "ind_garrette" }, na).boost))
+	check("an intercooler fits once a turbo kit's on", Parts.fits("ic_mishimotoh", na, { "induction": "ind_garrette" }) and not Parts.fits("ic_mishimotoh", na))
 	check("tuning never touches the base spec", Parts.peaks(SaveGame.load_spec("silvio")).x == Parts.peaks(base).x)
 	# knock eats the engine at full load; a safe tune doesn't
 	var hurt := []

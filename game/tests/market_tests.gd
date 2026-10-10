@@ -173,5 +173,46 @@ func _init() -> void:
 		var bd: Dictionary = Auction.BIDDERS[i]
 		if int(lim[i]) < int(float(al[0].worth) * float(bd.top[0])) - 1 or int(lim[i]) > int(float(al[0].worth) * float(bd.top[1])) + 1: lim_ok = false
 	check("each bidder has a limit, somewhere around what it's worth", lim_ok, str(lim))
+	# your hand up on a lot with no keys: the bid and the locksmith both have to be in your pocket
+	var stand := GDScript.new()
+	stand.source_code = "extends Node\nvar save := {}\n"
+	stand.reload()
+	var floor_drive: Variant = stand.new()
+	var au := Auction.new()
+	au.drive = floor_drive
+	var keyless: Dictionary = al[0].duplicate()
+	keyless.keys = false
+	au.lots = [keyless]
+	au.lot_i = 0
+	au.bid = 1000
+	au.wait_t = [1.0, 1.0, 1.0]
+	floor_drive.save = { "cash": 1100 }
+	var short := au.you_bid()
+	floor_drive.save = { "cash": 1000 + Auction.LOCKSMITH }
+	var enough := au.you_bid()
+	check("no keys: you can't bid what you can't pay the locksmith on top of", au.high == "YOU" and short.contains("LOCKSMITH") and enough.begins_with("YOU"), "%s / %s" % [short, enough])
+	au.free()
+	floor_drive.free()
+	# $1,990 on a $1,999 ask: a counter splits the difference, it doesn't round up past the ask
+	var off_range: Array = []
+	var counters := 0
+	for sd in 400:
+		var hl := { "seller": "flipper", "ask": 1999, "patience": 999, "ghosted": false, "deal": -1, "chat": [] }
+		var hr := RandomNumberGenerator.new()
+		hr.seed = sd
+		var ans := Market.offer(hl, 1990, hr)
+		if String(ans.kind) == "counter":
+			counters += 1
+			if int(ans.amount) > 1999 or int(ans.amount) < 1990: off_range.append(int(ans.amount))
+	check("a counter-offer lands between your offer and the ask", counters > 0 and off_range.is_empty(), "%d counters, out of range: %s" % [counters, str(off_range.slice(0, 3))])
+	# a check under the hood at five to midnight: ten minutes later it's tomorrow, and the parts
+	# truck's clock moved too
+	var sky := WorldSky.new()
+	sky.day = 4
+	sky.time_h = 23.95
+	var sv := { "clock_h": 120.0 }
+	SaveGame.pass_hours(sky, sv, 1.0 / 6.0)
+	check("ten minutes at the meetup runs past midnight into the next day", sky.day == 5 and absf(sky.time_h - 0.1167) < 0.01 and absf(float(sv.clock_h) - 120.1667) < 0.01,
+		"day %d %.3f h, clock %.3f" % [sky.day, sky.time_h, float(sv.clock_h)])
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

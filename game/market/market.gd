@@ -161,6 +161,7 @@ static func offer(l: Dictionary, amount: int, rng: RandomNumberGenerator) -> Dic
 		l.patience = int(l.patience) - 10
 		var c := (amount + int(l.ask)) / 2
 		c = (c / 100) * 100 + 69 if bool(s.get("sixty_nine", false)) else int(round(c / 50.0)) * 50
+		c = clampi(c, amount, int(l.ask))       # rounding never takes it past what they asked
 		res = { "kind": "counter", "amount": c, "text": String(s.counter) % ("$" + str(c)) }
 	if int(l.patience) <= 0 and res.kind != "yes":
 		l.ghosted = true
