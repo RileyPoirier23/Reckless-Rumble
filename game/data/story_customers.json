@@ -1,5 +1,5 @@
 {
-	"_about": "Scripted customers at the counter (CounterRules.scripted). 'schedule' books them by chapter and day (days count from Monday 7 October 2019 = 0). A story step can also bring its own: { \"type\": \"counter\", \"day\": 9, \"customers\": [\"dale_hatch\", { ...a spec... }] }. Keys: kind (story or familia), cast (a StoryScript.CAST face), person, car (catalogue id, paint), request, problem (a CounterRules problem id, or clean), excuse (a covered discrepancy with valid proof), papers (overrides per document: reg, licence, insurance, sheet, work, invoice; reg.use and sheet.tires from week 8), says, napkin, mask, letter ({title, lines}), ask (topic -> {line, doc, clue}), clue ({id, note}: what Leo can write in his notebook from what they say), outcomes (stamp -> {line, citation, money, dirty, heat, trust, review, correct, flags}), arrive (H:MM), forged (their proof is a bad one), from_away (the car came from another province), seed (instead of the id), quiet (no desk_<id>_<stamp> flag). 'regulars' (DeskRegulars) are the people who keep coming back: person, car, ask (small talk), and visits [{day, ...the same keys..., after_id, after: {last stamp -> what changes}}]. The last stamp is APPROVED, DENIED, REPORT or WRENCH (with _WRONG when it was the wrong call; the plain key covers both) or WALKED; a branch with a problem brings its own papers and lines; hello goes in front of says.",
+	"_about": "Scripted customers at the counter (CounterRules.scripted). 'schedule' books them by chapter and day (days count from Monday 7 October 2019 = 0). A story step can also bring its own: { \"type\": \"counter\", \"day\": 9, \"customers\": [\"dale_hatch\", { ...a spec... }] }. Keys: kind (story or familia), cast (a StoryScript.CAST face), person, car (catalogue id, paint), request, problem (a CounterRules problem id, or clean), excuse (a covered discrepancy with valid proof), papers (overrides per document: reg, licence, insurance, sheet, work, invoice; reg.use and sheet.tires from week 8), says, napkin, mask, letter ({title, lines}), ask (topic -> {line, doc, clue}), clue ({id, note}: what Leo can write in his notebook from what they say), outcomes (stamp -> {line, citation, money, dirty, heat, trust, review, correct, flags}), arrive (H:MM), forged (their proof is a bad one), from_away (the car came from another province), seed (instead of the id), quiet (no desk_<id>_<stamp> flag). 'regulars' (DeskRegulars) are the people who keep coming back: person, car, ask (small talk), visits [{day, ...the same keys..., after_id, after: {last stamp -> what changes}}], and overtime: the same, with a season ([[month, day], [month, day]]) instead of a day, for the days after the run (one regular drops in on about one open day in three, out of the visits whose season takes in the date). The last stamp is APPROVED, DENIED, REPORT or WRENCH (with _WRONG when it was the wrong call; the plain key covers both) or WALKED; a branch with a problem brings its own papers and lines; hello goes in front of says.",
 	"customers": {
 		"dale_hatch": {
 			"kind": "story",
@@ -11,7 +11,7 @@
 			"says": "MY GUYS ARE SWAMPED, SO HERE I AM. SAFETY ON THIS ONE, SON. FRANKIE ALWAYS DID MY USED ONES.",
 			"letter": { "title": "HATCH MOTORS", "lines": ["FROM THE DESK OF DALE HATCH", "", "LEO -", "AN OFFER FOR COVINGTON AUTO.", "A FAIR PRICE. FOR FRANK'S KIDS.", "NO RUSH. THINK IT OVER.", "", "- D.H."] },
 			"ask": {
-				"local": { "line": "THE MOUNTAIN TIM'S. FRANKIE AND I USED TO SIT IN THAT LOT. HE TOOK IT BLACK. CHECKED HIS BRAKES EVERY SUNDAY, TOO. CAREFUL MAN.",
+				"local": { "line": "THE MOUNTAIN TIM BURTONS. FRANKIE AND I USED TO SIT IN THAT LOT. HE TOOK IT BLACK. CHECKED HIS BRAKES EVERY SUNDAY, TOO. CAREFUL MAN.",
 					"clue": { "id": "hatch_sundays", "note": "HATCH KNOWS DAD CHECKED HIS BRAKES EVERY SUNDAY. SO DID EVERYBODY, I GUESS." } }
 			},
 			"outcomes": {
@@ -33,7 +33,7 @@
 			"ask": {
 				"odo_rollback": { "line": "THE ODOMETER'S BRAND NEW. WELL. NOT NEW. IT'S FROM A DIFFERENT TRUCK. HATCH'S GUYS DO IT ALL DAY. SHH.",
 					"clue": { "id": "darrell_hatch_lot", "note": "DARRELL SAYS HATCH'S LOT WINDS BACK ODOMETERS \"ALL DAY.\" DARRELL SAYS A LOT OF THINGS." } },
-				"local": { "line": "I DON'T DRINK COFFEE. MEDIUM DOUBLE-DOUBLE. THE MOUNTAIN ONE." }
+				"local": { "line": "I DON'T DRINK COFFEE. LARGE, SIX SUGARS. THE MOUNTAIN ONE." }
 			},
 			"outcomes": {
 				"APPROVED": { "line": "Darrell drives off honking. Three days later Hatch Motors lists it online: LOW KMS! ONE OWNER! SAFETIED AT COVINGTON AUTO." },
@@ -76,11 +76,11 @@
 		"jayden": {
 			"person": { "first": "JAYDEN", "last": "MALLET", "face": 913077, "fem": 0, "dob": [2000, 3, 14], "address": "12 MOUNTAIN RD, APT 3" },
 			"car": { "catalogue": "hondo_civil_1992", "paint": "#c8342c" },
-			"ask": { "local": { "line": "THE MOUNTAIN TIM'S. I AM THE MOUNTAIN TIM'S. SIX TO TWO, TUESDAY TO SATURDAY. DON'T ORDER THE CHILI." } },
+			"ask": { "local": { "line": "THE MOUNTAIN TIM BURTONS. I AM THE MOUNTAIN TIM BURTONS. SIX TO TWO, TUESDAY TO SATURDAY. DON'T ORDER THE CHILI." } },
 			"visits": [
 				{ "day": 1, "arrive": "8:50", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
 					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
-					"says": "SAFETY, PLEASE. I GOTTA BE AT THE WINDOW BY TEN. MOUNTAIN TIM'S. I'VE SEEN THINGS, MAN. A GUY ORDERED FORTY TIMBITS FOR HIS DOG. THE DOG WAS A CAT.",
+					"says": "SAFETY, PLEASE. I GOTTA BE AT THE WINDOW BY TEN. MOUNTAIN TIM BURTONS. I'VE SEEN THINGS, MAN. A GUY ORDERED FORTY BURTON BITS FOR HIS DOG. THE DOG WAS A CAT.",
 					"ask": { "fails_inspection": { "line": "THE BALD ONE? THAT'S MY LUCKY ONE. YOU DON'T TAKE A GUY'S LUCKY ONE." } },
 					"outcomes": {
 						"DENIED": { "line": "\"Yeah. Yeah, okay.\" He looks at the tire like it let him down personally. \"My manager says the same thing about my hairnet.\"" },
@@ -88,7 +88,7 @@
 					} },
 				{ "day": 11, "arrive": "9:15", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
 					"papers": { "sheet": { "tread": [0.9, 4.4, 3.1, 3.6] } },
-					"says": "SAFETY, PLEASE. I WORK THE WINDOW AT THE MOUNTAIN TIM'S. YOU'D BE AMAZED WHAT PEOPLE SAY TO A SPEAKER.",
+					"says": "SAFETY, PLEASE. I WORK THE WINDOW AT THE MOUNTAIN TIM BURTONS. YOU'D BE AMAZED WHAT PEOPLE SAY TO A SPEAKER.",
 					"ask": { "fails_inspection": { "line": "THE BALD ONE'S MY LUCKY ONE. EVERYBODY NEEDS A LUCKY ONE." } },
 					"outcomes": {
 						"DENIED": { "line": "\"Yeah, okay. My manager says the same thing about my hairnet.\"" },
@@ -97,7 +97,7 @@
 					"after": {
 						"WALKED": { "says": "I WAITED TILL SIX LAST WEEK. NOBODY CALLED MY NUMBER. I DIDN'T HAVE A NUMBER. SAFETY, PLEASE. AGAIN." },
 						"DENIED": { "problem": "clean", "request": "SAFETY INSPECTION",
-							"says": "FOUR TIRES. WELL. FOUR USED TIRES. NEW TO ME. AND A BOX OF TIMBITS FOR GUS. HE DIDN'T SAY THANKS, BUT HE TOOK THE BOX.",
+							"says": "FOUR TIRES. WELL. FOUR USED TIRES. NEW TO ME. AND A BOX OF BURTON BITS FOR GUS. HE DIDN'T SAY THANKS, BUT HE TOOK THE BOX.",
 							"outcomes": {
 								"APPROVED": { "line": "\"STICKER!\" He takes a picture of it. Then a picture of you. Then one of Gus, who doesn't move." },
 								"DENIED": { "line": "\"But they're new. Newish. New to me.\" He drives off slowly, like the tires might hear him." }
@@ -154,7 +154,7 @@
 					} },
 				{ "day": 52, "arrive": "16:10", "request": "SAFETY INSPECTION", "problem": "no_winter_tires",
 					"papers": { "reg": { "use": "RIDESHARE" }, "sheet": { "tires": "ALL-SEASON" } },
-					"says": "SAFETY, PLEASE. I DRIVE FOR HAILR NOW. NIGHTS, AFTER THE DRIVE-THRU. THE APP SAYS I NEED A STICKER BY SUNDAY. THE APP SAYS A LOT OF THINGS. MOSTLY 'YOU'RE LATE.'",
+					"says": "SAFETY, PLEASE. I DRIVE FOR HOPP-IN NOW. NIGHTS, AFTER THE DRIVE-THRU. THE APP SAYS I NEED A STICKER BY SUNDAY. THE APP SAYS A LOT OF THINGS. MOSTLY 'YOU'RE LATE.'",
 					"ask": { "no_winter_tires": { "line": "ALL-SEASONS. IT SAYS ALL SEASONS RIGHT ON THE TIRE. MY BUDDY SAYS THAT'S A PROMISE." } },
 					"outcomes": {
 						"DENIED": { "line": "\"Winters. Okay. Winters.\" He opens the app. The app says he's late." },
@@ -163,6 +163,27 @@
 					"after": {
 						"DENIED": { "hello": "NEW MUFFLER, LIKE YOU SAID. THE CAT AT THE DRIVE-THRU CAME BACK. SHE STILL WON'T LOOK AT ME." },
 						"APPROVED_WRONG": { "hello": "THE CAN'S STILL ON. A COP FOLLOWED ME HOME FOR THE NOISE. HE ASKED WHO STICKERED IT. I SAID A GUY." }
+					} }
+			],
+			"overtime": [
+				{ "season": [[12, 1], [4, 30]], "arrive": "9:20", "request": "SAFETY INSPECTION", "problem": "no_winter_tires",
+					"papers": { "reg": { "use": "RIDESHARE" }, "sheet": { "tires": "ALL-SEASON" } },
+					"says": "SAFETY, PLEASE. HOPP-IN SAYS MY STICKER'S DUE. I'M ON ALL-SEASONS. IT'S IN THE NAME, MAN. ALL. SEASONS.",
+					"ask": { "no_winter_tires": { "line": "THE APP DOESN'T ASK ABOUT TIRES. THE APP ASKS ABOUT MY RATING. MY RATING'S A 4.1. THE 1 IS DOING A LOT OF WORK." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Winters. Okay. Winters.\" He opens the app. The app says he's late." },
+						"APPROVED": { "line": "He slides through the lights at the bottom of Mountain Rd with a passenger in the back. His rating slides with him." }
+					},
+					"after": {
+						"DENIED": { "hello": "I GOT THE WINTERS ON LAST TIME. USED. NEW TO ME. THE PASSENGERS CAN'T TELL." },
+						"APPROVED_WRONG": { "hello": "A PASSENGER LEFT ME ONE STAR AND THE WORD 'SLIDY.' I DON'T KNOW WHAT YOU WANT ME TO SAY." }
+					} },
+				{ "season": [[5, 1], [11, 24]], "arrive": "10:50", "request": "SAFETY INSPECTION", "problem": "clean",
+					"papers": { "reg": { "use": "RIDESHARE" }, "sheet": { "tires": "ALL-SEASON" } },
+					"says": "SAFETY, PLEASE. HOPP-IN WANTS A NEW STICKER EVERY YEAR. ALL-SEASONS ON. IT'S NOT WINTER. I CHECKED. I LOOKED OUT THE WINDOW.",
+					"outcomes": {
+						"APPROVED": { "line": "\"Sick.\" He gets a ride request before he's out of the lot. Four stars. He'll take it." },
+						"DENIED": { "line": "\"For WHAT? It's not winter.\" He's right, and he knows it, and he tells the drive-thru about it all afternoon." }
 					} }
 			]
 		},
@@ -197,7 +218,7 @@
 						"APPROVED_WRONG": { "hello": "SUSSEX WENT GREAT. WE LOST SIX-NOTHING. A COP PULLED US OVER ON THE WAY HOME FOR THE REGISTRATION. HE ASKED WHERE WE GOT THE TIRES DONE. I DIDN'T SAY. I WANTED TO." }
 					} },
 				{ "day": 23, "arrive": "14:10", "request": "OIL CHANGE", "problem": "clean",
-					"says": "OIL CHANGE, PLEASE. AND I BROUGHT TIM'S. MEDIUM DOUBLE-DOUBLE FOR GUS, BLACK FOR YOU. I ASKED AROUND.",
+					"says": "OIL CHANGE, PLEASE. AND I BROUGHT TIM BURTONS. MEDIUM, TWO CREAMS TWO SUGARS FOR GUS, BLACK FOR YOU. I ASKED AROUND.",
 					"outcomes": {
 						"APPROVED": { "line": "\"Same time next week. I mean it. There's always a tournament.\"" },
 						"DENIED": { "line": "\"For an OIL CHANGE?\" He takes the coffees back. Both of them." }
@@ -241,7 +262,7 @@
 					"papers": { "reg": { "use": "COMMERCIAL" }, "sheet": { "tires": "ALL-SEASON" } },
 					"says": "WINTER TIRES ON, PLEASE. THE LEAGUE BOUGHT THE VAN OFF ME. IT'S THE TEAM VAN NOW. COMMERCIAL PLATES. LISA DID THE PAPERWORK. LISA SAYS IT NEEDS WINTERS BY SUNDAY OR THE LEAGUE GETS A LETTER.",
 					"outcomes": {
-						"APPROVED": { "line": "Gus has the winters on by ten. Rob tips him in Timbits. Carter eats half of them in the waiting room." },
+						"APPROVED": { "line": "Gus has the winters on by ten. Rob tips him in Burton Bits. Carter eats half of them in the waiting room." },
 						"DENIED": { "line": "\"You won't put WINTERS on?\" He stands in the lot for a while, doing the math on Sunday." }
 					},
 					"after": {
@@ -272,6 +293,33 @@
 								"DENIED": { "line": "\"Can you put them on, then? Now?\" Gus is already rolling the first one in." },
 								"APPROVED": { "line": "The team van leaves on all-seasons, with its winters in the back for luck." }
 							} }
+					} }
+			],
+			"overtime": [
+				{ "season": [[12, 1], [4, 30]], "arrive": "8:40", "request": "SAFETY INSPECTION", "problem": "clean",
+					"papers": { "reg": { "use": "COMMERCIAL" }, "sheet": { "tires": "WINTER" } },
+					"says": "SAFETY ON THE TEAM VAN, PLEASE. WINTERS ARE ON. LISA LAMINATED THE RECEIPT. SHE'S GOT HER OWN MACHINE NOW.",
+					"outcomes": {
+						"APPROVED": { "line": "\"Sussex, Edmundston, Campbellton.\" He counts them off on his fingers. Carter's asleep in the back." },
+						"DENIED": { "line": "\"It's got WINTERS on.\" Lisa calls the shop at four." }
+					} },
+				{ "season": [[4, 1], [6, 30]], "arrive": "8:20", "request": "SUMMER TIRES ON", "problem": "clean",
+					"papers": { "reg": { "use": "COMMERCIAL" }, "sheet": { "tires": "STUDDED" } },
+					"says": "SUMMERS ON THE TEAM VAN, PLEASE. THE LEAGUE PUT STUDS ON IN JANUARY. THE LEAGUE IS LISA. SHE SAYS THEY COME OFF NOW.",
+					"outcomes": {
+						"APPROVED": { "line": "Gus has the studs off by ten. Carter keeps one. For luck." },
+						"DENIED": { "line": "\"You won't take the STUDS off?\" The van crunches all the way out of the lot." }
+					} },
+				{ "season": [[5, 1], [10, 14]], "arrive": "13:40", "request": "SAFETY INSPECTION", "problem": "studs_out_of_season",
+					"papers": { "reg": { "use": "COMMERCIAL" } },
+					"says": "SAFETY ON THE TEAM VAN, PLEASE. THE STUDS ARE STILL ON. WE HAD A TOURNAMENT IN EDMUNDSTON. IT SNOWED IN EDMUNDSTON.",
+					"ask": { "studs_out_of_season": { "line": "IT SNOWED IN EDMUNDSTON. IN MAY. CARTER MADE A SNOWMAN. THE SNOWMAN HAD A STUD FOR A NOSE." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Fine. Studs off.\" He does the math on the next tournament out loud, all the way to the van." },
+						"APPROVED": { "line": "The team van crunches out of the lot in the sunshine. Somebody across the street takes a picture of it." }
+					},
+					"after": {
+						"APPROVED": { "hello": "SUMMERS ARE ON. THE VAN'S QUIET. CARTER SAYS IT'S TOO QUIET." }
 					} }
 			]
 		},
@@ -310,7 +358,7 @@
 							} }
 					} },
 				{ "day": 18, "arrive": "15:00", "request": "SAFETY INSPECTION", "problem": "clean", "excuse": "vin_door_mismatch",
-					"says": "SOMEBODY BACKED INTO ME AT THE CO-OP, DEAR. THE NEW DOOR CAME OFF A CAR AT THE PICK-N-PULL. IT'S A DIFFERENT GREEN. THE CAR SEEMS HAPPIER.",
+					"says": "SOMEBODY BACKED INTO ME AT CHAMPAGNE PLACE, DEAR. THE NEW DOOR CAME OFF A CAR AT THE PICK-N-PRAY. IT'S A DIFFERENT GREEN. THE CAR SEEMS HAPPIER.",
 					"ask": { "vin_door_mismatch": { "line": "I HAVE THE BILL, DEAR. I HAVE EVERY BILL SINCE 1971. DO YOU WANT TO SEE THE OTHERS?", "doc": "door_inv" } },
 					"outcomes": {
 						"APPROVED": { "line": "\"Thank you, dear. The door thanks you too. It's from a Corolly. It's adjusting.\"" },
@@ -374,12 +422,32 @@
 						"DENIED": { "hello": "THE NEW MUFFLER'S LOVELY, DEAR. THE GOOSE IS GONE. I DON'T MISS HER. I DO A LITTLE." },
 						"APPROVED_WRONG": { "hello": "THE GOOSE IS STILL HONKING, DEAR. THE NICE MAN FROM THE MINISTRY CALLED AGAIN. HE ASKED ABOUT YOU." }
 					} }
+			],
+			"overtime": [
+				{ "season": [[12, 1], [3, 31]], "arrive": "10:10", "request": "SAFETY INSPECTION", "problem": "fails_inspection",
+					"papers": { "sheet": { "lights": false } },
+					"says": "GOOD MORNING, DEAR. SAFETY ON THE CAVA-LAME. THE LIGHT'S OUT AGAIN. IT GETS SAD IN THE COLD. SO DO I. I BROUGHT MUFFINS.",
+					"ask": { "fails_inspection": { "line": "IT'S THE COLD, DEAR. IT GOES OUT IN NOVEMBER AND COMES BACK FOR EASTER." } },
+					"outcomes": {
+						"DENIED": { "line": "\"That's Frank's boy.\" She leaves the muffins." },
+						"APPROVED": { "line": "\"Are you feeling all right, dear? Frank never passed it.\" She leaves the muffins anyway." }
+					} },
+				{ "season": [[5, 1], [10, 14]], "arrive": "10:30", "request": "SAFETY INSPECTION", "problem": "studs_out_of_season",
+					"says": "SAFETY ON THE CAVA-LAME, DEAR. MY NEPHEW SAID THE STUDS WERE GOOD TILL APRIL. HE DIDN'T SAY WHICH APRIL.",
+					"ask": { "studs_out_of_season": { "line": "THE NEPHEW'S IN ALBERTA, DEAR. THE STUDS ARE HERE. I'M HERE. IT'S A WHOLE SITUATION." } },
+					"outcomes": {
+						"DENIED": { "line": "\"Frank's boy.\" She leaves the muffins. She'll call the nephew. In Alberta." },
+						"APPROVED": { "line": "The Cava-lame crunches off down Main St in the sunshine like it's walking on gravel." }
+					},
+					"after": {
+						"DENIED": { "hello": "THE STUDS ARE OFF, DEAR. GUS DID IT. THE NEPHEW SENT A CARD." }
+					} }
 			]
 		},
 		"darrell": {
 			"cast": "DARRELL",
 			"person": { "first": "DARRELL", "last": "LEGER", "address": "88 CLOVERDALE RD" },
-			"ask": { "local": { "line": "I DON'T DRINK COFFEE. MEDIUM DOUBLE-DOUBLE. THE MOUNTAIN ONE." } },
+			"ask": { "local": { "line": "I DON'T DRINK COFFEE. LARGE, SIX SUGARS. THE MOUNTAIN ONE." } },
 			"visits": [
 				{ "day": 32, "arrive": "11:50", "after_id": "darrell_trade", "car": { "catalogue": "toyoda_corolly_2003", "paint": "#8a8e94" },
 					"request": "SAFETY INSPECTION", "problem": "odo_rollback",
@@ -432,6 +500,29 @@
 					"after": {
 						"DENIED": { "hello": "BRENDA SAYS THANKS FOR NOT DOING THE OIL CHANGE. SHE SAYS IT SAVED ME A FINE. SHE KEEPS A LIST NOW. I'M ON IT." },
 						"APPROVED_WRONG": { "hello": "THE ESCAPED SOLD. THE NEW GUY'S VIN DOESN'T MATCH EITHER. IT'S A TRADITION NOW." }
+					} }
+			],
+			"overtime": [
+				{ "car": { "catalogue": "pontiak_grand_prize_2004", "paint": "#6a2a4a" }, "arrive": "11:40",
+					"request": "SAFETY INSPECTION", "problem": "odo_rollback",
+					"says": "SAFETY ON THE GRAND PRIZE. ONE OWNER. A RETIRED TEACHER. SHE ONLY DROVE IT TO BINGO. BINGO WAS IN QUEBEC CITY.",
+					"ask": { "odo_rollback": { "line": "SHE BACKED UP A LOT. FOR THE PARKING. AT BINGO." } },
+					"outcomes": {
+						"DENIED": { "line": "\"You're getting good at this.\" He means it as an insult. He also means it." },
+						"APPROVED": { "line": "\"Pleasure.\" It's on MarketThing by supper: LOW KMS, ONE OWNER, SAFETIED AT COVINGTON AUTO." }
+					},
+					"after": {
+						"DENIED": { "hello": "BRENDA SAYS I HAVE TO STOP BRINGING YOU CARS. I SAID THIS ONE'S DIFFERENT." },
+						"APPROVED_WRONG": { "hello": "THE LAST ONE SOLD IN AN HOUR. THE BUYER'S HAPPY. THE BUYER DOESN'T KNOW YET." }
+					} },
+				{ "season": [[11, 25], [4, 30]], "car": { "catalogue": "fjord_crown_victorious_2005", "paint": "#d8a03a" }, "arrive": "14:30",
+					"request": "SAFETY INSPECTION", "problem": "no_winter_tires",
+					"papers": { "reg": { "use": "TAXI" }, "sheet": { "tires": "ALL-SEASON" } },
+					"says": "SAFETY ON THE CROWN VICTORIOUS. IT'S AN OLD CAB. YOU CAN TELL BY THE HOLES IN THE ROOF WHERE THE SIGN WAS. THE OWNERSHIP STILL SAYS TAXI. I'LL FIX THAT.",
+					"ask": { "no_winter_tires": { "line": "IT'S NOT A CAB ANYMORE. IN MY HEART. THE PAPERS HAVEN'T CAUGHT UP WITH MY HEART." } },
+					"outcomes": {
+						"DENIED": { "line": "\"It's a PRIVATE car. Spiritually.\" He goes to change the ownership. He doesn't come back today." },
+						"APPROVED": { "line": "\"Pleasure.\" A cab on all-seasons goes back on the road with a fresh sticker. The road notices first." }
 					} }
 			]
 		}

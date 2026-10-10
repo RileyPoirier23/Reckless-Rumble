@@ -18,7 +18,15 @@
 ## the bay's parts (sign for the box, or send it back); from week 6 the police list has stolen
 ## part serials on it too; in week 7 Inspector Hachey pulls two old files a day (a walk-in, a
 ## regular, a box), covers the stamp with his thumb and watches Leo stamp them again; week 8 is
-## winter tires and studs.
+## winter tires and studs. Constable Tremblay's stolen list is new every week, and every file
+## keeps the one it was read against, so a file Hachey pulls is read against its own week's.
+##
+## OVERTIME (free play, after week 8 on the week picker, or KEEP WORKING at the end of the run):
+## the job after the run, one day after another from Monday, December 2, through the winter
+## into spring and on. Every rule stays up, so the dates on them bite: winters on working cars
+## till April 30, studs out of season from May 1. The record (days kept, the streak of right
+## calls, the best streak) and the book ride along in DeskBook's overtime file, saved at
+## clock-out.
 ##
 ## The room makes a few quiet sounds (DeskAudio): the horn from the lot, the stamp, paper, the
 ## wall clock, and the till when somebody takes money off the shop.
@@ -77,7 +85,7 @@ const BRIEFS := {
 	0: ["GUS LEANS ON THE DOORFRAME.", "\"FRONT COUNTER'S YOURS, KID. YOUR DAD RAN THIS SHOP TWENTY YEARS. THE COUNTER WAS SOMEBODY ELSE'S. NOW IT'S YOURS.\"", "\"IF THE PAPERS DON'T MATCH THE CAR, IT DOESN'T GET A STICKER. I READ THE VIN OFF THE DASH MYSELF. READ EVERY PAPER. EVERY ONE.\""],
 	1: ["A FAX FROM THE MINISTRY CURLS OUT OF THE MACHINE.", "\"EXPIRED REGISTRATIONS ARE NOW YOUR PROBLEM.\"", "GUS: \"CHECK THE DATE AGAINST THE CALENDAR. THE CALENDAR DOESN'T LIE.\""],
 	2: ["ANOTHER FAX. GUS DOESN'T EVEN LOOK UP.", "\"NO INSURANCE, NO SERVICE. AND THE LICENCE HAS TO BE THE OWNER'S.\"", "GUS: \"YOUR DAD USED TO SAY THE PAPERWORK IS THE JOB. THE WRENCHING IS THE FUN PART.\""],
-	3: ["CONSTABLE TREMBLAY DROPS OFF A STOLEN LIST AND A DOUBLE-DOUBLE.", "\"PIN THAT UP. ONE OF THOSE ROLLS IN, YOU CALL ME. YOU DON'T TOUCH IT.\"", "THEN MIA TORTELLINI CALLS. \"THE FAMILY'S SENDING CARS. YOU STILL OWE US A CAR, LEO. BAY 3. NO PAPERS.\""],
+	3: ["CONSTABLE TREMBLAY DROPS OFF A STOLEN LIST AND A BOX OF BURTON BITS.", "\"PIN THAT UP. ONE OF THOSE ROLLS IN, YOU CALL ME. YOU DON'T TOUCH IT.\"", "THEN MIA TORTELLINI CALLS. \"THE FAMILY'S SENDING CARS. YOU STILL OWE US A CAR, LEO. BAY 3. NO PAPERS.\""],
 	4: ["LAST FAX OF THE WEEK.", "\"PEOPLE ARE LENDING EACH OTHER LICENCES. CHECK THE PHOTO.\"", "GUS: \"RENT'S DUE TONIGHT. AND I HEARD THERE'S A NEW GUY ASKING AROUND ABOUT 'NEW NUMBERS'. BE SMART.\""],
 	8: ["YESTERDAY WAS THANKSGIVING. GUS, LEO, ARIES AND MIKEY ATE A STORE-BOUGHT TURKEY IN THE OFFICE. NOBODY SAID HIS NAME. THERE WAS A PLATE NOBODY USED.", "A FAX: \"SERVICE HISTORY. ODOMETERS GO UP.\"", "GUS: \"AND THE BULLETIN'S FULL. GOT YOU A BINDER. TABS AND EVERYTHING. DON'T SAY I NEVER GAVE YOU NOTHING.\""],
 	9: ["GUS HANGS UP THE PHONE LIKE IT OWES HIM MONEY.", "\"HATCH MOTORS. SAYS HE'S BRINGING A CAR OVER. HIMSELF.\" HE SAYS IT LIKE A WEATHER REPORT. THEN HE GOES AND STANDS IN BAY 2 FOR A WHILE."],
@@ -106,7 +114,7 @@ const BRIEFS := {
 	44: ["GUS: \"HE ASKED ME HOW LONG I'VE WORKED HERE. I SAID SINCE 1981. HE WROTE DOWN 1981. THEN HE UNDERLINED IT.\""],
 	45: ["HACHEY BRINGS MUFFINS. NOBODY KNOWS IF IT'S A TEST. GUS EATS ONE ANYWAY.", "GUS: \"IF IT'S A TEST, I PASSED.\""],
 	46: ["FRIDAY. THE LAST DAY OF THE AUDIT. HACHEY'S REPORT GOES TO FREDERICTON TONIGHT.", "GUS: \"WHATEVER HE WRITES, THE SHOP'S STILL HERE MONDAY. PROBABLY.\""],
-	38: ["CONSTABLE TREMBLAY TAPES A STRIP ONTO THE BOTTOM OF THE STOLEN LIST AND DOESN'T STAY FOR COFFEE. PARTS, BY SERIAL NUMBER. SOMEBODY'S BEEN TAKING CATALYTIC CONVERTERS OFF CARS IN THE CO-OP LOT WITH A BATTERY SAW.",
+	38: ["CONSTABLE TREMBLAY TAPES A STRIP ONTO THE BOTTOM OF THE STOLEN LIST AND DOESN'T STAY FOR COFFEE. PARTS, BY SERIAL NUMBER. SOMEBODY'S BEEN TAKING CATALYTIC CONVERTERS OFF CARS IN THE CHAMPAGNE PLACE LOT WITH A BATTERY SAW.",
 		"\"A PART ON THAT LIST, ON A CAR OR IN A BOX, YOU CALL ME. YOU DON'T SIGN FOR IT. YOU DON'T PUT IT BACK ON.\"",
 		"GUS: \"I READ THE SERIAL OFF THE PART MYSELF. NOT OFF THE INVOICE. AN INVOICE IS WHAT SOMEBODY WISHES WAS TRUE.\""],
 	49: ["MONDAY. IT SNOWED OVERNIGHT AND IT STUCK. THE LOT'S FULL OF PEOPLE WHO WANTED THEIR WINTERS ON LAST WEEK.",
@@ -133,8 +141,35 @@ const TIPS := [
 const TAB_SHORT := { "INSPECTION": "INSP.", "DOCUMENTS": "DOCS", "POLICE": "POLICE", "MINISTRY": "MIN.", "SEASONAL": "SEAS.", "PARTS": "PARTS" }
 const TAB_COL := { "INSPECTION": Color("c8a030"), "DOCUMENTS": Color("6a9a5a"), "POLICE": Color("4a6aa8"), "MINISTRY": Color("a84a3a"),
 	"SEASONAL": Color("8a5aa0"), "PARTS": Color("a8743a") }
-## First open day of each week of free play.
+## First open day of each week of free play (OVERTIME comes after them on the picker).
 const WEEK_DAYS := [0, 8, 14, 21, 28, 36, 42, 49]
+## Overtime's notices: what the calendar brings on the first open day on or after [month, day].
+const OT_NOTICES := [
+	[[12, 1], "A FAX: FROM DECEMBER 1, WINTER TIRES ON TAXIS, RIDESHARES AND COMMERCIAL VEHICLES ARE THE LAW ON THE ROAD TOO, NOT JUST AT THE STICKER. TILL APRIL 30."],
+	[[12, 24], "CHRISTMAS EVE. GUS HANGS A STRING OF LIGHTS OVER THE STOLEN LIST. HALF OF THEM WORK. HE SAYS THAT'S THE SPIRIT."],
+	[[1, 2], "A NEW YEAR. THE SAME BINDER. GUS WRITES THE YEAR ON THE CALENDAR IN PEN, SO NOBODY FORGETS."],
+	[[4, 15], "A FAX: STUDDED TIRES COME OFF BY APRIL 30. FROM MAY 1 THEY'RE OUT OF SEASON, AND A CAR ON STUDS DOESN'T GET A STICKER."],
+	[[5, 1], "MAY. STUD SEASON'S OVER TILL OCTOBER 15: STUDS ON A STICKER JOB FAIL. AND THE WORKING CARS DON'T NEED THEIR WINTERS TILL NOVEMBER 25."],
+	[[10, 15], "OCTOBER 15. STUD SEASON AGAIN. GUS: \"THEY'LL ALL BE BACK ON BY FRIDAY. LISTEN FOR THE CRUNCH.\""],
+	[[11, 25], "A FAX: WINTER TIRES ON TAXIS, RIDESHARES AND COMMERCIAL VEHICLES BEFORE THE STICKER, FROM TODAY TILL APRIL 30. AGAIN."],
+]
+## Overtime mornings nobody wrote anything down, by the month.
+const OT_MORNINGS := {
+	12: ["THE PLOW BURIED THE LOT ENTRANCE AGAIN. GUS SHOVELS IT OUT IN HIS GOOD COAT. NOBODY ASKS ABOUT THE COAT.",
+		"SOMEBODY LEFT A TIN OF COOKIES ON THE COUNTER. NO NAME. GUS EATS ONE AND DECLARES THEM SAFE."],
+	1: ["MINUS TWENTY-SIX WITH THE WIND. THE COFFEE MAKER WON'T START. GUS TALKS IT ROUND.",
+		"THE CABS ARE IN THE LOT BY SEVEN WITH THEIR ENGINES RUNNING. THE EXHAUST HANGS THERE LIKE FOG."],
+	2: ["IT SNOWED. IT SNOWED YESTERDAY TOO. GUS HAS STOPPED MENTIONING IT.", "MINUS TWENTY-SIX WITH THE WIND. THE COFFEE MAKER WON'T START. GUS TALKS IT ROUND."],
+	3: ["MUD SEASON. GUS PUTS CARDBOARD DOWN BY THE DOOR. THE MUD WALKS AROUND IT.", "THE POTHOLES ARE BACK. THE LOT'S FULL OF PEOPLE WHO FOUND ONE."],
+	4: ["THE POTHOLES ARE BACK. THE LOT'S FULL OF PEOPLE WHO FOUND ONE.", "THE SNOWBANK BY THE BAY DOOR IS DOWN TO A GREY LUMP. GUS GIVES IT A WEEK."],
+	5: ["THE FIRST WARM MORNING. GUS OPENS THE BAY DOORS AND STANDS IN THE SUN FOR A MINUTE.", "BLACKFLIES. GUS SAYS THEY DON'T BITE HIM. THEY DO."],
+	6: ["BLACKFLIES. GUS SAYS THEY DON'T BITE HIM. THEY DO.", "THE FIRST WARM MORNING. GUS OPENS THE BAY DOORS AND STANDS IN THE SUN FOR A MINUTE."],
+	7: ["A MINIVAN FROM AWAY ASKS THE WAY TO MAGNET HILL. GUS GIVES IT. MOSTLY RIGHT.", "TOO HOT FOR THE BAY. GUS WORKS IN HIS UNDERSHIRT AND DARES ANYBODY TO SAY SOMETHING."],
+	8: ["TOO HOT FOR THE BAY. GUS WORKS IN HIS UNDERSHIRT AND DARES ANYBODY TO SAY SOMETHING.", "A MINIVAN FROM AWAY ASKS THE WAY TO MAGNET HILL. GUS GIVES IT. MOSTLY RIGHT."],
+	9: ["BACK-TO-SCHOOL TRAFFIC ON MAIN ST. THE BUSES GET THEIR STICKERS SOMEWHERE ELSE. GUS SAYS THANK GOODNESS."],
+	10: ["THE LEAVES ARE DOWN AND IN EVERY GUTTER ON MAIN ST.", "FIRST FROST. THE LINE FOR WINTER TIRES STARTS AT SEVEN."],
+	11: ["FIRST FROST. THE LINE FOR WINTER TIRES STARTS AT SEVEN.", "THE LEAVES ARE DOWN AND IN EVERY GUTTER ON MAIN ST."],
+}
 ## What the stamps say on a box (signing for it) and on a pulled file.
 const STAMP_WORD := { "APPROVED": "APPROVED", "DENIED": "DENIED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
 const BOX_WORD := { "APPROVED": "SIGNED FOR", "DENIED": "REFUSED", "REPORT": "REPORTED", "WRENCH": "BAY 3" }
@@ -190,6 +225,7 @@ var book := ""                        # "", "notebook" or "log": open on the des
 var log_old := false                  # the log is open at last fall's pages
 var week_pick := 0                    # free play: which week to start in
 var fresh := true                     # nothing played yet this session
+var overtime := false                 # the job after the run (DeskBook.overtime keeps the record)
 
 # the books of the shop
 var cash := CounterRules.START_CASH
@@ -247,6 +283,8 @@ func _new_week() -> void:
 
 func start_day(d: int) -> void:
 	day = d
+	# Constable Tremblay's list for the week (the same one all week, a new one on Monday)
+	rules.use_list(DeskBook.week_list(CounterRules.week_of(day)))
 	var extra: Array = story.get("customers", [])
 	arrivals = rules.shift(day, heat(), extra, chapter)
 	if tutorial: arrivals = _tutorial_line(arrivals)
@@ -282,9 +320,15 @@ func _tutorial_line(sh: Array) -> Array:
 func heat() -> int:
 	return int(week.get("heat", 0)) + int(day_log.get("heat", 0))
 
-## The stolen list counts once it's on the wall.
+## The stolen list counts once it's on the wall. A file Hachey pulls is read against the list
+## from its own week (the Ministry's copy goes up over this week's while it's on the desk).
 func bolo_now() -> Array:
+	if _filed(): return CounterRules.audit_list(c, rules.bolo)
 	return rules.bolo if CounterRules.rule_active("bolo", day) else []
+
+## A pulled file is on the desk.
+func _filed() -> bool:
+	return c.get("kind", "") == "audit" and c.has("audit")
 
 ## The shift clock: arrivals join the line, the next one honks, six o'clock empties the lot.
 func tick(dt: float) -> void:
@@ -428,6 +472,11 @@ func _resolve() -> void:
 		result.sticker = DeskBook.issue(day, c)
 		day_log.stickers.append(result.sticker)
 	for f in result.get("flags", []): DeskBook.raise(String(f))
+	# overtime: every call counts toward the streak, or ends it
+	if overtime:
+		result.streak_was = int(DeskBook.overtime.get("streak", 0))
+		result.best_was = int(DeskBook.overtime.get("best", 0))
+		DeskBook.tally(bool(result.correct))
 	# into the filing cabinet: the regulars and the people turned away remember it; Hachey pulls it
 	if c.kind == "audit":
 		DeskBook.audits.append({ "no": int(c.audit.no), "day": day, "was": String(c.audit.stamp), "now": stamped, "right": bool(c.audit.correct) })
@@ -453,7 +502,7 @@ func _resolve() -> void:
 
 ## The day the papers are read against: today, or the day on a pulled file.
 func jday() -> int:
-	return int(c.audit.day) if c.get("kind", "") == "audit" and c.has("audit") else day
+	return int(c.audit.day) if _filed() else day
 
 ## Six o'clock: whoever's still in the lot drives off with their money.
 func close_up() -> void:
@@ -483,12 +532,22 @@ func end_day() -> void:
 	week.warnings += day_log.warnings.size()
 	for k in ["seen", "correct", "earned"]: month[k] += day_log[k]
 	month.citations += day_log.citations.size()
-	if posmod(day, 7) == 4 or day >= CounterRules.LAST_DAY:
+	var next := CounterRules.next_open(day)
+	# the bills come due on the last open day of the week (Friday, unless Friday's a holiday)
+	var closes := CounterRules.week_closes(day)
+	if closes:
 		_pay_bills()
 		if week.citations >= 4: DeskBook.meetings += 1
 		phase = "week_end"
-	else:
-		start_day(CounterRules.next_open(day))
+	if overtime: _keep_day(next, closes)
+	if not closes: start_day(next)
+
+## Overtime's clock-out: one more day kept, and the book saved with tomorrow in it (and the
+## week's tally, unless the week's done). A licence gone at the week's end ends this overtime.
+func _keep_day(next: int, closes: bool) -> void:
+	DeskBook.day_kept(next, cash, {} if closes else week)
+	if closes and DeskBook.revoked(): DeskBook.overtime.ended = true
+	DeskBook.save_overtime()
 
 ## CLOCK OUT: Leo's pay for the day (a cut of the shop's take), Bay 3 cash goes straight to
 ## the Familia, the desk's flags go to the story, and the story carries on into the evening.
@@ -509,11 +568,12 @@ func _pay_bills() -> void:
 		if paid: cash -= int(b[1])
 		bills_paid.append([b[0], b[1], paid])
 
-## After Friday's bills: the next week, the end of the month, or the end of the licence.
+## After Friday's bills: the next week, the end of the month, or the end of the licence. In
+## overtime there's always a next week, licence permitting.
 func _after_week() -> void:
 	if DeskBook.revoked():
 		phase = "revoked"
-	elif day >= CounterRules.LAST_DAY:
+	elif day >= CounterRules.LAST_DAY and not overtime:
 		phase = "month_end"
 	else:
 		_new_week()
@@ -521,6 +581,42 @@ func _after_week() -> void:
 
 func _quit() -> void:
 	get_tree().change_scene_to_file("res://title.tscn")
+
+## OVERTIME on the week picker: back to the overtime on file (the day it got to, the till, the
+## book and the record), or, if there isn't one or its licence went, a new one from Monday,
+## December 2 with a fresh book (the bests stay on the record).
+func _pick_overtime() -> void:
+	overtime = true
+	var had := DeskBook.load_overtime()
+	if not had or bool(DeskBook.overtime.get("ended", false)):
+		var record: Dictionary = DeskBook.overtime.duplicate(true) if had else {}
+		DeskBook.reset()
+		DeskBook.book_seed = randi()
+		DeskBook.overtime = record
+		DeskBook.start_overtime(CounterRules.OVERTIME_START, CounterRules.START_CASH)
+	cash = int(DeskBook.overtime.cash)
+	_new_week()
+	week.merge(DeskBook.overtime.get("week", {}), true)
+	start_day(int(DeskBook.overtime.day))
+
+## Back to the eight weeks on the picker: a fresh book and a fresh till.
+func _leave_overtime() -> void:
+	if not overtime: return
+	overtime = false
+	DeskBook.reset()
+	DeskBook.book_seed = randi()
+	cash = CounterRules.START_CASH
+	_new_week()
+
+## KEEP WORKING at the end of the run: overtime from Monday, December 2 with this run's book
+## (the regulars and the people turned away remember it, and Hachey pulls from it) and what's
+## left in the till. It takes the place of any overtime on file; the bests stay.
+func _continue_overtime() -> void:
+	DeskBook.overtime = DeskBook.overtime_on_file()
+	DeskBook.start_overtime(CounterRules.next_open(day), cash)
+	overtime = true
+	_new_week()
+	start_day(CounterRules.next_open(day))
 
 # ------------------------------------------------------------------ ASK
 
@@ -544,7 +640,7 @@ func ask_next() -> void:
 
 func ask(topic: String) -> void:
 	if phase != "counter": return
-	var ans := CounterRules.answer(c, topic)
+	var ans := CounterRules.answer(c, topic, jday())
 	said = { "q": String(CounterRules.QUESTIONS.get(topic, "...")), "a": String(ans.get("line", "...")), "clue": ans.get("clue", {}) }
 	if not asked.has(topic): asked.append(topic)
 	var doc := String(ans.get("doc", ""))
@@ -578,9 +674,17 @@ func _tab_step(dir: int) -> void:
 	if book == "log" and DeskBook.old_log:
 		log_old = not log_old
 		return
+	if phase == "month_end":
+		if dir > 0: _continue_overtime()
+		return
 	if phase == "brief" and story.is_empty() and fresh:
-		week_pick = posmod(CounterRules.week_of(day) - 1 + dir, WEEK_DAYS.size())
-		start_day(WEEK_DAYS[week_pick])
+		# the eight weeks, then OVERTIME
+		var at := WEEK_DAYS.size() if overtime else CounterRules.week_of(day) - 1
+		week_pick = posmod(at + dir, WEEK_DAYS.size() + 1)
+		if week_pick == WEEK_DAYS.size(): _pick_overtime()
+		else:
+			_leave_overtime()
+			start_day(WEEK_DAYS[week_pick])
 		return
 	if CounterRules.binder(day): tab = posmod(tab + dir, _tabs_today().size())
 
@@ -806,8 +910,8 @@ func fields() -> Array:
 	if not audit: out.append({ "r": Rect2(474, 4, 54, 42), "key": "today", "val": CounterRules.today(day), "doc": "", "label": "TODAY" })
 	for blk in _rule_blocks():
 		if blk.has("rule"): out.append({ "r": blk.r, "key": "rule", "val": blk.rule.id, "doc": "", "label": "THE RULE: " + String(blk.lines[0]) })
-	if CounterRules.rule_active("bolo", day):
-		out.append({ "r": _bolo_rect(), "key": "bolo", "val": 0, "doc": "", "label": "THE STOLEN LIST" })
+	if CounterRules.rule_active("bolo", jday()):
+		out.append({ "r": _bolo_rect(), "key": "bolo", "val": 0, "doc": "", "label": "THE STOLEN LIST FROM THAT WEEK" if _filed() else "THE STOLEN LIST" })
 	out.append({ "r": NOTEBOOK_ICON, "key": "notebook", "val": 0, "doc": "", "label": "LEO'S NOTEBOOK" })
 	return out
 
@@ -1129,7 +1233,8 @@ func _speech() -> String:
 			_:
 				var asks := { "SAFETY INSPECTION": "HI. I NEED A SAFETY INSPECTION.", "FULL INSPECTION": "HI. THE REGISTRY SAYS I NEED THE FULL INSPECTION.",
 					"OIL CHANGE": "JUST AN OIL CHANGE, PLEASE.", "BRAKE JOB": "MY BRAKES ARE GRINDING. CAN YOU DO A BRAKE JOB?",
-					"WINTER TIRES ON": "HI. I NEED MY WINTER TIRES PUT ON.", "CHECK ENGINE LIGHT": "MY CHECK ENGINE LIGHT IS ON. AGAIN." }
+					"WINTER TIRES ON": "HI. I NEED MY WINTER TIRES PUT ON.", "SUMMER TIRES ON": "HI. WINTERS OFF, SUMMERS ON, PLEASE. I'M DONE WITH WINTER.",
+					"CHECK ENGINE LIGHT": "MY CHECK ENGINE LIGHT IS ON. AGAIN." }
 				s = String(asks.get(c.request, "HI."))
 	if since - float(c.get("arrived", since)) > 120.0: s = "FINALLY. " + s
 	return s
@@ -1182,7 +1287,8 @@ func _draw_booth() -> void:
 		draw_rect(Rect2(0, 142, 150, 8), Color("6a5a48"))
 		PixelFont.draw_centered(self, 75, 70, "CLOSED", ASH, 2)
 	if phase in ["idle", "counter", "stamping", "result"]:
-		PixelFont.draw(self, Vector2(6, 330), "SERVED %d   IN THE LOT %d" % [served, waiting.size()], ASH)
+		if overtime: PixelFont.draw(self, Vector2(6, 330), "SERVED %d  LOT %d  STREAK %d" % [served, waiting.size(), int(DeskBook.overtime.get("streak", 0))], ASH)
+		else: PixelFont.draw(self, Vector2(6, 330), "SERVED %d   IN THE LOT %d" % [served, waiting.size()], ASH)
 	PixelFont.draw(self, Vector2(6, 342), Hints.fmt("{inspect}: INSPECT  {desk_snap_next}: NEXT THING") if Hints.pad else Hints.fmt("{desk_notebook}: NOTEBOOK  {desk_log}: LOG"), Color(ASH, 0.7))
 	PixelFont.draw(self, Vector2(6, 351), Hints.fmt("{menu_back}: MENU"), Color(ASH, 0.6))
 
@@ -1308,15 +1414,16 @@ func _draw_wall() -> void:
 		draw_rect(r, RED if i < warnings_used else Color("2a2622"))
 		draw_rect(r, ASH, false, 1.0)
 	_draw_board()
-	# the stolen list
-	if CounterRules.rule_active("bolo", day):
+	# the stolen list: this week's, or the Ministry's copy of the one from a pulled file's week
+	if CounterRules.rule_active("bolo", jday()):
 		var br := _bolo_rect()
+		var list := bolo_now()
 		draw_rect(br, Color("f2f0e8"))
-		draw_rect(Rect2(br.position, Vector2(br.size.x, 9)), BLUE)
-		PixelFont.draw(self, br.position + Vector2(3, 2), "PORT RUMBLE POLICE - STOLEN", BONE)
-		var cars := CounterRules.bolo_cars(rules.bolo)
+		draw_rect(Rect2(br.position, Vector2(br.size.x, 9)), (TAB_COL["MINISTRY"] as Color) if _filed() else BLUE)
+		PixelFont.draw(self, br.position + Vector2(3, 2), _list_title(), BONE)
+		var cars := CounterRules.bolo_cars(list)
 		# from week 6 the parts share the sheet, and the cars close up to make room
-		var parts: Array = CounterRules.bolo_parts(rules.bolo) if CounterRules.rule_active("hot", day) else []
+		var parts: Array = CounterRules.bolo_parts(list) if CounterRules.rule_active("hot", jday()) else []
 		var pitch := 10.0 if parts.is_empty() else 7.0
 		for i in cars.size():
 			var b: Dictionary = cars[i]
@@ -1334,9 +1441,16 @@ func _draw_wall() -> void:
 				var pp := Vector2(br.position.x + 4 + (i % 2) * 80, py + 9 + floori(i / 2.0) * 7)
 				PixelFont.draw(self, pp, "%s %s" % [parts[i].serial, parts[i].part], INK)
 		draw_circle(br.position + Vector2(br.size.x / 2, 1), 2, RED)
+	elif _filed():
+		PixelFont.draw(self, Vector2(478, 260), "(NO STOLEN LIST YET ON %s.)" % CounterRules.month_day(CounterRules.today(jday())), ASH)
 	else:
 		PixelFont.draw(self, Vector2(478, 260), "(A CORKBOARD. EMPTY FOR NOW.)", ASH)
 	_draw_shelf()
+
+## The stolen list's heading: the week it's for, or the date on a pulled file.
+func _list_title() -> String:
+	if _filed(): return "STOLEN AS OF %s - FILE COPY" % CounterRules.month_day(CounterRules.today(jday()))
+	return "POLICE - STOLEN - WEEK OF %s" % CounterRules.month_day(CounterRules.today(day - posmod(day, 7)))
 
 ## The wall clock: 8 to 6, and the minutes ticking.
 func _draw_clock(o: Vector2) -> void:
@@ -1475,9 +1589,41 @@ func _brief_paras() -> Array:
 		return ["CLOCK IN: 8:00 A.M. GUS IS LEANING ON THE DOORFRAME WITH A COFFEE THAT SAYS WORLD'S OKAYEST BOSS.",
 			"\"THAT'S THE OLD MANAGER'S MUG. I SAID DON'T TOUCH THE MUG. FINE. KEEP IT. READ EVERY PAPER.\"",
 			"\"I'LL BE RIGHT BEHIND YOU. NOT HELPING. JUST BEHIND YOU.\""]
+	if overtime: return _overtime_brief()
 	var paras: Array = BRIEFS.get(day, [MORNINGS[day % MORNINGS.size()]]).duplicate()
 	if DeskBook.old_log and (day == 29 or (story.is_empty() and day == 22)):
 		paras.append("GUS DROPS A BINDER ON THE DESK. \"LAST FALL'S STICKER LOG. MINISTRY WANTS 'EM ALL TOGETHER.\" HE DOESN'T LOOK AT IT. HE DOESN'T LOOK AT IT VERY HARD.")
+	return paras
+
+## An overtime morning: the first one, what the calendar brings (a notice, or a holiday the shop
+## was shut for), a new stolen list on the week's first day, and Hachey's car in the lot.
+func _overtime_brief() -> Array:
+	var paras: Array = []
+	var ot: Dictionary = DeskBook.overtime
+	var prev := day - 1
+	while prev > CounterRules.LAST_DAY and not CounterRules.is_open(prev): prev -= 1
+	if int(ot.get("days", 0)) == 0:
+		paras.append("OVERTIME. THE EIGHT WEEKS ARE DONE. THE JOB ISN'T. EVERY RULE IN THE BINDER STAYS UP, AND THE DATES ON THEM COME ROUND.")
+		paras.append("GUS: \"SAME RULES. ALL OF 'EM. READ THE CALENDAR BEFORE YOU READ THE TIRES.\"")
+	var shut: Array = []
+	for x in range(prev + 1, day):
+		if CounterRules.holiday(x) != "" and not shut.has(CounterRules.holiday(x)): shut.append(CounterRules.holiday(x))
+	if not shut.is_empty(): paras.append("THE SHOP WAS SHUT FOR %s." % " AND ".join(shut))
+	var noticed := false
+	for n in OT_NOTICES:
+		for x in range(prev + 1, day + 1):
+			var tx := CounterRules.today(x)
+			if int(tx[1]) == int(n[0][0]) and int(tx[2]) == int(n[0][1]):
+				paras.append(String(n[1]))
+				noticed = true
+	if not noticed and int(ot.get("days", 0)) > 0:
+		var pool: Array = OT_MORNINGS.get(int(CounterRules.today(day)[1]), MORNINGS)
+		paras.append(String(pool[posmod(day, pool.size())]))
+	if CounterRules.week_of(prev) != CounterRules.week_of(day) and int(ot.get("days", 0)) > 0:
+		paras.append("CONSTABLE TREMBLAY'S NEW STOLEN LIST IS ON THE CORKBOARD. LAST WEEK'S IS IN THE FILES.")
+	var hachey := CounterRules.audit_times(day)
+	if not hachey.is_empty():
+		paras.append("INSPECTOR HACHEY'S GREY SEDAN IS IN THE LOT AT 7:45. HE'S \"JUST PASSING THROUGH.\" HE'LL PULL A FILE AT %s" % CounterRules.clock_str(float(hachey[0])))
 	return paras
 
 func _draw_brief() -> void:
@@ -1485,7 +1631,9 @@ func _draw_brief() -> void:
 	_panel(r, 0.95)
 	var t := CounterRules.today(day)
 	PixelFont.draw_centered(self, 320, 44, "%s, %s" % [CounterRules.day_name(day), CounterRules.date_str(t)], GOLD, 3, INK)
-	PixelFont.draw_centered(self, 320, 66, "WEEK %d AT COVINGTON AUTO.  THE WINDOW OPENS AT 8. CLOCK-OUT IS AT 6." % CounterRules.week_of(day), ASH)
+	var head := "WEEK %d AT COVINGTON AUTO." % CounterRules.week_of(day)
+	if overtime: head = "OVERTIME, DAY %d AT COVINGTON AUTO." % (int(DeskBook.overtime.get("days", 0)) + 1)
+	PixelFont.draw_centered(self, 320, 66, head + "  THE WINDOW OPENS AT 8. CLOCK-OUT IS AT 6.", ASH)
 	var y := 84.0
 	for para in _brief_paras():
 		for l in wrap_text(para, 64):
@@ -1500,8 +1648,14 @@ func _draw_brief() -> void:
 			for l in wrap_text(n.text, 110):
 				PixelFont.draw(self, Vector2(70, y), l, BONE)
 				y += 8
+	if overtime:
+		PixelFont.draw_centered(self, 320, 274, "OVERTIME SAVES AT EVERY CLOCK-OUT.", ASH)
+		PixelFont.draw_centered(self, 320, 286, _record_line(), GOLD)
+	elif story.is_empty() and fresh and day == WEEK_DAYS[WEEK_DAYS.size() - 1]:
+		PixelFont.draw_centered(self, 320, 286, "AFTER WEEK 8: OVERTIME. DECEMBER, THE WINTER, THE SPRING, AND ON.", ASH)
 	if story.is_empty() and fresh:
-		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  < WEEK %d OF %d >  {desk_tab_next}" % [CounterRules.week_of(day), CounterRules.WEEKS]), GOLD)
+		var pick := "< OVERTIME >" if overtime else "< WEEK %d OF %d >" % [CounterRules.week_of(day), CounterRules.WEEKS]
+		PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_tab_prev}  %s  {desk_tab_next}" % pick), GOLD)
 	PixelFont.draw_centered(self, 320, 314, Hints.fmt("{desk_click}: OPEN THE WINDOW"), Color(BONE, 0.6 + 0.4 * sin(Time.get_ticks_msec() / 250.0)))
 
 func _draw_result() -> void:
@@ -1512,6 +1666,15 @@ func _draw_result() -> void:
 	if c.has("slip") and stamped in ["APPROVED", "DENIED"]: title = BOX_WORD[stamped]
 	if c.kind == "audit": title = "THE SAME STAMP" if good else "A DIFFERENT STAMP"
 	PixelFont.draw_centered(self, 310, 134, title, GOLD, 2)
+	if overtime and result.has("streak_was"):
+		var streak := int(DeskBook.overtime.get("streak", 0))
+		var st := "STREAK %d" % streak
+		var col := GREEN if good else RED
+		if not good and int(result.streak_was) > 0: st = "STREAK OVER AT %d" % int(result.streak_was)
+		elif good and streak > int(result.get("best_was", streak)):
+			st = "NEW BEST: %d" % streak
+			col = GOLD
+		PixelFont.draw(self, Vector2(r.end.x - 6 - PixelFont.width(st), r.position.y + 4), st, col)
 	var y := 152.0
 	for l in wrap_text(result.line, 66):
 		PixelFont.draw(self, Vector2(174, y), l, BONE)
@@ -1552,6 +1715,9 @@ func _day_end_rows() -> Array:
 		rows.append(["FILES PULLED", "%d, %d THE SAME" % [day_log.audits, day_log.audits_same] + (" (%d WRONG TWICE)" % twice if twice > 0 else ""), BONE])
 	rows.append(["REVIEWS", "%+d STARS" % day_log.reviews, BONE])
 	rows.append(["HEAT / FAMILIA", "%+d / %+d" % [day_log.heat, day_log.trust], BONE])
+	if overtime:
+		var ot: Dictionary = DeskBook.overtime
+		rows.append(["OVERTIME", "DAY %d, STREAK %d (BEST %d)" % [int(ot.get("days", 0)) + 1, int(ot.get("streak", 0)), int(ot.get("best", 0))], GOLD])
 	rows.append(["CASH ON HAND", "$%d" % cash, GREEN if cash >= 0 else RED])
 	return rows
 
@@ -1588,7 +1754,7 @@ func _draw_day_end() -> void:
 		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
 	else:
-		var friday := posmod(day, 7) == 4 or day >= CounterRules.LAST_DAY
+		var friday := CounterRules.week_closes(day)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: PAY THE BILLS") if friday else Hints.fmt("{desk_click}: GO HOME"), Color(BONE, 0.7))
 
 ## What the Ministry wrote down today, wrapped to the sheet: four lines at most.
@@ -1631,8 +1797,9 @@ func _draw_week_end() -> void:
 			PixelFont.draw(self, Vector2(100, y), l, BONE)
 			y += 8
 		y += 5
-	PixelFont.draw_centered(self, 320, 300, "%d CUSTOMERS. %d RIGHT CALLS. %d WARNINGS. %d CITATIONS." % [week.seen, week.correct, week.warnings, week.citations], ASH)
-	var nxt := "THE LICENCE" if DeskBook.revoked() else ("THE END OF THE MONTH" if day >= CounterRules.LAST_DAY else "NEXT WEEK")
+	if overtime: PixelFont.draw_centered(self, 320, 286, _record_line(), GOLD)
+	PixelFont.draw_centered(self, 320, 300, "%s. %s. %s. %s." % [_count(week.seen, "CUSTOMER"), _count(week.correct, "RIGHT CALL"), _count(week.warnings, "WARNING"), _count(week.citations, "CITATION")], ASH)
+	var nxt := "THE LICENCE" if DeskBook.revoked() else ("THE END OF THE MONTH" if day >= CounterRules.LAST_DAY and not overtime else "NEXT WEEK")
 	PixelFont.draw_centered(self, 320, 318, Hints.fmt("{desk_click}: " + nxt), Color(BONE, 0.7))
 
 ## Inspector Hachey's report on the week: one line, the way the Ministry writes them. A wrong
@@ -1651,8 +1818,8 @@ func _draw_month_end() -> void:
 	_panel(Rect2(80, 40, 480, 280), 0.97)
 	PixelFont.draw_centered(self, 320, 54, "NOVEMBER 29. THE SNOW STUCK.", GOLD, 3, INK)
 	var y := 90.0
-	var ls := ["%d WEEKS AT THE COUNTER. %d CUSTOMERS, %d RIGHT CALLS, $%d FOR THE SHOP." % [CounterRules.WEEKS, month.seen, month.correct, month.earned],
-		"%d STICKERS ON %d WINDSHIELDS. %d CITATIONS ON YOUR LICENCE." % [DeskBook.stickers.size(), DeskBook.stickers.size(), DeskBook.citations],
+	var ls := ["%d WEEKS AT THE COUNTER. %s, %s, $%d FOR THE SHOP." % [CounterRules.WEEKS, _count(month.seen, "CUSTOMER"), _count(month.correct, "RIGHT CALL"), month.earned],
+		"%s ON %s. %s ON YOUR LICENCE." % [_count(DeskBook.stickers.size(), "STICKER"), _count(DeskBook.stickers.size(), "WINDSHIELD"), _count(DeskBook.citations, "CITATION")],
 		audit_verdict(),
 		"GUS LOCKS UP. \"NOT BAD, KID.\" HE THINKS ABOUT IT. \"NOT GOOD EITHER. BUT NOT BAD.\"",
 		"THE FULL GAME HAS EIGHT YEARS OF THESE."]
@@ -1661,7 +1828,17 @@ func _draw_month_end() -> void:
 			PixelFont.draw(self, Vector2(108, y), l, BONE, 2)
 			y += 13
 		y += 6
-	PixelFont.draw_centered(self, 320, 300, Hints.fmt("{desk_click}: BACK TO THE MENU"), Color(BONE, 0.7))
+	PixelFont.draw_centered(self, 320, 296, Hints.fmt("{desk_tab_next}: KEEP WORKING (OVERTIME)"), GOLD)
+	PixelFont.draw_centered(self, 320, 308, Hints.fmt("{desk_click}: BACK TO THE MENU"), Color(BONE, 0.7))
+
+## "1 STICKER", "2 STICKERS".
+static func _count(n: int, what: String) -> String:
+	return "%d %s%s" % [n, what, "" if n == 1 else "S"]
+
+## Overtime's running record, one line.
+func _record_line() -> String:
+	var ot: Dictionary = DeskBook.overtime
+	return "DAYS KEPT %d.  STREAK %d.  BEST STREAK %d." % [int(ot.get("days", 0)), int(ot.get("streak", 0)), int(ot.get("best", 0))]
 
 ## The short fail ending: the Daily Clutch's front page.
 func _draw_revoked() -> void:
@@ -1674,9 +1851,11 @@ func _draw_revoked() -> void:
 	PixelFont.draw_centered(self, 320, 86, "COVINGTON AUTO LOSES", INK, 2)
 	PixelFont.draw_centered(self, 320, 102, "ITS INSPECTION LICENCE", INK, 2)
 	var y := 126.0
-	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS IN A MONTH. \"WE GAVE THE YOUNG MAN EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % DeskBook.citations, 70):
+	var when := "" if overtime else " IN A MONTH"
+	for l in wrap_text("THE MINISTRY PULLED STATION 0117'S LICENCE THIS WEEK AFTER %d CITATIONS%s. \"WE GAVE THE YOUNG MAN EVERY CHANCE,\" SAID A SPOKESPERSON, WHO DID NOT. THE SHOP WILL KEEP DOING OIL CHANGES. A HANDWRITTEN SIGN ON THE DOOR SAYS \"STILL OPEN. MOSTLY.\"" % [DeskBook.citations, when], 70):
 		PixelFont.draw(self, Vector2(140, y), l, PAPER_INK)
 		y += 9
+	if overtime: PixelFont.draw_centered(self, 320, 296, "OVERTIME: %d DAYS KEPT. BEST STREAK %d." % [int(DeskBook.overtime.get("days", 0)), int(DeskBook.overtime.get("best", 0))], PAPER_INK)
 	PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: BACK TO THE MENU"), PAPER_DIM)
 
 func _draw_cursor() -> void:

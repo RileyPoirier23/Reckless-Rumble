@@ -1,6 +1,6 @@
 ## Headless tests for the desk itself (the scene, not just the rules): the shift clock and the
-## line, warnings, ASK, the notebook and the sticker log, the binder, the controls, and Desk
-## 2.2's stolen parts, winter week and wider audit.
+## line, warnings, ASK, the notebook and the sticker log, the binder, the controls, Desk 2.2's
+## stolen parts, winter week and wider audit, and Desk 2.3's weekly stolen lists and overtime.
 ## godot --headless --path game -s tests/desk_tests.gd
 extends SceneTree
 
@@ -33,9 +33,17 @@ func field(sc: CounterScene, doc: String, key: String) -> Dictionary:
 		if f.key == key and (doc == "" or f.get("doc", "") == doc): return f
 	return {}
 
+## Overtime keeps its book in a file: the tests keep theirs out of the player's way.
+const TEST_OVERTIME := "user://desk_tests_overtime.json"
+
+func _wipe_overtime() -> void:
+	if FileAccess.file_exists(TEST_OVERTIME): DirAccess.remove_absolute(TEST_OVERTIME)
+
 func _init() -> void:
 	CounterScene.setup_actions()
 	DeskBook.reset()
+	DeskBook.overtime_path = TEST_OVERTIME
+	_wipe_overtime()
 	_controls()
 	_shift()
 	_warnings()
@@ -52,6 +60,9 @@ func _init() -> void:
 	_hot_desk()
 	_winter_desk()
 	_audit_more()
+	_list_desk()
+	_overtime_desk()
+	_wipe_overtime()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
 
@@ -200,7 +211,7 @@ func _ask() -> void:
 	stamp_now(sc, "APPROVED")
 	check("approving a covered car is the right call", sc.result.correct and sc.result.citation == "")
 	sc.press()
-	# a mask, and a sting who doesn't know which Tim's
+	# a mask at the counter
 	var m := sc.rules.customer(24, "clean", { "plain": true })
 	m.mask = "PUMPKIN"
 	sc.day = 24
@@ -646,13 +657,16 @@ func _hot_desk() -> void:
 # ------------------------------------------------------------------ Desk 2.2: winter week at the desk
 
 func _winter_desk() -> void:
-	# the week picker reaches week 8
+	# the week picker reaches week 8 (and OVERTIME after it)
 	var sc := desk(151)
 	sc.fresh = true
 	sc.start_day(0)
 	sc._tab_step(-1)
-	check("free play: the week picker wraps round to week 8", sc.day == 49 and CounterRules.week_of(sc.day) == 8)
+	check("free play: the week picker wraps round to OVERTIME, after week 8", sc.overtime and sc.day == CounterRules.OVERTIME_START)
+	sc._tab_step(-1)
+	check("...and back to week 8", not sc.overtime and sc.day == 49 and CounterRules.week_of(sc.day) == 8)
 	done(sc)
+	_wipe_overtime()
 	# Rob's team van: put its winters on Tuesday and it's fine on Friday; send him away and it isn't
 	for way in ["APPROVED", "DENIED"]:
 		DeskBook.reset()
@@ -732,5 +746,175 @@ func _audit_more() -> void:
 	check("the same wrong stamp twice: no citation, and it's on the day-end sheet", sc.day_log.audits_wrong == 1 and sc.day_log.citations.is_empty()
 		and sc._day_end_rows().any(func(r): return String(r[0]) == "FILES PULLED" and String(r[1]).contains("1 WRONG TWICE")))
 	check("Hachey's report says so", sc.audit_verdict().contains("WRONG BOTH TIMES") and DeskBook.flags.has("desk_audit_wrong_twice"))
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.3: a new list every week, and Hachey reads a file against its own
+
+## Tick the shift on until Inspector Hachey's at the window with a file (stamping anybody else
+## DENIED). {} if he never comes.
+func until_hachey(sc: CounterScene) -> Dictionary:
+	for i in 4000:
+		sc.tick(0.5)
+		if sc.phase == "counter":
+			if sc.c.kind == "audit": return sc.c
+			stamp_now(sc, "DENIED")
+		if sc.phase == "result": sc.press()
+		if sc.phase == "day_end": break
+	return {}
+
+func _list_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(181)
+	sc.start_day(31)
+	var wk5 := sc.rules.bolo
+	sc.start_day(33)
+	check("the stolen list is the same all week", sc.rules.bolo == wk5 and sc._list_title().begins_with("POLICE - STOLEN - WEEK OF NOV 4"))
+	sc.start_day(36)
+	check("...and a new one comes the next week", sc.rules.bolo != wk5 and sc.rules.list_seed == DeskBook.week_list(6))
+	# a stolen car in week 5, approved: the file keeps week 5's list
+	sc.start_day(31)
+	sc.press()
+	var w := sc.rules.walk_in(31, "stolen")
+	serve(sc, w, "APPROVED")
+	var rec: Dictionary = DeskBook.files[DeskBook.files.size() - 1]
+	check("a stolen car's file keeps the list it was read against", int(rec.get("list", -1)) == DeskBook.week_list(5) and rec.probs == ["stolen"] and CounterRules.auditable(rec, 42))
+	sc.close_up()
+	# week 7: a new list on the wall, and Hachey pulls the file
+	sc.start_day(42)
+	sc.press()
+	var a := until_hachey(sc)
+	check("Hachey pulls the stolen car's file", not a.is_empty() and int(a.get("audit", {}).get("no", 0)) == int(rec.no))
+	if not a.is_empty():
+		check("...and reads it against week 5's list, pinned over this week's", sc.bolo_now() == wk5 and sc.rules.bolo != wk5 and sc._list_title() == "STOLEN AS OF NOV 7 - FILE COPY")
+		sc.inspecting = true
+		sc.pick(field(sc, "reg", "plate"))
+		sc.pick(field(sc, "", "bolo"))
+		check("the plate on the file against that week's list: stolen", sc.verdict.good == false and String(sc.verdict.text) == "ON THE STOLEN LIST")
+		sc.inspecting = false
+		stamp_now(sc, "APPROVED")
+		check("stamp it the way it was stamped: consistent, and wrong twice", sc.result.correct and sc.result.citation == "" and sc.result.get("wrong_twice", false))
+		sc.press()
+		check("once he's gone, this week's list is back on the wall", sc.bolo_now() == sc.rules.bolo or sc.c.is_empty() or sc.c.kind != "audit")
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.3: overtime
+
+## A walk-in with nothing wrong, for a right call (and a file Hachey can pull later).
+func clean_one(sc: CounterScene) -> Dictionary:
+	return sc.rules.walk_in(sc.day, "clean")
+
+func _overtime_desk() -> void:
+	# OVERTIME, after week 8 on the picker: Monday, December 2, a fresh book, the till at the start
+	_wipe_overtime()
+	DeskBook.reset()
+	var sc := desk(171)
+	sc.fresh = true
+	sc.start_day(49)
+	sc._tab_step(1)
+	check("OVERTIME is after week 8 on the picker: Monday, December 2, a fresh book", sc.overtime and sc.day == CounterRules.OVERTIME_START and sc.phase == "brief"
+		and DeskBook.files.is_empty() and sc.cash == CounterRules.START_CASH and int(DeskBook.overtime.get("days", -1)) == 0)
+	var brief := " ".join(sc._brief_paras())
+	check("the first overtime morning says so, and the December 1 fax is on it", brief.contains("OVERTIME") and brief.contains("FROM DECEMBER 1"), brief.substr(0, 80))
+	check("every rule from the eight weeks is in the binder", sc._tabs_today().size() == CounterRules.TABS.size())
+	# the streak: right calls build it, a wrong one ends it; the best stays
+	sc.press()
+	for i in 3: serve(sc, clean_one(sc), "APPROVED")
+	check("three right calls: a streak of three, and a new best each time", int(DeskBook.overtime.streak) == 3 and int(DeskBook.overtime.best) == 3 and int(sc.result.best_was) == 2)
+	sc.waiting.push_front(sc.rules.customer(sc.day, "vin_mismatch"))
+	sc.next_customer()
+	stamp_now(sc, "APPROVED")
+	check("a wrong call ends it, and says so", int(DeskBook.overtime.streak) == 0 and int(DeskBook.overtime.best) == 3 and int(sc.result.streak_was) == 3)
+	sc.press()
+	serve(sc, clean_one(sc), "APPROVED")
+	check("...and it starts again; the best streak stays", int(DeskBook.overtime.streak) == 1 and int(DeskBook.overtime.best) == 3)
+	check("the day-end sheet keeps the record", sc._day_end_rows().any(func(r): return String(r[0]) == "OVERTIME" and String(r[1]).contains("STREAK 1 (BEST 3)")))
+	# clock out: the day's kept, and the book saved with tomorrow in it
+	sc.close_up()
+	sc.end_day()
+	check("clock-out: one day kept, Tuesday next, and it's saved", int(DeskBook.overtime.days) == 1 and sc.day == 57 and sc.phase == "brief" and FileAccess.file_exists(TEST_OVERTIME))
+	var till := sc.cash
+	var filed := DeskBook.files.size()
+	done(sc)
+	# a new session: OVERTIME picks up where it left off
+	DeskBook.reset()
+	sc = desk(172)
+	sc.fresh = true
+	sc.start_day(0)
+	sc._tab_step(-1)
+	check("pick OVERTIME again: the same day, the same till, the same book and record", sc.overtime and sc.day == 57 and sc.cash == till and DeskBook.files.size() == filed
+		and int(DeskBook.overtime.streak) == 1 and int(DeskBook.overtime.best) == 3 and int(DeskBook.overtime.days) == 1 and DeskBook.files[0].seed is int and DeskBook.overtime.days is int)
+	check("the brief keeps the record too", " ".join(sc._brief_paras()) != "" and sc._record_line() == "DAYS KEPT 1.  STREAK 1.  BEST STREAK 3.")
+	# Friday's bills, then Monday: in overtime the month doesn't end
+	sc.start_day(60)
+	sc.press()
+	sc.close_up()
+	sc.end_day()
+	check("Friday in overtime: the bills", sc.phase == "week_end" and sc.bills_paid.size() == CounterRules.BILLS.size())
+	sc._after_week()
+	check("...then Monday, December 9: no end of the month in overtime", sc.phase == "brief" and sc.day == 63 and " ".join(sc._brief_paras()).contains("NEW STOLEN LIST"))
+	# Christmas week: shut Wednesday and Thursday, the bills Friday
+	sc.start_day(78)
+	sc.close_up()
+	sc.end_day()
+	check("Christmas Eve's clock-out opens Friday the 27th", sc.day == 81 and sc.phase == "brief" and " ".join(sc._brief_paras()).contains("SHUT FOR CHRISTMAS AND BOXING DAY"))
+	# spring: studs out of season at the desk
+	var may := CounterRules.days_between(CounterRules.WEEK_START, [2020, 5, 5])
+	sc.start_day(may)
+	sc.press()
+	var st := sc.rules.customer(may, "studs_out_of_season")
+	sc.waiting.push_front(st)
+	sc.next_customer()
+	sc.inspecting = true
+	sc.tab = sc._tabs_today().find("SEASONAL")
+	var tires: Dictionary = {}
+	for f in sc.fields(): if f.key == "measure" and String(f.val.kind) == "tires": tires = f
+	sc.pick(tires)
+	for f in sc.fields(): if f.key == "rule" and f.val == "studs": sc.pick(f)
+	check("May 5: studs against the stud rule, out of season", sc.verdict.good == false and String(sc.verdict.text).contains("OUT OF SEASON") and sc.ask_list()[0] == "studs_out_of_season")
+	sc.inspecting = false
+	stamp_now(sc, "DENIED")
+	check("failing studs in May is the right call", sc.result.correct)
+	sc.press()
+	# Hachey still drops in now and then, and pulls one of the overtime files
+	var hd := may
+	while CounterRules.audit_times(hd).is_empty(): hd = CounterRules.next_open(hd)
+	sc.start_day(hd)
+	check("Hachey's sedan is in the lot on the morning he's coming", " ".join(sc._brief_paras()).contains("HACHEY") and sc.arrivals.filter(func(x): return x.c.kind == "audit").size() == 1)
+	sc.press()
+	var a := until_hachey(sc)
+	check("...and pulls an older file", not a.is_empty() and int(a.audit.day) < hd)
+	done(sc)
+	# the end of the run: KEEP WORKING carries this run's book into overtime
+	_wipe_overtime()
+	DeskBook.reset()
+	sc = desk(173)
+	sc.start_day(CounterRules.LAST_DAY)
+	sc.press()
+	serve(sc, sc.rules.walk_in(CounterRules.LAST_DAY, "tint"), "DENIED")
+	sc.close_up()
+	sc.end_day()
+	sc._after_week()
+	check("the run still ends on November 29", sc.phase == "month_end")
+	var left := sc.cash
+	sc._tab_step(1)
+	check("KEEP WORKING: overtime on Monday, December 2, with the run's files and till", sc.overtime and sc.day == CounterRules.OVERTIME_START and sc.phase == "brief" and DeskBook.files.size() == 1 and sc.cash == left)
+	# losing the licence ends an overtime: the next one starts over, and the best streak stays
+	DeskBook.overtime.best = 9
+	DeskBook.citations = CounterRules.REVOKE_AT
+	sc.start_day(60)
+	sc.close_up()
+	sc.end_day()
+	sc._after_week()
+	check("twelve citations and overtime's over too", sc.phase == "revoked" and bool(DeskBook.overtime_on_file().get("ended", false)))
+	done(sc)
+	DeskBook.reset()
+	sc = desk(174)
+	sc.fresh = true
+	sc.start_day(49)
+	sc._tab_step(1)
+	check("the next OVERTIME starts over from December 2, the best streak still on the books", sc.day == CounterRules.OVERTIME_START and DeskBook.files.is_empty()
+		and DeskBook.citations == 0 and int(DeskBook.overtime.days) == 0 and int(DeskBook.overtime.best) == 9)
 	done(sc)
 	DeskBook.reset()
