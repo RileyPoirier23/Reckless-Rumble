@@ -10,6 +10,8 @@ const ASH := Color("8a8478")
 const RED := Color("e0402e")
 
 const CPS := 55.0                 # typewriter: characters a second
+## Lines that are instructions, not something said: they run as soon as they come up.
+const INSTRUCTIONS := ["set", "cast", "cash", "flag", "pose"]
 
 var step: Dictionary
 var lines: Array = []
@@ -18,8 +20,16 @@ var shown := 0.0
 var set_name := "black"
 var choice_sel := 0
 var t := 0.0
-var history: Array = []           # set name at each line (so going back restores the set)
+var history: Array = []           # [set, cast poses] at each line (so going back restores both)
 var demo := false
+var cast := {}                     # who -> { x, facing, pose } for the people standing in the set
+var _paid := {}                    # "cash" lines already counted (going back and forward again doesn't pay twice)
+## Moving between places: the screen fades to black, the place (and who's there) changes, and it
+## fades back in. 0..1 going out, 1..2 coming back in; -1 when nothing's moving.
+const FADE_S := 0.35
+var _tr := 1.0                     # every scene fades in from black
+var _tr_to := ""                   # the set it's going to ("" just fading in)
+var _leaving := false              # the scene's over: fading out before the next step
 
 func _ready() -> void:
 	Controls.setup()
@@ -31,47 +41,93 @@ func _ready() -> void:
 		var sc: Dictionary = StoryScript.SCENES[step.id]
 		set_name = sc.set
 		lines = sc.lines
+		for c in sc.get("cast", []):
+			cast[String(c[0])] = { "x": int(c[1]), "facing": int(c[2]), "pose": String(c[3]) }
 	demo = OS.get_cmdline_user_args().has("--story-demo")
 
 func _process(dt: float) -> void:
 	t += dt
-	if step.type == "scene" and i < lines.size():
-		shown += dt * CPS
+	if _tr >= 0.0:
+		_tr += dt / FADE_S
+		if _tr >= 1.0 and _leaving:
+			_leaving = false
+			_tr = -1.0
+			StoryState.advance(get_tree())
+			return
+		if _tr >= 1.0 and _tr_to != "":
+			set_name = _tr_to          # it's black: change places, then whoever's there (the next "cast")
+			_tr_to = ""
+			_next()
+		if _tr >= 2.0: _tr = -1.0
+		queue_redraw()
+		if _tr >= 0.0 and _tr < 1.0: return
+	if step.type == "scene" and i < lines.size(): shown += dt * CPS
+	# instructions run as soon as they come up (a run of them all at once: two people bow together)
+	while step.type == "scene" and i < lines.size() and (String(lines[i][0]) in INSTRUCTIONS or _skip(lines[i])):
 		var ln: Array = lines[i]
-		# instructions run as soon as they come up
+		if _skip(ln):
+			_next()
+			continue
 		match String(ln[0]):
 			"set":
-				set_name = ln[1]
+				if String(ln[1]) == set_name:
+					_next()
+				else:
+					# somewhere else: fade out, change places there
+					_tr = 0.0
+					_tr_to = String(ln[1])
+					break
+			"cast":
+				cast = {}
+				for c in ln[1]: cast[String(c[0])] = { "x": int(c[1]), "facing": int(c[2]), "pose": String(c[3]) }
 				_next()
 			"cash":
-				StoryState.cash += int(ln[1])
+				if not _paid.has(i):
+					_paid[i] = true
+					StoryState.cash += int(ln[1])
 				_next()
 			"flag":
 				StoryState.set_flag(ln[1])
+				_next()
+			"pose":
+				if cast.has(String(ln[1])): cast[String(ln[1])].pose = String(ln[2])
 				_next()
 	if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("click") or Input.is_action_just_pressed("use"):
 		press()
 	if Input.is_action_just_pressed("shift_down") or Input.is_action_just_pressed("ui_text_backspace"):
 		back()
 	if _is_choice():
-		var opts: Array = lines[i][1]
+		var opts := _opts()
 		if Input.is_action_just_pressed("ui_down"): choice_sel = (choice_sel + 1) % opts.size()
 		if Input.is_action_just_pressed("ui_up"): choice_sel = (choice_sel + opts.size() - 1) % opts.size()
-	if Input.is_action_just_pressed("menu_back"):
+	if Input.is_action_just_pressed("menu_back") or Input.is_action_just_pressed("ui_back_pad"):
 		get_tree().change_scene_to_file("res://title.tscn")
 	queue_redraw()
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 		if _is_choice():
-			var opts: Array = lines[i][1]
+			var opts := _opts()
 			for k in opts.size():
 				if _choice_rect(k, opts.size()).has_point(get_global_mouse_position()):
 					choice_sel = k
 		press()
 
+func _poses() -> Dictionary:
+	var d := {}
+	for who in cast: d[who] = cast[who].pose
+	return d
+
 func _is_choice() -> bool:
 	return step.type == "scene" and i < lines.size() and String(lines[i][0]) == "choice"
+
+## A line that only plays for some Leos (a karma tier, a choice made earlier): see Karma.holds.
+static func _skip(ln: Array) -> bool:
+	return ln.size() > 2 and ln[2] is Dictionary and not Karma.holds(ln[2])
+
+## The choice's options this Leo has (an option can ask for a karma tier too).
+func _opts() -> Array:
+	return (lines[i][1] as Array).filter(func(o: Array) -> bool: return not (o.size() > 2 and o[2] is Dictionary and not Karma.holds(o[2])))
 
 ## Forward: finish the line if it's still typing, otherwise the next line.
 func press() -> void:
@@ -80,7 +136,9 @@ func press() -> void:
 		return
 	if i >= lines.size(): return
 	if _is_choice():
-		var opt: Array = lines[i][1][choice_sel]
+		# back up and pick again: only the last pick counts
+		for o in lines[i][1]: StoryState.flags.erase(String(o[1]))
+		var opt: Array = _opts()[choice_sel]
 		StoryState.set_flag(opt[1])
 		_next()
 		return
@@ -91,36 +149,103 @@ func press() -> void:
 	_next()
 
 func _next() -> void:
-	history.append(set_name)
+	history.append([set_name, cast.duplicate(true)])
 	i += 1
 	shown = 0.0
 	choice_sel = 0
 	if i >= lines.size():
-		StoryState.advance(get_tree())
+		# fade out, then the next step
+		_leaving = true
+		_tr = 0.0
 
 func back() -> void:
 	# step back to the previous spoken line (instructions don't count)
 	var j := i - 1
-	while j >= 0 and String(lines[j][0]) in ["set", "cash", "flag"]: j -= 1
-	if j < 0: return
-	while history.size() > j: set_name = history.pop_back()
+	while j >= 0 and (String(lines[j][0]) in INSTRUCTIONS or _skip(lines[j])): j -= 1
+	if j < 0 or _leaving or (_tr >= 0.0 and _tr < 1.0): return
+	while history.size() > j:
+		var h: Array = history.pop_back()
+		set_name = h[0]
+		cast = (h[1] as Dictionary).duplicate(true)
 	i = j
 	shown = 9999.0
 
 # ------------------------------------------------------------------ drawing
 
 func _draw() -> void:
+	_draw_scene()
+	# moving between places, starting and ending: a fade through black over everything
+	if _tr >= 0.0:
+		var a := clampf(1.0 - absf(_tr - 1.0), 0.0, 1.0)
+		if a > 0.0: draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, a))
+
+func _draw_scene() -> void:
 	if step.is_empty(): return
 	if step.type == "card":
 		_card()
 		return
 	StorySets.draw(self, set_name, t)
+	var ln: Array = lines[i] if i < lines.size() else ["*", ""]
+	var who := String(ln[0])
+	var talking := cast.has(who) and shown < StoryState.fill(String(ln[1])).length()
+	_people(who, talking)
 	if i >= lines.size(): return
-	var ln: Array = lines[i]
-	if String(ln[0]) == "choice":
-		_choices(ln[1])
-	elif not String(ln[0]) in ["set", "cash", "flag"]:
-		_box(String(ln[0]), StoryState.fill(String(ln[1])))
+	if who == "choice":
+		_choices(_opts())
+	elif not who in INSTRUCTIONS:
+		if who != "*" and not cast.has(who) and who != "MANAGER": _phone(who, StoryState.fill(String(ln[1])))
+		_box(who, StoryState.fill(String(ln[1])))
+
+## The cast, standing in the set (2x), the one talking lit and bobbing, the rest a touch darker.
+func _people(speaker: String, talking: bool) -> void:
+	var order := cast.keys()
+	order.sort_custom(func(a, b): return cast[a].x < cast[b].x)
+	var k := 0
+	for who in order:
+		var c: Dictionary = cast[who]
+		var is_speaker: bool = who == speaker
+		var frame := 1 if (is_speaker and talking and int(t * 9.0) % 2 == 0) else 0
+		var tex := PixPeople.sprite(String(who), String(c.pose), frame)
+		var bob := 0.0
+		if is_speaker and talking: bob = -2.0 * absf(sin(t * 9.0))
+		elif fmod(t + float(k) * 0.9, 3.2) < 0.35: bob = -2.0           # breathing
+		var x := float(c.x) * 2.0
+		var y := StorySets.FEET_Y * 2.0 - 128.0 + bob
+		# a soft shadow on the floor
+		draw_rect(Rect2(x - 16, 254, 32, 4), Color(0, 0, 0, 0.28))
+		var mod := Color(1, 1, 1) if (is_speaker or speaker == "*" or not cast.has(speaker)) else Color(0.78, 0.78, 0.82)
+		if int(c.facing) < 0:
+			draw_set_transform(Vector2(x, y), 0.0, Vector2(-1, 1))
+			draw_texture_rect(tex, Rect2(-26, 0, 52, 128), false, mod)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		else:
+			draw_texture_rect(tex, Rect2(x - 26, y, 52, 128), false, mod)
+		k += 1
+
+## Texts from people who aren't there: Leo's phone, up in the corner, with the message on it.
+func _phone(who: String, text: String) -> void:
+	var r := Rect2(470, 26, 132, 220)
+	draw_rect(r.grow(4), Color("0e0e12"))
+	draw_rect(r.grow(4), Color("3a3a40"), false, 2.0)
+	draw_rect(r, Color("e8e4dc"))
+	var cst: Dictionary = StoryScript.CAST.get(who, {})
+	var col := Color(cst.get("color", "8a8478"))
+	draw_rect(Rect2(r.position, Vector2(r.size.x, 22)), col.darkened(0.3))
+	if not cst.is_empty():
+		draw_texture_rect(Face.small_texture(int(cst.seed), int(cst.female), int(cst.age)), Rect2(r.position + Vector2(3, 3), Vector2(16, 16)), false)
+	PixelFont.draw(self, r.position + Vector2(23, 8), String(cst.get("name", who)), Color("f3ead2"))
+	# the bubble
+	var shown_text := text.substr(0, int(shown))
+	var ls := _wrap(shown_text, 28)
+	var bh := 8.0 + ls.size() * 9.0
+	var by := r.position.y + 32.0
+	draw_rect(Rect2(r.position.x + 6, by, r.size.x - 18, bh), Color("ffffff"))
+	draw_rect(Rect2(r.position.x + 6, by, r.size.x - 18, bh), Color("c8c4bc"), false, 1.0)
+	for k in mini(ls.size(), 18):
+		PixelFont.draw(self, Vector2(r.position.x + 10, by + 5 + k * 9), ls[k], Color("1a1614"))
+	if int(t * 2.0) % 2 == 0 and shown < text.length():
+		draw_rect(Rect2(r.position.x + 8, r.end.y - 14, 18, 8), Color("d8d4cc"))
+		PixelFont.draw(self, Vector2(r.position.x + 10, r.end.y - 12), "...", Color("6a6a70"))
 
 func _card() -> void:
 	draw_rect(Rect2(0, 0, 640, 360), Color("0b090d"))
@@ -129,7 +254,13 @@ func _card() -> void:
 	if String(step.get("sub", "")) != "":
 		PixelFont.draw_centered(self, 320, 162, String(step.sub), Color(BONE, a), 3)
 	PixelFont.draw_centered(self, 320, 200, String(step.get("small", "")), Color(ASH, a), 1)
-	if t > 1.0: PixelFont.draw_centered(self, 320, 320, "PRESS A / ENTER", Color(BONE, 0.4 + 0.3 * sin(t * 4.0)))
+	# the chapter cards say what Port Rumble's saying about Leo by now
+	if step.get("karma", false):
+		var tier := Karma.tier()
+		var col := Color("6fbf5a") if tier == "high" else (Color("e0402e") if tier == "low" else BONE)
+		PixelFont.draw_centered(self, 320, 236, "WHAT PORT RUMBLE SAYS ABOUT LEO", Color(ASH, a * 0.8), 1)
+		PixelFont.draw_centered(self, 320, 248, Karma.describe(tier), Color(col, a), 2)
+	if t > 1.0: PixelFont.draw_centered(self, 320, 320, Hints.fmt("PRESS {ui_accept}"), Color(BONE, 0.4 + 0.3 * sin(t * 4.0)))
 
 func _box(who: String, text: String) -> void:
 	var r := Rect2(8, 262, 624, 92)
@@ -162,7 +293,7 @@ func _box(who: String, text: String) -> void:
 		PixelFont.draw(self, Vector2(x0, y + k * 14), ls[k], tc, 2)
 	if shown >= text.length():
 		PixelFont.draw(self, Vector2(600, 340), ">" if int(t * 3.0) % 2 == 0 else " ", GOLD, 2)
-	PixelFont.draw(self, Vector2(14, 342), "A/ENTER NEXT   LB/BACKSPACE BACK   ESC MENU", Color(ASH, 0.6))
+	PixelFont.draw(self, Vector2(14, 342), Hints.fmt("{ui_accept} NEXT  {shift_down} BACK  {menu_back} MENU"), Color(ASH, 0.6))
 
 func _choice_rect(k: int, n: int) -> Rect2:
 	return Rect2(120, 270 - (n - k) * 22, 400, 18)
@@ -170,7 +301,7 @@ func _choice_rect(k: int, n: int) -> Rect2:
 func _choices(opts: Array) -> void:
 	draw_rect(Rect2(8, 262, 624, 92), Color(0.04, 0.035, 0.05, 0.94))
 	PixelFont.draw(self, Vector2(20, 272), "LEO:", GOLD, 2)
-	PixelFont.draw(self, Vector2(20, 300), "UP/DOWN TO PICK, A/ENTER TO SAY IT", Color(ASH, 0.7))
+	PixelFont.draw(self, Vector2(20, 300), Hints.fmt("{updown}: PICK  {ui_accept}: SAY IT"), Color(ASH, 0.7))
 	for k in opts.size():
 		var r := _choice_rect(k, opts.size())
 		var on := k == choice_sel

@@ -18,6 +18,9 @@ var _horn_a := 0.0
 var _horn_b := 0.0
 var _horn_env := 0.0
 var tick := 0.0               # blinker relay clicks (set to 1.0 for one click)
+var siren := 0.0              # how loud the nearest siren is (0 none .. 1 right on you)
+var _siren_p := 0.0
+var _siren_t := 0.0
 
 func _ready() -> void:
 	var gen := AudioStreamGenerator.new()
@@ -58,6 +61,12 @@ func _process(_dt: float) -> void:
 			_horn_a = fmod(_horn_a + 415.0 / RATE, 1.0)
 			_horn_b = fmod(_horn_b + 520.0 / RATE, 1.0)
 			s += (signf(sin(_horn_a * TAU)) * 0.5 + signf(sin(_horn_b * TAU)) * 0.5) * 0.22 * _horn_env
+		# a siren somewhere: the wail, rising and falling every four seconds, square-ish like a horn speaker
+		if siren > 0.01:
+			_siren_t = fmod(_siren_t + 1.0 / RATE, 4.0)
+			var sweep := 0.5 - 0.5 * cos(_siren_t / 4.0 * TAU)
+			_siren_p = fmod(_siren_p + (620.0 + sweep * 780.0) / RATE, 1.0)
+			s += clampf(sin(_siren_p * TAU) * 1.8, -1.0, 1.0) * 0.16 * siren * siren
 		if tick > 0.0:
 			s += (_rng.randf() - 0.5) * tick * 0.8
 			tick = maxf(0.0, tick - 1.0 / (RATE * 0.006))

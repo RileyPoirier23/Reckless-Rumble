@@ -6,6 +6,9 @@ extends AnimatableBody2D
 
 const PX := CarArt.PX
 const A_MAX := 1.8          # comfortable acceleration (m/s²)
+const CLASS_ACCEL := { "exotic": 2.6, "sports": 2.3, "muscle": 2.3, "hot_hatch": 2.2, "pony": 2.1, "rally": 2.2,
+	"kei": 1.3, "van": 1.4, "work_truck": 1.3, "hd_pickup": 1.4, "minivan": 1.6, "economy": 1.6, "classic": 1.5 }
+var a_max := A_MAX
 const B_COMF := 2.6         # comfortable braking
 const T_GAP := 1.4          # time gap it keeps (s)
 const S0 := 2.2             # minimum gap when stopped (m)
@@ -19,6 +22,7 @@ var head_light: PointLight2D
 var a := 0                   # on the edge from node a to node b
 var b := 0
 var c_next := -1             # where it goes after b
+var c_after := -1            # and after that, picked early when b to c_next is only a few metres
 var s := 0.0
 var lane_i := 0
 var pos := Vector2.ZERO      # metres
@@ -30,9 +34,12 @@ var width := 1.8
 var temper := 1.0            # some drive faster than others
 var turn_ahead := 0.0        # signed turn at the next node (rad), for the corridor and blinkers
 var stopped_at := -1         # the junction it has made its full stop at
-var entered := -1            # the junction it's crossing
+var entered := -1            # the junction it's crossing (the latest, if it's in two at once)
+var entered_from := -1       # and the node it came into it from
+var boxes := {}              # every junction it's still in the way in -> the node it came in from
 var wait_t := 0.0
 var last_rule := ""
+var why := ""                # what it's stopped for, when it is
 var lead_obj = null
 var stop_time := 0.0
 var _path := PackedVector2Array()
@@ -42,16 +49,29 @@ var spin := 0.0
 var wreck_t := 0.0
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var gone := false
+var held := false            # part of a crash scene: stays where it is until the scene clears
 var paint := Color.WHITE
+var looks := {}              # its wear, its sign, its ladder, its mods (Traffic.dress)
+# a semi's trailer: drawn, solid, and swinging on the fifth wheel behind the tractor
+var trailer: CarView
+var trailer_shape: CollisionShape2D
+var trailer_heading := 0.0
+var trailer_len := 0.0       # the size it's drawn at (m)
+var trailer_centre := Vector2.ZERO
+var hitch_back := 0.0        # from the tractor's middle back to the fifth wheel (m)
+var highway_only := false    # semis stay on the Trans-Canada
+var big := false             # buses and trucks stick to the bigger roads where they can
 var _art_damage := -1.0
+var pull := 0.0              # moved over (m, right) for a siren coming up behind
 
 static var _cone: ImageTexture
 
 func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float) -> void:
 	spec = body.duplicate()
 	paint = p
-	length = float(body.length)
-	width = float(body.width)
+	# the size it's drawn at (and bumps into things at): bigger than life, like every car on the road
+	length = float(body.length) * CarArt.CAR_SCALE
+	width = float(body.width) * CarArt.CAR_SCALE
 	a = na
 	b = nb
 	s = ns
@@ -63,35 +83,41 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	var d := traffic.map.g_pos[b] - traffic.map.g_pos[a]
 	heading = d.angle()
 	temper = 0.88 + rng.randf() * 0.25
+	# what the car is changes how it's driven: a kei truck crawls off the line, a sports car doesn't
+	var cls := String(body.get("class", ""))
+	a_max = float(CLASS_ACCEL.get(cls, A_MAX))
+	if cls in ["sports", "exotic", "muscle", "hot_hatch", "pony", "rally"]: temper += 0.06
+	elif cls in ["classic", "kei", "work_truck", "hd_pickup", "van"]: temper -= 0.06
 	sync_to_physics = false
 	shape = CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(length, width) * PX * Vector2(0.95, 0.9)
 	shape.shape = rect
 	add_child(shape)
+	looks = body.get("looks", {})
+	var art_cues: Dictionary = body.get("art", {})
+	big = length > 9.5
+	if art_cues.has("tractor"): _hook_trailer(body)
 	view = CarView.new()
-	view.art = CarArt.new(spec, paint, 0.0, rng.randi())
+	view.build(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE, looks)
+	# now and then the ambulance is on a call: its lights going (by where it showed up, so the
+	# traffic's dice aren't touched)
+	view.beacons = art_cues.has("ambulance") and int(ns * 7.0) % 5 < 2
 	add_child(view)
 	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
 	head_light.texture = _cone
 	head_light.energy = 1.0
-	head_light.color = Color(1.0, 0.95, 0.82)
-	head_light.offset = Vector2(56, 0)
+	head_light.color = Color(1.0, 0.97, 0.9)
+	head_light.texture_scale = 1.2
+	head_light.offset = Vector2(64.0 * 1.2, 0)      # the lamp end of the beam on the bumper
+	CarArt.reach_road(head_light)
 	head_light.visible = false
 	add_child(head_light)
 	_place()
 
 static func _cone_tex() -> ImageTexture:
-	var img := Image.create(128, 72, false, Image.FORMAT_RGBA8)
-	for y in 72:
-		for x in 128:
-			var dx := float(x) / 128.0
-			var dy := absf(float(y) - 36.0) / 36.0
-			var spread := 0.2 + dx * 0.8
-			var al := clampf(1.0 - dy / spread, 0.0, 1.0) * clampf(1.0 - dx, 0.0, 1.0) * clampf(dx * 6.0, 0.0, 1.0)
-			img.set_pixel(x, y, Color(1, 1, 1, al * 0.8))
-	return ImageTexture.create_from_image(img)
+	return CarArt.beam_tex(128, 72, 0.8)
 
 func sort_point() -> Vector2:
 	return global_position
@@ -111,11 +137,58 @@ func desired_speed(road: Dictionary) -> float:
 
 func _lane(road: Dictionary) -> float:
 	var lanes: Array = Traffic.LANE[road.cls]
-	return lanes[mini(lane_i, lanes.size() - 1)]
+	return float(lanes[mini(lane_i, lanes.size() - 1)]) + pull
+
+## A siren coming up behind: move over and slow down (0 = carry on, 1 = pulled over).
+func _siren_behind() -> float:
+	var fwd := Vector2(cos(heading), sin(heading))
+	for o in traffic.extra:
+		if not is_instance_valid(o) or not o.siren: continue
+		var rel: Vector2 = (o as AiCar).sim.pos - pos
+		if rel.length_squared() < 50.0 * 50.0 and rel.dot(fwd) < 2.0: return 1.0
+	return 0.0
 
 # ------------------------------------------------------------------ driving
 
+## A trailer behind a semi tractor: a box with the outfit's name on it, on the fifth wheel.
+func _hook_trailer(body: Dictionary) -> void:
+	highway_only = true
+	trailer_len = 13.6 * CarArt.CAR_SCALE
+	var d := CarGen.design(body)
+	hitch_back = (0.5 - float(d.wr) - 0.03) * length
+	trailer_heading = heading
+	trailer = CarView.new()
+	var colours := ["#e8e8e8", "#f0f0ec", "#d8d8d4", "#c8342c", "#2c4a8a", "#e8e8e8"]
+	var t_looks := { "decal": rng.randi() % CarArt.DECALS.size() } if rng.randf() < 0.7 else {}
+	trailer.build({ "body": "trailer", "length": 13.6, "width": 2.55, "track": 2.1 }, Color(String(colours[rng.randi() % colours.size()])), 0.0, rng.randi(), CarArt.CAR_SCALE, t_looks)
+	add_child(trailer)
+	trailer_shape = CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(trailer_len, 2.55 * CarArt.CAR_SCALE) * PX * Vector2(0.95, 0.9)
+	trailer_shape.shape = rect
+	add_child(trailer_shape)
+	_tow(0.0)
+
+## The trailer follows its fifth wheel: it swings toward the way the tractor's heading, the
+## faster the further it's gone and the shorter the trailer.
+func _tow(dt: float) -> void:
+	if trailer == null: return
+	var fwd := Vector2(cos(heading), sin(heading))
+	var kingpin := pos - fwd * hitch_back
+	var speed := velocity_vec().length()
+	trailer_heading += sin(angle_difference(trailer_heading, heading)) * speed / maxf(1.0, trailer_len * 0.8) * dt
+	trailer_centre = kingpin - Vector2.from_angle(trailer_heading) * (trailer_len * 0.5 - 1.2 * CarArt.CAR_SCALE)
+	var local := (trailer_centre - pos) * PX
+	trailer.position = local
+	trailer.heading = trailer_heading
+	trailer.lean = Vector2.ZERO
+	trailer_shape.position = local
+	trailer_shape.rotation = trailer_heading
+	trailer.headlights = view.headlights if view else false
+	trailer.braking = view.braking if view else false
+
 func drive(dt: float) -> void:
+	_tow(dt)
 	if state == "wrecked":
 		_wrecked(dt)
 		_place()
@@ -129,10 +202,21 @@ func drive(dt: float) -> void:
 	if road.is_empty():
 		gone = true
 		return
+	var yielding := _siren_behind()
+	# move over for the siren, as far as the road goes (not up onto the sidewalk)
+	var lanes: Array = Traffic.LANE[road.cls]
+	var room := clampf(float(road.get("w", 9.0)) / 2.0 - float(lanes[mini(lane_i, lanes.size() - 1)]) - width / 2.0 - 0.2, 0.0, 1.6)
+	pull = move_toward(pull, room * yielding, dt * 1.2)
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
-	if c_next < 0: c_next = traffic.next_node(a, b, self)
+	if c_next < 0:
+		c_next = c_after if c_after >= 0 and traffic.map.g_adj[b].any(func(e: Array) -> bool: return int(e[0]) == c_after) else traffic.next_node(a, b, self)
+		c_after = -1
+		# a dead end out of sight: it's pulled into a driveway, as far as anybody can tell
+		if c_next == a and map.g_adj[b].size() == 1 and traffic.player and pos.distance_to(traffic.player.sim.pos) > Traffic.SPAWN_MIN * 0.8:
+			gone = true
+			return
 	var din := (B - A).normalized()
 	var dout := (map.g_pos[c_next] - B).normalized() if c_next != b else -din
 	turn_ahead = din.angle_to(dout) if c_next != a or map.g_adj[b].size() == 1 else PI
@@ -153,62 +237,118 @@ func drive(dt: float) -> void:
 		var lat_err := (pos - A).dot(nrm) - _lane(road)
 		pos -= nrm * clampf(lat_err, -1.5 * dt, 1.5 * dt)
 	# --- how fast it wants to go: the limit, then slower for the bend ahead
-	var v0 := desired_speed(road)
+	var v0 := desired_speed(road) * (1.0 - 0.55 * yielding)
+	# still swinging round onto this road (out of a hairpin): slow until it's pointing down it
+	var herr := absf(angle_difference(heading, din.angle()))
+	if herr > 0.3: v0 = minf(v0, lerpf(v0, 5.0, clampf((herr - 0.3) / 0.9, 0.0, 1.0)))
 	var jr: float = traffic.junctions.get(b, {}).get("radius", 0.0)
 	var bend := absf(turn_ahead)
 	if bend > 0.25:
 		var v_turn := lerpf(v0, 5.0, clampf(bend / 1.5, 0.0, 1.0))
 		v0 = minf(v0, sqrt(v_turn * v_turn + 2.0 * B_COMF * maxf(0.0, db - jr)))
+	# a junction a few metres past this one (a stub between two, a short block): its corner and
+	# its stop sign are as good as this one's, so slow for them from here
+	if c_next != a and c_next != b and map.g_adj[c_next].size() >= 2:
+		var L2 := B.distance_to(map.g_pos[c_next])
+		if L2 < 30.0:
+			if c_after < 0: c_after = traffic.next_node(b, c_next, self)
+			var d2 := (map.g_pos[c_after] - map.g_pos[c_next]).normalized()
+			var bend2 := absf(dout.angle_to(d2)) if c_after != b else PI
+			var j2: Dictionary = traffic.junctions.get(c_next, {})
+			if bend2 > 0.25:
+				var v_turn2 := lerpf(v0, 5.0, clampf(bend2 / 1.5, 0.0, 1.0))
+				v0 = minf(v0, sqrt(v_turn2 * v_turn2 + 2.0 * B_COMF * maxf(0.0, db + L2 - float(j2.get("radius", 0.0)))))
+			if not j2.is_empty() and (String(j2.control) == "allway" or String(j2.control) == "priority" and not j2.majors.has(int(traffic.edge_road(b, c_next).get("idx", -1)))):
+				v0 = minf(v0, 3.0 + sqrt(2.0 * B_COMF * maxf(0.0, db + L2 - traffic.stop_line(c_next, b))))
 	# --- what's ahead: the car in front, or a stop line it has to obey
 	var lead := traffic.leader(self, 60.0)
 	lead_obj = lead[2]
 	var gap: float = lead[0]
 	var v_lead: float = lead[1]
-	if traffic.junctions.has(b) and entered != b and db < 50.0:
-		var stop_d := db - jr - 1.2
+	if traffic.junctions.has(b) and not boxes.has(b) and (db < 50.0 or db < traffic.stop_line(b, a) + 25.0):
+		# (a bus waits with its nose at the line, not its middle out in the junction)
+		var stop_d := db - traffic.stop_line(b, a) - maxf(0.0, length * 0.5 - 3.0)
 		var rule := traffic.may_enter(self, b, a, c_next, stop_d)
+		# too close and too quick to stop for it now (the light's just changed, the gap's just
+		# closed): it's committed, and whoever it's in the way of sees it in the box and waits
+		# (and one already over the line when the light changes is in the junction: it carries on;
+		# a light that's been red a while is different: whoever's still coming stands on the brakes)
+		if rule == "stop" and why in ["amber", "room", "oncoming"] and (v > 2.0 and stop_d < v * v / (2.0 * 5.0) or why == "amber" and stop_d < -0.5 and v > 0.3):
+			rule = "go"
 		last_rule = rule
-		if rule == "go" and traffic.junctions[b].inside.has(self): entered = b
-		if wait_t > 18.0 and rule == "stop" and traffic.junctions[b].control != "signal":
-			rule = "go"            # nobody waits forever at a four-way in Port Rumble
+		if rule == "go" and traffic.junctions[b].inside.has(self): _enter_box(b)
 		if rule == "stop":
+			# a bus or a truck swinging round the corner in front: wait well back from the line
+			if why == "wide": stop_d -= 5.0
 			if stop_d < gap:
 				gap = maxf(stop_d, 0.01)
 				v_lead = 0.0
 			if v < 0.4 and stop_d < 4.5 and stopped_at != b:
 				stopped_at = b
-				stop_time = Time.get_ticks_msec() / 1000.0
-		elif db < jr + 2.0:
-			traffic.enter(self, b)
-			entered = b
+				stop_time = Traffic.clock
+		elif db < jr + 2.0 or stop_d < 0.0:
+			# over the line on a go: it's crossing now, whatever the light does next
+			_enter_box(b)
 	# --- the Intelligent Driver Model
 	var dv := v - v_lead
-	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(A_MAX * B_COMF)))
+	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(a_max * B_COMF)))
 	var free := 1.0 - pow(v / maxf(v0, 0.5), 4.0)
 	var inter := (s_star / maxf(gap, 0.1)) ** 2 if gap < 200.0 else 0.0
-	acc = clampf(A_MAX * (free - inter), -9.0, A_MAX)
+	acc = clampf(a_max * (free - inter), -9.0, a_max)
 	v = maxf(0.0, v + acc * dt)
 	wait_t = wait_t + dt if v < 1.5 else 0.0
 	pos += Vector2(cos(heading), sin(heading)) * v * dt
 	# --- progress along the edge, and on to the next one
 	s = (pos - A).dot(din)
 	# on to the next road: at the end of this one, or once it's round the corner onto the next
-	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5
+	# (only once it's well along this road: on a stub a few metres long, "round the corner" can
+	# be true the moment it gets onto it)
+	# (and only once it's let into the junction and pointing most of the way down the new road: a
+	# right turner's own lane is already on the far side of the corner, metres short of the line;
+	# round a hairpin off a stub that's how it knows, however far along the stub it got)
+	var past_corner := c_next >= 0 and c_next != a and absf(turn_ahead) > 0.2 and s > L - 14.0 and (s > L * 0.5 or absf(turn_ahead) > 1.2) and pos.distance_to(B) < 14.0 and (pos - B).dot(dout) > 0.5 \
+		and absf(angle_difference(heading, dout.angle())) < 0.7 and (boxes.has(b) or not traffic.junctions.has(b))
 	if s >= L - 0.2 or past_corner:
+		# (round a tight corner it can be onto the next road before it was ever in the box)
+		if traffic.junctions.has(b) and not boxes.has(b): _enter_box(b)
 		a = b
 		b = c_next
 		c_next = -1
 		s = (pos - map.g_pos[a]).dot((map.g_pos[b] - map.g_pos[a]).normalized())
 		stopped_at = -1
-	if entered >= 0 and entered != b and pos.distance_to(map.g_pos[entered]) > float(traffic.junctions.get(entered, {}).get("radius", 6.0)) + 3.0:
-		traffic.leave(self, entered)
-		entered = -1
+		# turned round at a dead end and heading back into the junction it just crossed: that's a
+		# new crossing, with the rules and all
+		if boxes.has(b): _leave_box(b)
+	for n: int in boxes.keys():
+		var jx: Dictionary = traffic.junctions.get(n, {})
+		if n != b and pos.distance_to(map.g_pos[n]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0 + maxf(0.0, length * 0.5 - 3.0): _leave_box(n)
 	# --- lights
 	var turning := db < 40.0 and absf(turn_ahead) > 0.5 and absf(turn_ahead) < 2.8
 	view.blink_left = turning and turn_ahead < 0.0
 	view.blink_right = turning and turn_ahead > 0.0
 	view.braking = acc < -0.8 or v < 0.2
 	_place()
+
+## Into junction `n`'s box. It stays on the last one's list too until it's clear of it: where two
+## junctions are a few metres apart it's in both at once, and a car on a junction's list keeps
+## everybody crossing its way waiting.
+func _enter_box(n: int) -> void:
+	traffic.enter(self, n)
+	boxes[n] = a
+	entered = n
+	entered_from = a
+
+## Out of junction `n`'s box (or every one it's in, with no `n`).
+func _leave_box(n := -1) -> void:
+	for k: int in (boxes.keys() if n < 0 else [n]):
+		traffic.leave(self, k)
+		boxes.erase(k)
+	if n < 0 or n == entered:
+		entered = -1
+		entered_from = -1
+		for k: int in boxes:
+			entered = k
+			entered_from = int(boxes[k])
 
 ## The line it's about to drive, as points from where it is now: down its lane, round a
 ## smooth curve through the junction (from its lane in to the right lane out), and on.
@@ -247,9 +387,16 @@ func path_ahead(reach: float) -> PackedVector2Array:
 		if absf(den) > 0.05:
 			var t := (p2 - p0).cross(dout) / den
 			p1 = p0 + din * t
+		var ahead := false
 		for k in range(1, 7):
 			var u := float(k) / 6.0
-			out.append(p0.lerp(p1, u).lerp(p1.lerp(p2, u), u))
+			var q := p0.lerp(p1, u).lerp(p1.lerp(p2, u), u)
+			# partway round already: the bits of the curve behind it aren't ahead of it (aiming
+			# back at them sends it round in circles in the middle of the junction)
+			var tangent := (p1 - p0) * (1.0 - u) + (p2 - p1) * u
+			if not ahead and k < 6 and (q - pos).dot(tangent) <= 0.0: continue
+			ahead = true
+			out.append(q)
 		d = r_out + 3.0
 	else:
 		d = 1.5
@@ -280,7 +427,7 @@ func _place() -> void:
 	view.headlights = dark
 	head_light.visible = dark and pos.distance_to(traffic.player.sim.pos) < 80.0 if traffic.player else false
 	head_light.rotation = heading
-	head_light.position = Vector2(cos(heading), sin(heading)) * length * PX * 0.4
+	head_light.position = Vector2(cos(heading), sin(heading)) * length * PX * 0.5
 
 # ------------------------------------------------------------------ crashes
 
@@ -293,9 +440,7 @@ func hit(dv: Vector2, at: Vector2) -> void:
 	spin += r.cross(dv) * 0.25 / maxf(length, 1.0)
 	state = "wrecked"
 	wreck_t = 0.0
-	if entered >= 0:
-		traffic.leave(self, entered)
-		entered = -1
+	_leave_box()
 	# where it got hit, in the car's own frame
 	var fwd := Vector2(cos(heading), sin(heading))
 	var local := Vector2(r.dot(fwd), r.dot(Vector2(-fwd.y, fwd.x)))
@@ -311,7 +456,7 @@ func _refresh_art() -> void:
 	for k in damage: total += damage[k]
 	if absf(total - _art_damage) < 0.1: return
 	_art_damage = total
-	view.art = CarArt.new(spec, paint, damage, rng.randi())
+	view.build(spec, paint, damage, rng.randi(), CarArt.CAR_SCALE, looks)
 
 func _wrecked(dt: float) -> void:
 	wreck_t += dt
@@ -336,7 +481,7 @@ func _wrecked(dt: float) -> void:
 	view.blink_left = wreck_t > 1.0
 	view.blink_right = wreck_t > 1.0
 	view.braking = true
-	if wreck_v.length() < 0.3 and absf(spin) < 0.1 and wreck_t > 6.0:
+	if wreck_v.length() < 0.3 and absf(spin) < 0.1 and wreck_t > 6.0 and not held:
 		# back to the lane if it's still close to it and pointing the right way, otherwise it
 		# stays where it is with the hazards on until it's out of sight
 		var lane_p := traffic.lane_point(a, b, clampf((pos - traffic.map.g_pos[a]).dot((traffic.map.g_pos[b] - traffic.map.g_pos[a]).normalized()), 0.0, 9999.0), _lane(traffic.edge_road(a, b)))

@@ -16,6 +16,10 @@ func _init() -> void:
 	check("map has the places", m.landmarks.filter(func(l): return l.dest).size() >= 12, "%d destinations" % m.landmarks.size())
 	check("Covington Auto's lot is pavement", m.ground_at(Vector2(5570, 1566)) == "asphalt")
 	check("Main St downtown is a road", not m.road_at(Vector2(6000, 1548)).is_empty())
+	var in_lane := 0
+	for l in m.lights:
+		if not String(l.type) in MapData.FLUSH_LIGHTS and not m.road_at(l.p, 0.8).is_empty(): in_lane += 1
+	check("no lamp post stands in a road", in_lane == 0, "%d in a lane" % in_lane)
 	check("the Petitcodiac runs past downtown", m.river_at(Vector2(5950, 1650)) == 1)
 	check("the causeway is a bridge over it", m.ground_at(Vector2(5700, 1680)) == "asphalt" and m.river_at(Vector2(5700, 1680)) == 1)
 	var far := 0
@@ -85,7 +89,7 @@ func _init() -> void:
 	for id in ["silvio", "supreem", "charjer", "tow"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
 		var art := CarArt.new(spec, Color(spec.paint))
-		check("%s: drawn" % id, art.slices.size() == CarArt.SLICES)
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10 and art.atlas.get_width() == art.size.x * art.n)
 		check("%s: has a dash and a GPS" % id, spec.has("dash") and spec.has("gps"))
 		var c := CarSim.new(spec)
 		c.set_ambient(20.0)
@@ -112,5 +116,96 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- every place you can pick on the map: the GPS gets you there by road, into its lot
+	var unreachable2 := ""
+	for l in m.landmarks:
+		if not l.dest: continue
+		var r := m.route_to(Vector2(5570, 1566), l.p)
+		var hop := 0.0
+		for i in r.size() - 1: hop = maxf(hop, r[i].distance_to(r[i + 1]))
+		var off := 0
+		for i in r.size() - 1:
+			for k in 8:
+				var q: Vector2 = r[i].lerp(r[i + 1], k / 8.0)
+				if m.ground_at(q) in ["grass", "mud"]: off += 1
+		if r.is_empty() or r[r.size() - 1].distance_to(l.p) > 3.0 or hop > 450.0 or off > 0:
+			unreachable2 += "%s (hop %.0f m, %d off-road); " % [l.name, hop, off]
+	check("the GPS takes you all the way to every place, on roads and driveways", unreachable2 == "", unreachable2)
+	# ---- mud: slow going, but a rear-drive car on summer tires isn't stuck in it for good
+	var sp: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/silvio.json"))
+	var mc := CarSim.new(sp)
+	mc.set_ambient(10.0)
+	mc.surface = "mud"
+	var mt := 0.0
+	while mc.speed() < 2.0 and mt < 8.0:
+		mc.step(1.0 / 120.0, 0.6, 0.0, 0.0, 0.0)
+		mc.surface = "mud"
+		mt += 1.0 / 120.0
+	check("a rear-drive car crawls out of mud", mc.speed() >= 2.0, "%.1f m/s after %.1f s" % [mc.speed(), mt])
+	var gc := CarSim.new(sp)
+	gc.set_ambient(2.0)
+	var gt := 0.0
+	while gc.speed() < 2.0 and gt < 8.0:
+		gc.surface = "grass"
+		gc.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+		gt += 1.0 / 120.0
+	check("...and off cold grass, flat out", gc.speed() >= 2.0, "%.1f m/s after %.1f s" % [gc.speed(), gt])
+	# ---- the emergency vehicles: drawn, and they get going (a fire truck's no rocket, but it moves)
+	for id in ["ambulance", "fire"]:
+		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
+		var art := CarArt.new(spec, Color(spec.paint))
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10)
+		var c := CarSim.new(spec)
+		c.set_ambient(15.0)
+		var tt := 0.0
+		while c.speed() < 50.0 / 3.6 and tt < 20.0:
+			c.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+			tt += 1.0 / 120.0
+		check("%s: 0-50 km/h in under 12 s" % id, tt < 12.0, "%.1f s" % tt)
+	# ---- a crash scene shuts its lane: traffic won't turn into it
+	var tr := Traffic.new()
+	tr.map = m
+	var jn := -1
+	for n in m.g_adj.size():
+		var streets := 0
+		for e in m.g_adj[n]:
+			if String(e[2].cls) == "street": streets += 1
+		if streets == m.g_adj[n].size() and streets >= 3:
+			jn = n
+			break
+	check("found a street junction to test", jn >= 0)
+	if jn >= 0:
+		var from: int = m.g_adj[jn][0][0]
+		var tc := TrafficCar.new()
+		tc.rng.seed = 7
+		var exits: Array = []
+		for e in m.g_adj[jn]:
+			if e[0] != from: exits.append(e[0])
+		for x in exits.slice(1): tr.blocked[Vector2i(jn, x)] = true
+		var always := true
+		for i in 30:
+			if tr.next_node(from, jn, tc) != exits[0]: always = false
+		check("traffic goes round a shut lane", always)
+		tc.free()
+	tr.free()
+	check("hit and run and staying both count", Karma.DEEDS.has("hit_run") and Karma.DEEDS.has("stayed") and Karma.DEEDS.hit_run[0] < 0.0 and Karma.DEEDS.stayed[0] > 0.0)
+	# ---- line of sight: a building's shadow, and a building in the way
+	var sq := PackedVector2Array([Vector2(0, 0), Vector2(100, 0), Vector2(100, 100), Vector2(0, 100)])
+	var sh := Sight.shadow_of(sq, Vector2(-200, 50), 2000.0)
+	check("behind a building is in its shadow", Geometry2D.is_point_in_polygon(Vector2(400, 50), sh) and Geometry2D.is_point_in_polygon(Vector2(400, 150), sh))
+	check("beside it and in front of it aren't", not Geometry2D.is_point_in_polygon(Vector2(50, 600), sh) and not Geometry2D.is_point_in_polygon(Vector2(-100, 50), sh))
+	check("no shadow from inside the building", Sight.shadow_of(sq, Vector2(50, 50), 2000.0).is_empty())
+	CarView.screen_up = Vector2(0, -1)
+	var bn := BuildingNode.new()
+	bn.setup({ "r": Rect2(0, 0, 10, 10), "h": 30, "kind": "shop" })
+	var top := bn.global_position + bn.fp.position          # the north-west corner, world px
+	check("a car just behind a building is under it", bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx * 0.5)))
+	check("a car in front of it isn't", not bn.covers(bn.global_position + Vector2(bn.fp.size.x / 2.0, 20.0)))
+	check("a car well behind it isn't", not bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx - 60.0)))
+	var pumps := BuildingNode.new()
+	pumps.data = { "kind": "pumps" }
+	check("gas pumps don't block sight", not pumps.blocks_sight() and bn.blocks_sight())
+	pumps.free()
+	bn.free()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

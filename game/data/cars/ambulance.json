@@ -1,0 +1,97 @@
+{
+ "id": "ambulance",
+ "make": "Fjord",
+ "model": "E-Fiddy Type III Ambulance",
+ "year": 2019,
+ "body": "boxtruck",
+ "dash": "truck",
+ "gps": "trucker",
+ "owner": "PORT RUMBLE EMS",
+ "blurb": "A box on a cutaway van chassis. Inside: a stretcher, a defibrillator and a paramedic who has seen your kind of driving before.",
+ "drivetrain": "RWD",
+ "mass": 4300,
+ "wheelbase": 4.0,
+ "cg_front": 1.9,
+ "cg_height": 0.95,
+ "track": 1.72,
+ "length": 6.7,
+ "width": 2.3,
+ "cda": 1.6,
+ "steer_lock": 0.6,
+ "rear_grip": 1.0,
+ "engine": {
+  "name": "7.3 L V8",
+  "idle_rpm": 650,
+  "redline_rpm": 5000,
+  "limiter_rpm": 5200,
+  "inertia": 0.4,
+  "clutch_torque": 800,
+  "torque_curve": [
+   [
+    650,
+    380
+   ],
+   [
+    1500,
+    450
+   ],
+   [
+    2500,
+    500
+   ],
+   [
+    3200,
+    520
+   ],
+   [
+    4000,
+    490
+   ],
+   [
+    4600,
+    450
+   ],
+   [
+    5000,
+    420
+   ],
+   [
+    5200,
+    400
+   ],
+   [
+    6000,
+    320
+   ]
+  ]
+ },
+ "gearbox": {
+  "gears": [
+   3.51,
+   2.17,
+   1.45,
+   1.0,
+   0.69
+  ],
+  "reverse": 3.0,
+  "final": 4.1,
+  "efficiency": 0.84,
+  "shift_time": 0.35
+ },
+ "brakes": {
+  "max_torque": 11000,
+  "bias": 0.6
+ },
+ "tires": {
+  "radius": 0.4,
+  "tread_mm": 12.0,
+  "driven_inertia": 6.0,
+  "size": "LT245/75R17"
+ },
+ "paint": "#f2f2ee",
+ "class": "fleet",
+ "art": {
+  "cutaway": true,
+  "ambulance": true
+ }
+}

@@ -16,8 +16,8 @@ const CELL := 32.0                       # spatial index cell (metres)
 const CLS := {
 	"highway":  { "w": 26.0, "shoulder": 3.0, "rank": 5 },
 	"arterial": { "w": 16.0, "shoulder": 0.0, "rank": 4 },
-	"street":   { "w": 11.0, "shoulder": 0.0, "rank": 2 },
-	"rural":    { "w": 9.0,  "shoulder": 2.5, "rank": 3 },
+	"street":   { "w": 9.0,  "shoulder": 0.0, "rank": 2 },
+	"rural":    { "w": 8.0,  "shoulder": 2.5, "rank": 3 },
 	"gravel":   { "w": 7.0,  "shoulder": 0.0, "rank": 1 },
 	"ramp":     { "w": 8.0,  "shoulder": 1.5, "rank": 3 },
 }
@@ -40,6 +40,7 @@ var lots: Array = []            # { r: Rect2, kind: "asphalt"|"gravel"|"runway"|
 var buildings: Array = []       # { r: Rect2, h, kind, name, neon, zone }
 var lights: Array = []          # { p, type, seed }
 var landmarks: Array = []       # { name, p, dest }
+var wild_signs: Array = []      # { p, dir, kind }: the yellow MOOSE / DEER CROSSING diamonds
 var river_pts: PackedVector2Array
 var river_hw: PackedFloat32Array
 var rail_pts: PackedVector2Array
@@ -78,9 +79,14 @@ func build() -> void:
 	_villages()
 	_landmarks()
 	_index_roads()
+	_wild_signs()
 	_find_bridges_and_crossings()
 	_buildings()
+	_salvage()
+	_impound()
+	_driveways()
 	_street_lights()
+	_lights_off_the_road()
 	_graph()
 
 # ------------------------------------------------------------------ geography
@@ -274,17 +280,19 @@ func _landmarks() -> void:
 		lights.append({ "p": Vector2(x, 1008), "type": "runway", "seed": x })
 		lights.append({ "p": Vector2(x, 1036), "type": "runway", "seed": x + 1 })
 	landmarks.append({ "name": "AIRSTRIP 7", "p": Vector2(6640, 1022), "dest": true })
-	# the Big Stop at the Salisbury exit: diesel, fries, truckers
+	# the Large Stop at the Salisbury exit: diesel, fries, truckers
 	lots.append({ "r": Rect2(3510, 1960, 100, 70), "kind": "asphalt", "name": "", "lines": false })
-	buildings.append({ "r": Rect2(3560, 1966, 44, 22), "h": 7.0, "kind": "shop", "name": "THE BIG STOP", "zone": "" })
-	add_road("BIG STOP RD", "ramp", [Vector2(3480, 2050), Vector2(3530, 2000)], "")
+	buildings.append({ "r": Rect2(3560, 1966, 44, 22), "h": 7.0, "kind": "shop", "name": "THE LARGE STOP", "zone": "" })
+	add_road("LARGE STOP RD", "ramp", [Vector2(3480, 2050), Vector2(3530, 2000)], "")
 	for i in 3: lights.append({ "p": Vector2(3522 + i * 14, 2004), "type": "canopy", "seed": i })
-	landmarks.append({ "name": "THE BIG STOP", "p": Vector2(3540, 2010), "dest": true })
+	landmarks.append({ "name": "THE LARGE STOP", "p": Vector2(3540, 2010), "dest": true })
 	landmarks.append({ "name": "SALISBURY", "p": Vector2(3440, 2120), "dest": true })
 	# gas bars
-	_gas(Rect2(5640, 1210, 44, 34), "GAS BAR", "")
-	_gas(Rect2(6420, 1420, 44, 30), "ULTRAMARGE", "dieppe")
-	_gas(Rect2(3580, 2060, 40, 28), "GAS BAR", "salisbury")
+	_gas(Rect2(5640, 1210, 44, 34), "GAS BAR", "", "GAS BAR (NORTH END)")
+	_gas(Rect2(6420, 1420, 44, 30), "ULTRAMARGE", "dieppe", "ULTRAMARGE (DIEPPE)")
+	_gas(Rect2(3580, 2060, 40, 28), "GAS BAR", "salisbury", "GAS BAR (SALISBURY)")
+	# the Large Stop's diesel and regular islands, out front of the restaurant
+	buildings.append({ "r": Rect2(3534, 2012, 34, 3), "h": 1.0, "kind": "pumps", "name": "", "zone": "" })
 	# the Lutes Mountain towers: red lights you can see from everywhere
 	for i in 3:
 		var tp := Vector2(4360 + i * 40, 1040 + i * 18)
@@ -302,19 +310,87 @@ func _landmarks() -> void:
 	buildings.append({ "r": Rect2(720, 2716, 30, 20), "h": 12.0, "kind": "church", "name": "", "zone": "havelock" })
 	buildings.append({ "r": Rect2(820, 2716, 28, 18), "h": 6.0, "kind": "shop", "name": "GENERAL STORE", "zone": "havelock" })
 	lights.append({ "p": Vector2(834, 2738), "type": "neon", "seed": 77 })
-	landmarks.append({ "name": "RIVERSIDE", "p": Vector2(5840, 1880), "dest": true })
+	landmarks.append({ "name": "RIVERSIDE", "p": Vector2(5840, 1850), "dest": true })      # (on the street: it's a neighbourhood, not a lot)
 	landmarks.append({ "name": "DIEPPE", "p": Vector2(6500, 1300), "dest": false })
+
+## Northside Salvage: it takes over a block of the industrial park after the warehouses are
+## placed (so nothing else on the map moves): a trailer, stacks of crushed cars, a gravel lot.
+const SALVAGE := Rect2(6410, 910, 100, 60)
+func _salvage() -> void:
+	var r := SALVAGE
+	_clear_block(r)
+	lots.append({ "r": r, "kind": "gravel", "name": "", "lines": false })
+	buildings.append({ "r": Rect2(6412, 912, 26, 12), "h": 4.0, "kind": "shop", "name": "SALVAGE", "zone": "industrial" })
+	for s in [Rect2(6446, 912, 26, 7), Rect2(6476, 912, 30, 7), Rect2(6500, 924, 8, 30), Rect2(6450, 938, 36, 6), Rect2(6412, 958, 22, 8)]:
+		buildings.append({ "r": s, "h": 3.0, "kind": "junk", "name": "", "zone": "industrial" })
+	lights.append({ "p": Vector2(6442, 930), "type": "sodium", "seed": 6442 })
+	lights.append({ "p": Vector2(6490, 962), "type": "sodium_flicker", "seed": 6490 })
+	landmarks.append({ "name": "NORTHSIDE SALVAGE", "p": Vector2(6426, 940), "dest": true })
+
+## The Northside impound lot, where the police tow you and the auction runs on Saturdays: a paved
+## lot with its lines and a booth at the gate (it takes over its block the same way).
+const IMPOUND_LOT := Rect2(6170, 910, 100, 60)
+func _impound() -> void:
+	var r := IMPOUND_LOT
+	_clear_block(r)
+	lots.append({ "r": r, "kind": "asphalt", "name": "", "lines": true })
+	buildings.append({ "r": Rect2(6172, 912, 18, 10), "h": 4.0, "kind": "shop", "name": "IMPOUND", "zone": "industrial" })
+	lights.append({ "p": Vector2(6200, 930), "type": "sodium", "seed": 6200 })
+	lights.append({ "p": Vector2(6250, 950), "type": "sodium", "seed": 6250 })
+	landmarks.append({ "name": "NORTHSIDE IMPOUND", "p": Vector2(6182, 934), "dest": true })
+
+## Take a block back from the warehouses: what was built there goes.
+func _clear_block(r: Rect2) -> void:
+	buildings = buildings.filter(func(b): return not (b.r as Rect2).intersects(r))
+	lots = lots.filter(func(l): return not (l.r as Rect2).intersects(r))
+	lights = lights.filter(func(l): return not r.has_point(l.p))
 
 func _tims(p: Vector2, zone: String) -> void:
 	var r := Rect2(p - Vector2(14, 14), Vector2(28, 28))
 	_reserve(r)
 	buildings.append({ "r": Rect2(p - Vector2(10, 10), Vector2(18, 14)), "h": 6.0, "kind": "coffee", "name": "TIM BURTONS", "zone": zone })
-	lots.append({ "r": Rect2(p + Vector2(-14, 5), Vector2(28, 9)), "kind": "asphalt", "name": "", "lines": false })
+	lots.append({ "r": Rect2(p + Vector2(-14, 5), Vector2(28, 9)), "kind": "asphalt", "name": "", "lines": false, "driveway": true })
 	lights.append({ "p": p + Vector2(0, 5), "type": "neon_red", "seed": int(p.x) })
 	landmarks.append({ "name": "TIM BURTONS", "p": p, "dest": false })
 
-func _gas(r: Rect2, name: String, zone: String) -> void:
+## A lot set back from the road gets a paved driveway out to it (squares stepped along the line
+## from the lot to the nearest bit of road, so it reads as one strip), kept clear of buildings.
+func _driveways() -> void:
+	for l in lots.duplicate():
+		if not l.get("driveway", false): continue
+		var r: Rect2 = l.r
+		var rd := nearest_road(r.get_center(), 120.0)
+		if rd.is_empty(): continue
+		_driveway(_rect_point_toward(r, rd.point), rd.point)   # from the lot's edge, not through the building
+	# and every place on the map you can pick, if it sits back from its road
+	for lm in landmarks:
+		if not lm.get("dest", false): continue
+		var p: Vector2 = lm.p
+		var rd := nearest_road(p, 120.0)
+		if rd.is_empty() or float(rd.dist) < 8.0: continue
+		var lot := lot_at(p)
+		var from := _rect_point_toward(lot.r, rd.point) if not lot.is_empty() else p
+		if from.distance_to(rd.point) < 4.0: continue
+		# a lot that already reaches the road (gravel, asphalt): nothing to add
+		var grass := false
+		for k in range(1, 8):
+			if ground_at(from.lerp(rd.point, k / 8.0)) == "grass": grass = true
+		if not grass: continue
+		_driveway(from, rd.point)
+
+func _driveway(from: Vector2, to: Vector2) -> void:
+	var gap := from.distance_to(to)
+	var steps := maxi(1, int(ceilf(gap / 1.5)))
+	for i in steps + 1:
+		var q := from.lerp(to, float(i) / float(steps))
+		var sq := Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5))
+		if _in_building(q): continue
+		_reserve(sq)
+		lots.append({ "r": sq, "kind": "asphalt", "name": "", "lines": false })
+
+func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
+	if dest != "": landmarks.append({ "name": dest, "p": r.get_center(), "dest": true })
 	lots.append({ "r": r, "kind": "asphalt", "name": "", "lines": false })
 	buildings.append({ "r": Rect2(r.position + Vector2(r.size.x - 14, 2), Vector2(12, 10)), "h": 5.0, "kind": "shop", "name": name, "zone": zone })
 	buildings.append({ "r": Rect2(r.position + Vector2(4, r.size.y * 0.45), Vector2(r.size.x * 0.55, 3)), "h": 1.0, "kind": "pumps", "name": "", "zone": zone })
@@ -325,6 +401,58 @@ func _reserve(r: Rect2) -> void:
 		if c.r.intersects(r): c.reserved = true
 
 # ------------------------------------------------------------------ queries
+
+## Where the moose and deer are: stretches of country road through the woods, with the yellow
+## signs at each end. Never in town or a village, on the city end of the Trans-Canada, or on a
+## ramp. Moose country up north and along the big highway; deer in the farm woods.
+const WILD := [
+	{ "id": "lutes", "label": "LUTES MOUNTAIN", "kind": "moose", "roads": ["LUTES MOUNTAIN RD"], "r": Rect2(4200, 0, 440, 1520) },
+	{ "id": "irishtown", "label": "IRISHTOWN", "kind": "moose", "roads": ["IRISHTOWN RD"], "r": Rect2(5560, 0, 240, 980) },
+	{ "id": "tch", "label": "TRANS-CANADA", "kind": "moose", "roads": ["TRANS-CANADA HWY"], "r": Rect2(3620, 1180, 660, 640) },
+	{ "id": "canaan", "label": "CANAAN WOODS", "kind": "moose", "roads": ["ROUTE 885 - CANAAN RD"], "r": Rect2(640, 0, 220, 2360) },
+	{ "id": "r112", "label": "ROUTE 112 NORTH", "kind": "moose", "roads": ["ROUTE 112"], "r": Rect2(3040, 0, 300, 1880) },
+	{ "id": "berry", "label": "BERRY MILLS", "kind": "deer", "roads": ["BERRY MILLS RD"], "r": Rect2(4640, 960, 420, 740) },
+	{ "id": "boundary", "label": "BOUNDARY CREEK", "kind": "deer", "roads": ["BOUNDARY CREEK RD"], "r": Rect2(3740, 1320, 370, 580) },
+	{ "id": "scotch", "label": "SCOTCH SETTLEMENT", "kind": "deer", "roads": ["SCOTCH SETTLEMENT RD"], "r": Rect2(2040, 1440, 420, 910) },
+	{ "id": "parkindale", "label": "PARKINDALE", "kind": "deer", "roads": ["PARKINDALE RD"], "r": Rect2(1860, 2530, 300, 770) },
+	{ "id": "r106", "label": "ROUTE 106 SOUTH", "kind": "deer", "roads": ["ROUTE 106"], "r": Rect2(2820, 2380, 480, 920) },
+]
+
+## The wildlife stretch here ({} when there isn't one). Given a road name, only that road counts.
+func wild_zone_at(m: Vector2, road_name := "") -> Dictionary:
+	if not zone_at(m).is_empty(): return {}
+	for z in WILD:
+		if (z.r as Rect2).has_point(m) and (road_name == "" or road_name in (z.roads as Array)): return z
+	return {}
+
+## A crossing sign where each zone road enters its stretch, on the right shoulder, facing the
+## traffic coming in.
+func _wild_signs() -> void:
+	wild_signs.clear()
+	for z in WILD:
+		var zr: Rect2 = z.r
+		for rd in roads:
+			if not String(rd.name) in (z.roads as Array): continue
+			var pts: PackedVector2Array = rd.pts
+			for i in pts.size() - 1:
+				var a := pts[i]
+				var b := pts[i + 1]
+				var ina := zr.has_point(a)
+				if ina == zr.has_point(b): continue
+				# find where the road crosses the edge
+				var lo := 0.0
+				var hi := 1.0
+				for k in 12:
+					var mid := (lo + hi) / 2.0
+					if zr.has_point(a.lerp(b, mid)) == ina: lo = mid
+					else: hi = mid
+				var p := a.lerp(b, (lo + hi) / 2.0)
+				var into := (b - a).normalized() if not ina else (a - b).normalized()
+				var right := Vector2(-into.y, into.x)
+				var off := float(rd.w) / 2.0 + float(CLS[String(rd.cls)].shoulder) + 2.0
+				var sp := p - into * 6.0 + right * off
+				if road_at(sp, 1.0).is_empty() and river_at(sp) == 0:
+					wild_signs.append({ "p": sp, "dir": into, "kind": String(z.kind), "zone": String(z.id) })
 
 func zone_at(m: Vector2) -> Dictionary:
 	for z in ZONES:
@@ -606,6 +734,47 @@ func _fill_industrial(r: Rect2, zone: String, rng: RandomNumberGenerator) -> voi
 		lights.append({ "p": Vector2(b.end.x + 1, b.get_center().y), "type": "sodium", "seed": rng.randi() })
 
 ## Streetlights: every road in a lit zone gets poles on alternating sides; highways get
+## Lights that stand on a pole never stand in a lane: one that landed on a road (the next street at
+## a corner, a lot that a road runs through) moves out to the kerb, arm over the road, or goes.
+## Runway lights, canopy lights, porch lights and signs are flush with what they're on.
+const FLUSH_LIGHTS := ["runway", "canopy", "porch", "neon", "neon_red", "casino", "aviation"]
+
+func _lights_off_the_road() -> void:
+	var keep: Array = []
+	for l in lights:
+		if String(l.type) in FLUSH_LIGHTS or road_at(l.p, 0.8).is_empty():
+			keep.append(l)
+			continue
+		var moved := _kerb_spot(l.p)
+		if moved.is_empty(): continue
+		l.p = moved.p
+		l.arm = moved.arm
+		keep.append(l)
+	lights = keep
+
+## The nearest spot off every road beside the road at `p`: { p, arm } (the arm points back over
+## the road), or {} if there's no room (a junction box, a lot hemmed in by streets).
+func _kerb_spot(p: Vector2) -> Dictionary:
+	var on := road_at(p, 0.8)
+	var r: Dictionary = on.road
+	var pts: PackedVector2Array = r.pts
+	var a: Vector2 = pts[on.seg]
+	var b: Vector2 = pts[on.seg + 1]
+	var along := (b - a).normalized()
+	var t := clampf((p - a).dot(along), 0.0, a.distance_to(b))
+	var mid := a + along * t
+	var out := (p - mid).normalized() if p.distance_to(mid) > 0.05 else along.orthogonal()
+	for side in [1.0, -1.0]:
+		for slide in [0.0, 6.0, -6.0, 12.0, -12.0]:
+			var q: Vector2 = mid + along * slide + out * side * (float(r.w) / 2.0 + 1.5)
+			if road_at(q, 0.8).is_empty() and not _in_building(q): return { "p": q, "arm": -out * side }
+	return {}
+
+func _in_building(q: Vector2) -> bool:
+	for bd in buildings:
+		if (bd.r as Rect2).grow(0.5).has_point(q): return true
+	return false
+
 ## high-mast lights at the interchanges; the country stays dark.
 func _street_lights() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -629,7 +798,7 @@ func _street_lights() -> void:
 					var typ: String = z.light
 					if typ == "sodium" and rng.randf() < 0.08: typ = "sodium_flicker"
 					if typ == "sodium" and rng.randf() < 0.04: typ = "dead"
-					lights.append({ "p": lp, "type": typ, "seed": rng.randi() })
+					lights.append({ "p": lp, "type": typ, "seed": rng.randi(), "arm": -dir.orthogonal() * side })
 				side = -side
 				s += 34.0
 			acc = fmod(acc + L, 34.0)
@@ -707,6 +876,22 @@ func _graph() -> void:
 					if not cuts.has(pair[0]): cuts[pair[0]] = []
 					var t: float = (p - pair[2]).length() / maxf((pair[3] - pair[2]).length(), 0.001)
 					cuts[pair[0]].append([pair[1], t, p])
+	# T-junctions: a road that ends on another one (touching it, not crossing it) joins it there
+	for ri in roads.size():
+		var rr: Dictionary = roads[ri]
+		var rp: PackedVector2Array = rr.pts
+		for end in [rp[0], rp[rp.size() - 1]]:
+			for e in _road_index.get(_cell(end), []):
+				if e[0] == ri: continue
+				var other: Dictionary = roads[e[0]]
+				if other.limited != rr.limited: continue
+				var a: Vector2 = other.pts[e[1]]
+				var b: Vector2 = other.pts[e[1] + 1]
+				if seg_dist(end, a, b) > 1.5: continue
+				if end.distance_to(a) < 0.5 or end.distance_to(b) < 0.5: continue     # already a shared node
+				if not cuts.has(e[0]): cuts[e[0]] = []
+				var t: float = (end - a).length() / maxf((b - a).length(), 0.001)
+				cuts[e[0]].append([e[1], t, end])
 	for ri in roads.size():
 		var r: Dictionary = roads[ri]
 		var pts: PackedVector2Array = r.pts
@@ -722,7 +907,7 @@ func _graph() -> void:
 		var prev := -1
 		for p in seq:
 			var n := _node(p)
-			if prev >= 0: _link(prev, n, r)
+			if prev >= 0 and prev != n: _link(prev, n, r)     # (a junction cut right on a point: no road to itself)
 			prev = n
 
 func nearest_node(p: Vector2) -> int:
@@ -736,6 +921,65 @@ func nearest_node(p: Vector2) -> int:
 	return best
 
 ## A* from one point to another along the roads. Returns the points to drive through.
+## The nearest point of a rectangle to a point outside it.
+static func _rect_point_toward(r: Rect2, p: Vector2) -> Vector2:
+	return Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y))
+
+## The GPS's way somewhere: along the roads to the bit of road nearest the place (coming at it
+## from whichever end is shorter, not on to the junction past it), then in to the place itself.
+func route_to(from: Vector2, to: Vector2) -> PackedVector2Array:
+	var rd := nearest_road(to, 150.0)
+	if rd.is_empty(): return route(from, to)
+	var rp: Vector2 = rd.point
+	var pts: PackedVector2Array = rd.road.pts
+	# the graph nodes either side of that point on its road
+	var best: PackedVector2Array = route(from, to)
+	var best_len := INF
+	for end in [_end_node_toward(rd, -1), _end_node_toward(rd, 1)]:
+		if end < 0: continue
+		var r := route(from, g_pos[end])
+		if r.is_empty(): continue
+		var length := 0.0
+		for i in r.size() - 1: length += r[i].distance_to(r[i + 1])
+		length += r[r.size() - 1].distance_to(rp)
+		if length < best_len:
+			best_len = length
+			best = r
+	if best.is_empty(): return best
+	var out := best.duplicate()
+	if out[out.size() - 1].distance_to(rp) > 2.0: out.append(rp)
+	# a place with its own lot: in by the lot's edge on the road side (where its driveway is)
+	var lot := lot_at(to)
+	if not lot.is_empty():
+		var gate := _rect_point_toward(lot.r, rp)
+		if gate.distance_to(rp) > 3.0 and gate.distance_to(to) > 3.0: out.append(gate)
+	if rp.distance_to(to) > 3.0: out.append(to)
+	return out
+
+## The graph node at one end of the stretch of road a nearest_road() hit is on (dir -1: back
+## along the road, +1: on along it): the nearest node to the road's point that way.
+func _end_node_toward(rd: Dictionary, dir: int) -> int:
+	var rp: Vector2 = rd.point
+	var d: Vector2 = rd.dir * float(dir)
+	var pts: PackedVector2Array = rd.road.pts
+	var best := -1
+	var best_d := INF
+	for n in g_pos.size():
+		if g_adj[n].is_empty(): continue
+		var off := g_pos[n] - rp
+		var along := off.dot(d)
+		if along <= 0.5 or along >= best_d: continue
+		# it has to be on this road, not just somewhere off in that direction
+		var on_road := false
+		for i in pts.size() - 1:
+			if seg_dist(g_pos[n], pts[i], pts[i + 1]) < 1.5:
+				on_road = true
+				break
+		if on_road:
+			best_d = along
+			best = n
+	return best
+
 func route(from: Vector2, to: Vector2) -> PackedVector2Array:
 	var s := nearest_node(from)
 	var t := nearest_node(to)
