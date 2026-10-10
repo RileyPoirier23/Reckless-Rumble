@@ -127,6 +127,14 @@ func _init() -> void:
 		mc.surface = "mud"
 		mt += 1.0 / 120.0
 	check("a rear-drive car crawls out of mud", mc.speed() >= 2.0, "%.1f m/s after %.1f s" % [mc.speed(), mt])
+	var gc := CarSim.new(sp)
+	gc.set_ambient(2.0)
+	var gt := 0.0
+	while gc.speed() < 2.0 and gt < 8.0:
+		gc.surface = "grass"
+		gc.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+		gt += 1.0 / 120.0
+	check("...and off cold grass, flat out", gc.speed() >= 2.0, "%.1f m/s after %.1f s" % [gc.speed(), gt])
 	# ---- the emergency vehicles: drawn, and they get going (a fire truck's no rocket, but it moves)
 	for id in ["ambulance", "fire"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))

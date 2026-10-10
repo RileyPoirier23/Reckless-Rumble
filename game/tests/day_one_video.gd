@@ -385,7 +385,7 @@ class Autopilot extends Node:
 		for j in range(best + 1, route.size() - 1): rem += route[j].distance_to(route[j + 1])
 		if to_end > float(o.radius):
 			want = minf(want, maxf(4.0, sqrt(2.0 * 2.5 * rem)))
-			if rem < 12.0:
+			if rem < 12.0 or to_end < 50.0:        # (close: straight there, whatever way the GPS goes round)
 				aim = o.to
 				err = wrapf(fwd.angle_to(aim - p), -PI, PI)
 				steer = clampf(err * 2.2, -1.0, 1.0)
