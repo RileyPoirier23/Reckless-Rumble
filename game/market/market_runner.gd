@@ -82,7 +82,7 @@ func open_meet() -> void:
 # ------------------------------------------------------------------ the meetup's actions
 
 func do_check(check: String) -> String:
-	drive.sky.time_h = fmod(drive.sky.time_h + 1.0 / 6.0, 24.0)       # ten minutes with your head under the hood
+	SaveGame.pass_hours(drive.sky, drive.save, 1.0 / 6.0)       # ten minutes with your head under the hood
 	return String(Market.inspect(l, check).text)
 
 func start_test() -> void:

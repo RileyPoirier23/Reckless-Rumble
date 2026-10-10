@@ -173,5 +173,14 @@ func _init() -> void:
 		var bd: Dictionary = Auction.BIDDERS[i]
 		if int(lim[i]) < int(float(al[0].worth) * float(bd.top[0])) - 1 or int(lim[i]) > int(float(al[0].worth) * float(bd.top[1])) + 1: lim_ok = false
 	check("each bidder has a limit, somewhere around what it's worth", lim_ok, str(lim))
+	# a check under the hood at five to midnight: ten minutes later it's tomorrow, and the parts
+	# truck's clock moved too
+	var sky := WorldSky.new()
+	sky.day = 4
+	sky.time_h = 23.95
+	var sv := { "clock_h": 120.0 }
+	SaveGame.pass_hours(sky, sv, 1.0 / 6.0)
+	check("ten minutes at the meetup runs past midnight into the next day", sky.day == 5 and absf(sky.time_h - 0.1167) < 0.01 and absf(float(sv.clock_h) - 120.1667) < 0.01,
+		"day %d %.3f h, clock %.3f" % [sky.day, sky.time_h, float(sv.clock_h)])
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

@@ -54,6 +54,17 @@ static func ensure(data: Dictionary) -> Dictionary:
 		if not car.has("installing"): car.installing = []   # [{ slot, part, done_h }] Gus is on it
 	return data
 
+## Time skipped in one go (ten minutes under a seller's hood, the nephew with a wrench): the sky
+## runs through it a quarter hour at a time, so the date turns over at midnight and the weather
+## moves on, and the save's game hours (what orders and installs go by) keep up.
+static func pass_hours(sky: WorldSky, data: Dictionary, h: float) -> void:
+	var left := h
+	while left > 0.0:
+		var dh := minf(left, 0.25)
+		sky.step(dh / maxf(sky.rate, 0.0001))
+		left -= dh
+	data.clock_h = float(data.get("clock_h", 0.0)) + maxf(h, 0.0)
+
 ## The spec the sim drives for a car in the garage: its base spec with every part bolted on.
 static func car_spec(entry: Dictionary) -> Dictionary:
 	return Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}), entry.get("tune", {}))
