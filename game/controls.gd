@@ -29,6 +29,7 @@ const DEFAULTS := {
 	"map": [KEY_TAB, KEY_M, JOY_BUTTON_BACK],
 	"jobs": [KEY_J, JOY_BUTTON_RIGHT_STICK],
 	"help": [KEY_F1],
+	"camera": [KEY_T],
 	"pause": [KEY_ESCAPE, JOY_BUTTON_START],
 	"inspect": [KEY_I, JOY_BUTTON_Y],
 	"click": [JOY_BUTTON_A],

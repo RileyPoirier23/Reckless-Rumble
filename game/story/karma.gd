@@ -46,6 +46,8 @@ const DEEDS := {
 	"careless": [-0.5, 1.0],          # ...with scratches
 	"street_race": [-0.5, 1.0],       # raced on a public road
 	"tow_done": [0.5, 1.0],           # pulled somebody out of a ditch
+	"stayed": [0.5, 1.0],             # caused a crash and waited for the police
+	"hit_run": [-2.0, 4.0],           # caused a crash and drove off
 }
 
 ## Where Leo stands: the choices on file plus what he's done.

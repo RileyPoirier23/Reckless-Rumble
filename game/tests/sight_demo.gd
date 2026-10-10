@@ -38,6 +38,28 @@ func _run() -> void:
 		main.sight.on = false
 		await _wait(0.6)
 		await _shot(String(s[0]) + "_off")
+	# what it costs a frame
+	var t0 := Time.get_ticks_usec()
+	for i in 100: main.sight.update_sight(1.0 / 60.0, main.car.global_position, 400.0)
+	var nb := 0
+	for n in main.ysort.get_children(): if n is BuildingNode: nb += 1
+	print("sight: %.2f ms a frame, %d buildings in the scene, %d nodes" % [(Time.get_ticks_usec() - t0) / 100000.0, nb, main.ysort.get_child_count()])
+	var t1 := Time.get_ticks_msec()
+	var f0 := Engine.get_frames_drawn()
+	await _wait(3.0)
+	print("fps: %.1f" % ((Engine.get_frames_drawn() - f0) / ((Time.get_ticks_msec() - t1) / 1000.0)))
+	main.sight.on = false
+	t1 = Time.get_ticks_msec()
+	f0 = Engine.get_frames_drawn()
+	await _wait(3.0)
+	print("fps without sight: %.1f" % ((Engine.get_frames_drawn() - f0) / ((Time.get_ticks_msec() - t1) / 1000.0)))
+	main.sight.on = true
+	# the three camera angles, same spot
+	for ang in ["overhead", "angled", "low"]:
+		GameSettings.set_v("ui", "camera_angle", ang)
+		await _wait(1.0)
+		await _shot("angle_" + ang)
+	GameSettings.set_v("ui", "camera_angle", "angled")
 	# wide, to see the shadows run out
 	main.zoom_mult = 0.45
 	main.sight.on = true

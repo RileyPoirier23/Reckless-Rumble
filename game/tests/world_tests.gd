@@ -116,6 +116,45 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- the emergency vehicles: drawn, and they get going (a fire truck's no rocket, but it moves)
+	for id in ["ambulance", "fire"]:
+		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
+		var art := CarArt.new(spec, Color(spec.paint))
+		check("%s: drawn" % id, art.slices.size() == CarArt.SLICES)
+		var c := CarSim.new(spec)
+		c.set_ambient(15.0)
+		var tt := 0.0
+		while c.speed() < 50.0 / 3.6 and tt < 20.0:
+			c.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+			tt += 1.0 / 120.0
+		check("%s: 0-50 km/h in under 12 s" % id, tt < 12.0, "%.1f s" % tt)
+	# ---- a crash scene shuts its lane: traffic won't turn into it
+	var tr := Traffic.new()
+	tr.map = m
+	var jn := -1
+	for n in m.g_adj.size():
+		var streets := 0
+		for e in m.g_adj[n]:
+			if String(e[2].cls) == "street": streets += 1
+		if streets == m.g_adj[n].size() and streets >= 3:
+			jn = n
+			break
+	check("found a street junction to test", jn >= 0)
+	if jn >= 0:
+		var from: int = m.g_adj[jn][0][0]
+		var tc := TrafficCar.new()
+		tc.rng.seed = 7
+		var exits: Array = []
+		for e in m.g_adj[jn]:
+			if e[0] != from: exits.append(e[0])
+		for x in exits.slice(1): tr.blocked[Vector2i(jn, x)] = true
+		var always := true
+		for i in 30:
+			if tr.next_node(from, jn, tc) != exits[0]: always = false
+		check("traffic goes round a shut lane", always)
+		tc.free()
+	tr.free()
+	check("hit and run and staying both count", Karma.DEEDS.has("hit_run") and Karma.DEEDS.has("stayed") and Karma.DEEDS.hit_run[0] < 0.0 and Karma.DEEDS.stayed[0] > 0.0)
 	# ---- line of sight: a building's shadow, and a building in the way
 	var sq := PackedVector2Array([Vector2(0, 0), Vector2(100, 0), Vector2(100, 100), Vector2(0, 100)])
 	var sh := Sight.shadow_of(sq, Vector2(-200, 50), 2000.0)

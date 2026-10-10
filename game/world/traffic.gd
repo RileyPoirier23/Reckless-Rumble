@@ -44,6 +44,7 @@ var ysort: Node2D
 var player: PlayerCar
 var cars: Array[TrafficCar] = []
 var extra: Array = []          # cars with other drivers (racers, the police): traffic gives them room too
+var blocked := {}              # Vector2i(a, b): that lane is shut (a crash scene); nobody turns into it
 var hush := Rect2()            # a street race is on in here: Marco's crew has the side streets blocked
 var junctions := {}                 # node -> { control, major_roads, radius, queue, offset }
 var _node_cells := {}               # Vector2i -> Array of node ids (64 m cells)
@@ -195,6 +196,7 @@ func next_node(a: int, b: int, car: TrafficCar) -> int:
 	var din := (map.g_pos[b] - map.g_pos[a]).normalized()
 	for e in map.g_adj[b]:
 		if e[0] == a: continue
+		if blocked.has(Vector2i(b, e[0])): continue
 		var r: Dictionary = e[2]
 		var dout := (map.g_pos[e[0]] - map.g_pos[b]).normalized()
 		# prefer staying on bigger roads and going roughly straight; nobody wants the gravel
@@ -253,7 +255,7 @@ func _spawn(cam_m: Vector2) -> void:
 		var b: int = e[0]
 		var road: Dictionary = e[2]
 		var L := map.g_pos[a].distance_to(map.g_pos[b])
-		if L < 6.0: continue
+		if L < 6.0 or blocked.has(Vector2i(a, b)): continue
 		var lanes: Array = LANE[road.cls]
 		var lane: float = lanes[rng.randi() % lanes.size()]
 		# not in a junction or its queue, and well clear of every other car
@@ -268,23 +270,29 @@ func _spawn(cam_m: Vector2) -> void:
 			if c.pos.distance_to(p) < 30.0: clear = false
 		if player and player.sim.pos.distance_to(p) < 30.0: clear = false
 		if not clear: continue
-		var car := TrafficCar.new()
-		car.traffic = self
-		car.rng.seed = rng.randi()
-		# a car off the catalogue, picked for the part of town: rust and pickups out in the
-		# country, compacts and luxury downtown
-		var z := map.zone_at(p)
-		var style := String(z.get("style", ""))
-		if String(z.get("id", "")) == "" or style == "": style = "rural"
-		var body: Dictionary = CarCatalog.random_traffic(car.rng, style)
-		if body.is_empty():
-			body = BODIES[car.rng.randi() % BODIES.size()]
-			body.paint = PAINTS[car.rng.randi() % PAINTS.size()]
-		car.setup(body, Color(String(body.paint)), a, b, s, lane)
+		var car := place_car(a, b, s, lane)
 		car.v = minf(car.desired_speed(road) * 0.8, 12.0)
-		ysort.add_child(car)
-		cars.append(car)
 		return
+
+## A car in traffic, here: on the lane from node a to node b, s metres along, standing still.
+func place_car(a: int, b: int, s: float, lane: float) -> TrafficCar:
+	var p := lane_point(a, b, s, lane)
+	var car := TrafficCar.new()
+	car.traffic = self
+	car.rng.seed = rng.randi()
+	# a car off the catalogue, picked for the part of town: rust and pickups out in the
+	# country, compacts and luxury downtown
+	var z := map.zone_at(p)
+	var style := String(z.get("style", ""))
+	if String(z.get("id", "")) == "" or style == "": style = "rural"
+	var body: Dictionary = CarCatalog.random_traffic(car.rng, style)
+	if body.is_empty():
+		body = BODIES[car.rng.randi() % BODIES.size()]
+		body.paint = PAINTS[car.rng.randi() % PAINTS.size()]
+	car.setup(body, Color(String(body.paint)), a, b, s, lane)
+	ysort.add_child(car)
+	cars.append(car)
+	return car
 
 # ------------------------------------------------------------------ the frame
 
@@ -299,8 +307,8 @@ func step(dt: float, cam_m: Vector2) -> void:
 	for i in range(cars.size() - 1, -1, -1):
 		var c := cars[i]
 		# wrecks get towed once you've moved on
-		if c.state == "parked" and ((c.wreck_t > 20.0 and c.pos.distance_to(cam_m) > 60.0) or c.wreck_t > 40.0): c.gone = true
-		if c.pos.distance_to(cam_m) > DESPAWN or c.gone or (hush.has_point(c.pos) and c.pos.distance_to(cam_m) > 90.0):
+		if c.state == "parked" and not c.held and ((c.wreck_t > 20.0 and c.pos.distance_to(cam_m) > 60.0) or c.wreck_t > 40.0): c.gone = true
+		if (c.pos.distance_to(cam_m) > DESPAWN and not c.held) or c.gone or (hush.has_point(c.pos) and c.pos.distance_to(cam_m) > 90.0):
 			_leave_junctions(c)
 			c.queue_free()
 			cars.remove_at(i)

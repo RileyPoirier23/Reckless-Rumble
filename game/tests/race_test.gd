@@ -272,6 +272,7 @@ func _wildlife() -> void:
 	t = 0.0
 	while t < 5.0 and deer.state == "stand":
 		c.sim.vx = maxf(c.sim.vx, 14.0)
+		deer.t = 0.0                    # it stays frozen in the lights, however long a slow frame takes
 		await get_tree().physics_frame
 		t += 1.0 / 60.0
 	await _wait(0.3)
@@ -284,6 +285,9 @@ func _wildlife() -> void:
 	var shy := w.spawn_at("deer", rd.point + Vector2(-dir.y, dir.x) * 9.0, dir.angle() - PI / 2.0)
 	Input.action_press("horn")
 	await _wait(0.6)
+	for i in 30:                        # a slow frame on a software renderer: give it frames, not just time
+		if shy.state in ["flee", "gone"]: break
+		await get_tree().process_frame
 	Input.action_release("horn")
 	check("the horn sends a deer back into the trees", shy.state in ["flee", "gone"], shy.state)
 	main.hold_car = false
@@ -413,7 +417,8 @@ func _salvage() -> void:
 	check("salvage: Lloyd buys off the bench", int(main.save.cash) == cash1 + SalvageYard.offer("exh_magnaflown"))
 	y.panel.open()
 	await _wait(0.2)
-	check("salvage: the trailer window holds the car", main.car.locked and y.open())
+	for i in 3: await get_tree().process_frame        # (a slow frame on a software renderer can take longer than that)
+	check("salvage: the trailer window holds the car", main.car.locked and y.open(), "locked %s, open %s, free roam %s, scenes %d" % [main.car.locked, y.open(), main.free_roam, main.incidents.scenes.size()])
 	y.panel.visible = false
 	main.sky.time_h = 21.0
 	await _wait(0.2)

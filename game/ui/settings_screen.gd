@@ -108,6 +108,7 @@ func rows() -> Array:
 			out.append({ "kind": "choice", "sec": "ui", "key": "messages", "label": "CHATTER", "opts": ["all", "important", "off"], "desc": "PASSENGERS, THE CROWD AT THE MEET: ALL OF IT, LESS OF IT, OR NONE. WHAT MATTERS ALWAYS SHOWS." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "tips", "label": "FIRST-TIME TIPS", "desc": "THE ONE-TIME HINTS ABOUT THE MAP, GIGS AND THE CONTROLS." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "scan_tool", "label": "SCAN TOOL", "desc": "THE DIAGNOSTIC COMPUTER UNDER THE DASH: FAULT CODES, THE TIRES, THE WARNING LIGHTS." })
+			out.append({ "kind": "choice", "sec": "ui", "key": "camera_angle", "label": "CAMERA ANGLE", "opts": ["overhead", "angled", "low"], "desc": "STRAIGHT DOWN, TIPPED, OR DOWN LOW TO SEE THE SIDES OF THINGS. T FLIPS THROUGH THEM WHILE YOU DRIVE." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_zoom", "label": "CAMERA DISTANCE", "opts": [0.8, 0.9, 1.0, 1.1, 1.2], "desc": "FURTHER OUT SEES MORE ROAD; CLOSER IN SEES MORE CAR." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "controls_card", "label": "CONTROLS CARD AT START", "desc": "SHOW THE CONTROLS EVERY TIME YOU START DRIVING (F1 ANY TIME)." })
 			out.append({ "kind": "choice", "sec": "controls", "key": "prompts", "label": "BUTTON PROMPTS", "opts": ["auto", "keyboard", "xbox", "playstation"], "desc": "AUTO FOLLOWS WHATEVER YOU TOUCHED LAST." })

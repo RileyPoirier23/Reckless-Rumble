@@ -46,16 +46,15 @@ func update_sight(dt: float, eye: Vector2, view_r: float) -> void:
 	for n in drive.ysort.get_children():
 		if n is BuildingNode:
 			var b := n as BuildingNode
-			if b.global_position.distance_to(eye) > view_r + 600.0:
-				b.modulate.a = 1.0
+			# a building off the screen can't cover the car, and its shadow falls away off the screen too
+			if b.global_position.distance_to(eye) > view_r + b.reach():
+				if b.modulate.a != 1.0: b.modulate.a = 1.0
 				continue
 			# in the way of the car: see-through
 			var want := CUT_ALPHA if on and b.covers(eye) else 1.0
 			b.modulate.a = lerpf(b.modulate.a, want, k)
 			if not on or not b.blocks_sight(): continue
-			var world_cs := PackedVector2Array()
-			for c in b.corners(): world_cs.append(b.global_position + c)
-			var s := shadow_of(world_cs, eye, REACH)
+			var s := shadow_of(b.world_corners(), eye, REACH)
 			if s.size() >= 3: shadows.append(s)
 		elif n == drive.car:
 			continue

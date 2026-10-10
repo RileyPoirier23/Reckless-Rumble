@@ -21,7 +21,7 @@ const DEFAULTS := {
 		"combined": false, "rotation": 900.0, "range": 0.0, "ratio": 14.0,
 		"steer_dz": 0.0, "steer_gamma": 1.0, "pedal_dz": 0.03, "pedal_sat": 0.97 },
 	"display": { "mode": "windowed", "size": "1280x720", "vsync": true, "max_fps": 0, "stretch": "integer" },
-	"ui": { "messages": "all", "tips": true, "scan_tool": true, "camera_zoom": 1.0, "controls_card": false },
+	"ui": { "messages": "all", "tips": true, "scan_tool": true, "camera_zoom": 1.0, "camera_angle": "angled", "controls_card": false },
 	"difficulty": { "preset": "normal", "assist": "street", "police": "normal", "wildlife": "normal" },
 	"graphics": { "lights": 56, "weather": "full", "clouds": true, "smoke": true, "skids": true, "flashes": true, "blur": true, "sight": true },
 	"audio": { "master": 1.0, "engine": 1.0, "effects": 1.0, "mute_unfocused": false },

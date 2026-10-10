@@ -196,9 +196,11 @@ func tire_mu(i: int) -> float:
 	var t: Dictionary = tires[i]
 	var comp: Dictionary = COMPOUND[compound]
 	var mu: float = SURFACE_MU[surface] * comp[surface]
-	# rubber has a temperature window: summer tires go hard and useless in the cold
-	if t.temp < comp.cold_below: mu *= 0.78
-	mu *= 1.0 - clampf(absf(t.temp - comp.opt) - 25.0, 0.0, 90.0) / 220.0
+	# rubber has a temperature window: summer tires go hard and useless in the cold. All of it on
+	# SIM; half on STREET (October on summer tires shouldn't feel like ice); none on ARCADE
+	var harsh := 1.0 if assist == Assist.SIM else (0.5 if assist == Assist.STREET else 0.0)
+	if t.temp < comp.cold_below: mu *= 1.0 - 0.22 * harsh
+	mu *= 1.0 - clampf(absf(t.temp - comp.opt) - 25.0, 0.0, 90.0) / 220.0 * harsh
 	var tread: float = t.tread / float(spec.tires.tread_mm)
 	if surface == "dry":
 		mu *= 1.0 + (1.0 - tread) * 0.04       # slicks are grippier on dry... until they're cords

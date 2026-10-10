@@ -7,7 +7,9 @@ const HOUSE_COLS := [Color("6a7a8a"), Color("8a6a5a"), Color("c8c0a8"), Color("5
 
 var data: Dictionary
 var fp: Rect2           # footprint in px, relative to the origin
-var hpx: float
+var hpx_base: float      # wall height (px) seen from straight overhead
+var hpx: float:          # ...and from where the camera is
+	get: return hpx_base * CarView.lift_k
 var windows: Node2D
 
 func setup(b: Dictionary) -> void:
@@ -15,7 +17,7 @@ func setup(b: Dictionary) -> void:
 	var r: Rect2 = b.r
 	position = Vector2(r.position.x, r.end.y) * CarArt.PX
 	fp = Rect2(Vector2(0, -r.size.y * CarArt.PX), r.size * CarArt.PX)
-	hpx = minf(float(b.h) * CarArt.PX * 0.32, 84.0)
+	hpx_base = minf(float(b.h) * CarArt.PX * 0.32, 84.0)
 	if b.kind != "pumps":
 		var cs := CollisionShape2D.new()
 		var shape := RectangleShape2D.new()
@@ -60,12 +62,24 @@ func corners() -> PackedVector2Array:
 func sort_point() -> Vector2:
 	return global_position + fp.get_center()
 
+## The footprint corners in world px (buildings don't move, so worked out once).
+var _wc := PackedVector2Array()
+func world_corners() -> PackedVector2Array:
+	if _wc.is_empty():
+		for c in corners(): _wc.append(global_position + c)
+	return _wc
+
+## How far from its origin any of it reaches (px): the footprint's far corner, plus the walls.
+func reach() -> float:
+	return fp.size.length() + hpx
+
 ## Does this building stand between the camera and a point (world px)? Its walls and roof are
 ## drawn lifted toward the top of the screen, so a car just behind it (further up the screen)
 ## disappears under it.
 func covers(p: Vector2) -> bool:
 	var up := CarView.screen_up
 	if (p - sort_point()).dot(-up) >= 0.0: return false       # in front of it: drawn over it
+	if p.distance_to(sort_point()) > fp.size.length() * 0.5 + hpx + 20.0: return false
 	var pts := PackedVector2Array()
 	for c in corners():
 		pts.append(global_position + c)
@@ -110,7 +124,7 @@ func _draw() -> void:
 			draw_line(a, a + up * 28.0, c[0] if i % 2 == 0 else Color("c83a2a"), 4.0)
 		return
 	# shadow on the ground, cast away from the sun (low in the south-west sky)
-	var sh := Vector2(1, 0.6).normalized() * hpx * 0.6
+	var sh := Vector2(1, 0.6).normalized() * hpx_base * 0.6
 	draw_colored_polygon(PackedVector2Array([cs[0] + sh, cs[1] + sh, cs[2] + sh, cs[3] + sh]), Color(0, 0, 0, 0.22))
 	# walls, shaded by which way they face
 	var light := Vector2(-0.6, -0.8)

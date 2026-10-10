@@ -48,6 +48,7 @@ var jobs: JobRunner
 var job_board: JobBoard
 var market: MarketRunner
 var police: Police
+var incidents: Incidents        # crashes out there and the police, ambulance and fire that come to them
 var fuel: FuelStop
 var salvage: SalvageYard
 var auction: Auction
@@ -60,6 +61,7 @@ var awards_due: Array = []    # won, card not shown yet (it waits until you've s
 var awards_on := true         # tests and demos stage their own scenes: no cards stopping them
 var furniture_watch := true   # (and no stop signs and red lights going on the police's sheet)
 var hold_car := false          # a scene (or a test) has the car stopped
+var test_camera := false       # a soak or race test: straight overhead, whatever the settings say (cheapest to draw)
 var free_roam := true          # not a test, a demo or a story mission: the calendar carries over
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
 
@@ -190,6 +192,9 @@ void fragment() {
 	police = Police.new()
 	add_child(police)
 	police.setup(self)
+	incidents = Incidents.new()
+	add_child(incidents)
+	incidents.setup(self)
 	fuel = FuelStop.new()
 	add_child(fuel)
 	fuel.setup(self)
@@ -207,6 +212,7 @@ void fragment() {
 	luchadooros.setup(self)
 	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
 	for arg in OS.get_cmdline_user_args():
+		if arg.ends_with("-test"): test_camera = true
 		if arg.ends_with("-test") or arg.ends_with("-demo"):
 			police.enabled = false
 			wildlife.enabled = false
@@ -254,6 +260,10 @@ void fragment() {
 		var md: Node = load("res://tests/market_demo.gd").new()
 		md.main = self
 		add_child(md)
+	elif OS.get_cmdline_user_args().has("--incident-demo"):
+		var idm: Node = load("res://tests/incident_demo.gd").new()
+		idm.main = self
+		add_child(idm)
 	elif OS.get_cmdline_user_args().has("--sight-demo"):
 		var sd: Node = load("res://tests/sight_demo.gd").new()
 		sd.main = self
@@ -451,6 +461,7 @@ func _after_death() -> void:
 		jobs.finish(false)
 		hud.post("THE JOB'S OFF. NOBODY TIPS A WRECK.", 4.0)
 	police.clear()
+	incidents.clear()
 	wildlife.clear()
 	car.dead = false
 	car.respawn()
@@ -659,6 +670,7 @@ func _apply_settings(_section := "") -> void:
 	hud.verbosity = GameSettings.chatter_level()
 	hud.show_diag = bool(GameSettings.get_v("ui", "scan_tool"))
 	zoom_mult = float(GameSettings.get_v("ui", "camera_zoom"))
+	CarView.set_angle("overhead" if test_camera else String(GameSettings.get_v("ui", "camera_angle")))
 	police.strictness = GameSettings.police_strictness()
 	wildlife.rate = GameSettings.wildlife_rate()
 	# rain and snow: fewer drops at half (changing the count restarts them, so only on a change)
@@ -859,6 +871,7 @@ func _apply_season(s: String, reset := true) -> void:
 func _process(dt: float) -> void:
 	if garage and garage.visible:
 		CarView.screen_up = Vector2(0, -1)      # the garage is drawn straight on
+		CarView.set_angle("overhead")
 		return
 	sky.step(dt)
 	if sky.season != _season_seen:
@@ -893,19 +906,22 @@ func _process(dt: float) -> void:
 		blur_rect.visible = false
 	var up := Vector2(0, -1).rotated(cam_rot)
 	CarView.screen_up = up
+	CarView.set_angle("overhead" if test_camera else String(GameSettings.get_v("ui", "camera_angle")))
 	var spd := car.sim.speed()
 	var ahead := up * HudLayout.look_ahead(spd)     # see more of what's ahead, more as you go faster
 	if _dying:
 		# the death cam: in close on the wreck
 		cam.global_position = cam.global_position.lerp(car.global_position, minf(1.0, 3.0 * dt / maxf(Engine.time_scale, 0.05)))
-		cam.zoom = cam.zoom.lerp(Vector2(2.6, 2.6), minf(1.0, 2.5 * dt / maxf(Engine.time_scale, 0.05)))
+		cam.zoom = cam.zoom.lerp(Vector2(2.6, 2.6 * CarView.squash), minf(1.0, 2.5 * dt / maxf(Engine.time_scale, 0.05)))
 	else:
 		cam.global_position = car.global_position + ahead
 		var z := HudLayout.zoom_at(spd) * zoom_mult        # in close; pulls back with speed
-		cam.zoom = cam.zoom.lerp(Vector2(z, z), 1.5 * dt)
-	var r := Vector2(320, 180).length() / cam.zoom.x
+		cam.zoom = cam.zoom.lerp(Vector2(z, z * CarView.squash), 1.5 * dt)
+	var r := Vector2(320, 180 / CarView.squash).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	if not car.on_traffic_hit.is_valid(): car.on_traffic_hit = func(o: TrafficCar, dv: float) -> void: incidents.reported(o, dv, true)
+	incidents.step(dt)
 	# the GPS shows the police (flashing when they're after you) and whoever you're racing
 	var bl: Array = []
 	var flash := fmod(Time.get_ticks_msec() / 250.0, 2.0) < 1.0
@@ -913,7 +929,14 @@ func _process(dt: float) -> void:
 		bl.append([k.sim.pos, (Color(1, 0.2, 0.15) if flash else Color(0.3, 0.5, 1.0)) if k.siren else Color(0.35, 0.5, 0.95)])
 	if jobs.race:
 		for a in jobs.race.racers: bl.append([a.sim.pos, Color("d9a441")])
+	bl.append_array(incidents.blips())
 	gps.blips = bl
+	# the nearest siren coming
+	var sir := INF
+	for k in police.cruisers:
+		if k.siren: sir = minf(sir, k.sim.pos.distance_to(car.sim.pos))
+	sir = minf(sir, float(incidents.nearest_siren(car.sim.pos)[0]))
+	audio.siren = clampf(1.0 - sir / 260.0, 0.0, 1.0)
 	if not StoryState.active: _deliveries(dt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
@@ -1052,6 +1075,14 @@ func _inputs() -> void:
 		_pause()
 		return
 	audio.horn = Input.is_action_pressed("horn")
+	# T: the next camera angle
+	if Input.is_action_just_pressed("camera") and not modal_open():
+		var names: Array = CarView.ANGLES.keys()
+		var nxt: String = names[(names.find(String(GameSettings.get_v("ui", "camera_angle"))) + 1) % names.size()]
+		GameSettings.set_v("ui", "camera_angle", nxt)
+		GameSettings.save_file()
+		CarView.set_angle(nxt)
+		hud.post("CAMERA: " + nxt.to_upper(), 1.5)
 	# an H-shifter: a gear's button held is that gear; let go and it's in neutral
 	for gi in Controls.GEARS.size():
 		var act: String = Controls.GEARS[gi][0]

@@ -201,6 +201,7 @@ var locked := false               # a menu is up: hands off, ease to a stop
 var show_mode := false            # parked at the meet: out of gear, handbrake on, the gas just revs it
 var _in_show := false
 var _karma_hit: Object = null    # the last car Leo put his into (one bump, one count)
+var on_traffic_hit: Callable           # the driver's car: a hard hit on traffic gets called in (Incidents)
 var show_off := false             # doing a donut or a handbrake slide on purpose: the aids step back
 
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
@@ -340,6 +341,7 @@ func _physics_process(dt: float) -> void:
 					m2 = (other as Wildlife.Animal).mass
 					if (other as Wildlife.Animal).state != "hurt": Awards.bump("hit_" + (other as Wildlife.Animal).kind)
 				other.hit(-n * vn * (m1 / (m1 + m2)) * 1.6, col.get_position() / PX)
+				if other is TrafficCar and on_traffic_hit.is_valid(): on_traffic_hit.call(other, vn * (m1 / (m1 + m2)) * 1.6)
 				vw += n * vn * (m2 / (m1 + m2)) * 1.3
 			else:
 				vw += n * vn * 1.25

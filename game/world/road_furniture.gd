@@ -482,7 +482,7 @@ func _process(dt: float) -> void:
 
 ## The camera's "up", and the angle that turns a sign's face so it reads upright on the screen.
 static func _up() -> Vector2:
-	return CarView.screen_up
+	return CarView.screen_up * CarView.lift_k
 
 static func _face_angle() -> float:
 	return CarView.screen_up.angle() + PI / 2.0

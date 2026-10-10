@@ -139,6 +139,7 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 		"sedan": cab_f = 0.32; cab_b = -0.52
 		"tow": cab_f = 0.42; cab_b = 0.04
 	var truck := body == "tow"
+	var boxy := body in ["ambulance", "fire"]
 	for y in size.y:
 		for x in size.x:
 			var p := _uv(x, y) / k
@@ -146,69 +147,111 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 			var v := p.y
 			var c := Color(0, 0, 0, 0)
 			var rear_wheel := absf(u + wf) <= 3.0 and absf(v) >= hw - 2.5 and absf(v) <= hw + 0.4
-			match zz:
-				0, 1:
-					if _rounded(u, v, hl - 2.0, hw - 1.5, 2.0): c = UNDER
-					if rear_wheel: c = TIRE if zz == 0 or absf(u + wf) > 1.0 else RIM * 0.7
-				2, 3:
-					if _rounded(u, v, hl, hw, 3.0):
-						c = bodyc
-						var arch := (absf(u - wf) <= 3.4 or absf(u + wf) <= 3.4) and absf(v) >= hw - 1.6
-						if arch: c = TIRE if absf(absf(u) - wf) > 1.2 else RIM * (0.6 + 0.15 * zz)
-						if u > hl - 1.4 or u < -hl + 1.4: c = TRIM.lerp(bodyc, 0.25)        # bumpers
-						if absf(v) > hw - 0.8 and absf(absf(u) - wf) > 3.4 and zz == 2: c = TRIM.lerp(bodyc, 0.5)   # skirt line
-				4, 5:
-					if _rounded(u, v, hl, hw, 3.0):
-						c = bodyc
-						if u > hl - 1.6 and absf(v) < 2.2: c = TRIM                       # grille
-						if u > hl - 1.8 and absf(v) >= 2.6 and absf(v) <= hw - 0.6:     # headlights
-							c = HEAD * 0.85
-							if head_ok[0 if v < 0.0 else 1]: head.set_pixel(x, y, HEAD)
-							else: c = Color("2a2a2e")                                     # smashed
-						if u < -hl + 1.6 and absf(v) >= 2.4 and absf(v) <= hw - 0.4:    # taillights
-							c = TAIL
-							if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
-							else: c = Color("3a1a1a")
-							if absf(v) < 3.6: rev.set_pixel(x, y, REV_LIT)
-						if u < -hl + 1.2 and absf(v) < 1.6: c = Color("d8d4c0") * 0.8   # plate
-						# turn signals: amber at the front corners; at the back the corners are part of the
-						# red tail lamp and flash red (the North American way)
-						if u > hl - 2.2 and absf(v) > hw - 1.5:
-							c = AMBER_OFF
-							(_bl if v < 0.0 else _br).set_pixel(x, y, AMBER_LIT)
-						elif u < -hl + 1.8 and absf(v) > hw - 1.1:
-							c = TAIL
-							(_bl if v < 0.0 else _br).set_pixel(x, y, TAIL_LIT)
-							if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
-						if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = bodyc * 0.82   # arch lip
-				6:
-					if _rounded(u, v, hl - 0.6, hw - 0.6, 3.0):
-						c = bodyc
-						if u > 6.0 and absf(v) < 0.6: c = bodyc * 1.12           # hood crease
-						if truck and u < hl * 0.02:
-							c = STEEL * 0.75 if (int(absf(u) * 2.0) % 3 != 0) else STEEL * 0.55   # the wrecker deck
-							c.a = 1.0
-							if absf(v) > hw - 1.2: c = bodyc * 0.8
-				7, 8, 9:
-					var gk := float(zz - 7)
-					var front := hl * 0.30 - gk * 1.3
-					var back := -hl * 0.50 + gk * 1.0
-					if u <= front and u >= back and absf(v) <= hw - 0.8 - gk * 0.7:
-						c = GLASS
-						if zz == 9 and u > front - 1.5: c = GLASS_HI                       # windshield glint
-						if absf(u - (back + front) * 0.42) < 0.6: c = bodyc * 0.95        # B-pillar
-						if u > front - 0.8 or u < back + 0.8: c = bodyc * 0.9             # A and C pillars
-					elif _rounded(u, v, hl - 1.0 - k * 2.0, hw - 1.0, 3.0) and zz == 7 and (u > front or u < back):
-						c = bodyc                                                          # hood and trunk top
-				10, 11:
-					var front2 := hl * cab_f - 4.2
-					var back2 := hl * cab_b + 3.4
-					if u <= front2 and u >= back2 and absf(v) <= hw - 3.0 + (1 if zz == 10 else 0):
-						c = bodyc * (1.08 if zz == 11 else 1.0)
-						if zz == 11 and v < -hw + 4.5: c = bodyc * 1.25                     # roof highlight
+			if boxy and zz >= 7:
+				c = _box_layer(u, v, hl, hw, zz, bodyc)
+			else:
+				match zz:
+					0, 1:
+						if _rounded(u, v, hl - 2.0, hw - 1.5, 2.0): c = UNDER
+						if rear_wheel: c = TIRE if zz == 0 or absf(u + wf) > 1.0 else RIM * 0.7
+					2, 3:
+						if _rounded(u, v, hl, hw, 3.0):
+							c = bodyc
+							var arch := (absf(u - wf) <= 3.4 or absf(u + wf) <= 3.4) and absf(v) >= hw - 1.6
+							if arch: c = TIRE if absf(absf(u) - wf) > 1.2 else RIM * (0.6 + 0.15 * zz)
+							if u > hl - 1.4 or u < -hl + 1.4: c = TRIM.lerp(bodyc, 0.25)        # bumpers
+							if absf(v) > hw - 0.8 and absf(absf(u) - wf) > 3.4 and zz == 2: c = TRIM.lerp(bodyc, 0.5)   # skirt line
+					4, 5:
+						if _rounded(u, v, hl, hw, 3.0):
+							c = bodyc
+							if u > hl - 1.6 and absf(v) < 2.2: c = TRIM                       # grille
+							if u > hl - 1.8 and absf(v) >= 2.6 and absf(v) <= hw - 0.6:     # headlights
+								c = HEAD * 0.85
+								if head_ok[0 if v < 0.0 else 1]: head.set_pixel(x, y, HEAD)
+								else: c = Color("2a2a2e")                                     # smashed
+							if u < -hl + 1.6 and absf(v) >= 2.4 and absf(v) <= hw - 0.4:    # taillights
+								c = TAIL
+								if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
+								else: c = Color("3a1a1a")
+								if absf(v) < 3.6: rev.set_pixel(x, y, REV_LIT)
+							if u < -hl + 1.2 and absf(v) < 1.6: c = Color("d8d4c0") * 0.8   # plate
+							# turn signals: amber at the front corners; at the back the corners are part of the
+							# red tail lamp and flash red (the North American way)
+							if u > hl - 2.2 and absf(v) > hw - 1.5:
+								c = AMBER_OFF
+								(_bl if v < 0.0 else _br).set_pixel(x, y, AMBER_LIT)
+							elif u < -hl + 1.8 and absf(v) > hw - 1.1:
+								c = TAIL
+								(_bl if v < 0.0 else _br).set_pixel(x, y, TAIL_LIT)
+								if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
+							if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = bodyc * 0.82   # arch lip
+					6:
+						if _rounded(u, v, hl - 0.6, hw - 0.6, 3.0):
+							c = bodyc
+							if u > 6.0 and absf(v) < 0.6: c = bodyc * 1.12           # hood crease
+							if truck and u < hl * 0.02:
+								c = STEEL * 0.75 if (int(absf(u) * 2.0) % 3 != 0) else STEEL * 0.55   # the wrecker deck
+								c.a = 1.0
+								if absf(v) > hw - 1.2: c = bodyc * 0.8
+					7, 8, 9:
+						var gk := float(zz - 7)
+						var front := hl * 0.30 - gk * 1.3
+						var back := -hl * 0.50 + gk * 1.0
+						if u <= front and u >= back and absf(v) <= hw - 0.8 - gk * 0.7:
+							c = GLASS
+							if zz == 9 and u > front - 1.5: c = GLASS_HI                       # windshield glint
+							if absf(u - (back + front) * 0.42) < 0.6: c = bodyc * 0.95        # B-pillar
+							if u > front - 0.8 or u < back + 0.8: c = bodyc * 0.9             # A and C pillars
+						elif _rounded(u, v, hl - 1.0 - k * 2.0, hw - 1.0, 3.0) and zz == 7 and (u > front or u < back):
+							c = bodyc                                                          # hood and trunk top
+					10, 11:
+						var front2 := hl * cab_f - 4.2
+						var back2 := hl * cab_b + 3.4
+						if u <= front2 and u >= back2 and absf(v) <= hw - 3.0 + (1 if zz == 10 else 0):
+							c = bodyc * (1.08 if zz == 11 else 1.0)
+							if zz == 11 and v < -hw + 4.5: c = bodyc * 1.25                     # roof highlight
 			if c.a > 0.0 and c != TIRE:
 				c = _damaged(c, u, v, hl, hw, zz, rng)
 			if c.a > 0.0: img.set_pixel(x, y, c)
+
+## The upper half of a box-bodied truck (an ambulance, a fire engine): a cab up front with its
+## windshield, and the box behind. The ambulance has a red band round the box and a cross on the
+## roof; the fire engine's cab is as tall as its body, with the ladder racked on top.
+func _box_layer(u: float, v: float, hl: float, hw: float, zz: int, bodyc: Color) -> Color:
+	var fire := body == "fire"
+	var cab_back := hl * (0.36 if not fire else 0.48)
+	var gk := float(clampi(zz - 7, 0, 2))
+	var front := hl * (0.72 if not fire else 0.86) - gk * 1.2
+	var red := Color("c8281e") * (0.58 + 0.42 * float(zz) / 11.0)
+	red.a = 1.0
+	if u < cab_back and u > -hl + 0.6 and _rounded(u, v, hl - 0.6, hw - 0.4, 1.5):
+		# the box
+		var c := bodyc * (1.06 if zz >= 10 else 1.0)
+		c.a = 1.0
+		if not fire:
+			if zz == 8 and (absf(v) > hw - 1.4 or u < -hl + 1.6): c = red              # the band
+			if zz == 11 and ((absf(u + hl * 0.3) < 1.0 and absf(v) < 3.2) or (absf(v) < 1.0 and absf(u + hl * 0.3) < 3.2)): c = red
+		else:
+			if zz == 11:
+				var rail := absf(v) > 1.5 and absf(v) < 2.1
+				var rung := absf(v) <= 1.5 and int(floorf(u + 100.0)) % 3 == 0
+				if rail or rung: c = STEEL * 0.9
+				elif absf(v) <= 1.5: c = bodyc * 0.8
+				c.a = 1.0
+			if zz == 9 and absf(v) > hw - 1.0 and int(floorf(u + 100.0)) % 6 < 3: c = STEEL * 0.7     # compartment doors
+			c.a = 1.0
+		return c
+	if u >= cab_back and u <= front and absf(v) <= hw - 0.8 - gk * 0.6:
+		if fire or zz <= 9:
+			if zz >= 10:
+				return bodyc * 1.05 if not (zz == 11 and absf(v) < hw - 2.0 and absf(u - (cab_back + 1.5)) < 0.8) else Color("e0402e")
+			var c2 := GLASS
+			if zz == 9 and u > front - 1.5: c2 = GLASS_HI
+			if u < cab_back + 1.2: c2 = bodyc * 0.9                                       # the back of the cab
+			return c2
+	if zz == 7 and u > front and _rounded(u, v, hl - 1.0, hw - 1.0, 3.0):
+		return bodyc                                                                       # the hood
+	return Color(0, 0, 0, 0)
 
 ## What the crash did to this pixel: dents (darker, crumpled) toward the side that got hit,
 ## paint scraped to primer along the sides, a missing bumper, cracked glass.

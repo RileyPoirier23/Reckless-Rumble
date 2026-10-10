@@ -24,6 +24,17 @@ var beacons := false               # ...and it's switched on
 ## Which way is "up" on the screen, in world space. The chase camera turns, so the stack
 ## has to rise toward the top of the screen, not toward north. Set once a frame by the scene.
 static var screen_up := Vector2(0, -1)
+## How far the camera's tipped down from straight overhead: everything that stands up (car
+## slices, walls, poles) is drawn this much taller, while the camera squashes the ground (SQUASH).
+static var lift_k := 1.0
+## Settings > UI > CAMERA ANGLE: [ground squash, height lift] for each.
+const ANGLES := { "overhead": [1.0, 1.0], "angled": [0.82, 1.45], "low": [0.68, 1.9] }
+static var squash := 1.0
+
+static func set_angle(name: String) -> void:
+	var a: Array = ANGLES.get(name, ANGLES.angled)
+	squash = float(a[0])
+	lift_k = float(a[1])
 
 ## The flasher relay: about 85 flashes a minute, a little longer on than off.
 static func blink_on() -> bool:
@@ -57,9 +68,13 @@ func _draw() -> void:
 	for z in CarArt.SLICES:
 		# only the body leans; the tires stay planted
 		var body_k := maxf(0.0, (float(z) - 1.5) / float(CarArt.SLICES - 1))
-		var off := screen_up * (z * STEP + lift) + (fwd * lean.x + rt * lean.y) * body_k
+		var off := screen_up * (z * STEP * lift_k + lift) + (fwd * lean.x + rt * lean.y) * body_k
 		draw_set_transform(off, heading, Vector2.ONE)
 		draw_texture(art.slices[z], -half)
+		# tipped down, the slices spread apart: a second copy halfway up fills the gap
+		if lift_k > 1.05 and z < CarArt.SLICES - 1:
+			draw_set_transform(off + screen_up * STEP * lift_k * 0.5, heading, Vector2.ONE)
+			draw_texture(art.slices[z], -half)
 		if _lamps == null: _lamp_slice(self, z, off, half, bl, br)
 		# the front wheels: drawn on their own so they can steer
 		if z <= 2:
@@ -90,7 +105,7 @@ class LampLayer extends Node2D:
 		# the lamps sit on slices 6 and 7 (the 4th and 5th layers of the recipe)
 		for z in range(5, 9):
 			var body_k := maxf(0.0, (float(z) - 1.5) / float(CarArt.SLICES - 1))
-			var off := CarView.screen_up * (z * CarView.STEP + view.lift) + (fwd * view.lean.x + rt * view.lean.y) * body_k
+			var off := CarView.screen_up * (z * CarView.STEP * CarView.lift_k + view.lift) + (fwd * view.lean.x + rt * view.lean.y) * body_k
 			view._lamp_slice(self, z, off, half, bl, br)
 		if view.light_bar: _light_bar(half, fwd, rt)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -98,7 +113,7 @@ class LampLayer extends Node2D:
 	## The wrecker's roof bar: two amber lamps on the cab, flashing turn about when it's on.
 	func _light_bar(half: Vector2, fwd: Vector2, rt: Vector2) -> void:
 		var z := CarArt.SLICES - 1
-		var off := CarView.screen_up * (z * CarView.STEP + view.lift + 1.0) + (fwd * view.lean.x + rt * view.lean.y)
+		var off := CarView.screen_up * (z * CarView.STEP * CarView.lift_k + view.lift + 1.0) + (fwd * view.lean.x + rt * view.lean.y)
 		draw_set_transform(off, view.heading, Vector2.ONE)
 		var k: float = view.art.k
 		var x := half.x * 0.22                     # over the cab, a little ahead of the middle

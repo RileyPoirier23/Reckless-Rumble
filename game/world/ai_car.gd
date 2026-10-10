@@ -18,6 +18,7 @@ var trace: Array = []              # the last few seconds of driving, for workin
 var _trace_n := 0
 var lights := Color.TRANSPARENT    # a light bar: TRANSPARENT for none
 var siren := false
+var bar_cols: Array = [Color(1.0, 0.18, 0.12), Color(0.2, 0.4, 1.0)]   # the light bar, left and right (red and blue: police)
 var night := false
 
 var _pass := 0.0                   # sideways offset to get round something (m, + right)
@@ -273,11 +274,12 @@ func _lights(dt: float, _st: float) -> void:
 	bar.heading = sim.heading
 	bar.width = float(spec.width) * CarArt.CAR_SCALE
 	bar.on = siren
+	bar.cols = bar_cols
 	bar.t = _flash_t2
 	_bar_light.visible = siren
 	if siren:
 		var red := fmod(_flash_t2 * 3.0, 1.0) < 0.5
-		_bar_light.color = Color(1.0, 0.15, 0.1) if red else Color(0.15, 0.3, 1.0)
+		_bar_light.color = bar_cols[0] if red else bar_cols[1]
 		_bar_light.energy = 2.4
 
 ## The bar on the roof: off, it's a dark strip; on, it flashes red and blue, side to side.
@@ -285,6 +287,7 @@ class LightBar extends Node2D:
 	var heading := 0.0
 	var width := 1.8
 	var on := false
+	var cols: Array = [Color(1.0, 0.18, 0.12), Color(0.2, 0.4, 1.0)]
 	var t := 0.0
 
 	func _process(_dt: float) -> void:
@@ -295,15 +298,15 @@ class LightBar extends Node2D:
 		var f := Vector2(cos(heading), sin(heading))
 		var r := Vector2(-f.y, f.x)
 		var half := width * 0.42 * px
-		var c := CarView.screen_up * 17.0        # up on the roof, over the top slice
+		var c := CarView.screen_up * 17.0 * CarView.lift_k        # up on the roof, over the top slice
 		var phase := fmod(t * 3.0, 1.0) < 0.5
 		for side: float in [-1.0, 1.0]:
 			var a: Vector2 = c + r * side * half
 			var b: Vector2 = c + r * side * 0.12 * px
 			var col := Color("1a1a22")
+			var lit: bool = on and (side < 0.0) == phase
 			if on:
-				var lit: bool = (side < 0.0) == phase
-				col = (Color(1.0, 0.18, 0.12) if side < 0.0 else Color(0.2, 0.4, 1.0)) if lit else col.lightened(0.2)
+				col = (cols[0] if side < 0.0 else cols[1]) if lit else col.lightened(0.2)
 			draw_line(a + f * 0.1 * px, b + f * 0.1 * px, col, 0.45 * px)
-			if on and col.r + col.b > 1.0: draw_line(a + f * 0.1 * px, b + f * 0.1 * px, Color(1, 1, 1, 0.55), 0.15 * px)
+			if lit: draw_line(a + f * 0.1 * px, b + f * 0.1 * px, Color(1, 1, 1, 0.55), 0.15 * px)
 		draw_line(c - r * 0.12 * px, c + r * 0.12 * px, Color("dcdcdc"), 0.45 * px)

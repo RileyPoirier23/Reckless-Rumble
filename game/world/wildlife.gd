@@ -237,7 +237,7 @@ class Animal extends AnimatableBody2D:
 		var r := Vector2(-f.y, f.x)
 		var L := float(data.len) * px
 		var W := float(data.wid) * px
-		var up := CarView.screen_up * float(data.height) * px * 0.55
+		var up := CarView.screen_up * CarView.lift_k * float(data.height) * px * 0.55
 		var down := state == "hurt"
 		var lift := up * (0.25 if down else 1.0)
 		# shadow

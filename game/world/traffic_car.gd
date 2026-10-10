@@ -46,6 +46,7 @@ var spin := 0.0
 var wreck_t := 0.0
 var damage := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
 var gone := false
+var held := false            # part of a crash scene: stays where it is until the scene clears
 var paint := Color.WHITE
 var _art_damage := -1.0
 var pull := 0.0              # moved over (m, right) for a siren coming up behind
@@ -372,7 +373,7 @@ func _wrecked(dt: float) -> void:
 	view.blink_left = wreck_t > 1.0
 	view.blink_right = wreck_t > 1.0
 	view.braking = true
-	if wreck_v.length() < 0.3 and absf(spin) < 0.1 and wreck_t > 6.0:
+	if wreck_v.length() < 0.3 and absf(spin) < 0.1 and wreck_t > 6.0 and not held:
 		# back to the lane if it's still close to it and pointing the right way, otherwise it
 		# stays where it is with the hazards on until it's out of sight
 		var lane_p := traffic.lane_point(a, b, clampf((pos - traffic.map.g_pos[a]).dot((traffic.map.g_pos[b] - traffic.map.g_pos[a]).normalized()), 0.0, 9999.0), _lane(traffic.edge_road(a, b)))

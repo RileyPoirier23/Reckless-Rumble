@@ -79,6 +79,7 @@ Only on the wildlife stretches, marked with yellow crossing signs at each end: m
 - **Pink slips:** at rep 6, Friday and Saturday nights are one on one down the Main Street Mile against a ladder of five rivals, each in a quicker car than the last, up to the King of Main Street. Win and their car is in your garage. Lose and they drive home in yours, and Marco's cousin drops you at Gus's in whatever you've got left. You can't bet Toby's wrecker or your only car.
 - **The other racers** drive the same physics as your car. They follow the route, brake for the corners they can see coming, go round slower traffic when the road is wide enough, follow it when it isn't, and back out when they get stuck. The leaders lift a little and the stragglers try harder, so it stays close.
 - **The police** (Port Rumble Police, white Dodgy Charjers with a light bar) patrol at the limit. Go 20 km/h over, or race, where one can see you and they light you up. Pull over and Constable Tremblay writes the ticket. Keep going and it's a chase: the heat climbs and more cars join. Stay out of their sight for 14 seconds and they lose you. High heat, racing or a long chase gets the car impounded.
+- **Crash scenes** (`world/incidents.gd`): every few minutes of free driving, two cars tangle somewhere nearby and the radio has it ("Traffic on the nines..."). A patrol car, an ambulance (white, red band, red cross on the roof) and a fire engine (red, ladder racked on top) come down that lane with the lights on and the siren going, park in a line behind the wrecks, and set out cones. The lane's shut, so traffic turns off before it and you go round. A minute or so later the wrecks are towed and everybody leaves. The scene shows on the GPS in orange. A hard hit you put on a car in traffic gets the same response: wait for the police and it's an insurance claim (and a little karma); drive 150 m off before they get there and it's a hit and run, worth 30 heat and karma.
 - **Heat** shows above the GPS and cools off slowly. Tickets are $100 plus $8 for every km/h past 15 over, doubled at 50 over (stunt driving). Racing adds $1,500, running $1,000, and hitting a police car $800. The impound is $450 more.
 - Cruisers show on the GPS (flashing when they're after you), and so do the other racers.
 
@@ -194,6 +195,7 @@ The camera sits behind the car and turns with it, so up is always ahead. Time, w
 | Tow it home | R | |
 | Hydraulics (hop; hold to keep hopping) | X | A |
 | Controls card | F1 | (in the pause menu) |
+| Camera angle (overhead, angled, low) | T | (Settings > UI) |
 | Pause: resume, settings, controls, quit to title | Esc | Start |
 
 Every one of these can be changed in **Settings > Controls** (from the title or the pause menu): pick a row, Left/Right for the keyboard or controller column, Enter and press the new key or button (Delete clears it). The prompts on screen follow whatever you bind. The same tab has the stick's dead zone and response curve, how much the stick and keys steer less at speed, the trigger dead zone, easing for the keyboard (keys are on or off, so the gas, brake and steering ease in and come back out quicker), vibration, and the gearbox.
@@ -204,7 +206,9 @@ On the controller the stick has a response curve (small movements, small correct
 
 **Line of sight (`world/sight.gd`):** what Leo can see from the driver's seat, Project Zomboid style. Every building near the car throws a shadow away from it; the ground in a shadow is darker, and traffic, the police, racers and animals in one fade out until they come round the corner. A building standing between the camera and the car goes see-through, so the car is never lost under a roof. Gas pumps and the radio mast don't block anything. Settings > Graphics > LINE OF SIGHT turns it off.
 
-**The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, line of sight, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
+**Camera angle:** OVERHEAD looks straight down; ANGLED (the default) tips the camera so the ground is foreshortened and you see the sides of cars and buildings; LOW tips it further. T flips through them while you drive.
+
+**The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera angle, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, line of sight, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
 
 **1ton and the Luchadooros.** The Luchadooros are a lowrider and donk club with a lot in the industrial park, off the road from Northside Salvage (it's on the map). They have three leaders: La Calavera runs the streets, El Pulpo runs his mouth, and 1ton runs the bays. Pull up at their gate and 1ton will talk. Show him a car that's on his laminated list (the big rear-drive sedans and coupes: Impalers, Caprees, a Maliboo, Cutless Supremos, a Grand Nashunal, Broughamms, Town Carrs, Bonnevillains, Crown Victoriouses, a Charjer) and he joins your crew. From then on his bay is a tab in the garage. **Hydraulics** come as two, three or four pumps, hopping 35, 60 or 90 cm, and they weigh what they weigh. **Donk kits** put a car on 24, 26, 28 or 30-inch rims with the lift to clear them: taller gearing, slower off the line, less grip, and a lot more attention. You pay for the parts; he doesn't take money for the labour. On the road, X (A on a controller) dumps the pumps while you're stopped or creeping, and if you hold it the car keeps hopping. A donk sits up off its shadow and its front wheels draw bigger. Three Employee of the Month photos go with it.
 
@@ -235,6 +239,7 @@ On the controller the stick has a response curve (small movements, small correct
 - **Seasons change the grip:**
   - Fall has wet roads and wet leaves.
   - Winter is -12 °C with packed snow and black ice at the corners. Summer tires are hopeless in it; switch to winter tires.
+  - Rubber has a temperature window: cold summer tires go hard and lose grip. All of that on SIM driving aids; half of it on STREET (the default), so October on summer tires doesn't feel like ice; none on ARCADE.
   - Spring has rain and potholes.
 
 ## Tests
