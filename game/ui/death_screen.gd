@@ -363,7 +363,7 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 	if info.get("flat", false): dmg.flat = "rear"
 	var gy := 98                                   # where the tires touch
 	var x := 48
-	var tilt := 0.07 if wheel_off else 0.0
+	var tilt := 0.0                                # a car on three wheels sits itself down
 	match cause:
 		"tree":
 			x = 40

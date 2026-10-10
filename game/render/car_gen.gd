@@ -158,7 +158,8 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 		"c_top": 0.12, "c_bot": -0.06, "soft": 0.8, "nose_drop": 0.2, "nose_round": 0.06, "nose_lean": 0.0,
 		"nose_bot": 0.2, "tail_bot": 0.24, "tail_mid": 0.55, "ff": 0.44, "rear_d": 0.06, "d_w": 0.16,
 		"cab_d": 0.0, "bed_h": 0.0, "box_d": 0.0, "cab": "", "fin": 0.0, "doors": 4, "quarter": true,
-		"brow_d": 0.0, "brow_h": 0.0,
+		"brow_d": 0.0, "brow_h": 0.0, "arc": false, "peak": 0.55, "boxy": false, "kink": 0.0, "c_w": 0.0, "under": 0.03,
+		"tub": false,
 	}
 	match fam:
 		"sedan", "wagon":
@@ -277,6 +278,23 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.nose_round = 0.02
 			g.nose_bot = 0.36
 			g.tail_bot = 0.38
+			# a Jepp and its kind: a short flat-topped tub on a frame, up off the ground, with the
+			# doors cut out of its sides, an upright windshield and a flat hood to a square grille
+			if String(f.make) == "Jepp" or (art.has("open") and L < 4.3):
+				g.tub = true
+				g.clear = 0.42
+				g.under = 0.13
+				g.hood_h = 1.0
+				g.cowl_rise = 0.05
+				g.cowl_d = minf(L * 0.36, 1.45)
+				g.rake = 10.0 if year < 1987 else (20.0 if year < 2007 else 28.0)
+				g.nose_drop = 0.14
+				g.nose_round = 0.02
+				g.nose_bot = 0.44
+				g.tail_bot = 0.46
+				g.belt_up = 0.02
+				g.kick = 0.0
+				g.soft = 0.12 if year < 2007 else 0.3
 		"pickup":
 			var cab := String(art.get("cab", "reg"))
 			if f.body == "tow": cab = "reg"
@@ -519,6 +537,7 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 					g.nose_drop = 0.5
 			g.cab_h = 2.3 if g.cab != "step" else H
 			g.doors = 2
+	_modern(g, f, fam, L, r)
 	if art.has("fins") and fam in ["sedan", "coupe", "wagon", "roadster"]:
 		g.fin = { 1956: 0.08, 1957: 0.12, 1958: 0.15, 1959: 0.24, 1960: 0.14 }.get(year, 0.07)
 	# a little of the car's own in every number, so no two cars share a silhouette
@@ -529,6 +548,124 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 	g.kick = float(g.kick) + r.randf_range(-0.012, 0.012)
 	g.belt_up = float(g.belt_up) + r.randf_range(-0.012, 0.012)
 	return g
+
+## Cars from 2000 on don't share the nineties' three-box: a high beltline with the glass a third
+## of the side, one bow from the A-pillar over the roof to a short high deck, a tall blunt nose.
+## SUVs and pickups from the mid-nineties on stand tall: a flat hood, a square upright face, a
+## high belt, square arches and daylight under the sills. `m` runs 0..1 from 2000 to 2012, when
+## the coupe roofs and the big rims arrive.
+static func _modern(g: Dictionary, f: Dictionary, fam: String, L: float, r: RandomNumberGenerator) -> void:
+	var year: int = f.year
+	var cls: String = f.cls
+	var fwd: bool = f.drive == "FWD"
+	var m := clampf(float(year - 1999) / 13.0, 0.0, 1.0)
+	var lux := cls == "luxury"
+	if year >= 2000 and fam in ["sedan", "coupe", "hatch", "muscle"] and not cls in ["classic"]:
+		g.arc = true
+		g.peak = r.randf_range(0.42, 0.62)
+		g.clear = 0.14
+		g.soft = 1.0
+		g.hood_h = lerpf(0.78, 0.86, m) + (0.03 if lux else 0.0)
+		g.cowl_rise = lerpf(0.21, 0.16, m)
+		g.rake = lerpf(60.0, 63.0, m)
+		g.belt_up = lerpf(0.01, 0.04, m)
+		g.kick = lerpf(0.05, 0.09, m)
+		g.crown = lerpf(0.035, 0.05, m)
+		# a tall blunt face: the bumper stands nearly upright under the hood's front edge
+		g.nose_round = 0.06
+		g.nose_drop = lerpf(0.13, 0.1, m)
+		g.nose_bot = 0.22
+		g.tail_bot = 0.26
+		g.rt = 0.065
+		match fam:
+			"sedan", "muscle":
+				g.cowl_d = L * lerpf(0.31, 0.29, m) + (0.0 if fwd else 0.2)
+				g.hood_h = lerpf(0.8, 0.84, m) + (0.03 if lux else 0.0)
+				g.cowl_rise = lerpf(0.16, 0.14, m)
+				g.belt_up = 0.0
+				g.rake = lerpf(55.0, 58.0, m)
+				g.tail_h = lerpf(1.05, 1.1, m)
+				g.tail_mid = g.tail_h * 0.62
+				g.deck = L * lerpf(0.17, 0.19, m) + (0.08 if lux else 0.0)
+				g.deck_rise = 0.0
+				g.bl_rake = lerpf(58.0, 64.0, m)
+				g.c_top = 0.08
+				g.c_w = lerpf(0.18, 0.14, m)
+				if fam == "muscle": g.doors = 2
+			"coupe":
+				g.cowl_d = L * lerpf(0.33, 0.31, m) + (0.0 if fwd else 0.15)
+				g.hood_h = lerpf(0.76, 0.8, m)
+				g.cowl_rise = 0.15
+				g.belt_up = 0.0
+				g.rake = lerpf(58.0, 61.0, m)
+				g.tail_h = lerpf(1.0, 1.04, m)
+				g.tail_mid = g.tail_h * 0.62
+				g.deck = L * lerpf(0.15, 0.14, m)
+				g.deck_rise = 0.0
+				g.bl_rake = lerpf(64.0, 70.0, m)
+				g.c_top = 0.06
+				g.c_w = 0.2
+			"hatch":
+				g.cowl_d = L * lerpf(0.29, 0.27, m)
+				g.cowl_rise = lerpf(0.17, 0.15, m)
+				g.belt_up = 0.0
+				g.tail_h = lerpf(0.98, 1.05, m)
+				if g.rear == "hatch" and float(g.bl_rake) < 60.0:
+					g.bl_rake = lerpf(40.0, 52.0, m)
+					g.c_top = 0.12
+					g.c_bot = lerpf(0.0, -0.06, m)
+				else:
+					g.c_w = 0.18
+				g.tail_x = 0.0
+				g.tail_mid = 0.62
+	elif fam in ["suv", "offroad", "pickup"] and year >= 1995 and String(g.cab) != "ute" and String(g.cab) != "cabover":
+		var cross := cls == "crossover"
+		var big := L > 5.05
+		var hd: bool = cls in ["hd_pickup", "work_truck"] or f.body == "tow"
+		g.boxy = true
+		g.soft = lerpf(0.35, 0.6, m) if not cross else 0.8
+		g.nose = "blunt"
+		g.nose_round = 0.04 if not cross else 0.07
+		g.belt_up = 0.05 if not cross else 0.03
+		g.kick = 0.02 if not cross else lerpf(0.03, 0.07, m)
+		g.rake = lerpf(56.0, 60.0, m) if not cross else lerpf(60.0, 64.0, m)
+		# a body on a frame stands up off the ground, with the frame and the tank in the gap
+		if fam == "pickup":
+			g.hood_h = lerpf(1.1, 1.26, m) + (0.1 if hd else 0.0) - (0.14 if not big else 0.0)
+			g.cowl_rise = 0.07
+			g.clear = (lerpf(0.4, 0.47, m) + (0.04 if hd else 0.0)) if big else lerpf(0.32, 0.36, m)
+			g.under = 0.17 if big else 0.13
+			g.nose_drop = 0.22
+			g.bed_h = float(g.hood_h) - 0.03
+		elif cross:
+			g.hood_h = lerpf(0.92, 1.0, m)
+			g.cowl_rise = 0.11
+			g.clear = 0.24
+			g.under = 0.05
+			g.nose_drop = 0.24
+			g.rear_d = lerpf(0.22, 0.34, m)
+			g.d_w = 0.2
+			g.crown = 0.03
+		else:
+			g.hood_h = lerpf(1.02, 1.16, m) + (0.06 if big else 0.0)
+			g.cowl_rise = 0.08
+			g.clear = (0.4 if big else 0.33) if fam == "suv" else 0.36
+			g.under = 0.14 if fam == "suv" else 0.16
+			g.nose_drop = 0.2
+			g.rear_d = 0.06
+		g.nose_bot = float(g.clear) - 0.03
+		g.tail_bot = float(g.clear) - 0.01
+	elif fam == "van" and year >= 2005:
+		# the Euro-style vans: a short sloping hood, a tall face, the windshield nearly to the roof
+		g.cowl_d = 0.95
+		g.hood_h = 1.08
+		g.cowl_rise = 0.16
+		g.rake = 30.0
+		g.nose = "blunt"
+		g.nose_round = 0.1
+		g.nose_drop = 0.16
+		g.nose_bot = 0.34
+		g.soft = 0.7
 
 static func _dna(f: Dictionary) -> Dictionary:
 	var r := RandomNumberGenerator.new()
@@ -558,7 +695,9 @@ static func _dna(f: Dictionary) -> Dictionary:
 		elif fam in ["kei", "bubble"] or L < 3.6: tire_m = 0.27
 		elif fam == "boxtruck": tire_m = 0.45
 	if rim_in <= 0.0: rim_in = clampf(13.0 + float(year - 1950) * 0.08, 13.0, 18.0)
-	var rim_frac := clampf(rim_in * 0.0254 * 0.5 / tire_m, 0.42, 0.82)
+	# the rims read bigger than the tape measure says from the nineties on, the way Pixel Car Racer
+	# draws them: thin sidewalls filling the arches
+	var rim_frac := clampf(rim_in * 0.0254 * 0.5 / tire_m * lerpf(1.0, 1.14, clampf(float(year - 1988) / 24.0, 0.0, 1.0)), 0.42, 0.82)
 	if fam == "boxtruck": rim_frac = 0.55
 	var oh: float = maxf(0.25, L - float(f.WB))
 	var ff: float = g.ff
@@ -587,8 +726,17 @@ static func _dna(f: Dictionary) -> Dictionary:
 	var rake := deg_to_rad(float(g.rake))
 	var top_h := H
 	if fam == "boxtruck" and g.cab != "step": top_h = float(g.cab_h)
-	if fam == "van" and H > 2.15: top_h = 2.0
+	if fam == "van" and H > 2.15:
+		# a high roof: the windshield runs up nearly to it, the side glass stops at van height
+		top_h = H - 0.16
+		d.glass_cap = (2.0 - float(g.rt)) / L
 	d.cab_top = top_h / L
+	d.arc = g.arc
+	d.tub = g.tub
+	d.peak = g.peak
+	d.boxy = g.boxy
+	d.kink = float(g.kink) / L
+	d.under = float(g.under) / L
 	d.roof_f = float(d.cowl_x) - (top_h - cowl_h) * tan(rake) / L
 	d.belt_f = (cowl_h + float(g.belt_up)) / L
 	d.belt_r = float(d.belt_f) + float(g.kick) / L
@@ -641,11 +789,46 @@ static func _dna(f: Dictionary) -> Dictionary:
 		var mid := (float(d.roof_f) + float(d.roof_r)) * 0.5
 		d.roof_f = mid + min_roof * 0.5
 		d.roof_r = mid - min_roof * 0.5
+	if icon.has("top"): _hand_drawn(d, icon.top, g, L)
 	_glass_and_doors(d, g, L, r)
 	_details(d, f, fam, era, r)
 	for k in icon:
-		if not g.has(k) and not k in ["H", "art"]: d[k] = icon[k]
+		if not g.has(k) and not k in ["H", "art", "top"]: d[k] = icon[k]
 	return d
+
+## A top line drawn by hand for a car everybody knows: [x, y, corner radius, anchor] in metres,
+## x from the rear bumper, round from the tail over the roof to the front of the nose. The
+## named points move the anchors the glass, the pillars, the doors and the lamps hang on: tail,
+## deck (where the backlight meets the trunk), roof_r and roof_f (the top of the backlight and of
+## the windshield), cowl (the bottom of the windshield), hood (its front edge) and nose.
+static func _hand_drawn(d: Dictionary, top: Array, g: Dictionary, L: float) -> void:
+	var pts: Array = []
+	for q: Array in top:
+		var x := float(q[0]) / L
+		var y := float(q[1]) / L
+		pts.append([x, y, float(q[2]) / L])
+		if q.size() < 4: continue
+		match String(q[3]):
+			"tail":
+				d.tail_x = x
+				d.tail_h = y
+			"deck":
+				d.deck_x = x
+				d.deck_h = y
+			"roof_r": d.roof_r = x
+			"roof_f":
+				d.roof_f = x
+				d.cab_top = y
+			"cowl":
+				d.cowl_x = x
+				d.cowl_h = y
+			"hood":
+				d.nose_x = x
+				d.hood_h = y
+			"nose": d.nose_mid = y
+	d.top_pts = pts
+	d.belt_f = float(d.cowl_h) + float(g.belt_up) / L
+	d.belt_r = float(d.belt_f) + float(g.kick) / L
 
 ## The side glass (the daylight opening), the pillars on it and the door shut lines.
 static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNumberGenerator) -> void:
@@ -661,13 +844,20 @@ static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNu
 	var ws_x := func(y: float) -> float:
 		return cowl_x + (y - cowl_h) / maxf(0.001, h - cowl_h) * (roof_f - cowl_x)
 	var a_bot: float = float(ws_x.call(belt_f)) - a_w
-	var a_top: float = float(ws_x.call(glass_top)) - a_w * 0.7
+	# a high roof's side glass stops at van height, so its front edge follows the windshield there
+	var a_top: float = float(ws_x.call(minf(glass_top, float(d.get("glass_cap", 9.0))))) - a_w * 0.7
 	var dlo_rt := 0.0
 	var dlo_r := 0.0
 	match String(d.rear):
 		"notch", "fast", "hatch":
 			dlo_rt = float(d.roof_r) + float(g.c_top) / L
 			dlo_r = float(d.roof_r) + float(g.c_bot) / L
+			if float(g.c_w) > 0.0:
+				# the glass's back edge runs parallel to the backlight, a C-pillar's width ahead of it
+				var b0 := Vector2(float(d.deck_x), float(d.deck_h)) if d.rear == "notch" else Vector2(float(d.tail_x), float(d.tail_h))
+				var b1 := Vector2(float(d.roof_r), float(d.h))
+				var t := clampf((float(d.belt_r) - b0.y) / maxf(0.001, b1.y - b0.y), 0.0, 1.0)
+				dlo_r = lerpf(b0.x, b1.x, t) + float(g.c_w) / L
 		"pickup":
 			dlo_rt = float(d.cab_x) + 0.1 / L
 			dlo_r = dlo_rt
@@ -784,6 +974,7 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 	if String(art.get("lamps", "")) == "quad": head = "quad"
 	if offroad and year < 2010: head = "round"
 	if art.has("popups"): head = "popup"
+	if d.boxy and fam in ["pickup", "suv"] and cls != "crossover" and not art.has("round"): head = "truck"
 	d.head = head
 	var tail := "swept"
 	if art.has("fins"): tail = "fin"
@@ -822,7 +1013,8 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 	if (cls in ["luxury", "classic"] and year < 1990) or (us and year < 1970 and r.randf() < 0.4): trim.append("rocker_chrome")
 	if year >= 1975 and year < 2002 and not fam in ["sports", "mid", "wedge", "offroad", "boxtruck", "rear"] and r.randf() < 0.6: trim.append("moulding")
 	if fam == "suv" and year >= 1990 and year < 2012: trim.append("cladding")
-	if (cls == "crossover" and year >= 2008) or (fam == "suv" and year >= 2012 and r.randf() < 0.5): trim.append("arch_cladding")
+	if (cls == "crossover" and year >= 2000) or (fam == "suv" and year >= 2005 and r.randf() < 0.5): trim.append("arch_cladding")
+	if cls == "crossover" and year >= 2000 and not trim.has("cladding") and r.randf() < 0.7: trim.append("cladding")
 	if us and year < 1972 and cls in ["luxury", "classic"]: trim.append("arch_chrome")
 	if art.has("chrome") and year < 1980 and not trim.has("rocker_chrome"): trim.append("rocker_chrome")
 	d.trim = trim
@@ -834,18 +1026,25 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 	if art.has("portholes"): d.side_vent = "portholes"
 	if art.has("strakes"): d.side_vent = "strakes"
 	d.skirt = (us and cls in ["luxury", "classic"] and year >= 1955 and year < 1977 and fam in ["sedan", "coupe"] and r.randf() < 0.6)
-	d.mudflaps = cls in ["rally", "work_truck"] or (fam == "pickup" and r.randf() < 0.3)
-	d.step = (fam == "pickup" and year >= 1999 and r.randf() < 0.5) or (fam == "suv" and year >= 2002 and cls != "crossover" and r.randf() < 0.6)
+	d.mudflaps = cls in ["rally", "work_truck"] or (fam == "pickup" and year < 1995 and r.randf() < 0.3)
+	d.step = (fam == "pickup" and year >= 1999 and r.randf() < 0.5) or (fam == "suv" and year >= 2002 and cls != "crossover" and r.randf() < 0.6) or (cls == "hd_pickup" and year >= 1995)
 	# --- arches
 	var arch := "round"
 	if (fam == "pickup" or fam == "suv") and year >= 1970 and year < 1995: arch = _pick(r, ["flat", "square"])
 	if offroad: arch = "square" if year < 2005 else "flat"
+	if d.boxy and not offroad: arch = "square"
 	if fam == "kei" or fam == "boxtruck": arch = "flat"
 	if year >= 1975 and year < 1990 and fam in ["sedan", "coupe", "hatch", "wagon"] and r.randf() < 0.3: arch = "flat"
 	if cls == "rally" or art.has("dually") or (fam == "offroad" and year < 2000 and r.randf() < 0.3): d.flare = "box" if cls == "rally" else "bulge"
 	else: d.flare = "none"
+	if d.tub:
+		# flat-topped trapezoid flares, black plastic from the late eighties on
+		d.flare = "trap"
+		arch = "trap"
 	d.arch = arch
 	d.arch_gap = (0.045 if fam in ["pickup", "suv", "offroad", "boxtruck"] else (0.006 if fam in ["sports", "mid", "wedge"] or cls == "exotic" else 0.012)) / float(d.L)
+	if d.boxy: d.arch_gap = 0.03 / float(d.L)
+	elif year >= 2000: d.arch_gap = minf(float(d.arch_gap), 0.008 / float(d.L))
 	# --- wheels
 	var rim := "fivespoke"
 	var wall := "none"
@@ -896,15 +1095,36 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 # ================================================================== the outline
 
 ## The body's outline as fractions: [x, y, corner radius], round from the rear bumper's
-## bottom, up over the roof and down the nose.
+## bottom, up the tail and over the roof, down the nose and back along the sills. A car in
+## ICONS can draw the whole top by hand instead (top_pts, see _hand_drawn), the way a CAGE BOSS
+## signature face overrides the generator.
 static func profile(d: Dictionary) -> Array:
+	var pts: Array = []
+	var tail_bot: float = d.tail_bot
+	pts.append([0.012, tail_bot, 0.003])
+	if d.has("top_pts"):
+		pts.append_array(d.top_pts)
+	else:
+		pts.append_array(_rear_line(d))
+		pts.append_array(_roof_line(d))
+		pts.append_array(_nose_line(d))
+	var nose_lean: float = d.nose_lean
+	pts.append([1.0 - 0.012 - nose_lean, float(d.nose_bot), 0.003])
+	pts.append([float(d.wf), float(d.nose_bot), 0.0])
+	pts.append([float(d.wf), float(d.clear), 0.0])
+	pts.append([float(d.wr), float(d.clear), 0.0])
+	pts.append([float(d.wr), tail_bot, 0.0])
+	return pts
+
+## The tail and the deck (or a pickup's bed, or a box truck's box), up to where the roof starts.
+static func _rear_line(d: Dictionary) -> Array:
 	var s := float(d.soft)
 	var h: float = d.h
 	var pts: Array = []
 	var rear: String = d.rear
 	var tail_bot: float = d.tail_bot
 	var crown: float = d.crown
-	pts.append([0.012, tail_bot, 0.003])
+	var arc: bool = d.get("arc", false)
 	if rear == "pickup":
 		var bed_h: float = d.bed_h
 		pts.append([0.0, tail_bot + 0.02, 0.003])
@@ -928,7 +1148,7 @@ static func profile(d: Dictionary) -> Array:
 			pts.append([bx, float(d.cab_top) - 0.02, 0.0])
 			pts.append([bx + 0.01, float(d.cab_top), 0.01 * s])
 	else:
-		pts.append([0.0, d.tail_mid, 0.012 * s + 0.004])
+		if not d.get("tub", false): pts.append([0.0, d.tail_mid, 0.012 * s + 0.004])
 		match rear:
 			"notch":
 				if float(d.fin) > 0.0:
@@ -937,60 +1157,164 @@ static func profile(d: Dictionary) -> Array:
 				else:
 					pts.append([float(d.tail_x), float(d.tail_h), 0.01 * s + 0.003])
 				pts.append([float(d.deck_x), float(d.deck_h), 0.02 * s + 0.004])
-				pts.append([float(d.roof_r), h - crown * 0.5, 0.03 * s + 0.006])
+				if not arc: pts.append([float(d.roof_r), h - crown * 0.5, 0.03 * s + 0.006])
 			"fast":
 				pts.append([float(d.tail_x), float(d.tail_h), 0.012 * s + 0.003])
-				pts.append([float(d.roof_r), h - crown * 0.5, 0.06 * s + 0.01])
+				if not arc: pts.append([float(d.roof_r), h - crown * 0.5, 0.06 * s + 0.01])
 			"hatch":
 				pts.append([float(d.tail_x), float(d.tail_h), 0.008 * s + 0.003])
-				pts.append([float(d.roof_r), h - crown * 0.5, 0.03 * s + 0.006])
+				if not arc: pts.append([float(d.roof_r), h - crown * 0.5, 0.03 * s + 0.006])
 			"open":
-				pts.append([float(d.tail_x), float(d.tail_h), 0.015 * s + 0.003])
-				pts.append([float(d.dlo_r) - 0.03, float(d.belt_r) + 0.006, 0.02])
-				pts.append([float(d.dlo_r), float(d.belt_r), 0.006])
-				pts.append([float(d.a_bot), float(d.belt_f), 0.006])
+				if d.get("tub", false):
+					# a flat-topped tub with the door openings cut deep into its sides
+					var cut := tub_cut(d)
+					var tub_h: float = d.belt_r
+					pts.append([0.0, tub_h, 0.004])
+					pts.append([cut[0], tub_h, 0.004])
+					pts.append([cut[0] + 0.012, cut[2], 0.03])
+					pts.append([cut[1] - 0.012, cut[2], 0.03])
+					pts.append([cut[1], float(d.belt_f), 0.004])
+				else:
+					pts.append([float(d.tail_x), float(d.tail_h), 0.015 * s + 0.003])
+					pts.append([float(d.dlo_r) - 0.03, float(d.belt_r) + 0.006, 0.02])
+					pts.append([float(d.dlo_r), float(d.belt_r), 0.006])
+					pts.append([float(d.a_bot), float(d.belt_f), 0.006])
 			_:
 				pts.append([float(d.roof_r) * 0.6, h - 0.012, 0.012 * s + 0.004])
+	return pts
+
+## Where a Jepp's door opening is cut into the tub: [rear edge, front edge, bottom], fractions.
+static func tub_cut(d: Dictionary) -> Array:
+	var cut1: float = float(d.cowl_x) - 0.04 / float(d.L)
+	var cut0 := maxf(cut1 - 0.85 / float(d.L), float(d.wr) + float(d.tire_r) * 1.3)
+	return [cut0, cut1, lerpf(float(d.clear), float(d.belt_r), 0.4)]
+
+## The greenhouse: over the roof from the deck (or the back of the cab) to the cowl. Modern
+## cars carry one long bow from the windshield to the deck; older ones a flat roof with corners.
+static func _roof_line(d: Dictionary) -> Array:
+	var s := float(d.soft)
+	var h: float = d.h
+	var pts: Array = []
+	var rear: String = d.rear
+	var crown: float = d.crown
+	var arc: bool = d.get("arc", false)
+	var high := rear == "box" and h > float(d.cab_top) + 0.01
 	if rear != "open":
-		# the roof: a gentle crown, highest a little ahead of the middle
 		var rf: float = d.roof_f
 		var rr: float = d.roof_r
-		if rear in ["box", "pickup", "boxtruck"] and rear != "fast":
-			rr = maxf(rr, float(pts[pts.size() - 1][0]))
+		if rear == "boxtruck": rr = maxf(rr, float(d.box_x) + 0.01)
 		var top: float = d.cab_top
-		if rear == "box" and h > top + 0.01:
-			# a high-roof van: the roof steps up behind the windshield
-			pts.append([rf - 0.13, h, 0.07])
-			pts.append([rf - 0.02, top + 0.01, 0.05])
+		if high:
+			# a high-roof van: the windshield runs nearly all the way up and the roof is flat from
+			# just behind it to the back doors
+			pts.append([rf - 0.03, h, 0.02])
+			pts.append([rf - 0.004, top + (h - top) * 0.45, 0.02])
+			pts.append([rf, top, 0.008])
+		elif arc and rear in ["notch", "fast", "hatch"]:
+			# one long bow from the A-pillar to the deck: the backlight bulges a little, the roof
+			# crowns ahead of the middle and the windshield rolls into it
+			var bl := Vector2(rr, top - crown * 0.6)
+			var dk := Vector2(float(d.deck_x), float(d.deck_h)) if rear == "notch" else Vector2(float(d.tail_x), float(d.tail_h))
+			var bulge := (bl - dk).orthogonal().normalized() * 0.006
+			if bulge.y < 0.0: bulge = -bulge
+			pts.append([lerpf(dk.x, bl.x, 0.5) + bulge.x, lerpf(dk.y, bl.y, 0.5) + bulge.y, 0.5])
+			pts.append([bl.x, bl.y, 0.5])
+			pts.append([rr + (rf - rr) * float(d.get("peak", 0.55)), top, 0.5])
+			pts.append([rf, top - crown * 0.7, 0.5])
 		else:
 			pts.append([rr + (rf - rr) * 0.55, top, (rf - rr) * 0.45 if crown > 0.004 else 0.0])
-		pts.append([rf, top - crown, 0.02 * s + 0.004])
-	pts.append([float(d.cowl_x), float(d.cowl_h), 0.012 * s + 0.002])
+			pts.append([rf, top - crown, 0.02 * s + 0.004])
+	pts.append([float(d.cowl_x), float(d.cowl_h), 0.03 if arc else 0.012 * s + 0.002])
+	return pts
+
+## The hood and the face, from just ahead of the cowl down to the bottom of the nose.
+static func _nose_line(d: Dictionary) -> Array:
+	var s := float(d.soft)
+	var pts: Array = []
 	if float(d.brow_x) > 0.0: pts.append([float(d.brow_x), float(d.brow_h), 0.03 * s + 0.01])
 	var nose_lean: float = d.nose_lean
 	# blunt noses (trucks, boxes) keep tight corners; a wedge comes to a point
 	var nr := (0.014 * s + 0.002) * (0.35 if d.nose == "blunt" else 1.0)
 	pts.append([float(d.nose_x) - nose_lean * 0.5, float(d.hood_h), nr])
 	pts.append([1.0, float(d.nose_mid), nr if d.nose != "wedge" else 0.003])
-	pts.append([1.0 - 0.012 - nose_lean, float(d.nose_bot), 0.003])
-	pts.append([float(d.wf), float(d.nose_bot), 0.0])
-	pts.append([float(d.wf), float(d.clear), 0.0])
-	pts.append([float(d.wr), float(d.clear), 0.0])
-	pts.append([float(d.wr), tail_bot, 0.0])
 	return pts
 
-## The side glass as fractions, same shape as profile().
-static func glass_shape(d: Dictionary) -> Array:
-	var top: float = d.glass_top
+## Control points [x, y, corner radius] -> a closed outline with every corner rounded, still in
+## fractions. `lf` is the length in pixels it will be painted at, which decides how finely.
+static func smooth(pts: Array, lf: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var n := pts.size()
+	for i in n:
+		var q: Array = pts[i]
+		var pt := Vector2(float(q[0]), float(q[1]))
+		var qa: Array = pts[(i - 1 + n) % n]
+		var qb: Array = pts[(i + 1) % n]
+		var a := Vector2(float(qa[0]), float(qa[1]))
+		var b := Vector2(float(qb[0]), float(qb[1]))
+		var la := pt.distance_to(a)
+		var lb := pt.distance_to(b)
+		if la < 0.000001 or lb < 0.000001:
+			out.append(pt)
+			continue
+		var rr := minf(float(q[2]), minf(la, lb) * 0.5)
+		if rr * lf < 0.75:
+			out.append(pt)
+			continue
+		var p1 := pt + (a - pt) / la * rr
+		var p2 := pt + (b - pt) / lb * rr
+		var steps := clampi(int(rr * lf / 1.5), 2, 14)
+		for k in steps + 1:
+			var t := float(k) / float(steps)
+			out.append(p1.lerp(pt, t).lerp(pt.lerp(p2, t), t))
+	return out
+
+## How high the body's top edge is all the way along: TOP_N + 1 samples from the rear bumper (0)
+## to the nose (1), -1 where there's no body.
+const TOP_N := 240
+
+static func top_line(outline: PackedVector2Array) -> PackedFloat32Array:
+	var top := PackedFloat32Array()
+	top.resize(TOP_N + 1)
+	top.fill(-1.0)
+	var n := outline.size()
+	for i in n:
+		var a := outline[i]
+		var b := outline[(i + 1) % n]
+		var k0 := clampi(int(ceil(minf(a.x, b.x) * TOP_N)), 0, TOP_N)
+		var k1 := clampi(int(floor(maxf(a.x, b.x) * TOP_N)), 0, TOP_N)
+		var flat := absf(b.x - a.x) < 0.000001
+		for k in range(k0, k1 + 1):
+			var y := maxf(a.y, b.y) if flat else lerpf(a.y, b.y, (float(k) / TOP_N - a.x) / (b.x - a.x))
+			if y > top[k]: top[k] = y
+	return top
+
+static func top_at(top: PackedFloat32Array, x: float) -> float:
+	var f := clampf(x, 0.0, 1.0) * TOP_N
+	var k := mini(int(f), TOP_N - 1)
+	return lerpf(top[k], top[k + 1], f - float(k))
+
+## The side glass as fractions, same shape as profile(). Its top edge follows the roof a roof's
+## thickness in, so an arched roof gets an arched window; a kink tucks the back of it forward.
+static func glass_shape(d: Dictionary, top: PackedFloat32Array) -> Array:
 	var r := 0.01 * float(d.soft) + 0.002
+	var rt: float = d.rt
+	var belt_r: float = d.belt_r
+	var cap := float(d.get("glass_cap", 9.0))
+	var x0: float = d.dlo_rt
+	var x1: float = d.a_top
 	var pts: Array = []
-	pts.append([float(d.dlo_r), float(d.belt_r), 0.002])
-	pts.append([float(d.dlo_rt), top, r])
-	if d.rear != "open":
-		var rf: float = d.a_top
-		var rr: float = d.dlo_rt
-		pts.append([rr + (rf - rr) * 0.55, top + float(d.crown) * 0.5, (rf - rr) * 0.4])
-	pts.append([float(d.a_top), top - (0.0 if d.rear != "open" else 0.0), r * 0.6])
+	pts.append([float(d.dlo_r), belt_r, 0.002])
+	var kink := float(d.get("kink", 0.0))
+	if kink > 0.0:
+		# a kink: the back edge of the glass runs up the C-pillar, then turns forward
+		var ky := belt_r + (top_at(top, x0) - rt - belt_r) * 0.4
+		pts.append([float(d.dlo_r) + kink * 0.3, ky, 0.003])
+		pts.append([float(d.dlo_r) + kink, ky + (top_at(top, x0) - rt - ky) * 0.25, 0.006])
+	var n := 10
+	for k in n + 1:
+		var x := lerpf(x0, x1, float(k) / float(n))
+		var y := maxf(minf(top_at(top, x) - rt, cap), belt_r + 0.012)
+		pts.append([x, y, r if k == 0 or k == n else 0.0])
 	pts.append([float(d.a_bot), float(d.belt_f), 0.002])
 	return pts
 
@@ -1111,6 +1435,7 @@ class _Car:
 	var wheels: Array = []               # [side, centre x, centre y, arch centre]
 	var shape := PackedVector2Array()
 	var glass := PackedVector2Array()
+	var top_f := PackedFloat32Array()      # the body's top edge, undamaged, in fractions
 	var top_y := PackedInt32Array()      # first body row in each column (-1 none)
 	var bot_y := PackedInt32Array()
 	var x_lo := 0
@@ -1160,42 +1485,46 @@ class _Car:
 	## Crash damage moves the outline: the crushed end comes back and buckles, a rolled roof sits low.
 	func warp(fx: float, fy: float) -> Vector2:
 		var belt: float = d.belt_f
-		if front > 0.0 and fx > 0.68:
-			var k := (fx - 0.68) / 0.32
-			fx -= front * 0.2 * k
+		if front > 0.0 and fx > 0.62:
+			var k := (fx - 0.62) / 0.38
+			# the crushed end comes back in jagged folds, worst at the very front
+			var j := sin(fy * 520.0) * 0.6 + sin(fy * 1310.0 + 1.7) * 0.4
+			fx -= front * (0.2 * k + 0.016 * j * k * k)
+			# the hood buckles up into a peak a little behind the crush
+			if fy > float(d.hood_h) - 0.03: fy += front * 0.03 * maxf(0.0, 1.0 - absf(k - 0.55) / 0.22)
 			if fy > float(d.clear) and fy < belt + 0.03: fy += front * 0.04 * k * (0.6 + 0.4 * sin(fx * 90.0))
-		if rear > 0.0 and fx < 0.3:
-			var k2 := (0.3 - fx) / 0.3
-			fx += rear * 0.16 * k2
+		if rear > 0.0 and fx < 0.34:
+			var k2 := (0.34 - fx) / 0.34
+			var j2 := sin(fy * 470.0 + 0.6) * 0.6 + sin(fy * 1190.0) * 0.4
+			fx += rear * (0.16 * k2 + 0.014 * j2 * k2 * k2)
+			# the trunk lid kinks up
+			if fy > float(d.tail_h) - 0.03: fy += rear * 0.025 * maxf(0.0, 1.0 - absf(k2 - 0.5) / 0.25)
 			if fy > float(d.clear) and fy < belt + 0.03: fy += rear * 0.035 * k2 * (0.6 + 0.4 * sin(fx * 80.0))
 		if roof > 0.0 and fy > belt + 0.01:
 			fy -= roof * 0.08 * clampf((fy - belt) / maxf(0.01, float(d.h) - belt), 0.0, 1.0)
 		return Vector2(X(fx), Y(fy))
 
-	## Fractions with corner radii -> a pixel polygon, each corner rounded with a curve.
+	## Fractions with corner radii -> a pixel polygon, each corner rounded with a curve. Where a
+	## crash bent the car, long straight runs are cut short first so the crumple can bite.
 	func poly(pts: Array) -> PackedVector2Array:
-		var raw: Array = []
-		for q: Array in pts:
-			raw.append([warp(float(q[0]), float(q[1])), float(q[2]) * lf])
+		return warped(CarGen.smooth(pts, lf))
+
+	func warped(outline: PackedVector2Array) -> PackedVector2Array:
 		var out := PackedVector2Array()
-		var n := raw.size()
+		var n := outline.size()
+		var bent := front > 0.0 or rear > 0.0
+		var step := 2.0 / lf
 		for i in n:
-			var pt: Vector2 = raw[i][0]
-			var rad: float = raw[i][1]
-			var a: Vector2 = raw[(i - 1 + n) % n][0]
-			var b: Vector2 = raw[(i + 1) % n][0]
-			var la := pt.distance_to(a)
-			var lb := pt.distance_to(b)
-			var rr := minf(rad, minf(la, lb) * 0.5)
-			if rr < 0.75:
-				out.append(pt)
-				continue
-			var p1 := pt + (a - pt) / la * rr
-			var p2 := pt + (b - pt) / lb * rr
-			var steps := clampi(int(rr / 1.5), 2, 14)
-			for s in steps + 1:
-				var t := float(s) / float(steps)
-				out.append(p1.lerp(pt, t).lerp(pt.lerp(p2, t), t))
+			var a := outline[i]
+			out.append(warp(a.x, a.y))
+			if not bent: continue
+			var b := outline[(i + 1) % n]
+			var in_zone := (a.x > 0.6 or b.x > 0.6) and front > 0.0 or (a.x < 0.34 or b.x < 0.34) and rear > 0.0
+			if not in_zone: continue
+			var cuts := int(a.distance_to(b) / step)
+			for k in range(1, cuts):
+				var q := a.lerp(b, float(k) / float(cuts))
+				out.append(warp(q.x, q.y))
 		return out
 
 	## Even-odd scanline fill of a pixel polygon into a mask.
@@ -1230,10 +1559,12 @@ class _Car:
 		_stance()
 		var art: Dictionary = d.art
 		if mods.get("shadow", true): _shadow()
-		shape = poly(CarGen.profile(d))
+		var outline := CarGen.smooth(CarGen.profile(d), lf)
+		top_f = CarGen.top_line(outline)
+		shape = warped(outline)
 		fill(bm, shape, 1)
 		if d.rear != "open":
-			glass = poly(CarGen.glass_shape(d))
+			glass = poly(CarGen.glass_shape(d, top_f))
 			fill(gm, glass, 1)
 			for i in gm.size():
 				if gm[i] != 0 and bm[i] == 0: gm[i] = 0
@@ -1255,7 +1586,9 @@ class _Car:
 		_panels()
 		_trim()
 		_side_bits()
+		if String(mods.get("stripes", d.stripe_kind if d.art.has("stripes") else "none")) == "rally": _rally_plate()
 		_lamps()
+		_windshield()
 		_glass_frame()
 		_cabin_open()
 		_outline()
@@ -1267,10 +1600,13 @@ class _Car:
 		_truck_things()
 		_kit()
 		_wells()
+		_underbody()
 		_flares()
 		_wheels()
 		_damage_fx()
 		if art.has("beacon") or art.has("topper") or art.has("spotlight"): _roof_lights()
+		if dmg.has("wheel_off"): _tilt()
+		_clip_ground()
 
 	# ------------------------------------------------------------ stance and wheels
 
@@ -1308,6 +1644,10 @@ class _Car:
 	func in_arch(dx: float, dy: float, ra: float) -> bool:
 		if dy >= 0.0: return absf(dx) < ra
 		match String(d.arch):
+			"trap":
+				var tt := ra * 0.88
+				if -dy >= tt: return false
+				return absf(dx) < lerpf(ra * 1.02, ra * 0.7, -dy / tt)
 			"flat":
 				return dx * dx + dy * dy < ra * ra * 1.02 and -dy < ra * 0.8
 			"square":
@@ -1380,78 +1720,130 @@ class _Car:
 		if d.rear == "boxtruck" and fx < float(d.box_x): y = float(d.h) - 0.03
 		return y
 
-	## Paint every body pixel by where it sits. Tops catch the sky; down the side: a bright
-	## shoulder, the sky, the horizon line, the darker ground, and the rocker turning under.
+	## Paint every body pixel by where it sits, as a light level (0 deep shadow .. 8 specular).
+	## Tops catch the sky. Down the side: a bright shoulder with specular streaks along the curved
+	## panels, the sky, the reflected horizon (it bends round the wheels and lifts at the ends), the
+	## darker ground, the rocker turning under. Each fender gets a lit crescent over its wheel and
+	## a lip on the arch; the tail catches a rim of light; a slanted reflection crosses the doors.
 	func _shade_body() -> void:
-		var c_deep: int = (pal.deep as Color).to_abgr32()
-		var c_sh: int = (pal.sh as Color).to_abgr32()
-		var c_mid: int = (pal.mid as Color).to_abgr32()
-		var c_base: int = (pal.base as Color).to_abgr32()
-		var c_sky: int = (pal.base as Color).lerp(pal.lt, 0.6).to_abgr32()
-		var c_lt: int = (pal.lt as Color).to_abgr32()
-		var c_hi: int = (pal.hi as Color).to_abgr32()
-		var c_gnd: int = (pal.mid as Color).lerp(pal.sh, 0.15).to_abgr32()
-		var c_bounce: int = (pal.mid as Color).to_abgr32()
+		var lv: Array[int] = []
+		for c: Color in [pal.deep, pal.sh, (pal.mid as Color).lerp(pal.sh, 0.15), pal.mid, pal.base, (pal.base as Color).lerp(pal.lt, 0.6), pal.lt, pal.hi, pal.spec]:
+			lv.append(c.to_abgr32())
 		var matte := finish == "matte"
 		var chrome := finish == "chrome"
+		if chrome:
+			lv.clear()
+			for hx in ["2b2722", "151312", "4a3f35", "6f6253", "93877a", "b9cde0", "dbe8f4", "f3f8fd", "ffffff"]:
+				lv.append(Color(hx).to_abgr32())
+		var c_gnd_lt: int = Color("8f8270").to_abgr32()
+		var mirror: Array[int] = []
+		for hx in ["ffffff", "4f7db0", "7ba3cf", "a9c8e6", "dcecf8", "0b0b0d", "2a2522", "4c433b", "75685a", "a39380", "3a3632", "f2f8ff"]:
+			mirror.append(Color(hx).to_abgr32())
 		var flake := finish in ["metallic", "pearl"]
 		var c_flk: int = (pal.lt as Color).to_abgr32()
 		var c_flk2: int = (pal.mid as Color).to_abgr32()
-		if chrome:
-			c_sky = Color("dce6f0").to_abgr32()
-			c_base = Color("aab6c4").to_abgr32()
-			c_gnd = Color("5e5248").to_abgr32()
-			c_bounce = Color("8c8072").to_abgr32()
 		var end_k := maxf(2.0, lf * 0.016)
+		var ct := maxf(2.0, lf * 0.03)
+		var streak_x := X(lerpf(float(d.dlo_r), float(d.a_bot), 0.55))
+		var streak_w := maxf(2.0, lf * 0.022)
+		var a_bot_x := X(float(d.a_bot))
+		var dlo_x := X(float(d.dlo_r))
 		for xx in range(maxi(0, x_lo), mini(w, x_hi + 1)):
 			var t0 := top_y[xx]
 			if t0 < 0: continue
 			var fx := (float(xx) - float(ox)) / lf
 			var sh_y := Y(shoulder(fx))
 			var span := maxf(3.0, sill - sh_y)
+			var dl := float(xx - x_lo)
+			var dr := float(x_hi - xx)
+			# the horizon lifts where the body turns away at either end
+			var h_t := 0.42 - 0.1 * clampf(1.0 - minf(dl, dr) / (end_k * 4.0), 0.0, 1.0)
+			var hl := maxf(1.0, float(u)) / span
+			# specular runs along the shoulder over the front fender and the rear quarter
+			var spec_side := (float(xx) > a_bot_x + lf * 0.02 and float(xx) < X(float(d.nose_x)) - lf * 0.06) or (float(xx) < dlo_x - lf * 0.01 and float(xx) > float(x_lo) + lf * 0.05)
 			for yy in range(t0, bot_y[xx] + 1):
 				var i := yy * w + xx
 				if bm[i] == 0 or gm[i] != 0: continue
-				var c := c_base
 				var from_top := yy - t0
 				var bay := float(BAYER_K[(yy & 3) * 4 + (xx & 3)])
+				var l := 4
+				var t := (float(yy) - sh_y) / span
 				if float(yy) < sh_y - 0.5:
-					# hood, roof, deck and pillars: lit from above
-					c = c_hi if from_top == 0 else (c_lt if from_top <= u else c_sky)
+					# hood, roof, deck and pillars: lit from above, a streak of sky along the crest
+					l = 7 if from_top == 0 else (6 if from_top <= u else 5)
+					if from_top == u and not matte and int(float(xx) * 0.09 + float(t0) * 0.02) % 3 != 0: l = 8 if chrome else 7
 				else:
-					var t := (float(yy) - sh_y) / span
-					var td := t + (bay - 0.5) * 0.04
-					if chrome:
-						if td < 0.06: c = c_hi
-						elif td < 0.4: c = c_sky
-						elif td < 0.46: c = c_base
-						elif td < 0.5: c = c_deep
-						elif td < 0.8: c = c_gnd
-						elif td < 0.9: c = c_bounce
-						else: c = c_sh
-					elif matte:
-						if td < 0.05: c = c_lt
-						elif td < 0.5: c = c_base
-						elif td < 0.85: c = c_mid
-						else: c = c_sh
+					var td := t + (bay - 0.5) * 0.05
+					if matte:
+						l = 6 if td < 0.05 else (4 if td < 0.5 else (3 if td < 0.85 else 1))
+					elif chrome:
+						# a mirror: the sky deepening down to a hard black horizon, then the road
+						# coming back up out of the dark, lightest just before the rocker turns under
+						# a mirror: deep sky at the shoulder paling down to a white horizon, a hard black
+						# horizon line, then the road coming back up out of the dark, lightest just
+						# before the rocker turns under; hard white glints across it
+						var wob := sin(fx * 31.0) * 0.015
+						var hz := h_t + wob
+						var c_m := 0
+						if td < 0.035: c_m = 0
+						elif td < 0.12: c_m = 1
+						elif td < hz * 0.5: c_m = 2
+						elif td < hz * 0.78: c_m = 3
+						elif td < hz - 0.03 - 0.03 * absf(sin(fx * 57.0) * sin(fx * 13.0)): c_m = 4
+						elif td < hz: c_m = 11
+						elif td < hz + hl * 2.0: c_m = 5
+						elif td < hz + 0.08: c_m = 6
+						elif td < hz + 0.18: c_m = 7
+						elif td < 0.78: c_m = 8
+						elif td < 0.9: c_m = 9
+						else: c_m = 10
+						var sx2 := streak_x - (float(yy) - sh_y) * 0.45
+						if td > 0.03 and td < hz and absf(float(xx) - sx2) < streak_w * 0.6: c_m = 0
+						if td > hz + 0.1 and td < 0.85 and absf(float(xx) - sx2 - streak_w * 1.5) < streak_w * 0.35: c_m = 9
+						if from_top == 0: c_m = 0
+						buf[i] = mirror[c_m]
+						continue
 					else:
-						if td < 0.045: c = c_hi
-						elif td < 0.12: c = c_lt
-						elif td < 0.4: c = c_sky
-						elif td < 0.44: c = c_base
-						elif td < 0.46 + 0.02 / span * float(u): c = c_sh
-						elif td < 0.74: c = c_gnd
-						elif td < 0.88: c = c_sh
-						else: c = c_deep
-					if from_top == 0: c = c_hi
+						if td < 0.03: l = 8 if spec_side else 7
+						elif td < 0.1: l = 6
+						elif td < h_t - 0.07: l = 5
+						elif td < h_t: l = 5 if bay > (td - (h_t - 0.07)) / 0.07 else 4
+						elif td < h_t + hl: l = 1
+						elif td < 0.7: l = 2
+						elif td < 0.84: l = 2 if bay > (td - 0.7) / 0.14 else 1
+						elif td < 0.94: l = 1
+						else: l = 0
+						# a slanted reflection across the doors
+						var sx := streak_x - (float(yy) - sh_y) * 0.45
+						if td > 0.06 and td < h_t and absf(float(xx) - sx) < streak_w: l = mini(l + 1, 7)
+					if from_top == 0: l = 7
 					# the ends of the car turn away from us
-					var dl := float(xx - x_lo)
-					var dr := float(x_hi - xx)
-					if (dl < end_k or dr < end_k) and t > 0.08:
-						c = c_mid if c == c_sky or c == c_base else (c_sh if c == c_gnd or c == c_mid else c)
-					if flake and t > 0.1 and ((xx * 73 + yy * 151) % 23 == 0):
-						c = c_flk if t < 0.45 else c_flk2
-				buf[i] = c
+					if (dl < end_k or dr < end_k) and t > 0.08 and l >= 0: l = maxi(0, l - 1)
+				# the fenders: a lit crescent over each wheel and a lip on the arch
+				if t > -0.05 and not matte and l >= 0:
+					for wv: Array in wheels:
+						var ac: Vector2 = wv[3]
+						var dx := float(xx) + 0.5 - ac.x
+						var dy := float(yy) + 0.5 - ac.y
+						if absf(dx) > arch_r + ct or dy > arch_r * 0.2 or dy < -(arch_r + ct): continue
+						if skirted(wv): continue
+						var k := 0
+						while k <= int(ct) and not in_arch(dx, dy, arch_r + float(k)): k += 1
+						if k > int(ct): continue
+						if k <= 1: l = 6 if dy < -arch_r * 0.35 else 3
+						elif dy < -arch_r * 0.15 and bay > float(k) / ct * 0.8: l = mini(l + 1, 7)
+				if flake and t > 0.1 and ((xx * 73 + yy * 151) % 23 == 0) and l > 0:
+					buf[i] = c_flk if t < 0.45 else c_flk2
+					continue
+				buf[i] = c_gnd_lt if l < 0 else lv[l]
+		# a rim of light down the tail, where it faces the light
+		if not matte:
+			for yy in range(maxi(0, y_lo), mini(hgt, y_hi + 1)):
+				for xx in range(maxi(1, x_lo), mini(w, x_lo + int(lf * 0.12))):
+					var i := yy * w + xx
+					if bm[i] == 0 or gm[i] != 0 or bm[i - 1] != 0: continue
+					if float(yy) < sill - 1.0 and float(yy) > float(top_y[xx]) + 1.0: buf[i] = lv[6] if float(yy) < Y(float(d.belt_r)) + lf * 0.06 else lv[3]
+					break
 
 	const BAYER_K: Array[float] = [0.0, 0.53, 0.13, 0.67, 0.8, 0.27, 0.93, 0.4, 0.2, 0.73, 0.07, 0.6, 1.0, 0.47, 0.87, 0.33]
 
@@ -1580,6 +1972,9 @@ class _Car:
 			var t2 := _first_body(xx)
 			if on_paint(xx, t2 + 1): p.img.set_pixel(xx, t2 + 1, (pal.hi as Color))
 
+	## Stripes and liveries. Racing stripes run over the top of the car, so from the side they're
+	## one clean band along the hood, the roof and the deck (never across the glass); side stripes
+	## one band down the flank; a rally car carries a number plate on the front door.
 	func _livery() -> void:
 		var stripes := String(mods.get("stripes", "none"))
 		if stripes == "none" and d.art.has("stripes") and not mods.has("stripes"): stripes = String(d.stripe_kind)
@@ -1587,11 +1982,23 @@ class _Car:
 		var sc: Color = CarGen._col(mods.get("stripe_color", null), Color("f0f0ec") if mods.has("stripes") or paint_c.get_luminance() < 0.6 else Color("1e1e24"))
 		if stripes == "none" and livery == "none": return
 		var scd := sc.darkened(0.25)
+		var band := clampi(2 + int(lf / 160.0), 2, 4)
+		var glass_spans: Array = []
+		if d.rear != "open":
+			glass_spans.append([float(d.roof_f) - 0.01, float(d.cowl_x) + 0.01])
+			match String(d.rear):
+				"notch": glass_spans.append([float(d.deck_x) - 0.01, float(d.roof_r) + 0.01])
+				"fast": glass_spans.append([lerpf(float(d.roof_r), float(d.tail_x), 0.7), float(d.roof_r) + 0.01])
+				"hatch": glass_spans.append([float(d.tail_x) + 0.03, float(d.roof_r) + 0.01])
 		for xx in range(x_lo, x_hi + 1):
 			var fx := (float(xx) - float(ox)) / lf
 			var sh_y := Y(shoulder(fx))
 			var span := maxf(3.0, sill - sh_y)
-			for yy in range(maxi(0, top_y[xx]), bot_y[xx] + 1):
+			var over_glass := false
+			for gs: Array in glass_spans:
+				if fx > float(gs[0]) and fx < float(gs[1]): over_glass = true
+			var t0 := top_y[xx]
+			for yy in range(maxi(0, t0), bot_y[xx] + 1):
 				var mi := yy * w + xx
 				if bm[mi] == 0 or gm[mi] != 0: continue
 				var s2 := (float(yy) - sh_y) / span
@@ -1599,10 +2006,10 @@ class _Car:
 				var c := sc
 				match stripes:
 					"racing":
-						# down the middle of the tops, and a pair along the side
-						on = (yy - top_y[xx] <= u and float(yy) < sh_y) or (s2 > 0.16 and s2 < 0.26) or (s2 > 0.3 and s2 < 0.35)
-					"side": on = s2 > 0.58 and s2 < 0.68
-					"rally": on = s2 > 0.2 and s2 < 0.55 and fx > 0.42 and fx < 0.6
+						# down the middle of the tops: from the side, the band along the crest
+						on = yy - t0 < band and not over_glass and fx > float(d.tail_x) + 0.012 and fx < float(d.nose_x) - 0.015
+						if on and yy - t0 == band - 1: c = scd
+					"side": on = s2 > 0.56 and s2 < 0.56 + maxf(0.07, float(band) / span)
 					"hockey": on = (s2 > 0.1 and s2 < 0.2 and fx > 0.24 and fx < 0.9) or (s2 > 0.1 and s2 < 0.5 and fx > 0.24 and fx < 0.27)
 					"tail": on = (fx > 0.045 and fx < 0.06 or fx > 0.07 and fx < 0.085) and s2 < 0.62
 					"rainbow":
@@ -1627,8 +2034,26 @@ class _Car:
 						on = true
 						c = Color("b8bcc4") if s2 < 0.6 else sc
 				if on:
-					var lit := s2 < 0.12 or float(yy) < sh_y
-					p.img.set_pixel(xx, yy, (c.lightened(0.15) if lit else (scd if s2 > 0.74 else c)))
+					if stripes == "racing" and yy - t0 < band: p.img.set_pixel(xx, yy, c.lightened(0.1) if yy == t0 else c)
+					else: p.img.set_pixel(xx, yy, (c.lightened(0.15) if s2 < 0.12 else (scd if s2 > 0.74 else c)))
+
+	## A rally plate on the front door: a white roundel with the car's number on it.
+	func _rally_plate() -> void:
+		var cuts: Array = d.door_cuts
+		var dx0: float = float(cuts[0][1]) if cuts.size() > 0 else float(d.dlo_r)
+		var dx1: float = float(cuts[0][0]) if cuts.size() > 0 else float(d.a_bot)
+		var cx := int(X(lerpf(dx0, dx1, 0.5)))
+		var sh_y := Y(shoulder(lerpf(dx0, dx1, 0.5)))
+		var cy := int(sh_y + (sill - sh_y) * 0.42)
+		var rr := maxf(3.0, (sill - sh_y) * 0.21)
+		p.disc(cx, cy, rr + 1.0, CarGen.INK)
+		p.disc(cx, cy, rr, Color("f4f2ea"))
+		p.disc(cx - 1, cy - 1, rr * 0.4, Color("ffffff"))
+		var num := str(1 + absi(hash(String(d.id) + String(d.model))) % 99)
+		if rr >= 5.0:
+			p.text(cx - Pix.text_w(num) / 2, cy - 2, num, Color("1a1a1e"))
+		else:
+			p.rect(cx - 1, cy - 1, 2, 3, Color("1a1a1e"))
 
 	## Rust: brown bubbles low on the doors and round the arches, more of it the older it gets.
 	func _rust() -> void:
@@ -1893,7 +2318,9 @@ class _Car:
 		var lights_on: bool = dmg.get("lights", mods.get("lights_on", false))
 		var nose := int(X(1.0 - front * 0.2)) - 1
 		var tail := int(X(rear * 0.16))
-		var lens := Color("fff6d8") if lights_on else Color("d8e2ea")
+		var lens := Color("fffbe8") if lights_on else Color("d8e2ea")
+		var reflector := Color("fff4cc") if lights_on else Color("8c9aaa")
+		var head_at := Vector2(-1, -1)
 		if front < 0.4:
 			var hx := nose
 			var col_top := _first_body(hx - int(lf * 0.02))
@@ -1909,11 +2336,12 @@ class _Car:
 			if head == "frog":
 				# bug-eyes standing up out of the hood
 				var fx := nose - int(lf * 0.08)
-				var fr := maxf(1.5, lf * 0.02)
+				var fr := maxf(1.5, lf * 0.022)
 				var fy := _first_body(fx) - int(fr * 0.4)
 				p.disc(fx, fy, fr, (pal.base as Color))
 				p.disc(fx + int(fr * 0.5), fy, fr * 0.6, lens)
 				p.ring(fx, fy, fr + 0.6, CarGen.INK)
+				head_at = Vector2(fx + fr, fy)
 			match head:
 				"popup":
 					# folded flush into the hood, or standing up when they're on
@@ -1926,6 +2354,7 @@ class _Car:
 						p.hline(px0, py - ph, pw, (pal.hi as Color))
 						p.vline(px0 + pw - 1, py - ph + 1, ph - 1, lens)
 						p.frame(px0 - 1, py - ph - 1, pw + 2, ph + 2, CarGen.INK)
+						head_at = Vector2(px0 + pw, py - ph / 2)
 					else:
 						for xx in range(px0, px0 + pw): gap_px(xx, _first_body(xx) + u + 1)
 						gap_px(px0, _first_body(px0) + u)
@@ -1933,27 +2362,41 @@ class _Car:
 					var sy := int(Y(float(d.nose_mid))) + u
 					_lens(nose - 3 * u, sy, 3 * u, 2 * u, CarGen.AMBER)
 				"round", "quad":
-					var ry := col_top + maxi(2, int(lf * 0.022))
-					var rr := maxf(1.5, lf * 0.016)
-					p.disc(nose - int(rr), ry, rr, lens)
-					p.ring(nose - int(rr), ry, rr + 0.6, CarGen.CHROME[2])
-					p.px(nose - int(rr) - 1, ry - 1, Color.WHITE)
+					var ry := col_top + maxi(2, int(lf * 0.026))
+					var rr := maxf(1.5, lf * 0.021)
+					var rx := nose - int(rr)
+					p.disc(rx, ry, rr + 0.7, CarGen.CHROME[2] if year < 1990 else CarGen.INK)
+					p.disc(rx, ry, rr, reflector)
+					p.disc(rx + int(rr * 0.25), ry - int(rr * 0.2), rr * 0.7, lens)
+					p.px(rx - int(rr * 0.4), ry - int(rr * 0.45), Color.WHITE)
 					if d.head == "quad" and lod >= 1:
-						p.disc(nose - int(rr * 2.6), ry, rr * 0.8, lens.darkened(0.08))
-						p.ring(nose - int(rr * 2.6), ry, rr * 0.8 + 0.6, CarGen.CHROME[2])
+						var qx := nose - int(rr * 2.7)
+						p.disc(qx, ry, rr * 0.82 + 0.7, CarGen.CHROME[2] if year < 1990 else CarGen.INK)
+						p.disc(qx, ry, rr * 0.82, reflector.darkened(0.06))
+						p.disc(qx + 1, ry - 1, rr * 0.55, lens.darkened(0.06))
+					head_at = Vector2(nose, ry)
 				"rect":
-					var lw := maxi(3, int(lf * 0.035))
-					var lh := maxi(3, int(lf * 0.022))
-					var ly := col_top + maxi(2, int(lf * 0.01))
-					_lens(nose - lw, ly, lw, lh, lens)
+					var lw := maxi(3, int(lf * 0.045))
+					var lh := maxi(3, int(lf * 0.03))
+					var ly := col_top + maxi(2, int(lf * 0.012))
+					_lamp_block(nose - lw, ly, lw, lh, lens, reflector)
 					p.frame(nose - lw - 1, ly - 1, lw + 2, lh + 2, CarGen.CHROME[2] if year < 1985 else CarGen.INK)
 					_lens(nose - lw - 2 * u - 1, ly + lh - 2 * u, 2 * u, 2 * u, CarGen.AMBER)
+					head_at = Vector2(nose, ly + lh / 2)
+				"truck":
+					# a tall lamp block on the corner of a square face, the indicator under it
+					var tw := maxi(4, int(lf * 0.06))
+					var th := maxi(4, int(lf * 0.045))
+					var tly := col_top + maxi(1, u)
+					_lamp_block(nose - tw, tly, tw, th, lens, reflector)
+					p.frame(nose - tw - 1, tly - 1, tw + 2, th + 2, CarGen.INK)
+					_lens(nose - tw, tly + th + 1, tw / 2, maxi(2, 2 * u), CarGen.AMBER)
+					head_at = Vector2(nose, tly + th / 2)
 				"flush", "jewel", "swept":
 					# a lamp wrapped round the corner, following the hood's line back: a clear lens
 					# over a chrome reflector, the indicator at its back end, a projector in the jewels
-					var lw2 := int(lf * (0.06 if head == "flush" else (0.075 if head == "jewel" else 0.1)))
-					var lh2 := maxi(2, int(lf * (0.022 if head != "swept" else 0.018)))
-					var reflector := Color("8c9aaa") if not lights_on else Color("fff0c0")
+					var lw2 := int(lf * (0.075 if head == "flush" else (0.095 if head == "jewel" else 0.125)))
+					var lh2 := maxi(2, int(lf * (0.026 if head != "swept" else 0.024)))
 					var first := -1
 					var last := nose
 					for xx in range(nose - lw2, nose + 1):
@@ -1961,13 +2404,14 @@ class _Car:
 						var ty := _first_body(xx) + u + (1 if head == "flush" else 0)
 						var t := float(xx - (nose - lw2)) / float(maxi(1, lw2))
 						var hh := lh2 + int(t * lf * 0.008)
-						if head == "swept": hh = maxi(2, int(float(lh2) * (0.55 + t * 0.9)))
+						if head == "swept": hh = maxi(2, int(float(lh2) * (0.5 + t * 0.9)))
 						if not on_paint(xx, ty + hh): continue
 						if first < 0: first = xx
 						for k in hh:
-							var c := lens if k == 0 or k < hh - 1 else reflector
-							if k == 0: c = lens.lightened(0.5)
-							if head != "flush" and t < 0.2: c = CarGen.AMBER.lightened(0.3) if k == 0 else CarGen.AMBER
+							# the lens is bright along its top, the reflector shows through below
+							var f := float(k) / float(maxi(1, hh - 1))
+							var c := lens.lightened(0.5) if k == 0 else (lens if f < 0.45 else (lens.lerp(reflector, 0.5) if f < 0.75 else reflector))
+							if head != "flush" and t < 0.18: c = CarGen.AMBER.lightened(0.3) if k == 0 else CarGen.AMBER
 							p.img.set_pixel(xx, ty + k, c)
 						p.px(xx, ty - 1, CarGen.INK)
 						p.px(xx, ty + hh, CarGen.INK)
@@ -1975,63 +2419,112 @@ class _Car:
 					if first >= 0:
 						var fy0 := _first_body(first) + u
 						p.vline(first - 1, fy0 - 1, lh2 + 2, CarGen.INK)
-						if head != "flush" and lod >= 1: p.vline(first + int(float(lw2) * 0.2), fy0, lh2 - 1, CarGen.INK.lerp(lens, 0.5))
+						if head != "flush" and lod >= 1: p.vline(first + int(float(lw2) * 0.18), fy0, lh2 - 1, CarGen.INK.lerp(lens, 0.5))
+						head_at = Vector2(last, _first_body(last) + u + lh2 / 2)
 					if head in ["jewel", "swept"] and lod >= 2 and first >= 0:
-						var bx := last - int(lf * 0.02)
+						# the projector: a dark bowl with a bright bulb
+						var bx := last - int(lf * 0.025)
 						var by := _first_body(bx) + u + lh2 / 2 + 1
-						p.disc(bx, by, maxf(1.0, lf * 0.007), Color("3a4250"))
-						p.px(bx, by, Color.WHITE)
+						var br := maxf(1.2, lf * 0.009)
+						p.disc(bx, by, br + 0.6, CarGen.INK)
+						p.disc(bx, by, br, Color("3a4250") if not lights_on else Color("fff8e0"))
+						p.px(bx - 1, by - 1, Color.WHITE)
 					if head == "swept" and year >= 2012 and lod >= 1 and first >= 0:
 						p.hline(first + 2, _first_body(first + lw2 / 2) + u + lh2 + 1, maxi(2, last - first - 3), Color("eaf4ff"))
-			if lights_on: p.glow(nose + 3, col_top + int(lf * 0.03), maxf(6.0, lf * 0.05), Color("fff4c8"), 0.8)
+			if front > 0.12 and head_at.x >= 0.0 and lod >= 1: _crack(int(head_at.x) - int(lf * 0.03), int(head_at.y))
+			if lights_on and head_at.x >= 0.0: _bloom(int(head_at.x) + 1, int(head_at.y), maxf(4.0, lf * 0.04), Color("fff8de"))
 		else:
 			p.rect(nose - 2 * u, int(Y(float(d.hood_h))) + u, 3 * u, 3 * u, CarGen.WELL)
 		if rear < 0.4:
-			var tw := maxi(3, int(lf * 0.03))
+			var red := CarGen.LAMP_RED if not lights_on else Color("ff3a2e")
+			var red_hi := Color("ff7a7a") if not lights_on else Color("ffc4b0")
+			var tw := maxi(3, int(lf * 0.034))
 			var ty2 := _first_body(tail + tw / 2) + maxi(1, u)
+			var tail_at := Vector2(tail, ty2 + int(lf * 0.012))
 			match String(d.tail_lamp):
 				"fin":
 					var fy := _first_body(tail + u) + u
-					_lens(tail, fy, maxi(3, int(lf * 0.025)), maxi(3, int(lf * 0.03)), CarGen.LAMP_RED)
+					_lens(tail, fy, maxi(3, int(lf * 0.028)), maxi(3, int(lf * 0.034)), red)
+					tail_at = Vector2(tail, fy + int(lf * 0.015))
 				"bar":
 					var by := int(Y(float(d.tail_h))) + 2 * u
-					_lens(tail, by, maxi(4, int(lf * 0.05)), maxi(2, int(lf * 0.014)), CarGen.LAMP_RED)
+					_lens(tail, by, maxi(4, int(lf * 0.06)), maxi(2, int(lf * 0.018)), red)
+					tail_at = Vector2(tail, by + 1)
 				"round":
-					p.disc(tail + int(lf * 0.012), ty2 + int(lf * 0.012), maxf(1.5, lf * 0.012), CarGen.LAMP_RED)
-					p.ring(tail + int(lf * 0.012), ty2 + int(lf * 0.012), maxf(1.5, lf * 0.012) + 0.6, CarGen.INK)
+					var rr2 := maxf(1.5, lf * 0.016)
+					p.disc(tail + int(rr2), ty2 + int(rr2), rr2 + 0.6, CarGen.INK)
+					p.disc(tail + int(rr2), ty2 + int(rr2), rr2, red)
+					p.disc(tail + int(rr2) - 1, ty2 + int(rr2) - 1, rr2 * 0.5, red_hi)
+					tail_at = Vector2(tail, ty2 + int(rr2))
 				"tall":
-					var th := maxi(4, int(lf * 0.065))
-					_lens(tail, ty2 + u, tw, th, CarGen.LAMP_RED)
+					var th := maxi(4, int(lf * 0.08))
+					_lens(tail, ty2 + u, tw, th, red)
 					p.rect(tail, ty2 + u + th - 2 * u, tw, 2 * u, CarGen.AMBER)
+					p.hline(tail, ty2 + u + th / 2, tw, Color("f4f0ec") if not lights_on else red_hi)
+					tail_at = Vector2(tail, ty2 + th / 2)
 				"block":
-					_lens(tail, ty2, maxi(4, int(lf * 0.04)), maxi(3, int(lf * 0.03)), CarGen.LAMP_RED)
+					_lens(tail, ty2, maxi(4, int(lf * 0.05)), maxi(3, int(lf * 0.036)), red)
 				"racetrack":
 					# one long thin bar wrapped round the tail
 					var rw := int(lf * 0.1)
 					for xx in range(tail, tail + rw):
 						var top := _first_body(xx) + u
 						if not on_paint(xx, top + 1): continue
-						p.img.set_pixel(xx, top, Color("ff5a4a"))
-						p.img.set_pixel(xx, top + 1, CarGen.LAMP_RED)
+						p.img.set_pixel(xx, top, red_hi)
+						p.img.set_pixel(xx, top + 1, red)
 						p.px(xx, top + 2, CarGen.INK)
 				_:
 					# a block on the rear corner that wraps round onto the quarter panel
-					var ww := int(lf * (0.045 if d.tail_lamp == "wrap" else 0.07))
-					var hh2 := maxi(3, int(lf * 0.028))
+					var ww := int(lf * (0.06 if d.tail_lamp == "wrap" else 0.08))
+					var hh2 := maxi(3, int(lf * 0.034))
 					var ty0 := int(Y(float(d.tail_h))) + maxi(1, u)
 					for xx in range(tail, tail + ww):
 						var t2 := float(xx - tail) / float(maxi(1, ww))
-						var hh3 := maxi(2, int(float(hh2) * (1.0 - t2 * (0.55 if d.tail_lamp == "wrap" else 0.75))))
+						var hh3 := maxi(2, int(float(hh2) * (1.0 - t2 * (0.5 if d.tail_lamp == "wrap" else 0.7))))
 						var top := maxi(ty0, _first_body(xx) + u)
 						if not on_paint(xx, top + hh3): continue
 						for k in hh3:
-							var c := CarGen.LAMP_RED
-							if k == 0: c = Color("ff7a7a")
-							elif k == hh3 - 1 and hh3 > 3: c = CarGen.LAMP_RED.darkened(0.3)
+							var c := red
+							if k == 0: c = red_hi
+							elif k == hh3 - 1 and hh3 > 3: c = red.darkened(0.3)
+							elif k == hh3 / 2 and hh3 > 4 and lod >= 2: c = red.lightened(0.12)
 							p.img.set_pixel(xx, top + k, c)
 						p.px(xx, top - 1, CarGen.INK)
 						p.px(xx, top + hh3, CarGen.INK)
 					p.vline(tail + ww, maxi(ty0, _first_body(tail + ww) + u), maxi(2, hh2 / 2), CarGen.INK)
+					tail_at = Vector2(tail, ty0 + hh2 / 2)
+			if rear > 0.12 and lod >= 1: _crack(int(tail_at.x) + int(lf * 0.02), int(tail_at.y))
+			if lights_on: _bloom(int(tail_at.x) - 1, int(tail_at.y), maxf(3.0, lf * 0.025), Color("ff4a3a"))
+
+	## A lamp lens in a box: bright along the top, the reflector showing through at the bottom.
+	func _lamp_block(x0: int, y0: int, lw: int, lh: int, lens: Color, reflector: Color) -> void:
+		for k in lh:
+			var f := float(k) / float(maxi(1, lh - 1))
+			p.hline(x0, y0 + k, lw, lens.lightened(0.5) if k == 0 else (lens if f < 0.5 else (lens.lerp(reflector, 0.5) if f < 0.8 else reflector)))
+		if lw > 4 and lh > 3: p.px(x0 + 1, y0 + 1, Color.WHITE)
+
+	## Light coming off a lamp: a small hot bloom in the lamp's own colour. A solid heart and
+	## dithered rings of the same light (never see-through grey), so it glows on any background.
+	func _bloom(cx: int, cy: int, r: float, c: Color) -> void:
+		var ri := int(ceil(r))
+		for dy in range(-ri, ri + 1):
+			for dx in range(-ri, ri + 1):
+				var dd := sqrt(float(dx * dx + dy * dy)) / r
+				if dd >= 1.0: continue
+				var xx := cx + dx
+				var yy := cy + dy
+				if dd < 0.38: p.px(xx, yy, c.lightened(0.5))
+				elif dd < 0.68:
+					if Pix.dith(xx, yy, 0.55): p.px(xx, yy, c)
+				elif Pix.dith(xx, yy, 0.2): p.px(xx, yy, c.darkened(0.08))
+
+	## A cracked lens: a star of dark lines and a missing chip.
+	func _crack(cx: int, cy: int) -> void:
+		var r := maxf(2.0, lf * 0.018)
+		for k in 4:
+			var a := 0.7 + float(k) * 1.6
+			p.line(cx, cy, cx + int(cos(a) * r), cy + int(sin(a) * r * 0.7), Color("2a2e36"))
+		p.px(cx, cy, CarGen.WELL)
 
 	func _first_body(xx: int) -> int:
 		if xx < 0 or xx >= w: return gy
@@ -2045,6 +2538,31 @@ class _Car:
 		p.frame(x0 - 1, y0 - 1, lw + 2, lh + 2, CarGen.INK)
 
 	# ------------------------------------------------------------ glass trim
+
+	## A van's windshield is long and leans well back, so it shows from the side: a band of glass
+	## just inside the outline from the cowl up to the roof, paler at the top.
+	func _windshield() -> void:
+		if not d.family in ["van", "minivan"] or lod == 0 or front > 0.4: return
+		var p0 := Vector2(X(float(d.cowl_x)), Y(float(d.cowl_h)))
+		var p1 := Vector2(X(float(d.roof_f)), Y(float(d.cab_top)))
+		var along := p1 - p0
+		var ln := along.length()
+		if ln < 4.0: return
+		var dir := along / ln
+		var nrm := Vector2(-dir.y, dir.x)
+		if nrm.x > 0.0: nrm = -nrm
+		var bw := maxf(2.0, lf * 0.018)
+		for yy in range(int(p1.y) - 2, int(p0.y) + 2):
+			for xx in range(int(minf(p0.x, p1.x)) - int(bw) - 2, int(maxf(p0.x, p1.x)) + 2):
+				if not on_paint(xx, yy) or glass_at(xx, yy): continue
+				var q := Vector2(float(xx) + 0.5, float(yy) + 0.5) - p0
+				var t := q.dot(dir) / ln
+				var n := q.dot(nrm)
+				if t < 0.05 or t > 0.96 or n < 1.2 or n > bw + 1.2: continue
+				var c := CarGen.GLASS_TOP if t > 0.7 else (CarGen.GLASS if t > 0.2 else CarGen.GLASS_LO)
+				if absf(t - 0.55) < 0.06: c = CarGen.GLASS_TOP.lightened(0.15)
+				if n > bw: c = CarGen.TRIM
+				p.img.set_pixel(xx, yy, c)
 
 	## The frame round the side glass, the pillars on it, a vent window, a sunroof or T-tops.
 	func _glass_frame() -> void:
@@ -2098,6 +2616,9 @@ class _Car:
 	## Roadsters and open 4x4s: a framed windshield, seats and headrests, a folded top or a roll bar.
 	func _cabin_open() -> void:
 		if d.rear != "open": return
+		if d.get("tub", false):
+			_tub_cabin()
+			return
 		var cx := X(float(d.cowl_x))
 		var cy := Y(float(d.cowl_h))
 		var rake := (float(d.cowl_x) - float(d.roof_f)) / maxf(0.01, float(d.h) - float(d.cowl_h))
@@ -2135,6 +2656,67 @@ class _Car:
 			var fx0 := sx - lf * 0.1
 			p.rect(int(fx0), int(belt - lf * 0.02), int(lf * 0.08), int(lf * 0.02) + 1, Color("2a2a2e"))
 			p.hline(int(fx0), int(belt - lf * 0.02), int(lf * 0.08), Color("4a4a50"))
+
+	## A Jepp with its doors off: through the opening, the far side of the tub and the seats; an
+	## upright windshield frame on the cowl and a roll bar over the back seat.
+	func _tub_cabin() -> void:
+		var cut := CarGen.tub_cut(d)
+		var tub := Y(float(d.belt_r))
+		var x0 := int(X(float(cut[0])))
+		var x1 := int(X(float(cut[1])))
+		var by := int(Y(float(cut[2])))
+		var wall := (pal.sh as Color)
+		for xx in range(x0, x1 + 1):
+			for yy in range(int(tub), by + 1):
+				if body_at(xx, yy) or p.get_px(xx, yy).a > 0.6: continue
+				p.img.set_pixel(xx, yy, (pal.mid as Color) if yy <= int(tub) + u else wall)
+		var seat := Color("2a2622")
+		var seat_hi := Color("4a423a")
+		# the driver's seat: a back leaning a little, its headrest above the tub
+		var sx := int(lerpf(float(x0), float(x1), 0.28))
+		var sw := maxi(2, int(lf * 0.03))
+		var top := int(tub - lf * 0.06)
+		for yy in range(top, by):
+			var lean := int(float(yy - top) * 0.2)
+			p.hline(sx - lean, yy, sw, seat if yy > top + 1 else seat_hi)
+		p.rect(sx - int(float(by - top) * 0.2), by - maxi(2, int(lf * 0.02)), int(lf * 0.07), maxi(2, int(lf * 0.02)), seat)
+		p.frame(sx - 1, top - 1, sw + 2, int(lf * 0.03), CarGen.INK)
+		# the back seat's headrest over the rear tub
+		var rx := int(X(float(cut[0]) - 0.07))
+		p.rect(rx, int(tub - lf * 0.045), sw, int(lf * 0.045), seat)
+		p.hline(rx, int(tub - lf * 0.045), sw, seat_hi)
+		# the steering wheel in front of the seat
+		p.line(int(X(float(cut[1]) - 0.02)), int(tub - lf * 0.035), int(X(float(cut[1]) - 0.045)), int(tub + lf * 0.01), Color("1a1a1e"))
+		# the windshield: an upright frame standing on the cowl, glass edge-on behind the post
+		var cx := X(float(d.cowl_x))
+		var cy := Y(float(d.cowl_h))
+		var ws_h := lf * 0.5 / float(d.L) / 4.0 * 4.0
+		var rake := tan(deg_to_rad(float(d.get("ws_rake", 0.0))))
+		var lean2 := (float(d.cowl_x) - float(d.roof_f)) / maxf(0.01, float(d.h) - float(d.cowl_h))
+		if rake <= 0.0: rake = lean2
+		var post := maxf(2.0, lf * 0.012)
+		var frame_c := (pal.base as Color) if year < 1987 else CarGen.TRIM
+		var tx := cx - ws_h * rake
+		var ty := cy - ws_h
+		for k in int(post) + 1:
+			p.line(int(cx) - k, int(cy), int(tx) - k, int(ty), frame_c if k > 0 else (pal.hi as Color))
+		p.line(int(cx) - int(post) - 1, int(cy), int(tx) - int(post) - 1, int(ty), CarGen.GLASS_TOP)
+		p.line(int(cx) + 1, int(cy), int(tx) + 1, int(ty), CarGen.INK)
+		p.line(int(cx) - int(post) - 2, int(cy), int(tx) - int(post) - 2, int(ty), CarGen.INK)
+		p.rect(int(tx) - int(post) - 2, int(ty) - u, int(post) + 4, 2 * u, frame_c)
+		p.frame(int(tx) - int(post) - 3, int(ty) - u - 1, int(post) + 6, 2 * u + 2, CarGen.INK)
+		# the roll bar over the back seat, padded black
+		var rb := Color("26292f")
+		var rb_hi := Color("4a4f58")
+		var bf := x0 - maxi(1, int(lf * 0.012))
+		var bb := bf - int(lf * 0.13)
+		var bt := int(tub - lf * 0.13)
+		var bw := maxi(2, int(lf * 0.012))
+		for k in bw:
+			p.line(bf + k, int(tub), bf + k - int(lf * 0.012), bt, rb)
+			p.line(bb + k, int(tub), bb + k + int(lf * 0.01), bt, rb)
+			p.line(bb + k + int(lf * 0.01), bt + k, bf + k - int(lf * 0.012), bt + k, rb if k > 0 else rb_hi)
+		p.line(bb + int(lf * 0.01), bt, bf, int(tub), rb)
 
 	# ------------------------------------------------------------ the contour
 
@@ -2195,10 +2777,10 @@ class _Car:
 		for end in [0, 1]:
 			var at := tail if end == 0 else nose
 			var by := int(Y(float(d.tail_bot if end == 0 else d.nose_bot)))
+			if end == 1 and bumper in ["gone", "hang"]: _bare_nose(nose, by)
 			if end == 1 and (bumper == "gone" or bash): continue
 			if end == 1 and bumper == "hang":
-				p.line(nose - 6, by - int(lf * 0.03), nose + 4, gy - 1, CarGen.TRIM)
-				p.line(nose - 6, by - int(lf * 0.03) - 1, nose + 4, gy - 2, CarGen.INK)
+				_hanging_bumper(nose, by, style)
 				continue
 			var bw := int(lf * (0.07 if style != "steel" else 0.05))
 			var bh := maxi(3, int(lf * (0.03 if style == "chrome" else 0.04)))
@@ -2232,6 +2814,49 @@ class _Car:
 					_valance(end, at, by)
 				_:
 					_valance(end, at, by)
+
+	## With the bumper cover off, the nose shows what's behind it: the dark crash structure and
+	## the steel reinforcement bar across it.
+	func _bare_nose(nose: int, by: int) -> void:
+		if lod == 0: return
+		var top := by - int(lf * 0.05)
+		for yy in range(top, by + 1):
+			for xx in range(nose - int(lf * 0.07), nose + 1):
+				if on_paint(xx, yy): p.img.set_pixel(xx, yy, CarGen.WELL if (xx + yy) % 5 != 0 else CarGen.TRIM)
+		var bar_y := top + int(lf * 0.018)
+		p.rect(nose - int(lf * 0.05), bar_y, int(lf * 0.05) + 2, maxi(2, int(lf * 0.012)), CarGen.STEEL)
+		p.hline(nose - int(lf * 0.05), bar_y, int(lf * 0.05) + 2, CarGen.STEEL.lightened(0.3))
+		p.frame(nose - int(lf * 0.05) - 1, bar_y - 1, int(lf * 0.05) + 4, maxi(2, int(lf * 0.012)) + 2, CarGen.INK)
+
+	## A bumper hanging off: still clipped on by the front wheel, its nose end down on the road.
+	func _hanging_bumper(nose: int, by: int, style: String) -> void:
+		var bh := maxf(3.0, lf * 0.034)
+		var a := Vector2(float(wheels[1][1]) + arch_r * 0.9, float(by) - bh * 0.6)
+		var b := Vector2(float(nose) + lf * 0.05, float(gy) - bh * 0.5)
+		var dir := (b - a).normalized()
+		var nrm := Vector2(-dir.y, dir.x)
+		if nrm.y > 0.0: nrm = -nrm
+		var c_mid: Color = pal.base
+		var c_top: Color = pal.lt
+		var c_low: Color = pal.sh
+		match style:
+			"chrome", "chrome5":
+				c_mid = CarGen.CHROME[2]
+				c_top = CarGen.CHROME[4]
+				c_low = CarGen.CHROME[0]
+			"rubber", "steel":
+				c_mid = CarGen.RUBBER if style == "rubber" else CarGen.STEEL
+				c_top = c_mid.lightened(0.25)
+				c_low = c_mid.darkened(0.35)
+		var corners := PackedVector2Array([a + nrm * bh * 0.5, b + nrm * bh * 0.5, b - nrm * bh * 0.5, a - nrm * bh * 0.5])
+		p.poly(corners, c_mid)
+		p.line(int(a.x + nrm.x * bh * 0.5), int(a.y + nrm.y * bh * 0.5), int(b.x + nrm.x * bh * 0.5), int(b.y + nrm.y * bh * 0.5), c_top)
+		p.line(int(a.x - nrm.x * bh * 0.4), int(a.y - nrm.y * bh * 0.4), int(b.x - nrm.x * bh * 0.4), int(b.y - nrm.y * bh * 0.4), c_low)
+		# the torn end and the dark inside of the cover where it turned the corner
+		p.line(int(b.x), int(b.y - bh * 0.5), int(b.x), int(b.y + bh * 0.5), CarGen.TRIM)
+		p.poly_outline(corners, CarGen.INK)
+		# a clip strap still holding it up at the wheel
+		p.line(int(a.x), int(a.y), int(a.x) - 2, int(a.y) - int(bh), CarGen.TRIM)
 
 	## A painted bumper: its seam, and the black intake or diffuser in its bottom edge.
 	func _valance(end: int, at: int, by: int) -> void:
@@ -2384,6 +3009,19 @@ class _Car:
 			p.hline(rx, rt - rh, int(lf * 0.06), (pal.hi as Color))
 			p.frame(rx - 1, rt - rh - 1, int(lf * 0.06) + 2, rh + 2, CarGen.INK)
 		if rear > 0.5 and not mods.has("spoiler"): spoiler = "none"
+		# a wing wants a deck under it: a wagon or an SUV gets a spoiler off the roof's back edge
+		# instead, and nothing at all where a roof rack is in the way
+		if spoiler != "none" and d.rear == "box":
+			spoiler = "none" if art.has("rack") else "roof"
+		if spoiler in ["wing", "gt", "factory_wing", "tall", "deck"] and d.rear == "hatch" and (float(d.roof_r) - float(d.tail_x)) * float(d.L) < 0.4: spoiler = "roof"
+		if spoiler == "roof" and not d.family in ["van", "boxtruck"]:
+			var rx := X(float(d.roof_r)) + lf * 0.004
+			var rt := float(_first_body(int(rx + lf * 0.03)))
+			var pts6 := PackedVector2Array([Vector2(rx - lf * 0.035, rt + 2 * u), Vector2(rx - lf * 0.03, rt - u), Vector2(rx + lf * 0.06, rt - u), Vector2(rx + lf * 0.06, rt + u)])
+			p.poly(pts6, (pal.base as Color))
+			p.hline(int(rx - lf * 0.03), int(rt - u), int(lf * 0.09), (pal.hi as Color))
+			p.poly_outline(pts6, CarGen.INK)
+			spoiler = "none"
 		if spoiler != "none" and not d.family in ["pickup", "van", "boxtruck"]:
 			var dx0 := X(float(d.tail_x) + rear * 0.16) + lf * 0.01
 			var dtop := float(_first_body(int(dx0 + lf * 0.05)))
@@ -2569,17 +3207,62 @@ class _Car:
 			p.hline(st0, sty, st1 - st0, Color("5a5e66"))
 			p.frame(st0 - 1, sty - 1, st1 - st0 + 2, 2 * u + 2, CarGen.INK)
 		if d.mudflaps and lod >= 1:
+			# a flap behind each wheel, hung from the body and stopping short of the road
 			for wv: Array in wheels:
 				var mx := int(float(wv[1]) - arch_r * 0.95) - u
-				var my := int(float(wv[3].y))
-				var mh := gy - my - int(lf * 0.025)
-				p.rect(mx, my, maxi(2, u + 1), mh, CarGen.RUBBER)
-				p.frame(mx - 1, my - 1, maxi(2, u + 1) + 2, mh + 2, CarGen.INK)
+				var my := int(sill)
+				var mh := int(float(gy - my) * 0.7)
+				var mw := maxi(2, u + 1)
+				p.rect(mx, my, mw, mh, CarGen.RUBBER)
+				p.vline(mx, my, mh, Color("3e434b"))
+				p.frame(mx - 1, my, mw + 2, mh + 1, CarGen.INK)
+		# a truck's grille seen from the side: a chrome edge down the face, big on the heavy-duty ones
+		if d.boxy and d.family in ["pickup", "suv"] and front < 0.3 and lod >= 1 and d.cls != "crossover":
+			var hd: bool = d.cls in ["hd_pickup", "work_truck"]
+			var gx := int(X(1.0)) - 1
+			var gt := int(Y(float(d.hood_h))) + u
+			var gb := int(Y(float(d.nose_bot))) - int(lf * 0.03)
+			var gw := maxi(2, int(lf * (0.016 if hd else 0.009)))
+			for yy in range(gt, gb):
+				for k in gw:
+					var xx := gx - k
+					if not on_paint(xx, yy): continue
+					var t := float(yy - gt) / float(maxi(1, gb - gt))
+					var c: Color = CarGen.CHROME[3] if k == gw - 1 else (CarGen.CHROME[2] if t < 0.5 else CarGen.CHROME[1])
+					if hd and (yy - gt) % (3 * u + 1) == 0: c = CarGen.CHROME[0]
+					p.img.set_pixel(xx, yy, c)
+			p.vline(gx - gw, gt, gb - gt, CarGen.INK)
 
+	## A spare on the back door, seen edge-on: the tread face of a tyre, rounded top and bottom,
+	## with its blocks, the sidewall's lit edge and the carrier bracket to the body.
 	func _spare(sx: int, sy: int, sr: float) -> void:
-		p.rect(sx - int(sr * 0.25), sy - int(sr), int(sr * 0.55), int(sr * 2.0), CarGen.TIRE)
-		p.vline(sx - int(sr * 0.25), sy - int(sr) + 1, int(sr * 2.0) - 2, Color("3a3e46"))
-		p.frame(sx - int(sr * 0.25) - 1, sy - int(sr) - 1, int(sr * 0.55) + 2, int(sr * 2.0) + 2, CarGen.INK)
+		var hw := maxf(2.0, sr * 0.3)
+		var x0 := float(sx) - hw
+		var x1 := float(sx) + hw
+		var bx := int(x1) + 1
+		p.rect(bx, sy - int(sr * 0.18), maxi(2, int(sr * 0.3)), maxi(2, int(sr * 0.36)), CarGen.TRIM)
+		for yy in range(sy - int(sr) - 1, sy + int(sr) + 2):
+			var fy := (float(yy) + 0.5 - float(sy)) / sr
+			if absf(fy) > 1.0: continue
+			# the tyre's round seen from the end: narrower toward the top and the bottom
+			var pinch := hw * (1.0 - sqrt(maxf(0.0, 1.0 - fy * fy)) * 0.0) * sqrt(maxf(0.0, 1.0 - pow(absf(fy), 6.0)))
+			var a0 := int(round(float(sx) - pinch))
+			var a1 := int(round(float(sx) + pinch))
+			for xx in range(a0, a1 + 1):
+				var c := CarGen.TIRE
+				var fx := (float(xx) - x0) / maxf(1.0, x1 - x0)
+				if fx < 0.18: c = Color("3a3f48")
+				elif fx > 0.85: c = Color("101216")
+				# tread blocks: grooves across, staggered left and right of the centre rib
+				var rows := maxf(3.0, sr * 0.45)
+				var ph := fposmod((fy + 1.0) * rows, 1.0)
+				if fx >= 0.18 and fx <= 0.85 and ph < 0.3 and (fx < 0.5) == (int((fy + 1.0) * rows) % 2 == 0): c = Color("0c0d10")
+				if absf(fy) > 0.93: c = Color("101216")
+				p.px(xx, yy, c)
+			p.px(a0 - 1, yy, CarGen.INK)
+			p.px(a1 + 1, yy, CarGen.INK)
+		p.hline(int(round(float(sx) - hw * 0.4)), sy - int(sr) - 1, int(hw * 0.8) + 1, CarGen.INK)
+		p.hline(int(round(float(sx) - hw * 0.4)), sy + int(sr) + 1, int(hw * 0.8) + 1, CarGen.INK)
 
 	## The wrecker's body: side boxes over the rear wheel, and the boom up the back.
 	func _wrecker(bx0: int, bx1: int, rail: int) -> void:
@@ -2663,6 +3346,64 @@ class _Car:
 
 	# ------------------------------------------------------------ wheels
 
+	## Under the sills: a car's dark floor pan; a truck's frame rails, its tank, the exhaust and the
+	## leaf springs, so a body on a frame stands up off the ground with daylight under it.
+	func _underbody() -> void:
+		var fd := float(d.get("under", 0.0)) * lf
+		if lod == 0 or fd < 0.8: return
+		var top := int(sill) + 1
+		var rail := maxi(1, int(fd * (0.55 if fd > 4.0 else 1.0)))
+		var ra: Vector2 = wheels[0][3]
+		var fa: Vector2 = wheels[1][3]
+		var x0 := int(X(0.03 + rear * 0.16))
+		var x1 := int(X(0.97 - front * 0.2))
+		var dark := Color("191c21")
+		var mid := Color("2b2f36")
+		var lit := Color("474d57")
+		for xx in range(x0, x1):
+			var over_wheel := absf(float(xx) - ra.x) < arch_r * 0.92 or absf(float(xx) - fa.x) < arch_r * 0.92
+			for k in rail:
+				var yy := top + k
+				if over_wheel or p.get_px(xx, yy).a > 0.6: continue
+				# the frame rail: lit along its bottom flange where the road light catches it
+				p.px(xx, yy, lit if k == rail - 1 and rail > 1 else (mid if k == 0 else dark))
+		# crossmember stubs under the cab and the bed
+		if fd > 4.0:
+			for f2: float in [0.3, 0.55]:
+				var cxm := int(lerpf(ra.x + arch_r, fa.x - arch_r, f2))
+				for yy in range(top, top + rail + int(fd * 0.2)):
+					if p.get_px(cxm, yy).a < 0.6: p.px(cxm, yy, mid)
+		if fd <= 4.0: return
+		# the tank and the exhaust between the wheels
+		var gap0 := ra.x + arch_r
+		var gap1 := fa.x - arch_r
+		var tx0 := int(lerpf(gap0, gap1, 0.12))
+		var tx1 := int(lerpf(gap0, gap1, 0.5))
+		var ty0 := top + rail
+		var ty1 := top + int(fd)
+		for yy in range(ty0, ty1):
+			for xx in range(tx0, tx1):
+				if p.get_px(xx, yy).a > 0.6: continue
+				var c := mid if yy == ty0 or xx == tx0 else (dark if yy == ty1 - 1 else Color("23272d"))
+				if (xx == tx0 or xx == tx1 - 1) and (yy == ty1 - 1): continue
+				p.px(xx, yy, c)
+		var ey := top + rail + maxi(1, int(fd * 0.25))
+		for xx in range(int(ra.x - arch_r * 1.2), tx0):
+			if p.get_px(xx, ey).a < 0.6 and absf(float(xx) - ra.x) > arch_r * 0.92: p.px(xx, ey, Color("4a4e56"))
+		for xx in range(tx1, int(gap1)):
+			if p.get_px(xx, ey).a < 0.6: p.px(xx, ey, Color("3a3e46"))
+		# leaf springs ahead of and behind the rear wheel, on a truck
+		if d.family == "pickup" or (d.family in ["suv", "offroad"] and year < 2000):
+			for side: float in [-1.0, 1.0]:
+				var sx := ra.x + side * arch_r * 1.0
+				var ex := ra.x + side * arch_r * 1.45
+				for k in 6:
+					var t := float(k) / 5.0
+					var qx := int(lerpf(sx, ex, t))
+					var qy := top + rail + int(fd * 0.3 * (1.0 - t))
+					if p.get_px(qx, qy).a < 0.6: p.px(qx, qy, Color("3a3e46"))
+					if p.get_px(qx, qy + 1).a < 0.6: p.px(qx, qy + 1, dark)
+
 	## The dark inside of each wheel arch, behind the tyre.
 	func _wells() -> void:
 		for wv: Array in wheels:
@@ -2682,45 +3423,131 @@ class _Car:
 					var qy := int(ac.y + sin(a) * (ra - 1.5))
 					if p.get_px(qx, qy) == CarGen.WELL: p.img.set_pixel(qx, qy, Color("1c2026"))
 
-	## Fender flares: the drift kit's bolt-ons, a rally car's box arches, a dually's hips.
+	## Fender flares: the drift kit's bolt-ons, a rally car's box arches, a muscle car's bulge, a
+	## dually's hips. A flare is an arch over the top of the wheel that comes straight down to the
+	## sill and stops there: a lit lip along its top, its face shaded round the curve, a dark
+	## underside where it turns in toward the tyre, and its shadow on the panel behind it.
 	func _flares() -> void:
 		var style := "none"
 		if String(mods.get("fenders", "stock")) == "flared": style = "bolt"
 		elif d.flare != "none": style = String(d.flare)
+		if d.art.has("dually"): _dually_hips()
+		if style == "trap":
+			_trap_flares()
+			return
 		if style == "none": return
 		var box := style == "box"
-		var sx := 1.1 if box else 1.0
 		var c_hi := (pal.hi as Color)
 		var c_lt := (pal.lt as Color)
 		var c_base := (pal.base as Color)
 		var c_mid := (pal.mid as Color)
 		var c_sh := (pal.sh as Color)
+		var bottom := int(minf(sill, Y(float(d.rocker)) + float(u)))
 		for wv: Array in wheels:
-			if style == "bulge" and wv[0] == "front" and d.art.has("dually"): continue
+			if style == "bulge" and d.art.has("dually"): continue
 			var ac: Vector2 = wv[3]
-			var fr := arch_r + (3.0 if not box else 4.0) * float(u) + lf * 0.006
-			for yy in range(int(ac.y - fr) - 2, int(sill) + 1):
-				for xx in range(int(ac.x - fr * sx) - 2, int(ac.x + fr * sx) + 3):
+			var th0 := (2.5 if style == "bulge" else 3.5) * float(u) + lf * (0.006 if style == "bulge" else 0.01)
+			var fr0 := arch_r + th0
+			for yy in range(int(ac.y - fr0) - 2, bottom + 1):
+				# thickest over the top, thinning down the sides to the rocker
+				var drop := clampf((float(yy) - ac.y) / maxf(1.0, float(bottom) - ac.y), 0.0, 1.0)
+				var th := th0 * (1.0 - 0.5 * drop)
+				var fr := arch_r + th
+				for xx in range(int(ac.x - fr0 * 1.15) - 2, int(ac.x + fr0 * 1.15) + 3):
 					if xx < 0 or yy < 0 or xx >= w or yy >= hgt: continue
-					var dx := (float(xx) + 0.5 - ac.x) / sx
+					var dx := float(xx) + 0.5 - ac.x
 					var dy := float(yy) + 0.5 - ac.y
-					var dd := sqrt(dx * dx + dy * dy)
-					if box: dd = maxf(absf(dx), -dy) * 0.55 + dd * 0.45
-					if dd < arch_r - 0.2 or dd > fr + 1.2: continue
+					# above the hub the flare is a ring; below it, it drops straight to the rocker
+					var dd := sqrt(dx * dx + dy * dy) if dy < 0.0 else absf(dx)
+					if box: dd = maxf(absf(dx), -dy) * 0.6 + dd * 0.4 if dy < 0.0 else absf(dx)
+					if in_arch(dx, dy, arch_r - 0.2) or dd > fr + 1.2: continue
+					if dd < arch_r - 0.2: continue
 					if dd > fr + 0.2:
-						# the flare stands proud: a shadow round it on the panel, ink where it sticks out
+						# standing proud: its shadow on the panel, ink where it sticks out past the body
 						if on_paint(xx, yy): p.img.set_pixel(xx, yy, c_sh)
 						elif p.img.get_pixel(xx, yy).a < 0.5: p.img.set_pixel(xx, yy, CarGen.INK)
 						continue
-					var up := -dy / maxf(0.5, dd)
-					var c := c_lt if up > 0.7 else (c_base if up > 0.25 else c_mid)
-					if dd > fr - 1.0: c = c_hi if up > 0.45 else c_lt
-					elif dd < arch_r + 1.0: c = c_mid
+					var up := -dy / maxf(0.5, sqrt(dx * dx + dy * dy))
+					var c := c_lt if up > 0.75 else (c_base if up > 0.3 else c_mid)
+					if dd > fr - 1.0: c = c_hi if up > 0.5 else (c_lt if up > 0.0 else c_base)
+					elif dd < arch_r + 1.2: c = c_sh if up > 0.2 else c_mid
+					if yy >= bottom - u: c = c_sh
 					p.img.set_pixel(xx, yy, c)
-			if style == "bolt":
+			# the ends stop square at the rocker
+			for xx in range(int(ac.x - fr0) - 1, int(ac.x + fr0) + 2):
+				if absf(float(xx) + 0.5 - ac.x) >= arch_r - 0.2 and absf(float(xx) + 0.5 - ac.x) <= arch_r + th0 * 0.5 + 1.0: p.px(xx, bottom + 1, CarGen.INK)
+			if style == "bolt" and lod >= 1:
 				for k in 5:
-					var a3 := PI + PI * (0.15 + 0.7 * float(k) / 4.0)
-					p.px(int(ac.x + cos(a3) * (fr - 1.5 * u)), int(ac.y + sin(a3) * (fr - 1.5 * u)), CarGen.CHROME[2])
+					var a3 := PI + PI * (0.1 + 0.8 * float(k) / 4.0)
+					p.px(int(ac.x + cos(a3) * (fr0 - 1.5 * u)), int(ac.y + sin(a3) * (fr0 - 1.5 * u)), CarGen.CHROME[2])
+
+	## A Jepp's flares: flat-topped trapezoids standing proud of the tub, black plastic from the
+	## late eighties on and body colour before, each with a lit top and a dark underside.
+	func _trap_flares() -> void:
+		var plastic := year >= 1987
+		var c_top := Color("5a606a") if plastic else (pal.hi as Color)
+		var c_face := Color("30353d") if plastic else (pal.lt as Color)
+		var c_low := Color("1c2026") if plastic else (pal.mid as Color)
+		var bottom := sill
+		var th := maxf(2.0, lf * 0.018)
+		for wv: Array in wheels:
+			var ac: Vector2 = wv[3]
+			var ra := arch_r
+			var top := ra * 0.88 + th
+			for yy in range(int(ac.y - top) - 2, int(bottom) + 1):
+				for xx in range(int(ac.x - ra * 1.1 - th) - 3, int(ac.x + ra * 1.1 + th) + 4):
+					var dx := float(xx) + 0.5 - ac.x
+					var dy := float(yy) + 0.5 - ac.y
+					if in_arch(dx, dy, ra): continue
+					var half := ra * 1.02 + th if dy >= 0.0 else lerpf(ra * 1.02 + th, ra * 0.7 + th * 0.9, -dy / top)
+					var inside := -dy <= top and absf(dx) <= half
+					if not inside:
+						if -dy <= top + 1.0 and absf(dx) <= half + 1.0: p.px(xx, yy, CarGen.INK)
+						continue
+					var c := c_face
+					if -dy > top - maxf(1.0, th * 0.4): c = c_top
+					elif in_arch(dx, dy, ra + 1.6): c = c_low
+					elif dx > half - 1.2: c = c_low
+					p.px(xx, yy, c)
+			# the flare stops square at the sill
+			for xx in range(int(ac.x - ra * 1.02 - th) - 1, int(ac.x + ra * 1.02 + th) + 2):
+				if absf(float(xx) + 0.5 - ac.x) >= ra: p.px(xx, int(bottom) + 1, CarGen.INK)
+
+	## A dually's rear hips: one wide fender over both rear tyres, flat across the top with round
+	## shoulders, standing out from the bed side down to the rocker.
+	func _dually_hips() -> void:
+		var ac: Vector2 = wheels[0][3]
+		var ra := arch_r * 1.06
+		var top := ac.y - ra - maxf(3.0, lf * 0.028)
+		var bottom := Y(float(d.rocker))
+		var rc := minf(ra * 0.55, (bottom - top) * 0.5)
+		var x0 := maxf(ac.x - ra * 1.55, X(0.012))
+		var x1 := minf(ac.x + ra * 1.55, X(float(d.get("cab_x", 0.4))) - 3.0)
+		var c_hi := (pal.hi as Color)
+		var c_lt := (pal.lt as Color)
+		var c_base := (pal.base as Color)
+		var c_sh := (pal.sh as Color)
+		for yy in range(int(top) - 1, int(bottom) + 2):
+			for xx in range(int(x0) - 1, int(x1) + 2):
+				var fx := float(xx) + 0.5
+				var fy := float(yy) + 0.5
+				# a rounded box: is this pixel inside, on its edge, or out?
+				var qx := maxf(0.0, maxf(x0 + rc - fx, fx - (x1 - rc)))
+				var qy := maxf(0.0, top + rc - fy)
+				var dist := sqrt(qx * qx + qy * qy) - rc
+				if fx < x0 or fx > x1 or fy < top or fy > bottom: dist = maxf(dist, 1.0)
+				var dx := fx - ac.x
+				var dy := fy - ac.y
+				if in_arch(dx, dy, ra): continue
+				if dist > 1.0: continue
+				if dist > 0.0:
+					p.px(xx, yy, CarGen.INK)
+					continue
+				var f := (fy - top) / maxf(1.0, bottom - top)
+				var c := c_hi if fy < top + 1.0 else (c_lt if f < 0.18 else (c_base if f < 0.6 else (pal.mid as Color)))
+				if fx > x1 - 1.5: c = c_sh
+				if in_arch(dx, dy, ra + 1.5): c = c_sh
+				p.img.set_pixel(xx, yy, c)
 
 	func _wheels() -> void:
 		var look := CarGen.wheel_look(d, mods, len)
@@ -2730,11 +3557,7 @@ class _Car:
 			var cx := int(round(float(wv[1])))
 			var cy := int(round(float(wv[2])))
 			if String(dmg.get("wheel_off", "")) == String(wv[0]):
-				# just the hub, on the ground, and the brake rotor glowing a bit
-				p.disc(cx, cy + 2, r_tire * 0.6, Color("6a5a50"))
-				p.ring(cx, cy + 2, r_tire * 0.6, CarGen.INK)
-				p.disc(cx, cy + 2, r_tire * 0.25, Color("8a8a8e"))
-				p.rect(cx - int(r_tire * 0.7), cy - int(r_tire * 0.2), 2 * u, int(r_tire), Color("b8603a"))
+				# nothing here: _tilt() sits the car down on the bare hub
 				continue
 			var flat: bool = String(dmg.get("flat", "")) == String(wv[0])
 			if skirted(wv):
@@ -2782,19 +3605,7 @@ class _Car:
 					var qx := cx + (ex - cx) * s / steps
 					var qy := cy + (ey - cy) * s / steps
 					if glass_at(qx, qy): p.img.set_pixel(qx, qy, Color("c8d4e0"))
-		if front > 0.3 and lod >= 1:
-			# the crumple: buckles in the hood and the fender
-			var nx := int(X(1.0 - front * 0.2))
-			for k in 3:
-				var bx := nx - int(lf * (0.05 + 0.05 * k))
-				for yy in range(_first_body(bx), int(Y(float(d.rocker)))):
-					if on_paint(bx, yy) and (yy + k) % 3 != 0: p.img.set_pixel(bx, yy, gap_c())
-		if rear > 0.3 and lod >= 1:
-			var tx := int(X(rear * 0.16))
-			for k in 2:
-				var bx2 := tx + int(lf * (0.05 + 0.05 * k))
-				for yy in range(_first_body(bx2), int(Y(float(d.rocker)))):
-					if on_paint(bx2, yy) and (yy + k) % 3 != 0: p.img.set_pixel(bx2, yy, gap_c())
+		_scrapes()
 		var smoke := float(dmg.get("smoke", 0.0))
 		if smoke > 0.0:
 			var sx2 := int(X(0.85 - front * 0.18))
@@ -2802,31 +3613,179 @@ class _Car:
 			for k in int(6 + smoke * 10.0):
 				p.glow(sx2 - k * 2 + int(sin(float(k)) * 3.0), int(by) - 3 - k * 3, (2.0 + float(k) * 0.6) * u, Color(0.82, 0.82, 0.84), 1.0 - float(k) * 0.04)
 		var drv: Dictionary = dmg.get("driver", {})
-		if not drv.is_empty():
-			# slumped over the door: the head on the sill, an arm hanging down the outside
-			var cuts: Array = d.door_cuts
-			var wx := int(X(lerpf(float(cuts[0][1]), float(cuts[0][0]), 0.3))) if cuts.size() > 0 else int(X(0.5))
-			var wy := int(Y(float(d.belt_f)))
-			var sk: Color = drv.get("skin", Color("dcae88"))
-			var hc: Color = drv.get("hair", Color("3b2a1e"))
-			var hr := maxf(2.0, lf * 0.022)
-			var arm := maxi(2, int(lf * 0.016))
-			var arm_l := int(lf * 0.085)
-			var ax := wx + int(hr * 0.8)
-			if drv.get("sleeve", null) != null:
-				p.rect(ax - 1, wy - 1, arm + 2, arm + 2, CarGen.INK)
-			p.rect(ax - 1, wy, arm + 2, arm_l + 2, CarGen.INK)
-			p.rect(ax, wy, arm, arm_l, sk)
-			p.vline(ax, wy, arm_l, sk.lightened(0.12))
-			p.rect(ax, wy + arm_l - arm, arm, arm, sk.darkened(0.12))
-			if drv.get("sleeve", null) != null: p.rect(ax, wy, arm, arm, drv.sleeve)
-			p.disc(wx, wy - int(hr * 0.5), hr + 1.0, CarGen.INK)
-			p.disc(wx, wy - int(hr * 0.5), hr, sk)
-			p.disc(wx - int(hr * 0.3), wy - int(hr * 0.9), hr * 0.8, hc)
-			if drv.get("long_hair", false):
-				p.rect(wx - int(hr), wy - int(hr * 0.2), int(hr * 1.4), int(lf * 0.07), CarGen.INK)
-				p.rect(wx - int(hr) + 1, wy - int(hr * 0.2), int(hr * 1.4) - 2, int(lf * 0.07) - 1, hc)
-				p.vline(wx - int(hr) + 2, wy, int(lf * 0.06), hc.lightened(0.15))
+		if not drv.is_empty(): _driver(drv)
+
+	## A crash leaves its marks near the hit: the panels creased in folds, a dent shaded into the
+	## door, bare metal scraped through the paint and a patch of grey primer.
+	func _scrapes() -> void:
+		if lod == 0: return
+		var bare := Color("c9cdd2")
+		var bare_lo := Color("7e838a")
+		var primer := Color("8f8c84")
+		var primer_lo := Color("74716b")
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(String(d.get("id", "")) + String(d.get("model", "")))
+		var belt := Y(float(d.belt_f))
+		for end: int in [1, 0]:
+			var amt := front if end == 1 else rear
+			if amt < 0.15: continue
+			var x_end := X(1.0 - amt * 0.2) if end == 1 else X(amt * 0.16)
+			var dir := -1.0 if end == 1 else 1.0
+			# creases in the crushed panels, each a dark fold with a lit edge behind it
+			for k in 2 + int(amt * 2.0):
+				var cx := int(x_end + dir * lf * (0.03 + 0.045 * float(k)))
+				var lean := rng.randf_range(-0.35, 0.35)
+				for yy in range(_first_body(cx) + u, int(sill) - u):
+					var xx := cx + int(float(yy) * lean) - int(belt * lean)
+					if (yy + k) % 4 == 0: continue
+					if on_paint(xx, yy): p.img.set_pixel(xx, yy, (pal.deep as Color))
+					if on_paint(xx - int(dir), yy): p.img.set_pixel(xx - int(dir), yy, (pal.lt as Color))
+			# a dent in the door behind the crumple: dark where it dips away from the light
+			var dcx := x_end + dir * lf * rng.randf_range(0.17, 0.22)
+			var dcy := lerpf(belt, sill, 0.45)
+			var drx := lf * 0.04 * (0.6 + amt * 0.6)
+			var dry := drx * 0.55
+			for yy in range(int(dcy - dry), int(dcy + dry) + 1):
+				for xx in range(int(dcx - drx), int(dcx + drx) + 1):
+					var ex := (float(xx) - dcx) / drx
+					var ey := (float(yy) - dcy) / dry
+					var e := ex * ex + ey * ey
+					if e > 1.0 or not on_paint(xx, yy): continue
+					if ex + ey < -0.3 and e > 0.25: p.img.set_pixel(xx, yy, (pal.sh as Color))
+					elif ex + ey > 0.5 and e > 0.3: p.img.set_pixel(xx, yy, (pal.lt as Color))
+			# a primer patch on the fender
+			var pcx := x_end + dir * lf * rng.randf_range(0.08, 0.12)
+			var pcy := lerpf(belt, sill, rng.randf_range(0.2, 0.45))
+			var prx := lf * rng.randf_range(0.025, 0.04) * (0.7 + amt * 0.5)
+			var pry := prx * 0.65
+			for yy in range(int(pcy - pry) - 1, int(pcy + pry) + 2):
+				for xx in range(int(pcx - prx) - 1, int(pcx + prx) + 2):
+					var e2 := pow((float(xx) - pcx) / prx, 2.0) + pow((float(yy) - pcy) / pry, 2.0) + sin(float(xx) * 1.3 + float(yy) * 0.7) * 0.18
+					if e2 > 1.0 or not on_paint(xx, yy): continue
+					p.img.set_pixel(xx, yy, primer if e2 < 0.7 else primer_lo)
+			# scrapes: bare metal streaks running back from the hit, a dark lower edge under each
+			for k in 2 + int(amt * 3.0):
+				var sy := lerpf(belt + lf * 0.015, sill - lf * 0.015, rng.randf())
+				var sx0 := x_end + dir * lf * rng.randf_range(0.02, 0.05)
+				var sl := int(lf * rng.randf_range(0.07, 0.17) * (0.5 + amt * 0.5))
+				var slope := rng.randf_range(-0.06, 0.06)
+				for t in sl:
+					if t % 7 == 5: continue
+					var xx2 := int(sx0 + dir * float(t))
+					var yy2 := int(sy + float(t) * slope)
+					if on_paint(xx2, yy2): p.img.set_pixel(xx2, yy2, bare)
+					if t % 3 != 0 and on_paint(xx2, yy2 + 1): p.img.set_pixel(xx2, yy2 + 1, bare_lo)
+
+	## The driver after the crash, slumped against the front window: a head with its hair and a
+	## sleeved shoulder behind the glass. With the glass gone, the arm hangs out over the door.
+	func _driver(drv: Dictionary) -> void:
+		if glass.is_empty() or lod == 0: return
+		var sk: Color = drv.get("skin", Color("dcae88"))
+		var hc: Color = drv.get("hair", Color("3b2a1e"))
+		var sl: Color = drv.get("sleeve", Color("3a4a5a"))
+		var broken: bool = dmg.get("glass", false)
+		var belt := Y(float(d.belt_f))
+		var gt := Y(float(d.glass_top))
+		var seats := _seats()
+		var fx := X(lerpf(float(d.dlo_r), float(d.a_bot), 0.62))
+		if seats.size() > 0: fx = float(seats[0][1]) + lf * 0.03
+		var hr := maxf(2.0, lf * 0.024)
+		# slumped forward and down against the door: the head low in the window
+		var hx := fx + hr * 0.6
+		var hy := belt - hr * 1.1
+		var lay := Image.create(w, hgt, false, Image.FORMAT_RGBA8)
+		var q := Pix.new(1, 1)
+		q.img = lay
+		q.w = w
+		q.h = hgt
+		# the shoulder and the upper arm in the sleeve, then the head and its hair
+		q.rect(int(hx - hr * 2.2), int(hy + hr * 0.4), int(hr * 2.4), int(belt - hy), sl)
+		q.hline(int(hx - hr * 2.2), int(hy + hr * 0.4), int(hr * 2.4), sl.lightened(0.15))
+		q.disc(int(hx), int(hy), hr + 1.0, CarGen.INK)
+		q.disc(int(hx), int(hy), hr, sk)
+		q.disc(int(hx - hr * 0.35), int(hy - hr * 0.35), hr * 0.85, hc)
+		q.px(int(hx + hr * 0.5), int(hy + hr * 0.1), sk.darkened(0.25))
+		if drv.get("long_hair", false):
+			q.rect(int(hx - hr * 1.2), int(hy), int(hr * 1.2), int(hr * 1.8), hc)
+			q.vline(int(hx - hr * 1.2) + 1, int(hy + 1), int(hr * 1.4), hc.lightened(0.15))
+		# only what shows in the window opening, seen through the glass unless it broke
+		var gc := Color(CarGen.GLASS, 0.35)
+		for yy in range(maxi(0, int(gt) - 2), mini(hgt, int(belt) + 1)):
+			for xx in range(maxi(0, int(hx - hr * 3.0)), mini(w, int(hx + hr * 2.0))):
+				var c := lay.get_pixel(xx, yy)
+				if c.a < 0.5 or not glass_at(xx, yy): continue
+				p.img.set_pixel(xx, yy, c if broken else c.blend(gc))
+		if not broken: return
+		# the arm hanging out over the door: the sleeve rounded over the sill, the forearm hanging
+		# down the door, a hand at the end of it
+		var arm := maxi(2, int(lf * 0.018))
+		var ax := int(hx - hr * 0.4)
+		var ay := int(belt) - maxi(1, arm / 2)
+		var arm_l := int(lf * 0.075)
+		var sleeve_l := int(float(arm_l) * 0.4)
+		var hand := arm + 1
+		p.rect(ax - 2, ay - 2, arm + 4, sleeve_l + 3, CarGen.INK)
+		p.rect(ax, ay + sleeve_l, arm + 1, arm_l - sleeve_l + 1, CarGen.INK)
+		p.rect(ax - 1, ay + arm_l - 1, hand + 2, hand + 2, CarGen.INK)
+		p.rect(ax - 1, ay - 1, arm + 2, sleeve_l + 1, sl)
+		p.hline(ax - 1, ay - 1, arm + 2, sl.lightened(0.2))
+		p.vline(ax + arm, ay, sleeve_l, sl.darkened(0.25))
+		p.rect(ax + 1, ay + sleeve_l, arm - 1, arm_l - sleeve_l, sk)
+		p.vline(ax + 1, ay + sleeve_l, arm_l - sleeve_l, sk.lightened(0.12))
+		p.rect(ax, ay + arm_l, hand, hand, sk)
+		p.hline(ax, ay + arm_l + hand - 1, hand, sk.darkened(0.2))
+		p.px(ax + hand - 1, ay + arm_l, sk.darkened(0.15))
+
+	## Nothing solid below the road: anything that strayed under the ground line goes, the
+	## shadow stays.
+	func _clip_ground() -> void:
+		var under := Color(0.0, 0.0, 0.02, 0.25) if mods.get("shadow", true) else Color(0, 0, 0, 0)
+		for yy in range(gy + 2, hgt):
+			for xx in w:
+				if p.img.get_pixel(xx, yy).a >= 0.6: p.img.set_pixel(xx, yy, under)
+
+	## A car that lost a wheel sits down on that corner: the whole picture turns about the other
+	## wheel's contact patch until the bare brake disc is on the road.
+	func _tilt() -> void:
+		var side := String(dmg.get("wheel_off", ""))
+		var lost: Array = wheels[1] if side == "front" else wheels[0]
+		var kept: Array = wheels[0] if side == "front" else wheels[1]
+		var hub_r := r_tire * 0.55
+		var pivot := Vector2(float(kept[1]), float(gy))
+		var span := float(lost[1]) - float(kept[1])
+		var ang := atan2(r_tire - hub_r, absf(span)) * signf(span)
+		var src: Image = p.img.duplicate()
+		var ca := cos(ang)
+		var sa := sin(ang)
+		p.img.fill(Color(0, 0, 0, 0))
+		for yy in hgt:
+			for xx in w:
+				var c := src.get_pixel(xx, yy)
+				# the ground shadow stays where it is
+				if c.a > 0.0 and c.a < 0.6: p.img.set_pixel(xx, yy, c)
+		for yy in hgt:
+			for xx in w:
+				var dx := float(xx) + 0.5 - pivot.x
+				var dy := float(yy) + 0.5 - pivot.y
+				var ix := int(floor(pivot.x + dx * ca + dy * sa))
+				var iy := int(floor(pivot.y - dx * sa + dy * ca))
+				if ix < 0 or iy < 0 or ix >= w or iy >= hgt: continue
+				var c2 := src.get_pixel(ix, iy)
+				if c2.a >= 0.6: p.img.set_pixel(xx, yy, c2)
+		# the bare hub where the wheel was: the brake disc on the road, the caliper on it
+		var hx := int(pivot.x + span * ca)
+		var hy := gy - int(hub_r)
+		p.disc(hx, hy, hub_r + 0.6, CarGen.INK)
+		p.disc(hx, hy, hub_r, Color("6a625c"))
+		p.ring(hx, hy, hub_r * 0.8, Color("8a817a"))
+		p.disc(hx, hy, hub_r * 0.42, Color("9a9ea4"))
+		for k in 5:
+			var la := TAU * float(k) / 5.0
+			p.px(hx + int(cos(la) * hub_r * 0.3), hy + int(sin(la) * hub_r * 0.3), Color("dadee4"))
+		p.rect(hx - int(hub_r * 0.95), hy - int(hub_r * 0.5), maxi(2, int(hub_r * 0.35)), int(hub_r), Color("b8603a"))
+		# sparks and a gouge in the road where it dragged
+		p.hline(hx - int(lf * 0.08), gy, int(lf * 0.08), Color("3a3632"))
+		for k in 4: p.px(hx - int(lf * 0.03) - k * 3 * u, gy - 1 - (k % 2) * u, Color("ffd070"))
 
 # ================================================================== wheels
 
@@ -2857,6 +3816,20 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 	var rotor := Color("3c4149")
 	var tire_c: Array[Color] = [Color("121418"), Color("1c1f25"), Color("272b32"), Color("343942"), Color("454b55")]
 	var lip_w := maxf(1.0, rr * (0.1 if rim != "deepdish" else 0.26))
+	if r < 4.5:
+		# counter size: a dark tyre and a grey hub, no spokes to turn into a white square
+		var q0 := 1.0 - 0.5 / r
+		for yy in range(int(floor(ccy - ry - 1.0)), int(ceil(ccy + ry + 1.0))):
+			for xx in range(cx - int(r) - 1, cx + int(r) + 2):
+				var ddx := float(xx) - float(cx)
+				var ddy := float(yy) - ccy
+				if (ddx * ddx) / (r * r) + (ddy * ddy) / (ry * ry) <= q0: p.px(xx, yy, tire_c[1])
+		var hub := Color("7d838c") if rim != "beadlock" else Color("4a4e56")
+		p.px(cx, int(ccy), hub)
+		if r >= 3.4:
+			p.px(cx - 1, int(ccy), hub.darkened(0.2))
+			p.px(cx, int(ccy) - 1, hub.lightened(0.15))
+		return
 	var x0 := int(floor(float(cx) - r - 2.0))
 	var x1 := int(ceil(float(cx) + r + 2.0))
 	var y0 := int(floor(ccy - ry - 2.0))
@@ -2867,7 +3840,8 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			var dy := float(yy) - ccy
 			var q := (dx * dx) / (r * r) + (dy * dy) / (ry * ry)
 			var dist := sqrt(dx * dx + dy * dy)
-			if q > 1.0:
+			# a round tyre, no single pixels poking out at twelve, three, six and nine o'clock
+			if q > 1.0 - 0.55 / r:
 				# mud tyres: knobs standing proud of the round
 				if kind == "mud" and q < 1.14:
 					var a0 := atan2(dy, dx) + spin * 0.5
@@ -2877,13 +3851,16 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			var nd := Vector2(dx, dy) / maxf(0.01, dist)
 			var lit := nd.dot(light)          # -1 facing away .. 1 facing the light
 			if dist > rr:
-				# the tyre
+				# the tyre: a crisp black tread edge, the sidewall lit from the upper left with a
+				# bright bead ring just outside the rim
 				var t := (dist - rr) / maxf(0.5, r - rr)
 				var c: Color
-				if q > 0.86 or t > 0.9: c = tire_c[0]
+				if sqrt(q) * r > r - 1.45: c = tire_c[0]
 				else:
 					var k := 1 + int(clampf((lit + 1.0) * 0.5 * 3.0 + (0.4 if t < 0.35 else 0.0), 0.0, 2.99))
 					c = tire_c[k]
+					if not simple and dist - rr < 1.0 and lit > -0.35: c = tire_c[4]
+					elif not simple and absf(t - 0.62) < 0.5 / maxf(1.0, r - rr) and lit > 0.25: c = tire_c[3]
 					if kind == "mud" and t > 0.7 and fposmod((a + spin * 0.5) * 16.0 / TAU, 1.0) < 0.3: c = tire_c[0]
 					if wall == "white" and not simple and t > 0.25 and t < 0.6: c = Color("e8e6dc") if lit > -0.3 else Color("b8b6ac")
 					if wall == "letters" and not simple and t > 0.38 and t < 0.6 and a < -0.6 and a > -2.5:
@@ -2963,18 +3940,23 @@ static func _rim_face(rim: String, rt: float, ang: float, lit: float, rc: Color,
 			if absf(off) > half * 0.6 and side_lit and n <= 6: return hi
 			return rc if lit > -0.45 else rc.darkened(0.22)
 		"mesh":
-			if rt < 0.28: return shade
-			if rt > 0.9: return rc
-			var k1 := fposmod(ang * 14.0 / TAU + rt * 2.2, 1.0)
-			var k2 := fposmod(ang * 14.0 / TAU - rt * 2.2, 1.0)
-			if k1 < 0.22 or k2 < 0.22: return hi if lit > 0.0 else rc
+			# a cross-spoke lattice: eight spokes, an X between each pair, dark behind it
+			if rt < 0.24: return shade
+			if rt > 0.88: return rc if lit > -0.3 else lo
+			var nm := 6 if simple else 8
+			var seg_m := TAU / float(nm)
+			var um := fposmod(ang + PI / 2.0, seg_m) / seg_m
+			var vm := (rt - 0.24) / 0.64
+			var wm := 0.15 if not simple else 0.22
+			if um < 0.08 or um > 0.92 or absf(um - vm) < wm or absf(um - (1.0 - vm)) < wm:
+				return hi if lit > 0.2 else (rc if lit > -0.45 else rc.darkened(0.2))
 			return gap
 		"wire":
 			if rt < 0.24: return shade
 			var k3 := fposmod(ang * 24.0 / TAU + rt * 3.0, 1.0)
 			var k4 := fposmod(ang * 24.0 / TAU - rt * 3.0, 1.0)
 			if k3 < 0.16 or k4 < 0.16: return Color("eef2f6") if lit > -0.2 else Color("a8b0b8")
-			return gap
+			return Color("4c5159")
 		"turbofan":
 			if rt < 0.3 or rt > 0.86: return shade
 			if fposmod(ang * 12.0 / TAU + rt * 1.4, 1.0) < 0.38: return gap
@@ -2986,9 +3968,15 @@ static func _rim_face(rim: String, rt: float, ang: float, lit: float, rc: Color,
 			if absf(off2) < 0.16: return rc.darkened(0.3) if lit < 0.0 else rc
 			return gap
 		"dish":
-			if rt > 0.78: return rc.darkened(0.1)
-			if rt < 0.5 and lit > 0.2: return hi
-			return rc if lit > -0.3 else lo
+			# a shallow bowl: its rim catches the light on the upper left, the inside of the bowl
+			# the other way round, darkest where it dips toward the hub
+			if rt > 0.82: return hi if lit > 0.2 else (rc if lit > -0.3 else lo)
+			if rt < 0.2: return hi if lit > 0.0 else rc
+			var bowl := -lit * 0.55 + (rt - 0.5) * 0.9
+			if bowl > 0.3: return hi
+			if bowl > -0.05: return rc
+			if bowl > -0.35: return rc.darkened(0.18)
+			return lo
 		"steel":
 			if rt > 0.84: return lo
 			if rt > 0.5 and rt < 0.68:
