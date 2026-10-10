@@ -91,15 +91,16 @@ func start(k: String) -> void:
 			var st: Dictionary = drive.save.get("street", {})
 			var rep := int(st.get("rep", 0))
 			var rung := int(st.get("pinks", 0))
+			var night := _meet_day()
 			race_rival = {}
-			if Jobs.pinks_tonight(drive.sky.day, rep) and rung < StreetRace.RIVALS.size():
+			if Jobs.pinks_tonight(night, rep) and rung < StreetRace.RIVALS.size():
 				race_rival = StreetRace.make_rival(rung)
 				race_route = StreetRace.ROUTES[0]
 				var e := CarCatalog.entry(String(race_rival.car))
 				drive.hud.post("PINK SLIPS TONIGHT: %s IN THE %s %s. WIN AND IT'S YOURS. LOSE AND YOURS IS THEIRS." % [String(race_rival.name), String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()], 7.0)
 			else:
-				race_route = Jobs.street_route(drive.sky.day, rep)
-				var tonight := Jobs.street_route(drive.sky.day)
+				race_route = Jobs.street_route(night, rep)
+				var tonight := Jobs.street_route(night)
 				if tonight.id != race_route.id:
 					drive.hud.post("MARCO: \"%s IS FOR PEOPLE WITH A NAME. YOU GET %s.\"" % [String(tonight.name), String(race_route.name)], 6.0)
 				drive.hud.post("STREET RACE: %s. MEET MARCO AT THE START. $%d BUY-IN." % [race_route.name, int(race_route.buy_in)], 5.0)
@@ -221,9 +222,9 @@ func _objective() -> void:
 
 # ------------------------------------------------------------------ the meet
 
-## The meet's night (after midnight it's still the night before).
+## Tonight, for the meet and the street (after midnight it's still the night before).
 func _meet_day() -> int:
-	return int(drive.sky.day) - (1 if float(drive.sky.time_h) < 6.0 else 0)
+	return Jobs.night_of(int(drive.sky.day), float(drive.sky.time_h))
 
 func _meet(_dt: float) -> void:
 	if meet == null:

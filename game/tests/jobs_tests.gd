@@ -234,6 +234,13 @@ func _init() -> void:
 		"%s / %s / %s" % [Jobs.street_route(ne_day).id, Jobs.street_route(ne_day, 4).id, Jobs.street_route(ne_day, 5).id])
 	var fri := 4
 	check("pink slips: Friday and Saturday, with the rep", Jobs.weekday(fri) == "FRIDAY" and Jobs.pinks_tonight(fri, 6) and Jobs.pinks_tonight(fri + 1, 9) and not Jobs.pinks_tonight(fri, 5) and not Jobs.pinks_tonight(fri + 2, 9))
+	# the street runs to four in the morning: 1 a.m. Sunday is still Saturday night, 1 a.m. Friday is Thursday's
+	var racer := { "street": { "rep": 9 } }
+	check("past midnight it's still the night before", Jobs.night_of(fri + 2, 1.0) == fri + 1 and Jobs.night_of(fri, 23.0) == fri
+		and Jobs.pinks_tonight(Jobs.night_of(fri + 2, 1.0), 9) and not Jobs.pinks_tonight(Jobs.night_of(fri, 1.0), 9))
+	check("the phone says pinks at 1 a.m. Sunday, not 1 a.m. Friday", Jobs.street_line(racer, fri + 2, 1.0).begins_with("PINK") and not Jobs.street_line(racer, fri, 1.0).begins_with("PINK"),
+		"%s / %s" % [Jobs.street_line(racer, fri + 2, 1.0), Jobs.street_line(racer, fri, 1.0)])
+	check("Marco's route holds till four", Jobs.street_route(Jobs.night_of(ne_day + 1, 2.0)).id == Jobs.street_route(ne_day).id)
 	check("rep: a win's one, pinks two, a loss nothing, a no-show costs one", StreetRace.rep_after(3, true, 1, false) == 4 and StreetRace.rep_after(3, true, 1, true) == 5 and StreetRace.rep_after(3, true, 3, false) == 3 and StreetRace.rep_after(3, false, 4, false) == 2 and StreetRace.rep_after(0, false, 4, false) == 0)
 	# best in show at the meet starts the street record with rep and nothing else
 	var st_meet := { "rep": 2 }
