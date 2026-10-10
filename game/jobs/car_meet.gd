@@ -71,6 +71,7 @@ static func looks_pts(l: Dictionary, stance := false) -> float:
 	if cal != null and Color(cal) != Color("#5a5a60"): p += 0.5
 	p += float(l.get("tint", 0.0)) * 0.8
 	if String(l.get("stripes", "none")) != "none": p += 1.0
+	if String(l.get("livery", "none")) != "none": p += 1.2
 	var sp := String(l.get("spoiler", "none"))
 	if sp != "none": p += float({ "ducktail": 0.8, "wing": 1.2, "gt": 1.8 }.get(sp, 1.0))
 	var kit: Dictionary = l.get("kit", {})

@@ -12,10 +12,11 @@
 ## mods: rim (mesh, fivespoke, tenspoke, multispoke, turbofan, deepdish, dish, steel, hubcap,
 ##   beadlock, wire), rim_color, rim_size, caliper, drop (-1 lifted .. 1 slammed), tire (stock,
 ##   mud, lowpro), spoiler (none, ducktail, wing, gt), kit ({lip, skirts, diffuser}), fenders
-##   (stock, flared), livery (none, slash), stripes (none, racing, side, rally), stripe_color,
+##   (stock, flared), livery (none, slash, split, sponsor, flames), stripes (none, racing, side,
+##   rally), stripe_color (left out: dark on pale paint, light on dark),
 ##   tint, finish (gloss, matte, metallic, pearl, chrome), year, exhaust (single, dual, quad,
 ##   side), rollbar, lightbar, bash, spare, bed (stock, tonneau), hood (stock, vented), smooth,
-##   lights_on, shadow, rust.
+##   lights_on, glow (lit lamps spill past the outline, for night and dusk), shadow, rust.
 ## dmg: front, rear (0..1 crush), roof, glass, wheel_off, flat, smoke, bumper, lights, driver.
 class_name PixCars
 extends RefCounted
@@ -121,7 +122,7 @@ static func _stamp(p: Pix, x: int, y: int, len: int, d: Dictionary, paint: Color
 ## (<25% deep, <50% shadow, <75% base, else highlight). Same framing as image(): ground 8px up.
 static var showroom_dir := "res://art/vehicles/showroom/"
 const SHOWROOM_BASELINE := 78
-const COSMETIC_KEYS := ["year", "shadow", "lights_on"]
+const COSMETIC_KEYS := ["year", "shadow", "lights_on", "glow"]
 static var _authored := {}
 
 static func art_id(spec: Dictionary) -> String:

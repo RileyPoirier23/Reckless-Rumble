@@ -27,13 +27,14 @@ const FINISHES := ["gloss", "metallic", "pearl", "matte", "chrome"]
 const RIM_COLORS := ["#c8ccd4", "#1a1a1e", "#e8c040", "#e8e8ec", "#c8342c", "#2a6aa8", "#6a6a70", "#d8a060"]
 const CALIPERS := ["#5a5a60", "#c8242c", "#d8b020", "#2a6aa8", "#2a8a3a", "#e8e8ec"]
 const STRIPES := ["none", "racing", "side", "rally"]
+const LIVERIES := ["none", "slash", "split", "sponsor", "flames"]
 const SPOILERS := ["none", "ducktail", "wing", "gt"]
 const KITS := ["none", "lip", "lip + skirts", "full"]
 const EXHAUSTS := ["single", "dual", "quad"]
-const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS"]
+const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS"]
 ## What the body shop charges for each kind of change.
 const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "CALIPERS": 180, "RIDE HEIGHT": 150,
-	"TINT": 220, "STRIPES": 350, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160 }
+	"TINT": 220, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160 }
 
 const GUS := [
 	"\"TAKE WHAT YOU WANT. BRING IT BACK IN ONE PIECE.\"",
@@ -226,7 +227,8 @@ func _look_value(r: String) -> Variant:
 		"RIDE HEIGHT": return float(trial.get("drop", 0.0))
 		"TINT": return float(trial.get("tint", 0.0))
 		"STRIPES": return trial.get("stripes", "none")
-		"STRIPE COLOUR": return trial.get("stripe_color", "#f0ece4")
+		"LIVERY": return trial.get("livery", "none")
+		"STRIPE COLOUR": return trial.get("stripe_color", "")
 		"SPOILER": return trial.get("spoiler", "none")
 		"BODY KIT": return trial.get("kit_name", "none")
 		"EXHAUST TIPS": return trial.get("exhaust", "single")
@@ -250,7 +252,12 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"RIDE HEIGHT": trial.drop = clampf(float(trial.get("drop", 0.0)) + dx * 0.2, 0.0, 1.0)
 			"TINT": trial.tint = clampf(float(trial.get("tint", 0.0)) + dx * 0.25, 0.0, 1.0)
 			"STRIPES": trial.stripes = _cycle(STRIPES, trial.get("stripes", "none"), dx)
-			"STRIPE COLOUR": trial.stripe_color = _cycle(PAINTS, trial.get("stripe_color", "#f4f4f4"), dx)
+			"LIVERY": trial.livery = _cycle(LIVERIES, trial.get("livery", "none"), dx)
+			"STRIPE COLOUR":
+				# AUTO first: the body shop picks a colour that stands out from the paint
+				var picked := String(_cycle([""] + PAINTS, trial.get("stripe_color", ""), dx))
+				if picked == "": trial.erase("stripe_color")
+				else: trial.stripe_color = picked
 			"SPOILER": trial.spoiler = _cycle(SPOILERS, trial.get("spoiler", "none"), dx)
 			"BODY KIT":
 				trial.kit_name = _cycle(KITS, trial.get("kit_name", "none"), dx)
@@ -274,7 +281,7 @@ func _looks_cost() -> int:
 	var cost := 0
 	if trial_paint != String(_car().paint): cost += LOOK_COST.PAINT
 	var keys := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
-		"TINT": "tint", "STRIPES": "stripes", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust" }
+		"TINT": "tint", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust" }
 	for r in keys:
 		var k: String = keys[r]
 		if str(trial.get(k, "")) != str(old.get(k, "")): cost += int(LOOK_COST[r])
@@ -472,7 +479,7 @@ func _draw_upgrades() -> void:
 func _draw_looks() -> void:
 	var r := _panel()
 	for k in LOOK_ROWS.size() + 1:
-		var y := r.position.y + 8 + k * 18
+		var y := r.position.y + 8 + k * 17
 		var on := k == row
 		draw_rect(Rect2(r.position.x + 4, y - 4, r.size.x - 8, 16), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.02))
 		if k == LOOK_ROWS.size():
@@ -484,6 +491,8 @@ func _draw_looks() -> void:
 		var v: Variant = _look_value(lr)
 		var vx := r.position.x + 110
 		match lr:
+			"STRIPE COLOUR" when String(v) == "":
+				PixelFont.draw(self, Vector2(vx, y), "AUTO", BONE)
 			"PAINT", "RIM COLOUR", "CALIPERS", "STRIPE COLOUR":
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(String(v)))
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(1, 1, 1, 0.3), false, 1.0)

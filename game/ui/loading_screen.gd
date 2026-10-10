@@ -114,7 +114,7 @@ func _ready() -> void:
 	var paints: Array = e.get("paints", ["#c8342c"])
 	paint = Color(String(paints[rng.randi() % paints.size()]))
 	car_name = "%d %s %s" % [int(e.get("year", 0)), String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
-	mods = { "lights_on": true }
+	mods = { "lights_on": true, "glow": true }          # dusk: the lamps light the air a little
 	if rng.randf() < 0.5:
 		mods.merge({ "rim": PixCars.RIMS[rng.randi() % PixCars.RIMS.size()], "drop": rng.randf() * 0.8,
 			"spoiler": ["none", "none", "ducktail", "wing", "gt"][rng.randi() % 5], "finish": ["gloss", "gloss", "metallic", "matte", "pearl"][rng.randi() % 5],

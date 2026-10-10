@@ -154,8 +154,8 @@ func _init() -> void:
 		for q: Array in icon.top:
 			if float(q[0]) < last - 0.05 or float(q[0]) > L + 0.01: bad_tops.append("%s runs backwards at %.2f" % [id, float(q[0])])
 			last = float(q[0])
-		# the body covers the tops of the wheels
-		for wx: float in [float(d.wr), float(d.wf)]:
+		# the body covers the tops of the wheels (bar a hot rod's open front wheels)
+		for wx: float in ([float(d.wr)] if icon.get("cycle", false) else [float(d.wr), float(d.wf)]):
 			if CarGen.top_at(top, wx) < float(d.tire_r) * 2.0: bad_tops.append("%s low over a wheel" % id)
 	check("forty-odd icons are drawn by hand, front to back, over their wheels", drawn >= 35 and bad_tops.is_empty(), "%d drawn; %s" % [drawn, str(bad_tops.slice(0, 4))])
 	var shape_icon := _signature(CarGen.render(120, CarGen.design({ "id": "porch_neuner_1973" }), Color("c8342c"), { "shadow": false }))
@@ -168,6 +168,8 @@ func _init() -> void:
 	var striped := CarGen.render(200, sd, Color("2c5a8a"), { "stripes": "racing" })
 	var flared := CarGen.render(200, sd, Color("2c5a8a"), { "fenders": "flared" })
 	var deep := 0
+	var hood_band := 0
+	var hood_x := 22 + int(lerpf(float(sd.cowl_x), float(sd.wf), 0.4) * 200.0)
 	var under_sill := 0
 	var sill_y := plain.get_height() - 8 - int(float(sd.clear) * 200.0)
 	for xx in plain.get_width():
@@ -177,9 +179,10 @@ func _init() -> void:
 				t0p = yy
 				break
 		for yy in plain.get_height():
-			if striped.get_pixel(xx, yy) != plain.get_pixel(xx, yy) and t0p >= 0 and yy > t0p + 5: deep += 1
+			if striped.get_pixel(xx, yy) != plain.get_pixel(xx, yy) and t0p >= 0 and yy > t0p + 9: deep += 1
+			if xx == hood_x and striped.get_pixel(xx, yy) != plain.get_pixel(xx, yy): hood_band += 1
 			if flared.get_pixel(xx, yy) != plain.get_pixel(xx, yy) and yy > sill_y + 2 and flared.get_pixel(xx, yy).a > 0.9 and plain.get_pixel(xx, yy).a < 0.5: under_sill += 1
-	check("racing stripes are one band along the top, no streaks down the side", deep == 0, "%d pixels below the band" % deep)
+	check("racing stripes are a solid band along the tops, no streaks down the side", deep == 0 and hood_band >= 5, "%d pixels below the band, %d in it over the hood" % [deep, hood_band])
 	check("flares stop at the sill", under_sill == 0, "%d pixels under it" % under_sill)
 	# a car that loses a wheel sits down on that corner
 	var whole := CarGen.render(170, camry, Color("c8342c"), {}, {})
@@ -197,18 +200,28 @@ func _init() -> void:
 	# no wing over a roof rack
 	var wagon := CarGen.design({ "id": "volkswagon_passatt_wagon_2002" })
 	check("a wagon with a roof rack gets no wing", CarGen.render(170, wagon, Color("c8342c"), {}).get_data() == CarGen.render(170, wagon, Color("c8342c"), { "spoiler": "gt" }).get_data())
-	# lit lamps glow in light colours, not a grey smudge
+	# lit lamps: a bright lens and a warm falloff in the lamp's own colour, kept on the car in
+	# daylight and spilling past the outline only at night
 	var lit := CarGen.render(170, camry, Color("2a2a2e"), { "lights_on": true, "shadow": false })
 	var dark := CarGen.render(170, camry, Color("2a2a2e"), { "shadow": false })
-	var greys := 0
-	var glows := 0
+	var night := CarGen.render(170, camry, Color("2a2a2e"), { "lights_on": true, "glow": true, "shadow": false })
+	var cold := 0
+	var bright := 0
+	var spilled := 0
+	var night_spill := 0
 	for yy in lit.get_height():
 		for xx in range(lit.get_width() - 30, lit.get_width()):
 			var c := lit.get_pixel(xx, yy)
-			if c == dark.get_pixel(xx, yy) or c.a < 0.5: continue
-			glows += 1
-			if c.get_luminance() < 0.6: greys += 1
-	check("headlights glow warm and bright", glows > 4 and greys == 0, "%d glow pixels, %d dull" % [glows, greys])
+			var c0 := dark.get_pixel(xx, yy)
+			if night.get_pixel(xx, yy) != c0 and c0.a < 0.5: night_spill += 1
+			if c == c0: continue
+			if c0.a < 0.5:
+				spilled += 1
+				continue
+			if c.get_luminance() > 0.8: bright += 1
+			if c.b - c0.b > c.r - c0.r + 0.02: cold += 1
+	check("headlights light up warm: a bright lens, a warm falloff, on the car by day and past it at night",
+		bright > 3 and cold == 0 and spilled == 0 and night_spill > 3, "%d bright, %d cold, %d spilled by day, %d at night" % [bright, cold, spilled, night_spill])
 	# nothing solid under the road, at any size
 	var below: Array = []
 	for k in range(0, ids.size(), 9):
