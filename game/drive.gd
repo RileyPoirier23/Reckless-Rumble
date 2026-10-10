@@ -403,6 +403,7 @@ func _on_fatal(info: Dictionary) -> void:
 	if car.spec.get("id", "") == "tow" and StoryState.active: info.driver = "LEO"
 	info.place = String(z.label) if String(z.label) != "" else "COUNTRY"
 	info.car_name = "%s %s '%s" % [String(car.spec.get("make", "")), String(car.spec.get("model", "")), str(int(car.spec.get("year", 0)) % 100).pad_zeros(2)]
+	if car_i < (save.garage as Array).size(): info.looks = SaveGame.car_looks(save.garage[car_i])
 	if mission: mission.set_process(false)
 	hud.objective = ""
 	audio.horn = false

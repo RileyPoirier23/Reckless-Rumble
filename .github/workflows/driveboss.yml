@@ -78,6 +78,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/catalog_tests.gd | tee catalog.log
           grep -q "^0 failed" catalog.log
+      - name: Side-view car generator tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/cargen_tests.gd | tee cargen.log
+          grep -q "^0 failed" cargen.log
       - name: Jobs tests
         working-directory: game
         run: |

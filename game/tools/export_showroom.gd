@@ -30,16 +30,15 @@ func _init() -> void:
 ## paintable pixel takes (found by painting it twice in different colours).
 static func render(spec: Dictionary) -> Array:
 	var len := mini(224, int(float(spec.get("length", 4.6)) * PX_PER_M))
-	var body := PixCars.body_of(spec)
-	var mods := { "year": int(spec.get("year", 2000)) }
-	var a := PixCars.image(len, body, FACTORY, mods)
+	var mods := { "year": int(spec.get("year", 2000)), "shadow": false }
+	var a := PixCars.image_of(spec, len, FACTORY, mods)
 	# tall things (a wrecker's boom) shrink until they fit the 224x76 footprint
 	var used := a.get_used_rect()
 	var tall := (a.get_height() - 8) - used.position.y
 	if tall > 76 or used.size.x > 224:
 		len = int(float(len) * minf(76.0 / float(tall), 224.0 / float(used.size.x)))
-		a = PixCars.image(len, body, FACTORY, mods)
-	var b := PixCars.image(len, body, Color("ff00ff"), mods)
+		a = PixCars.image_of(spec, len, FACTORY, mods)
+	var b := PixCars.image_of(spec, len, Color("ff00ff"), mods)
 	var sprite := Image.create(W, H, false, Image.FORMAT_RGBA8)
 	var mask := Image.create(W, H, false, Image.FORMAT_RGBA8)
 	var ox := (W - len) / 2 - 22

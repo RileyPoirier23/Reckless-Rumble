@@ -1585,7 +1585,9 @@ func _queue_tex(w: Dictionary) -> ImageTexture:
 	var car: Dictionary = w.get("queue_car", w.car)
 	var qlen := clampi(int(float(car.len) * 8.0), 30, 46)
 	w._qlen = qlen
-	var img := PixCars.image(qlen, PixCars.body_of({ "body": car.get("side_body", "sedan") }), Color(car.paint))
+	# the car as itself when it came out of the catalogue, rust and all
+	var who := { "id": String(car.get("cat", "")), "body": String(car.get("body", "sedan")), "length": float(car.len), "year": int(car.get("year", 2000)) }
+	var img := PixCars.image_of(who, qlen, Color(car.paint), { "rust": float(car.get("rust_look", 0.0)) })
 	var t := ImageTexture.create_from_image(img)
 	_qtex[id] = t
 	return t

@@ -121,6 +121,11 @@ static func _tire_stack(p: Pix, x: int, y: int, n: int) -> void:
 		p.ellipse(x, ty - 1, 5.0, 1.5, Color("0b0a0c"))
 		p.hline(x - 9, ty + 2, 4, Color("3a383e"))
 
+## A catalogue car drawn as itself, scaled for how deep into the set it stands (1 = right up front).
+static func _car(p: Pix, x: int, y: int, id: String, depth: float, paint: Color, dmg := {}, flip := false, mods := {}) -> void:
+	var len := PixCars.length_px(float(CarCatalog.entry(id).get("length", 4.6)), depth)
+	PixCars.draw_car(p, x, y, len, { "id": id }, paint, dmg, flip, 0.0, mods)
+
 static func _drum(p: Pix, x: int, y: int, c: Color) -> void:
 	p.box(x, y - 22, 14, 22, c)
 	for yy in [y - 18, y - 11, y - 4]: p.hline(x, yy, 14, c.darkened(0.3))
@@ -227,15 +232,16 @@ static func _airstrip(p: Pix) -> void:
 	for x in range(0, AW, 24): p.vline(x, 60, 24, Color("5a5e68"))
 	p.line(40, 66, 30, 84, Color("6a6e78"))
 	p.line(76, 66, 88, 82, Color("6a6e78"))
-	# the ring of cars, headlights on (beams in the haze)
-	var ring := [[0, 98, "sedan", Color("2a2a2e"), 4.9], [222, 98, "coupe", Color("e8e4dc"), 4.5], [84, 94, "suv", Color("6a2a4a"), 4.7], [168, 94, "muscle", Color("d8a03a"), 4.8]]
+	# the ring of the Familia's cars, headlights on (beams in the haze)
+	var ring := [[0, 98, "lexis_ell_ess_four_hunnert_1990", Color("2a2a2e")], [222, 98, "nissun_skylion_gee_tee_arr_1991", Color("e8e4dc")],
+		[84, 94, "jepp_grand_cherokay_2006", Color("6a2a4a")], [168, 94, "pontiak_fireburd_trans_ammo_1979", Color("d8a03a")]]
 	for c in ring:
-		PixCars.draw(p, int(c[0]), int(c[1]), PixCars.length_px(float(c[4]), 0.5), String(c[2]), c[3], { "lights": true }, int(c[0]) > 150)
+		_car(p, int(c[0]), int(c[1]), String(c[2]), 0.5, c[3], { "lights": true }, int(c[0]) > 150)
 	p.beam(76, 88, 170, 80, 130, Color("fff4c8"), 0.25)
 	p.beam(228, 88, 140, 82, 130, Color("fff4c8"), 0.25)
-	# the wreck: Dad's Supreem, parked inside Mia's car
-	PixCars.draw(p, 128, 126, PixCars.length_px(4.5, 0.66), "coupe", Color("3a6aa8"), { "rear": 0.9, "glass": true, "bumper": "gone" }, true, 0.0, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" })
-	PixCars.draw(p, 36, 128, PixCars.length_px(4.6, 0.66), "hatch", Color("d8d4c8"), { "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" })
+	# the wreck: Dad's Supreem, parked inside Mia's Eclipsed
+	_car(p, 128, 126, "mitsubishy_eclipsed_1995", 0.66, Color("3a6aa8"), { "rear": 0.9, "glass": true, "bumper": "gone" }, true, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" })
+	_car(p, 36, 128, "supreem", 0.66, Color("d8d4c8"), { "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" })
 	# Mia's turbo, on the ground, where turbos don't go
 	p.disc(204, 140, 5.0, Color("8a8a90"))
 	p.ring(204, 140, 5.0, Color("4a4a50"))
@@ -279,7 +285,7 @@ static func _office(p: Pix) -> void:
 	p.vline(251, 14, 58, Color("2a2420"))
 	p.rect(210, 56, 4, 16, Color("c8342c"))
 	p.rect(288, 56, 4, 16, Color("c8342c"))
-	PixCars.draw(p, 216, 54, 74, "sedan", Color("4a6a8a"), {})
+	PixCars.draw_car(p, 216, 54, 74, { "id": "toyoda_camree_1997" }, Color("4a6a8a"))
 	p.rect(196, 14, 110, 58, Color(0.8, 0.9, 1.0, 0.12))
 	for k in 3: p.line(200 + k * 36, 16, 214 + k * 36, 30, Color(1, 1, 1, 0.3))
 	# filing cabinet with a drawer full of the old manager's pens
@@ -363,11 +369,11 @@ static func _lot(p: Pix, charjer: bool) -> void:
 	p.speckle(0, 108, AW, AH - 108, Color("56525a"), 0.05)
 	for k in 5: p.line(30 + k * 64, 112, 18 + k * 64, AH, Color("d8d4c0"))
 	for k in 4: p.ellipse(60 + k * 70, 130 + (k * 11) % 30, 9.0, 2.0, Color("2a2628"))
-	PixCars.draw(p, -40, 128, PixCars.length_px(5.6, 0.72), "pickup", Color("2a5a3a"), {})
+	_car(p, -40, 128, "fjord_f_one_fiddy_1996", 0.72, Color("2a5a3a"))                 # Gus's truck
 	if charjer:
 		# across the street, idling, for an hour
 		p.rect(268, 108, 52, 10, Color("2a2628"))
-		PixCars.draw(p, 250, 114, PixCars.length_px(5.0, 0.5), "sedan", Color("16161a"), { "lights": true }, true, 0.0, { "rim": "tenspoke", "tint": 1.0 })
+		_car(p, 250, 114, "charjer", 0.5, Color("16161a"), { "lights": true }, true, { "tint": 1.0 })
 	# the streetlight is just coming on
 	p.rect(150, 40, 2, 70, Color("2a2a2e"))
 
@@ -412,11 +418,11 @@ static func _tims(p: Pix) -> void:
 	p.cone_down(272, 32, 140, 46.0, Color(1.0, 0.92, 0.7), 0.3)
 	p.box(10, 112, 10, 14, Color("3a5a3a"))                                    # bin
 	# Darrell's truck, and the '91 Silvio with its puddle
-	PixCars.draw(p, -30, 126, PixCars.length_px(5.4, 0.72), "pickup", Color("6a5a48"), { "glass": true }, false, 0.0, { "year": 1988 })
+	_car(p, -30, 126, "gmz_sierruh_1988", 0.72, Color("6a5a48"), { "glass": true }, false, { "rust": 0.5 })
 	p.speckle(0, 104, 90, 16, Color("8a6a44"), 0.18)                           # rust patches
 	p.ellipse(262, 132, 30.0, 3.0, Color("2a3a4a"))
 	p.ellipse(262, 132, 18.0, 1.5, Color("4a6a8a"))
-	PixCars.draw(p, 196, 130, PixCars.length_px(4.52, 0.86), "coupe", Color("c8342c"), {}, true, 0.0, { "year": 1991, "rim": "fivespoke" })
+	_car(p, 196, 130, "silvio", 0.86, Color("c8342c"), {}, true)
 
 # ====================================================================== the apartment over the garage
 

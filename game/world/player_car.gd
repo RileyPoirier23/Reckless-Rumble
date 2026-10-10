@@ -323,6 +323,7 @@ func _die(cause: String, sub: String, kmh: float, other: Object) -> void:
 		var os: Dictionary = other.spec
 		var ob := String(os.get("side_body", os.get("body", "sedan")))
 		info.other_body = "pickup" if ob == "tow" else ob
+		info.other_id = String(os.get("id", ""))
 		info.other_name = String(os.get("name", ""))
 		info.other_paint = other.paint
 		info.other_police = other is AiCar and (other as AiCar).lights.a > 0.0

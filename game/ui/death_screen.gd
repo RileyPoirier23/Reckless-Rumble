@@ -347,9 +347,10 @@ static func _driver(info: Dictionary) -> Dictionary:
 
 static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: int) -> void:
 	var cause := String(info.get("cause", "tree"))
-	var body := String(info.get("body", "sedan"))
-	if not PixCars.BODIES.has(body): body = "sedan"
+	# the car you were in, drawn as itself when we know which it was
+	var car: Dictionary = { "id": String(info.get("car", "")), "body": String(info.get("body", "sedan")), "length": float(info.get("length", 4.6)) }
 	var paint: Color = info.get("paint", Color("c8342c"))
+	var looks: Dictionary = info.get("looks", {})
 	var len := clampi(int(float(info.get("length", 4.6)) * 19.0), 78, 118)
 	var speed := float(info.get("speed_kmh", 100.0))
 	var crush := clampf((speed - 60.0) / 90.0, 0.45, 1.0)
@@ -368,40 +369,39 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			x = 40
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			_skids(p, x, gy, night)
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 			_tree(p, nose + 1, gy + 2, night, season)
 			_glass(p, nose, gy, seed)
 		"building":
 			x = 60
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			_wall(p, nose - 6, night)
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 			_rubble(p, nose - 8, gy, night)
 		"traffic":
 			var sub := String(info.get("sub", "tbone"))
-			var other_body := String(info.get("other_body", "van"))
-			if not PixCars.BODIES.has(other_body): other_body = "van"
+			var other: Dictionary = { "id": String(info.get("other_id", "")), "body": String(info.get("other_body", "van")) }
 			var other_paint: Color = info.get("other_paint", Color("d8d4c8"))
-			var olen := 76 if other_body in ["van", "suv", "pickup"] else 68
+			var olen := 76 if String(CarGen.design(other).family) in ["van", "suv", "pickup", "boxtruck", "offroad"] else 68
 			x = 30
 			var nose := x + int(len * (1.0 - crush * 0.2))
 			match sub:
 				"headon":
 					var od := { "front": crush * 0.9, "glass": true, "smoke": 0.5, "bumper": "gone" }
-					PixCars.draw(p, nose + 2 - int(olen * crush * 0.9 * 0.2), gy, olen, other_body, other_paint, od, true)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					PixCars.draw_car(p, nose + 2 - int(olen * crush * 0.9 * 0.2), gy, olen, other, other_paint, od, true)
+					PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 				"rear":
 					var od := { "rear": crush, "glass": true, "smoke": 0.0 }
-					PixCars.draw(p, nose - int(olen * crush * 0.16) - 2, gy, olen, other_body, other_paint, od, false)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					PixCars.draw_car(p, nose - int(olen * crush * 0.16) - 2, gy, olen, other, other_paint, od, false)
+					PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 				_:
 					var od := { "roof": 0.6, "glass": true, "smoke": 0.0 }
-					PixCars.draw(p, nose - olen / 2 - 6, gy - 8, olen, other_body, other_paint.darkened(0.08), od, true)
-					PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+					PixCars.draw_car(p, nose - olen / 2 - 6, gy - 8, olen, other, other_paint.darkened(0.08), od, true)
+					PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 			_glass(p, nose, gy, seed)
 		"rail":
 			x = 190 - int(len * 0.19)
-			PixCars.draw(p, x, 64, len, body, paint, dmg, false, 0.5)
+			PixCars.draw_car(p, x, 64, len, car, paint, dmg, false, 0.5, looks)
 			_splash(p, x + int(len * 0.95), 96, night)
 		"water":
 			x = 100
@@ -410,16 +410,17 @@ static func _wreck(p: Pix, info: Dictionary, night: bool, season: String, seed: 
 			dmg.front = 0.1
 			dmg.lights = night
 			_bank(p, night, x)
-			PixCars.draw(p, x, 100, len, body, paint, dmg, false, 0.16)
+			PixCars.draw_car(p, x, 100, len, car, paint, dmg, false, 0.16, looks)
 			_waterline(p, x - 8, x + len + 14, 90, night)
 		"edge":
 			x = 186 - int(len * 0.19)
-			PixCars.draw(p, x, 92, len, body, paint, dmg, false, 0.38)
+			PixCars.draw_car(p, x, 92, len, car, paint, dmg, false, 0.38, looks)
 		_:
-			PixCars.draw(p, x, gy, len, body, paint, dmg, false, tilt)
+			PixCars.draw_car(p, x, gy, len, car, paint, dmg, false, tilt, looks)
 	if wheel_off and cause != "water":
-		var r := float(PixCars.BODIES[body].wheel) * len
-		PixCars.wheel(p, 262, gy - 4 - int(r), r, String(PixCars.BODIES[body].rim))
+		# the one that got away, rolling off down the road
+		var r := float(PixCars.wheel_spots(car, len)[1][1])
+		PixCars.wheel(p, 262, gy - 4 - int(r), r, PixCars.stock_rim(car))
 		p.hline(254, gy - 3, 18, Color(0, 0, 0, 0.35))
 
 static func _tree(p: Pix, x: int, gy: int, night: bool, season: String) -> void:

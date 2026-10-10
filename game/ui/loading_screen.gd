@@ -83,7 +83,8 @@ var lines: Array[String] = []
 var big := true
 var car_tex: ImageTexture
 var car_len := 220
-var body := "coupe"
+var car_id := ""
+var car_name := ""
 var mods := {}
 var paint := Color.RED
 var hour := 12.0
@@ -106,22 +107,28 @@ func _ready() -> void:
 	lines = BigFont.wrap(String(card[1]), 600, 2, false)
 	big = lines.size() <= 3
 	if not big: lines = BigFont.wrap(String(card[1]), 600, 1, true)
-	# a car out of the garage of the universe, tuned at random
-	var bodies := PixCars.BODIES.keys()
-	body = String(bodies[rng.randi() % bodies.size()])
-	var paints := ["#c8342c", "#2c5a8a", "#e8e4dc", "#1e1e24", "#e8a020", "#2a6a3a", "#6a2a4a", "#d8d4c8", "#4a6a8a", "#8a8e94"]
-	paint = Color(paints[rng.randi() % paints.size()])
-	mods = { "rim": PixCars.RIMS[rng.randi() % PixCars.RIMS.size()], "drop": rng.randf() * 0.8,
-		"spoiler": ["none", "none", "ducktail", "wing", "gt"][rng.randi() % 5], "finish": ["gloss", "gloss", "metallic", "matte", "pearl"][rng.randi() % 5],
-		"tint": rng.randf(), "stripes": ["none", "none", "none", "racing", "side"][rng.randi() % 5], "lights_on": true }
-	if rng.randf() < 0.3: mods.kit = { "lip": true, "skirts": true }
-	car_tex = ImageTexture.create_from_image(PixCars.image(car_len, body, paint, mods))
-	var b: Dictionary = PixCars.BODIES[body]
-	var r := float(b.wheel) * car_len
-	wheels = [[20 + float(b.wr) * car_len, r], [20 + float(b.wf) * car_len, r]]
+	# a real car out of the catalogue, as it left the factory or tuned at random
+	var ids := CarCatalog.ids()
+	car_id = String(ids[rng.randi() % ids.size()])
+	var e := CarCatalog.entry(car_id)
+	var paints: Array = e.get("paints", ["#c8342c"])
+	paint = Color(String(paints[rng.randi() % paints.size()]))
+	car_name = "%d %s %s" % [int(e.get("year", 0)), String(e.get("make", "")).to_upper(), String(e.get("model", "")).to_upper()]
+	mods = { "lights_on": true }
+	if rng.randf() < 0.5:
+		mods.merge({ "rim": PixCars.RIMS[rng.randi() % PixCars.RIMS.size()], "drop": rng.randf() * 0.8,
+			"spoiler": ["none", "none", "ducktail", "wing", "gt"][rng.randi() % 5], "finish": ["gloss", "gloss", "metallic", "matte", "pearl"][rng.randi() % 5],
+			"tint": rng.randf(), "stripes": ["none", "none", "none", "racing", "side"][rng.randi() % 5] })
+		if rng.randf() < 0.3: mods.kit = { "lip": true, "skirts": true }
+	car_len = clampi(int(float(e.get("length", 4.6)) * 48.0), 150, 270)
+	var car := { "id": car_id }
+	car_tex = ImageTexture.create_from_image(PixCars.image_of(car, car_len, paint, mods))
+	wheels = PixCars.wheel_spots(car, car_len, mods)
+	var look := PixCars.wheel_look(car, car_len, mods)
+	var r := float(wheels[0][1])
 	for k in 8:
-		var img := Pix.new(int(r * 2.0) + 4, int(r * 2.0) + 4, 1)
-		PixCars.wheel(img, int(r) + 2, int(r) + 2, r, String(mods.rim), false, mods, float(k) * TAU / 40.0)
+		var img := Pix.new(int(r * 2.0) + 6, int(r * 2.0) + 6, 1)
+		PixCars.wheel(img, int(r) + 3, int(r) + 3, r, String(look[0]), false, look[1], float(k) * TAU / 40.0)
 		wheel_frames.append(ImageTexture.create_from_image(img.img))
 	hour = [8.0, 13.0, 18.6, 22.5][rng.randi() % 4]
 	ResourceLoader.load_threaded_request(next_path)
@@ -193,7 +200,8 @@ func _draw() -> void:
 	draw_texture(car_tex, Vector2(cx, top))
 	var fr: ImageTexture = wheel_frames[int(t * 30.0) % wheel_frames.size()]
 	for w in wheels:
-		draw_texture(fr, Vector2(cx + float(w[0]) - w[1] - 2.0, 252.0 - w[1] * 2.0 - 2.0 + bob))
+		draw_texture(fr, Vector2(cx + float(w[0]) - float(w[1]) - 3.0, 252.0 - float(w[1]) * 2.0 - 3.0 + bob))
+	PixelFont.draw(self, Vector2(632 - PixelFont.width(car_name), 6), car_name, Color(ASH, 0.8))
 	if night:
 		draw_colored_polygon(PackedVector2Array([Vector2(cx + car_len + 18, 228), Vector2(cx + car_len + 260, 210), Vector2(cx + car_len + 260, 258)]), Color(1, 0.95, 0.75, 0.12))
 	# the card
