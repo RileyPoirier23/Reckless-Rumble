@@ -379,6 +379,16 @@ class Autopilot extends Node:
 		if gap < 30.0: want = minf(want, maxf(0.0, (gap - 7.0) * 0.7))
 		var to_end := p.distance_to(o.to)
 		if to_end < 45.0: want = minf(want, maxf(0.0, sqrt(2.0 * 2.5 * maxf(0.0, to_end - float(o.radius) * 0.4))))
+		# the route ends at the road; the place itself can be off it (a lot, a driveway): slow for the
+		# end of the route, then turn in and head straight for it
+		var rem := on.distance_to(route[best + 1])
+		for j in range(best + 1, route.size() - 1): rem += route[j].distance_to(route[j + 1])
+		if to_end > float(o.radius):
+			want = minf(want, maxf(4.0, sqrt(2.0 * 2.5 * rem)))
+			if rem < 12.0:
+				aim = o.to
+				err = wrapf(fwd.angle_to(aim - p), -PI, PI)
+				steer = clampf(err * 2.2, -1.0, 1.0)
 		var stop := _junction_stop(on, fwd, route, best, dt, v)
 		if stop >= 0.0: want = minf(want, sqrt(2.0 * 3.0 * maxf(0.0, stop - 1.0)))
 		_log_t += dt
