@@ -153,9 +153,10 @@ func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator, pinks := 
 	for w in r.pts:
 		var best := 0.0
 		var bd := INF
-		for i in path.size():
-			if path[i].distance_to(map.g_pos[map.nearest_node(w)]) < bd:
-				bd = path[i].distance_to(map.g_pos[map.nearest_node(w)])
+		var wn := map.g_pos[map.nearest_node(w)]
+		for i in probe.pts.size():                 # (the probe's own points: it drops any zero-length step)
+			if probe.pts[i].distance_to(wn) < bd:
+				bd = probe.pts[i].distance_to(wn)
 				best = probe.cum[i]
 		wp_s.append(best)
 	for l in int(r.laps):

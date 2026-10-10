@@ -907,7 +907,7 @@ func _graph() -> void:
 		var prev := -1
 		for p in seq:
 			var n := _node(p)
-			if prev >= 0: _link(prev, n, r)
+			if prev >= 0 and prev != n: _link(prev, n, r)     # (a junction cut right on a point: no road to itself)
 			prev = n
 
 func nearest_node(p: Vector2) -> int:
