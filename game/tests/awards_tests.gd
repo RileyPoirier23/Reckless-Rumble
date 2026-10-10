@@ -103,12 +103,14 @@ func _layout() -> void:
 	# the frames: on the screen, apart, above the detail panel
 	var n := Awards.LIST.size()
 	for i in n:
-		var r := EmployeeWall.frame_rect(i)
+		# (each frame where the wall has scrolled to show it)
+		var sc := maxi(0, int(i / EmployeeWall.COLS) - EmployeeWall.ROWS + 1)
+		var r := EmployeeWall.frame_rect(i, sc)
 		if not Rect2(0, 0, 640, 360).encloses(r.grow(2)): bad += "frame %d off screen; " % i
 		if r.end.y + 2 > EmployeeWall.DETAIL.position.y: bad += "frame %d on the detail panel; " % i
 		if r.position.y < 34: bad += "frame %d on the heading; " % i
 		for j in range(i + 1, n):
-			if r.grow(2).intersects(EmployeeWall.frame_rect(j).grow(2)): bad += "frames %d and %d touch; " % [i, j]
+			if r.grow(2).intersects(EmployeeWall.frame_rect(j, sc).grow(2)): bad += "frames %d and %d touch; " % [i, j]
 	# the plate fits the month; the detail fits the name and what it takes
 	var plate_w := EmployeeWall.FRAME.x - 24
 	if PixelFont.width("SEP 2026") > plate_w - 2: bad += "the plate is too small for the month; "
