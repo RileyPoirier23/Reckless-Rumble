@@ -17,6 +17,7 @@ var shape_node: CollisionShape2D
 var smoke: Array[CPUParticles2D] = []
 var steam: CPUParticles2D
 var engine_smoke: CPUParticles2D
+var smoke_on := true           # Settings > Graphics: tire smoke
 var head_light: PointLight2D
 var tail_light: PointLight2D
 var damage_bucket := 0
@@ -144,10 +145,14 @@ var _in_show := false
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
 ## a little stability control). SIM gives you none; ARCADE gives you more.
 func _inputs(dt: float) -> Array:
-	var th := Controls.trigger("throttle")
-	var br := Controls.trigger("brake")
-	var st := Controls.steer_axis()
-	var hb := Input.get_action_strength("handbrake")
+	var ins := Controls.drive_inputs(dt, float(spec.get("steer_lock", 0.55)))
+	var th: float = ins[0]
+	var br: float = ins[1]
+	var st: float = ins[2]
+	var hb: float = ins[3]
+	# a wheel turns the road wheels one for one: no help that would move them without the rim
+	var wheel := Wheel.active()
+	sim.direct_steer = wheel
 	if impaired > 0.0:
 		# drunk: the wheel answers late, the car drifts, and you overcorrect
 		_drunk_t += dt
@@ -161,12 +166,15 @@ func _inputs(dt: float) -> Array:
 		var tc_limit := 2.5 if sim.assist == CarSim.Assist.STREET else 1.5
 		if spin > tc_limit and v > 1.5 and hb < 0.1:
 			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)
-		# stability: steer into a slide for you, and don't let the stick over-rotate at speed
-		var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
-		var help := 0.55 if sim.assist == CarSim.Assist.STREET else 0.9
-		if v > 4.0 and absf(beta) > 0.08 and hb < 0.1:
-			st = clampf(st + beta * help * 1.6, -1.0, 1.0)
-		st *= lerpf(1.0, 0.55 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(v / 35.0, 0.0, 1.0))
+		if not wheel:
+			# stability: steer into a slide for you, and don't let the stick over-rotate at speed
+			# (how much less lock at speed is a setting: Settings > Controls > SPEED STEERING)
+			var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
+			var help := 0.55 if sim.assist == CarSim.Assist.STREET else 0.9
+			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1:
+				st = clampf(st + beta * help * 1.6, -1.0, 1.0)
+			var at_speed := lerpf(1.0, 0.55 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(float(GameSettings.get_v("controls", "speed_steer")), 0.0, 1.5))
+			st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
 	return [th, br, st, hb]
 
 func _lights(dt: float, st: float) -> void:
@@ -312,7 +320,7 @@ func _die(cause: String, sub: String, kmh: float, other: Object) -> void:
 		info.other_name = String(os.get("name", ""))
 		info.other_paint = other.paint
 		info.other_police = other is AiCar and (other as AiCar).lights.a > 0.0
-	Input.start_joy_vibration(0, 1.0, 1.0, 1.0)
+	Controls.rumble(1.0, 1.0, 1.0)
 	fatal.emit(info)
 
 ## Where the hit landed decides what gets bent. Glancing hits along a wall scrape the paint;
@@ -386,7 +394,7 @@ func _update_look(dt: float, br: float) -> void:
 		var s := clampf((slip - 2.0) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + side, rear, s, mark_col)
 		smoke[side].global_position = rear
-		smoke[side].emitting = slip > 4.5 and sim.surface != "ice"
+		smoke[side].emitting = smoke_on and slip > 4.5 and sim.surface != "ice"
 		smoke[side].color_ramp.colors[0] = Color(0.88, 0.9, 0.95, 0.6) if snow else Color(0.85, 0.85, 0.88, 0.55)
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)

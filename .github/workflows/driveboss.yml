@@ -98,6 +98,11 @@ jobs:
         run: |
           "$GODOT" --headless --path . -s tests/hud_layout_tests.gd | tee hud.log
           grep -q "^0 failed" hud.log
+      - name: Settings and controls tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/settings_tests.gd | tee settings.log
+          grep -q "^0 failed" settings.log
       - name: Export
         working-directory: game
         run: |

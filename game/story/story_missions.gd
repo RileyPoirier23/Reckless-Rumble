@@ -94,7 +94,7 @@ class MissionRunner extends Node2D:
 				_end_text = "..."
 				_end_t = 1.2
 				done = true
-				Input.start_joy_vibration(0, 1.0, 1.0, 0.8)
+				Controls.rumble(1.0, 1.0, 0.8)
 				return
 		if car.sim.pos.distance_to(o.to) < float(o.radius) and (not o.get("stop", false) or car.sim.speed() < 2.0):
 			if o.get("careful", false):

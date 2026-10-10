@@ -16,6 +16,7 @@ var objective := ""
 var place := ""
 var night := false
 var show_help := false
+var show_diag := true          # Settings > UI: the scan tool under the dash
 var surface := "dry"
 var stepped_aside := false     # a menu or a panel is up: the HUD steps aside
 var diag_style := "analog90"   # the scan tool matches the dash
@@ -101,6 +102,8 @@ func diag_event(text: String) -> void:
 	if t.begins_with("MONEY SHIFT"): t = "SHIFT BLOCKED: TOO MANY RPM"
 	_event = t.substr(0, 50)
 	_event_t = 4.0
+	# no scan tool (Settings > UI): what it would have shown comes up as a note instead
+	if not show_diag: notify(_event, "status", 1, 3.0)
 
 # ------------------------------------------------------------------ the queue
 
@@ -240,7 +243,7 @@ func _draw() -> void:
 			Hints.fmt("BLINKERS {blinkers}  HAZARDS {hazards}"),
 			Hints.fmt("HIGH BEAMS {high_beams} (HOLD TO FLASH)  HORN {horn}"),
 			Hints.fmt("MAP {map}  GIGS {jobs}  USE {use}"),
-			Hints.fmt("HIDE THIS {help}  QUIT TO TITLE {menu_back}"),
+			Hints.fmt("HIDE THIS {help}  PAUSE, SETTINGS {pause}"),
 		]
 		for i in lines.size():
 			PixelFont.draw(self, hr.position + Vector2(6, 5 + i * 11), String(lines[i]).substr(0, 60), BONE if i < 5 else ASH)
@@ -286,6 +289,7 @@ func codes() -> Array:
 	return out
 
 func _diag() -> void:
+	if not show_diag: return
 	var r := HudLayout.DIAG
 	var pal := _diag_palette()
 	var cs := codes()

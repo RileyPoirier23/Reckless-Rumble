@@ -49,6 +49,7 @@ var fuel: FuelStop
 var salvage: SalvageYard
 var auction: Auction
 var wildlife: Wildlife
+var pause_menu: PauseMenu
 var hold_car := false          # a scene (or a test) has the car stopped
 var free_roam := true          # not a test, a demo or a story mission: the calendar carries over
 const GARAGE_DOOR := Rect2(5546, 1556, 48, 12)     # in front of Covington Auto's bay doors
@@ -160,6 +161,9 @@ void fragment() {
 	job_board.picked.connect(_on_job_picked)
 	job_board.quit_job.connect(func(): jobs.finish(false))
 	get_node("HudLayer").add_child(job_board)
+	pause_menu = PauseMenu.new()
+	pause_menu.quit_to_title.connect(_quit_to_title)
+	get_node("HudLayer").add_child(pause_menu)
 	jobs = JobRunner.new()
 	add_child(jobs)
 	jobs.setup(self)
@@ -199,7 +203,10 @@ void fragment() {
 	add_child(traffic)
 	traffic.setup(world, sky, ysort, car)
 	world.warm(car.sim.pos, Vector2(40, 25))
-	hud.show_help = false            # F1/START shows the controls; the first-run tips point at it
+	hud.show_help = bool(GameSettings.get_v("ui", "controls_card"))   # F1 (or the pause menu) shows the controls
+	_apply_settings()
+	var iw := get_node_or_null("/root/InputWatch")
+	if iw: iw.settings_changed.connect(_apply_settings)
 	if OS.get_cmdline_user_args().has("--traffic-demo"):
 		var td: Node = load("res://tests/traffic_demo.gd").new()
 		td.main = self
@@ -236,6 +243,10 @@ void fragment() {
 		var sd: Node = load("res://tests/salvage_demo.gd").new()
 		sd.main = self
 		add_child(sd)
+	elif OS.get_cmdline_user_args().has("--pause-demo"):
+		var pd: Node = load("res://tests/pause_demo.gd").new()
+		pd.main = self
+		add_child(pd)
 	elif OS.get_cmdline_user_args().has("--fuel-demo"):
 		var fd: Node = load("res://tests/fuel_demo.gd").new()
 		fd.main = self
@@ -286,7 +297,7 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 	gps.style = String(spec.get("gps", "tomtum"))
 	map_screen.sim = car.sim
 	audio.sim = car.sim
-	car.sim.assist = CarSim.Assist.STREET
+	_apply_car_settings()
 	for k in car.damage: car.damage[k] = float(entry.get("damage", {}).get(k, 0.0))
 	car.damage_bucket = -2
 	car.sim.set_wear(entry.get("wear", {}))
@@ -346,7 +357,7 @@ func _hook_car(spec: Dictionary, at: Vector2, heading: float) -> void:
 	gps.style = String(spec.get("gps", "tomtum"))
 	map_screen.sim = car.sim
 	audio.sim = car.sim
-	car.sim.assist = CarSim.Assist.STREET
+	_apply_car_settings()
 	cam_rot = heading + PI / 2.0
 	cam.global_position = car.global_position
 
@@ -586,11 +597,53 @@ func _tip_used(key: String) -> void:
 		seen.append(key)
 		save.tips_seen = seen
 
+## The settings the drive scene follows (Settings: difficulty, UI, graphics), at start and on change.
+func _apply_settings(_section := "") -> void:
+	hud.verbosity = GameSettings.chatter_level()
+	hud.show_diag = bool(GameSettings.get_v("ui", "scan_tool"))
+	zoom_mult = float(GameSettings.get_v("ui", "camera_zoom"))
+	police.strictness = GameSettings.police_strictness()
+	wildlife.rate = GameSettings.wildlife_rate()
+	# rain and snow: fewer drops at half (changing the count restarts them, so only on a change)
+	var wx := GameSettings.weather_amount()
+	for fx: CPUParticles2D in [rain_fx, snow_fx]:
+		if not fx.has_meta("full"): fx.set_meta("full", fx.amount)
+		var n := maxi(1, int(int(fx.get_meta("full")) * maxf(wx, 0.1)))
+		if fx.amount != n: fx.amount = n
+	clouds.visible = bool(GameSettings.get_v("graphics", "clouds"))
+	skids.visible = bool(GameSettings.get_v("graphics", "skids"))
+	if car: _apply_car_settings()
+
+## The car you're in: the driving aids and the gearbox you picked.
+func _apply_car_settings() -> void:
+	car.sim.assist = GameSettings.assist()
+	car.sim.auto_gearbox = not GameSettings.manual()
+	car.smoke_on = bool(GameSettings.get_v("graphics", "smoke"))
+
+## ESC / START: everything on the screen steps aside (the game stops, so it won't on its own).
+func _pause() -> void:
+	hud.stepped_aside = true
+	dash.visible = false
+	gps.visible = false
+	hud.queue_redraw()
+	police.hud_panel.queue_redraw()
+	pause_menu.open()
+
+## Pause > Quit to title: save where you are first (not mid-story: the story saves itself).
+func _quit_to_title() -> void:
+	get_tree().paused = false
+	if not StoryState.active:
+		_store_car()
+		if free_roam: _keep_calendar()
+		SaveGame.write(save)
+	StoryState.active = false
+	get_tree().change_scene_to_file("res://title.tscn")
+
 ## Whether a menu or a panel has the screen (the HUD hides under it).
 func modal_open() -> bool:
 	return job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
 		or fuel.open() or salvage.open() or auction.open() or (jobs.meet != null and jobs.meet.state == "results") \
-		or map_screen.visible or death.visible or (garage != null and garage.visible)
+		or map_screen.visible or death.visible or (garage != null and garage.visible) or pause_menu.visible
 
 ## First-run tips, once a save: after a few seconds of plain driving (no job, no race, no chase),
 ## one at a time, and never one you've already used.
@@ -603,6 +656,7 @@ const TIPS := [
 var _tip_t := 0.0
 func _tips(dt: float) -> void:
 	if not free_roam or StoryState.active or jobs.active() or police.chasing() or hud.stepped_aside: return
+	if not bool(GameSettings.get_v("ui", "tips")): return
 	if not hud.msgs.is_empty() or car.sim.speed() < 2.0:
 		return
 	_tip_t += dt
@@ -667,7 +721,7 @@ func _process(dt: float) -> void:
 		# the world won't hold still
 		var tt := Time.get_ticks_msec() / 1000.0
 		cam.rotation += sin(tt * 0.7) * 0.07 * car.impaired
-		blur_rect.visible = true
+		blur_rect.visible = bool(GameSettings.get_v("graphics", "blur"))
 		blur_rect.material.set_shader_parameter("amount", car.impaired * (0.7 + 0.3 * sin(tt * 1.3)))
 		blur_rect.material.set_shader_parameter("offset", Vector2(sin(tt * 0.9), cos(tt * 0.6)) * 0.012 * car.impaired)
 	else:
@@ -724,8 +778,9 @@ func _process(dt: float) -> void:
 	dash.lit = night
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
-	rain_fx.emitting = sky.rain > 0.08
-	snow_fx.emitting = sky.snow > 0.08
+	var wx := GameSettings.weather_amount()
+	rain_fx.emitting = sky.rain > 0.08 and wx > 0.0
+	snow_fx.emitting = sky.snow > 0.08 and wx > 0.0
 	rain_fx.modulate.a = clampf(sky.rain * 1.3, 0.2, 1.0)
 	snow_fx.modulate.a = clampf(sky.snow * 1.3, 0.25, 1.0)
 	rain_fx.direction = (Vector2(wind.x * 6.0, 260)).normalized()
@@ -735,9 +790,9 @@ func _process(dt: float) -> void:
 	var fogc := Color(0.75, 0.77, 0.8) if sky.daylight() > 0.4 else Color(0.18, 0.2, 0.26)
 	if sky.snow > 0.5: fogc = Color(0.9, 0.92, 0.96) if sky.daylight() > 0.4 else Color(0.3, 0.32, 0.4)
 	fog_rect.color = Color(fogc.r, fogc.g, fogc.b, sky.fog * 0.55)
-	flash_rect.color = Color(1, 1, 1, sky.flash * 0.55)
+	flash_rect.color = Color(1, 1, 1, sky.flash * 0.55 * (1.0 if bool(GameSettings.get_v("graphics", "flashes")) else 0.0))
 	if sky.thunder_in >= 0.0 and sky.thunder_in < dt:
-		Input.start_joy_vibration(0, 0.4, 0.8, 0.6)
+		Controls.rumble(0.4, 0.8, 0.6)
 	# the car's world
 	car.sim.set_ambient(sky.temperature())
 	hud.surface = car.sim.surface
@@ -804,6 +859,8 @@ func _inputs() -> void:
 	if Input.is_action_just_pressed("gearbox"):
 		car.sim.auto_gearbox = not car.sim.auto_gearbox
 		hud.diag_event("GEARBOX: AUTOMATIC" if car.sim.auto_gearbox else Hints.fmt("GEARBOX: MANUAL. {shift} TO SHIFT"))
+		GameSettings.set_v("controls", "transmission", "auto" if car.sim.auto_gearbox else "manual")
+		GameSettings.save_file()
 	if Input.is_action_just_pressed("help"):
 		_tip_used("help")
 		hud.show_help = not hud.show_help
@@ -814,10 +871,19 @@ func _inputs() -> void:
 	elif Input.is_action_just_pressed("reset"):
 		car.respawn()
 		world.warm(car.sim.pos, Vector2(40, 25))
-	if Input.is_action_just_pressed("menu_back"):
-		StoryState.active = false
-		get_tree().change_scene_to_file("res://title.tscn")
+	if Input.is_action_just_pressed("pause") and not _dying:
+		_pause()
+		return
 	audio.horn = Input.is_action_pressed("horn")
+	# an H-shifter: a gear's button held is that gear; let go and it's in neutral
+	for gi in Controls.GEARS.size():
+		var act: String = Controls.GEARS[gi][0]
+		var g := -1 if act == "gear_r" else gi + 1
+		if Input.is_action_just_pressed(act):
+			car.sim.auto_gearbox = false
+			if g >= 0 or absf(car.sim.vx) < 1.5: car.sim.shift(g)
+		elif Input.is_action_just_released(act) and car.sim.gear == g:
+			car.sim.shift(0)
 	if not car.sim.auto_gearbox:
 		if Input.is_action_just_pressed("shift_up"): car.sim.shift(car.sim.gear + 1)
 		if Input.is_action_just_pressed("shift_down"): car.sim.shift(car.sim.gear - 1)

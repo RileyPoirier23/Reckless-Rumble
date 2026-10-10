@@ -32,12 +32,25 @@ var top_over := 0.0           # the worst km/h over the limit they saw
 var offences: Array = []      # what goes on the ticket: speeding, racing, fleeing, ramming
 var seen := false             # somebody can see you right now
 var enabled := true
+var strictness := 1.0          # Settings > Difficulty: relaxed 0.6, normal 1, strict 1.5
 var rng := RandomNumberGenerator.new()
 var hud_panel: PoliceHud
 var _route_t := 0.0
 var _spawn_t := 2.0
 var _next_id := 0
 var _hits := 0
+
+
+## How strict they are (Settings > Difficulty): how far over they let slide, how long they give you
+## to pull over, how long they keep looking.
+func over_kmh() -> float:
+	return OVER_KMH / maxf(strictness, 0.1)
+
+func stop_s() -> float:
+	return STOP_S / maxf(strictness, 0.1)
+
+func lose_s() -> float:
+	return LOSE_S * strictness
 
 func setup(the_drive: Node) -> void:
 	drive = the_drive
@@ -116,14 +129,14 @@ func _physics_process(dt: float) -> void:
 			if spotter and not _legal_here(c):
 				var over := _over_kmh(c)
 				if _racing(): _light_up(spotter, "racing", over)
-				elif over > OVER_KMH: _light_up(spotter, "speeding", over)
+				elif over > over_kmh(): _light_up(spotter, "speeding", over)
 		"stop":
 			stop_t += dt
 			top_over = maxf(top_over, _over_kmh(c) if seen else 0.0)
 			_steer_chasers(dt, c)
 			if _bust_check(dt, c, close): return
 			# they gave you a chance
-			if stop_t > STOP_S and (c.sim.speed() > 12.0 or close > 90.0):
+			if stop_t > stop_s() and (c.sim.speed() > 12.0 or close > 90.0):
 				state = "chase"
 				offences.append("fleeing")
 				add_heat(15.0)
@@ -134,7 +147,7 @@ func _physics_process(dt: float) -> void:
 			_steer_chasers(dt, c)
 			if _bust_check(dt, c, close): return
 			lost_t = 0.0 if seen else lost_t + dt
-			if lost_t > LOSE_S: _lost()
+			if lost_t > lose_s(): _lost()
 	# drive into a police car and it goes on the ticket (them hitting you doesn't)
 	if c.hit_police < _hits: _hits = c.hit_police          # a different car
 	if c.hit_police > _hits:
@@ -386,10 +399,10 @@ class PoliceHud extends Control:
 		draw_rect(bar, Color(0.7, 0.08, 0.06, 0.85) if red else Color(0.1, 0.2, 0.75, 0.85))
 		var msg := ""
 		if police.state == "stop":
-			msg = "PULL OVER  %d" % int(ceilf(maxf(0.0, Police.STOP_S - police.stop_t)))
+			msg = "PULL OVER  %d" % int(ceilf(maxf(0.0, police.stop_s() - police.stop_t)))
 		elif police.seen:
 			msg = "PURSUIT"
 		else:
-			msg = "LOSING THEM  %d" % int(ceilf(maxf(0.0, Police.LOSE_S - police.lost_t)))
+			msg = "LOSING THEM  %d" % int(ceilf(maxf(0.0, police.lose_s() - police.lost_t)))
 		if police.bust_t > 0.3: msg = "STOPPING... %d" % int(ceilf(Police.BUST_S - police.bust_t))
 		PixelFont.draw_centered(self, bar.get_center().x, bar.position.y + 2, msg, Color.WHITE)

@@ -179,18 +179,25 @@ The camera sits behind the car and turns with it, so up is always ahead. Time, w
 | Steer | A / D | Left stick |
 | Handbrake | Space | B |
 | Shift up / down (manual) | E / Q | RB / LB |
-| Automatic / manual | G | |
+| Automatic / manual | G | L3 |
 | Blinkers | Z / C | D-pad left / right |
 | Hazards | V | D-pad down |
 | High beams (tap) / flash (hold) | B | D-pad up |
 | Horn | H | X |
 | Garage (at Covington Auto's bay doors) | F | Y |
 | Map and GPS route | Tab / M | Back |
+| Gigs | J | R3 |
 | Tow it home | R | |
-| Hide the controls | F1 | Start |
-| Back to the menu | Esc | |
+| Controls card | F1 | (in the pause menu) |
+| Pause: resume, settings, controls, quit to title | Esc | Start |
+
+Every one of these can be changed in **Settings > Controls** (from the title or the pause menu): pick a row, Left/Right for the keyboard or controller column, Enter and press the new key or button (Delete clears it). The prompts on screen follow whatever you bind. The same tab has the stick's dead zone and response curve, how much the stick and keys steer less at speed, the trigger dead zone, easing for the keyboard (keys are on or off, so the gas, brake and steering ease in and come back out quicker), vibration, and the gearbox.
 
 On the controller the stick has a response curve (small movements, small corrections), and the default STREET assists add traction control and a little stability control. Blinkers cancel themselves after the turn.
+
+**A steering wheel.** Plug it in, then **Settings > Wheel**: pick it, run CALIBRATE (hands off, full left, full right, the gas, the brake; it works out which axis is which and which way they run, and handles both pedals on one axis), set the wheel's rotation to match its own software, and turn on DRIVE WITH THE WHEEL. The rim turns the road wheels one for one (AUTO range gears it like a real car, about 14 to 1; or pick how many degrees give full lock), with no steering help in the way. Paddles, and an H-shifter's gears, bind on the same tab. There's no force feedback in the game: turn on your wheel's centring spring in its own software.
+
+**The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
 
 **Burnout:** hold the gas and the brake together while stopped. The front brakes hold the car and the rear tires spin.
 

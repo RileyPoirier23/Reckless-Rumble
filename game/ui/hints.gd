@@ -16,7 +16,7 @@ const PS := { JOY_BUTTON_A: "CROSS", JOY_BUTTON_B: "CIRCLE", JOY_BUTTON_X: "SQUA
 	JOY_BUTTON_DPAD_UP: "D-PAD UP", JOY_BUTTON_DPAD_DOWN: "D-PAD DOWN", JOY_BUTTON_DPAD_LEFT: "D-PAD LEFT", JOY_BUTTON_DPAD_RIGHT: "D-PAD RIGHT",
 	JOY_BUTTON_LEFT_STICK: "L3", JOY_BUTTON_RIGHT_STICK: "R3" }
 ## Pad-only stand-ins for actions that are keyboard-only (or the other way round).
-const PAD_ALIAS := { "menu_back": "ui_back_pad", "gearbox": "", "reset": "" }
+const PAD_ALIAS := { "menu_back": "ui_back_pad", "reset": "" }
 const KEY_NAMES := { "ESCAPE": "ESC", "BACKSPACE": "BKSP", "UP": "UP", "DOWN": "DOWN", "LEFT": "LEFT", "RIGHT": "RIGHT",
 	"KP ENTER": "ENTER", "SPACE": "SPACE" }
 ## Labels for pairs that read better as one word.
@@ -24,6 +24,9 @@ const PAIRS := {
 	"steer": ["A/D", "L-STICK"], "drive": ["W/S", "RT/LT"], "updown": ["UP/DOWN", "D-PAD"], "leftright": ["LEFT/RIGHT", "D-PAD"],
 	"shift": ["E/Q", "RB/LB"], "blinkers": ["Z/C", "D-PAD L/R"],
 }
+## The two actions behind each pair: once either is rebound in Settings, the label is built from them.
+const PAIR_ACTIONS := { "steer": ["steer_left", "steer_right"], "drive": ["throttle", "brake"],
+	"shift": ["shift_up", "shift_down"], "blinkers": ["blink_left", "blink_right"] }
 
 ## Called by the InputWatch autoload on every input event.
 static func saw(e: InputEvent) -> void:
@@ -37,6 +40,11 @@ static func saw(e: InputEvent) -> void:
 
 ## The name of the button for an action, for whatever's in your hands right now.
 static func key(action: String) -> String:
+	if PAIR_ACTIONS.has(action) and _rebound(PAIR_ACTIONS[action]):
+		var a := key(String(PAIR_ACTIONS[action][0]))
+		var b := key(String(PAIR_ACTIONS[action][1]))
+		if a == "" and b == "": return ""
+		return a + "/" + b
 	if PAIRS.has(action):
 		var pr: Array = PAIRS[action]
 		var s: String = pr[1] if pad else pr[0]
@@ -68,6 +76,12 @@ static func key(action: String) -> String:
 			if e is InputEventMouseButton: return "CLICK"
 	if action == "click" and not pad: return "CLICK"
 	return ""
+
+static func _rebound(acts: Array) -> bool:
+	var b: Dictionary = GameSettings.data.get("bindings", {})
+	for a in acts:
+		if b.has(String(a)): return true
+	return false
 
 ## Fill {action} placeholders. Bits whose action has no button on this device drop out,
 ## along with the words up to the next double space.

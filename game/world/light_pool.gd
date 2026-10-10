@@ -65,8 +65,9 @@ func refresh(center_px: Vector2, half_px: Vector2) -> void:
 		if not _on(src): continue
 		cand.append([p.distance_squared_to(center_px), src])
 	cand.sort_custom(func(a, b): return a[0] < b[0])
+	var lit := mini(N, int(GameSettings.get_v("graphics", "lights")))      # Settings > Graphics > STREETLIGHTS
 	for i in N:
-		if i < cand.size():
+		if i < cand.size() and i < lit:
 			assigned[i] = cand[i][1]
 			pool[i].position = cand[i][1].p * PX + Vector2(0, -6)
 			var t: Dictionary = TYPES.get(cand[i][1].type, TYPES.sodium)

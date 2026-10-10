@@ -15,6 +15,7 @@ const MAX_AROUND := 3
 var drive: Node
 var animals: Array = []
 var enabled := true
+var rate := 1.0                # Settings > Difficulty: off 0, rare 0.4, normal 1, many 2
 var rng := RandomNumberGenerator.new()
 var _roll_t := 3.0
 
@@ -60,7 +61,7 @@ func _physics_process(dt: float) -> void:
 		var road: Dictionary = hit.get("road", {})
 		var style := String(map.zone_at(c.sim.pos).get("style", "rural"))
 		var wild := map.wild_zone_at(c.sim.pos, String(road.get("name", "")))
-		if animals.size() < MAX_AROUND and c.sim.speed() > 8.0 and rng.randf() < odds(drive.sky.time_h, drive.sky.season, String(road.get("cls", "")), style, wild):
+		if animals.size() < MAX_AROUND and c.sim.speed() > 8.0 and rng.randf() < rate * odds(drive.sky.time_h, drive.sky.season, String(road.get("cls", "")), style, wild):
 			spawn_ahead(c, pick_kind(drive.sky.season, rng.randf(), String(wild.kind)), wild)
 
 ## An animal at the roadside somewhere ahead of you, facing the road: only on the stretch's own

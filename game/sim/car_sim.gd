@@ -21,6 +21,7 @@ enum Assist { SIM, STREET, ARCADE }
 var spec: Dictionary
 var assist := Assist.SIM
 var auto_gearbox := true
+var direct_steer := false             # a steering wheel: steer_in is the road wheels' angle over full lock
 
 # ---- state: body
 var pos := Vector2.ZERO
@@ -215,7 +216,8 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 			var t := throttle
 			throttle = brake
 			brake = t
-	# steering: less lock at speed, and the wheel can only turn so fast
+	# steering: less lock at speed, and the wheel can only turn so fast (unless a steering wheel's
+	# driving: then the rim turns the road wheels one for one, quick as you turn it)
 	var v := speed()
 	var max_steer := lerpf(float(spec.steer_lock), 0.11, clampf(v / 42.0, 0.0, 1.0))
 	# catching a slide: steering into it may go past the speed limit on lock, up to the slide angle
@@ -226,6 +228,9 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 	# quick hands at parking speed, calmer at speed, and the wheel comes back to centre on its own
 	var rate := lerpf(4.5, 2.4, clampf(v / 30.0, 0.0, 1.0))
 	if absf(target) < absf(steer) and signf(target) == signf(steer) or absf(steer_in) < 0.05: rate *= 1.6
+	if direct_steer:
+		target = clampf(steer_in, -1.0, 1.0) * float(spec.steer_lock)
+		rate = 15.0
 	steer = move_toward(steer, target, rate * dt)
 	var h := dt / SUBSTEPS
 	for i in SUBSTEPS:
