@@ -475,6 +475,7 @@ func _resolve() -> void:
 	# overtime: every call counts toward the streak, or ends it
 	if overtime:
 		result.streak_was = int(DeskBook.overtime.get("streak", 0))
+		result.best_was = int(DeskBook.overtime.get("best", 0))
 		DeskBook.tally(bool(result.correct))
 	# into the filing cabinet: the regulars and the people turned away remember it; Hachey pulls it
 	if c.kind == "audit":
@@ -1666,9 +1667,14 @@ func _draw_result() -> void:
 	if c.kind == "audit": title = "THE SAME STAMP" if good else "A DIFFERENT STAMP"
 	PixelFont.draw_centered(self, 310, 134, title, GOLD, 2)
 	if overtime and result.has("streak_was"):
-		var st := "STREAK %d" % int(DeskBook.overtime.get("streak", 0))
+		var streak := int(DeskBook.overtime.get("streak", 0))
+		var st := "STREAK %d" % streak
+		var col := GREEN if good else RED
 		if not good and int(result.streak_was) > 0: st = "STREAK OVER AT %d" % int(result.streak_was)
-		PixelFont.draw(self, Vector2(r.end.x - 6 - PixelFont.width(st), r.position.y + 4), st, GREEN if good else RED)
+		elif good and streak > int(result.get("best_was", streak)):
+			st = "NEW BEST: %d" % streak
+			col = GOLD
+		PixelFont.draw(self, Vector2(r.end.x - 6 - PixelFont.width(st), r.position.y + 4), st, col)
 	var y := 152.0
 	for l in wrap_text(result.line, 66):
 		PixelFont.draw(self, Vector2(174, y), l, BONE)

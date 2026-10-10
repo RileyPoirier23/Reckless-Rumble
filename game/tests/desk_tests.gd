@@ -821,7 +821,7 @@ func _overtime_desk() -> void:
 	# the streak: right calls build it, a wrong one ends it; the best stays
 	sc.press()
 	for i in 3: serve(sc, clean_one(sc), "APPROVED")
-	check("three right calls: a streak of three", int(DeskBook.overtime.streak) == 3 and int(DeskBook.overtime.best) == 3)
+	check("three right calls: a streak of three, and a new best each time", int(DeskBook.overtime.streak) == 3 and int(DeskBook.overtime.best) == 3 and int(sc.result.best_was) == 2)
 	sc.waiting.push_front(sc.rules.customer(sc.day, "vin_mismatch"))
 	sc.next_customer()
 	stamp_now(sc, "APPROVED")
