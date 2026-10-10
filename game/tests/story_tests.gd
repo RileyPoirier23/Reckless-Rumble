@@ -62,6 +62,25 @@ func _init() -> void:
 			# the GPS routes node to node; the last stretch is the street the place is on
 			check("%s: you can drive to '%s'" % [id, String(o.text).substr(0, 24)], r.size() >= 1 and r[r.size() - 1].distance_to(o.to) < 250.0 and map.ground_at(o.to) == "asphalt")
 			from = o.to
+	# Frankie: the news, then June, then the naming, and every choice names him Frankie
+	var news_i := -1
+	var born_i := -1
+	for k in StoryScript.STEPS.size():
+		var st: Dictionary = StoryScript.STEPS[k]
+		if String(st.get("id", "")) == "the_news": news_i = k
+		if String(st.get("id", "")) == "frankie": born_i = k
+	check("Frankie: the news comes first, then he's born", news_i >= 0 and born_i > news_i)
+	var naming: Array = []
+	var born_flags := []
+	for ln in StoryScript.SCENES.frankie.lines:
+		if String(ln[0]) == "choice": naming = ln[1]
+		if String(ln[0]) == "flag": born_flags.append(String(ln[1]))
+	var all_frankie := naming.size() == 3
+	for o in naming:
+		if not String(o[0]).contains("Frankie"): all_frankie = false
+	check("Frankie: every name Leo can pick is Frankie", all_frankie)
+	check("Frankie: he's born, and Gus's line plants the clue", born_flags.has("frankie_born") and born_flags.has("clue_frankie"))
+	check("Frankie: his mom's in the cast", StoryScript.CAST.has("SHAY"))
 	# prompts follow the device
 	Controls.setup()
 	Hints.pad = false

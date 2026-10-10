@@ -300,7 +300,7 @@ What exists today (`game/story/story_script.gd`, `story_missions.gd`, the counte
 | **Sal** | Understatement; the only one who says what everyone sees | "He was chasing himself." | Small kindnesses, so Chapter 6 hurts |
 | **Darrell** | Lies and contradicts himself in the same sentence | Every line | Keep him exactly like this, and pay him off |
 | **Tremblay** | Tired, decent; counts Leo's chances out loud | (one brief) | A scene; her own guilt about Frank's report |
-| **Dale Hatch** | Warm salesman; calls Leo "son"; calls Frank **"Frankie"** (nobody else does, and Gus flinches every time) | (absent) | An introduction in Chapter 1 |
+| **Dale Hatch** | Warm salesman; calls Leo "kid"; calls Frank **"Frankie"** (nobody else does, and Gus flinches every time; when Leo names his son Frankie in June 2020, Gus says so out loud) | (absent) | An introduction in Chapter 1 |
 | **The old manager** | Absent, then nervous, then brave | (one mention) | A presence through paperwork |
 
 #### Foreshadowing
@@ -376,7 +376,7 @@ Eight chapters, one per year, as in the concept, each a fall-to-summer year that
 
 **Goal:** pay off the $4,200, keep the inspection licence through the first Ministry audit, learn to launch from Dom, beat Johnny Tram's crew (Tier 1, Downtown back streets), survive the first winter and the first anniversary.
 
-- **The desk:** weeks 1 to 8 of the rule escalation (section 3.8). Scripted customers: **Dale Hatch** (week 2, the Wednesday after Thanksgiving) brings a Hatch Motors used car himself because "my guys are swamped," calls Leo "son", calls Frank "Frankie", offers to buy Covington Auto "at a fair price, for Frank's kids." Constable Tremblay drops the BOLO list. The Familia's napkins from Thursday. Darrell's trade-in with a rolled-back odometer (week 3). The Ministry Inspector's first audit (week 7). A Christmas card for Frank from the old manager (week 11).
+- **The desk:** weeks 1 to 8 of the rule escalation (section 3.8). Scripted customers: **Dale Hatch** (week 2, the Wednesday after Thanksgiving) brings a Hatch Motors used car himself because "my guys are swamped," calls Leo "kid", calls Frank "Frankie", offers to buy Covington Auto "at a fair price, for Frank's kids." Constable Tremblay drops the BOLO list. The Familia's napkins from Thursday. Darrell's trade-in with a rolled-back odometer (week 3). The Ministry Inspector's first audit (week 7). A Christmas card for Frank from the old manager (week 11).
 - **The drives:** DETAILING (exists). LAUNCH CONTROL: Dom's three medal tests at Airstrip 7 (reaction, 60-foot time, shift light). PIZZA DELIRIUM: Year-1 money. TOBY'S NIGHT SHIFT: a sleet-storm ride-along in the wrecker, hooking up wrecked traffic cars. FIRST SNOW: winter tires or suffer; drive to Lutes Mountain on 6 December. HATCH DYNO DAY at Airstrip 7. JOHNNY TRAM: four crew members, then Johnny, then the pink slip for his Hondo S2-Thousand.
 - **Cutscene beats:**
   - Mia's books: "I don't do feelings. I do columns." She shows Leo the ledger of what he owes, in pencil, so it can go down.

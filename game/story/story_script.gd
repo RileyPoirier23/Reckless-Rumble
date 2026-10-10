@@ -26,6 +26,7 @@ const CAST := {
 	"TREMBLAY":  { "name": "CONST. TREMBLAY", "seed": 911911, "female": 1, "age": 41, "color": "4a7ab8" },
 	"DARRELL":   { "name": "DARRELL (SELLER)", "seed": 900900, "female": 0, "age": 58, "color": "8a8478" },
 	"FRANK":     { "name": "FRANK COVINGTON", "seed": 190001, "female": 0, "age": 49, "color": "c8c0a8" },
+	"SHAY":      { "name": "SHAY", "seed": 190404, "female": 1, "age": 19, "color": "c88ad8" },
 }
 
 const SCENES := {
@@ -171,6 +172,41 @@ const SCENES := {
 		["*", "GUS GOES BACK TO WORK. HE DOESN'T SAY ANOTHER WORD ALL NIGHT."],
 		["flag", "clue_brakes"],
 	]},
+	# ------------------------------------------------------------------ Frankie
+	"the_news": { "set": "tims", "cast": [["LEO", 120, 1, "cup"], ["SHAY", 196, -1, "crossed"]], "lines": [
+		["*", "TIM BURTONS ON MOUNTAIN ROAD. A WEEK LATER. SHAY TEXTED AT SIX IN THE MORNING: \"WE NEED TO TALK. NOT ON THE PHONE.\""],
+		["SHAY", "You look like you haven't slept since the funeral."],
+		["LEO", "I sleep. In the shop, mostly. Gus says it's a fire hazard. Gus says I'm a fire hazard."],
+		["pose", "SHAY", "stand"],
+		["SHAY", "Leo. I'm pregnant."],
+		["*", "THE DOUBLE-DOUBLE GOES COLD IN HIS HAND."],
+		["SHAY", "June. I wasn't going to say anything until I knew what I wanted. I know what I want."],
+		["choice", [["\"Okay. Okay. We do this. Together.\"", "news_together"], ["\"...I'm going to need to sit down.\"", "news_sit"], ["\"Dad would've lost his mind. The good way.\"", "news_dad"]]],
+		["SHAY", "You don't have to have it figured out. Nobody's ever had it figured out."],
+		["SHAY", "But you're going to have to stop driving like you want to see your father again."],
+		["pose", "LEO", "stand"],
+		["*", "LEO DRIVES HOME UNDER THE LIMIT. THE WHOLE WAY. AT EVERY STOP SIGN. MIKEY WILL NEVER BELIEVE IT."],
+		["flag", "frankie_coming"],
+	]},
+	"frankie": { "set": "apartment", "cast": [["MIKEY", 40, 1, "pockets"], ["ARIES", 92, 1, "stand"], ["LEO", 150, 1, "stand"], ["SHAY", 204, -1, "stand"], ["GUS", 262, -1, "crossed"]], "lines": [
+		["*", "THE APARTMENT OVER THE GARAGE. JUNE. FOUR IN THE MORNING. NOBODY HAS SLEPT. NOBODY CARES."],
+		["MIKEY", "He's got your nose, man. Sorry. He'll grow out of it."],
+		["ARIES", "He's got Dad's ears. Look. Leo, look."],
+		["*", "LEO HOLDS HIM UP TO THE PHOTO ON THE FRIDGE. FRANK COVINGTON, FORTY-NINE, SQUINTING AT SOMEBODY'S BARBECUE."],
+		["LEO", "This is your grandpa. He'd have had you under a car by now."],
+		["GUS", "He'd have had him under a Charjer. Rear-wheel drive. Proper."],
+		["SHAY", "He needs a name, Leo. The nurse asked twice. I said you'd know."],
+		["choice", [["\"Frank. After Dad. Frankie, while he's small.\"", "name_after_dad"], ["\"Francis. Frankie for short.\"", "name_francis"], ["\"Frankie. He just looks like a Frankie.\"", "name_frankie"]]],
+		["SHAY", "Frankie. Hi, Frankie."],
+		["pose", "GUS", "stand"],
+		["GUS", "...Frankie."],
+		["GUS", "Only one man ever called your father that. Dale Hatch."],
+		["GUS", "Your father hated it."],
+		["*", "GUS GOES DOWNSTAIRS. NOBODY HEARS THE BAY DOOR. NOBODY SEES HIM STANDING IN THE DARK, LOOKING AT THE CHARJER."],
+		["ARIES", "Hi, Frankie. I'm your aunt. I'm fourteen. This is going to be weird for both of us."],
+		["flag", "frankie_born"],
+		["flag", "clue_frankie"],
+	]},
 }
 
 ## The order of the story. "mission" ids are in StoryMissions.
@@ -193,5 +229,9 @@ const STEPS := [
 	{ "type": "scene", "id": "clock_out_2" },
 	{ "type": "drive", "mission": "detailing" },
 	{ "type": "scene", "id": "bay_three" },
-	{ "type": "card", "title": "TO BE CONTINUED", "sub": "CHAPTER 1 CONTINUES IN THE NEXT BUILD", "small": "DOM'S DRAG LESSONS, JOHNNY TRAM, AND THE FIRST SNOW." },
+	{ "type": "scene", "id": "the_news" },
+	# (the rest of the winter goes here: Dom's drag lessons, Johnny Tram, the first snow)
+	{ "type": "card", "title": "JUNE 2020", "sub": "LITTLE FRANKIE", "small": "EIGHT MONTHS OF COUNTER SHIFTS LATER." },
+	{ "type": "scene", "id": "frankie" },
+	{ "type": "card", "title": "TO BE CONTINUED", "sub": "CHAPTER 1 CONTINUES IN THE NEXT BUILD", "small": "THE WINTER IN BETWEEN: DOM'S DRAG LESSONS, JOHNNY TRAM, THE FIRST SNOW." },
 ]

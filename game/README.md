@@ -206,6 +206,8 @@ On the controller the stick has a response curve (small movements, small correct
 
 **Employee of the Month.** Thirty-five awards, each a framed photo of Leo on the wall of the break room at Covington Auto (from the title, or the pause menu). The wall fills a month at a time: the first photo you earn is October 2019, the next November, and so on. They're for the things you do on the road: kilometres, the cars and parts you collect, the gigs (pizzas, rides, tows, night drives), races, the meet and Drag Night, tickets and getting away, moose and deer, money, the auction, Northside Salvage, selling a car, running dry and writing one off. A new one goes up on the HUD straight away, and its card comes up the next time you've stopped with nothing else going on. What you've won is kept in `user://driveboss_awards.json`, apart from any save.
 
+**Frankie.** In the story, a week after Bay 3, Shay asks Leo to meet her at the Tim Burtons on Mountain Road: she's pregnant, due in June (whichever way he takes it, he drives home under the limit). In June 2020, at four in the morning in the apartment over the garage, Leo holds his son up to Frank's photo on the fridge and names him Frankie, after his dad. Gus has something to say about the name: only one man ever called Frank that. From July 2020 on, Frankie is in the Employee of the Month photos too, in Leo's arm in a tiny Covington Auto cap, and he gets bigger.
+
 **Burnout:** hold the gas and the brake together while stopped. The front brakes hold the car and the rear tires spin.
 
 **Reverse (automatic):** hold the brake at a stop.
