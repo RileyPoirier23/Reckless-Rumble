@@ -79,12 +79,12 @@ func build() -> void:
 	_villages()
 	_landmarks()
 	_index_roads()
-	_driveways()
 	_wild_signs()
 	_find_bridges_and_crossings()
 	_buildings()
 	_salvage()
 	_impound()
+	_driveways()
 	_street_lights()
 	_lights_off_the_road()
 	_graph()
@@ -310,7 +310,7 @@ func _landmarks() -> void:
 	buildings.append({ "r": Rect2(720, 2716, 30, 20), "h": 12.0, "kind": "church", "name": "", "zone": "havelock" })
 	buildings.append({ "r": Rect2(820, 2716, 28, 18), "h": 6.0, "kind": "shop", "name": "GENERAL STORE", "zone": "havelock" })
 	lights.append({ "p": Vector2(834, 2738), "type": "neon", "seed": 77 })
-	landmarks.append({ "name": "RIVERSIDE", "p": Vector2(5840, 1880), "dest": true })
+	landmarks.append({ "name": "RIVERSIDE", "p": Vector2(5840, 1850), "dest": true })      # (on the street: it's a neighbourhood, not a lot)
 	landmarks.append({ "name": "DIEPPE", "p": Vector2(6500, 1300), "dest": false })
 
 ## Northside Salvage: it takes over a block of the industrial park after the warehouses are
@@ -359,19 +359,34 @@ func _driveways() -> void:
 	for l in lots.duplicate():
 		if not l.get("driveway", false): continue
 		var r: Rect2 = l.r
-		var c := r.get_center()
-		var rd := nearest_road(c, 120.0)
+		var rd := nearest_road(r.get_center(), 120.0)
 		if rd.is_empty(): continue
-		var to: Vector2 = rd.point
-		var from := _rect_point_toward(r, to)       # from the lot's edge, not through the building
-		var gap := from.distance_to(to)
-		if gap < r.size.length() * 0.5 + 4.0: continue
-		var steps := int(ceilf(gap / 1.5))
-		for i in steps + 1:
-			var q := from.lerp(to, float(i) / float(steps))
-			var sq := Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5))
-			_reserve(sq)
-			lots.append({ "r": sq, "kind": "asphalt", "name": "", "lines": false })
+		_driveway(_rect_point_toward(r, rd.point), rd.point)   # from the lot's edge, not through the building
+	# and every place on the map you can pick, if it sits back from its road
+	for lm in landmarks:
+		if not lm.get("dest", false): continue
+		var p: Vector2 = lm.p
+		var rd := nearest_road(p, 120.0)
+		if rd.is_empty() or float(rd.dist) < 8.0: continue
+		var lot := lot_at(p)
+		var from := _rect_point_toward(lot.r, rd.point) if not lot.is_empty() else p
+		if from.distance_to(rd.point) < 4.0: continue
+		# a lot that already reaches the road (gravel, asphalt): nothing to add
+		var grass := false
+		for k in range(1, 8):
+			if ground_at(from.lerp(rd.point, k / 8.0)) == "grass": grass = true
+		if not grass: continue
+		_driveway(from, rd.point)
+
+func _driveway(from: Vector2, to: Vector2) -> void:
+	var gap := from.distance_to(to)
+	var steps := maxi(1, int(ceilf(gap / 1.5)))
+	for i in steps + 1:
+		var q := from.lerp(to, float(i) / float(steps))
+		var sq := Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5))
+		if _in_building(q): continue
+		_reserve(sq)
+		lots.append({ "r": sq, "kind": "asphalt", "name": "", "lines": false })
 
 func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
@@ -861,6 +876,22 @@ func _graph() -> void:
 					if not cuts.has(pair[0]): cuts[pair[0]] = []
 					var t: float = (p - pair[2]).length() / maxf((pair[3] - pair[2]).length(), 0.001)
 					cuts[pair[0]].append([pair[1], t, p])
+	# T-junctions: a road that ends on another one (touching it, not crossing it) joins it there
+	for ri in roads.size():
+		var rr: Dictionary = roads[ri]
+		var rp: PackedVector2Array = rr.pts
+		for end in [rp[0], rp[rp.size() - 1]]:
+			for e in _road_index.get(_cell(end), []):
+				if e[0] == ri: continue
+				var other: Dictionary = roads[e[0]]
+				if other.limited != rr.limited: continue
+				var a: Vector2 = other.pts[e[1]]
+				var b: Vector2 = other.pts[e[1] + 1]
+				if seg_dist(end, a, b) > 1.5: continue
+				if end.distance_to(a) < 0.5 or end.distance_to(b) < 0.5: continue     # already a shared node
+				if not cuts.has(e[0]): cuts[e[0]] = []
+				var t: float = (end - a).length() / maxf((b - a).length(), 0.001)
+				cuts[e[0]].append([e[1], t, end])
 	for ri in roads.size():
 		var r: Dictionary = roads[ri]
 		var pts: PackedVector2Array = r.pts
@@ -930,14 +961,21 @@ func route_to(from: Vector2, to: Vector2) -> PackedVector2Array:
 func _end_node_toward(rd: Dictionary, dir: int) -> int:
 	var rp: Vector2 = rd.point
 	var d: Vector2 = rd.dir * float(dir)
+	var pts: PackedVector2Array = rd.road.pts
 	var best := -1
 	var best_d := INF
 	for n in g_pos.size():
+		if g_adj[n].is_empty(): continue
 		var off := g_pos[n] - rp
 		var along := off.dot(d)
-		if along <= 0.5: continue
-		if absf(off.dot(d.orthogonal())) > 12.0: continue
-		if along < best_d:
+		if along <= 0.5 or along >= best_d: continue
+		# it has to be on this road, not just somewhere off in that direction
+		var on_road := false
+		for i in pts.size() - 1:
+			if seg_dist(g_pos[n], pts[i], pts[i + 1]) < 1.5:
+				on_road = true
+				break
+		if on_road:
 			best_d = along
 			best = n
 	return best

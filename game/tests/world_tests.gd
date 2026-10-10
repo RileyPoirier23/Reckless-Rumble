@@ -116,6 +116,21 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- every place you can pick on the map: the GPS gets you there by road, into its lot
+	var unreachable2 := ""
+	for l in m.landmarks:
+		if not l.dest: continue
+		var r := m.route_to(Vector2(5570, 1566), l.p)
+		var hop := 0.0
+		for i in r.size() - 1: hop = maxf(hop, r[i].distance_to(r[i + 1]))
+		var off := 0
+		for i in r.size() - 1:
+			for k in 8:
+				var q: Vector2 = r[i].lerp(r[i + 1], k / 8.0)
+				if m.ground_at(q) in ["grass", "mud"]: off += 1
+		if r.is_empty() or r[r.size() - 1].distance_to(l.p) > 3.0 or hop > 450.0 or off > 0:
+			unreachable2 += "%s (hop %.0f m, %d off-road); " % [l.name, hop, off]
+	check("the GPS takes you all the way to every place, on roads and driveways", unreachable2 == "", unreachable2)
 	# ---- mud: slow going, but a rear-drive car on summer tires isn't stuck in it for good
 	var sp: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/silvio.json"))
 	var mc := CarSim.new(sp)
