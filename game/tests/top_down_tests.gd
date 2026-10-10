@@ -113,8 +113,12 @@ func _knots() -> void:
 			if not tr.junctions.has(m) or String(tr.junctions[m].control) != "signal" or float(e[1]) > 25.0: continue
 			if tr.junctions[n].majors.has(int(e[2].idx)) and tr.junctions[m].majors.has(int(e[2].idx)) and int(tr.junctions[n].offset) != int(tr.junctions[m].offset): out_of_step.append([n, m])
 	check("lights a few metres apart on the same main road run in step", out_of_step.is_empty(), str(out_of_step))
-	check("John St where it runs on top of Main St is nobody's route", tr.shadowed.has(Vector2i(795, 48)) and tr.shadowed.size() < 10, str(tr.shadowed.keys()))
-	check("waiting on John St at King St, the nose is out of Main St's junction", tr.stop_line(795, 792) > 10.0, "%.1f" % tr.stop_line(795, 792))
+	# (found by where they are: the map's node numbers move when roads are added)
+	var john_king := map.nearest_node(Vector2(6250, 1500))
+	var john_main := map.nearest_node(Vector2(6279, 1500))
+	var john_robinson := map.nearest_node(Vector2(6180, 1500))
+	check("John St where it runs on top of Main St is nobody's route", tr.shadowed.has(Vector2i(john_king, john_main)) and tr.shadowed.size() < 10, str(tr.shadowed.keys()))
+	check("waiting on John St at King St, the nose is out of Main St's junction", tr.stop_line(john_king, john_robinson) > 10.0, "%.1f" % tr.stop_line(john_king, john_robinson))
 	var car := TrafficCar.new()
 	car.rng.seed = 5
 	var picks := {}
