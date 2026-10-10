@@ -8,9 +8,31 @@ class_name CarArt
 extends RefCounted
 
 const PX := 12.0         # pixels per metre (the whole game uses this)
-const CAR_SCALE := 1.0   # cars are drawn this much bigger than life next to the roads
+const CAR_SCALE := 1.25  # cars in the world are drawn (and bump into things) this much bigger than life,
+                         # so they hold their own next to the roads; the driving physics don't change
 const SLICES := 16
 const K := PX / 8.0      # the recipe is written in 8 px/m units and drawn finer
+
+## A light that reaches the road. The ground, the road and the skid marks are drawn far below
+## the cars (z about -4000), past a Light2D's default z range, and the tree tops and clouds above
+## them shouldn't light up.
+static func reach_road(l: Light2D) -> void:
+	l.range_z_min = RenderingServer.CANVAS_ITEM_Z_MIN
+	l.range_z_max = 2999
+
+## A headlight beam, pointing along +x from the left edge of the texture: nothing at the lamp
+## itself (so the car's own hood stays dark), brightest a few metres out, fading with distance
+## and spreading wider as it goes.
+static func beam_tex(w: int, h: int, strength := 1.0) -> ImageTexture:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	for y in h:
+		for x in w:
+			var dx := float(x) / float(w)
+			var dy := absf(float(y) - h / 2.0) / (h / 2.0)
+			var spread := 0.25 + 0.75 * dx
+			var a := smoothstep(0.0, 0.12, dx) * pow(1.0 - dx, 1.4) * clampf(1.0 - dy / spread, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, a * strength))
+	return ImageTexture.create_from_image(img)
 
 var length_px: int
 var width_px: int
@@ -32,7 +54,7 @@ const GLASS_HI := Color("3b5068")
 const TRIM := Color("1d1b20")
 const UNDER := Color("100e12")
 const HEAD := Color("f4ecc2")
-const TAIL := Color("7a1414")
+const TAIL := Color("9a1c1c")
 const TAIL_LIT := Color("ff3b2e")
 const REV_LIT := Color("f4f4f0")
 
@@ -42,27 +64,31 @@ const STEEL := Color("6a6e74")
 
 ## Damage by side: 0..1 each. A plain number still works (spread around the car).
 var dmg := { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }
+var px := PX              # this art's pixels per metre (PX x the scale it was drawn at)
+var k := K
 var bumper_front := true
 var bumper_rear := true
 var head_ok := [true, true]     # left, right
 var tail_ok := [true, true]
 const PRIMER := Color("8a8a84")
 
-func _init(spec: Dictionary, paint: Color, damage = 0.0, seed := 1) -> void:
+func _init(spec: Dictionary, paint: Color, damage = 0.0, seed := 1, scale := 1.0) -> void:
+	px = PX * scale
+	k = px / 8.0
 	body = String(spec.get("body", "coupe"))
 	if damage is Dictionary:
-		for k in dmg: dmg[k] = clampf(float(damage.get(k, 0.0)), 0.0, 1.0)
+		for zk in dmg: dmg[zk] = clampf(float(damage.get(zk, 0.0)), 0.0, 1.0)
 	else:
-		for k in dmg: dmg[k] = clampf(float(damage), 0.0, 1.0) * 0.6
+		for zk in dmg: dmg[zk] = clampf(float(damage), 0.0, 1.0) * 0.6
 	bumper_front = dmg.front < 0.65
 	bumper_rear = dmg.rear < 0.65
 	# a hard hit on one corner takes that side's lamps out
 	head_ok = [not (dmg.front > 0.45 and dmg.left >= dmg.right * 0.8), not (dmg.front > 0.45 and dmg.right > dmg.left * 0.8)]
 	tail_ok = [not (dmg.rear > 0.45 and dmg.left >= dmg.right * 0.8), not (dmg.rear > 0.45 and dmg.right > dmg.left * 0.8)]
-	length_px = int(round(float(spec.length) * PX))
-	width_px = int(round(float(spec.width) * PX))
+	length_px = int(round(float(spec.length) * px))
+	width_px = int(round(float(spec.width) * px))
 	if width_px % 2 == 1: width_px += 1
-	wheelbase_px = float(spec.wheelbase) * PX
+	wheelbase_px = float(spec.wheelbase) * px
 	size = Vector2i(length_px + 4, width_px + 4)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
@@ -98,9 +124,9 @@ static func _rounded(u: float, v: float, hl: float, hw: float, cr: float) -> boo
 	return true
 
 func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Color, _unused: float, rng: RandomNumberGenerator) -> void:
-	var hl := length_px / 2.0 / K
-	var hw := width_px / 2.0 / K
-	var wf := wheelbase_px / 2.0 / K       # front axle at +wf, rear at -wf
+	var hl := length_px / 2.0 / k
+	var hw := width_px / 2.0 / k
+	var wf := wheelbase_px / 2.0 / k       # front axle at +wf, rear at -wf
 	var shade := 0.58 + 0.42 * float(z) / float(SLICES - 1)
 	var zz := int(float(z) * 12.0 / float(SLICES))   # which layer of the 12-layer recipe
 	var bodyc := paint * shade
@@ -115,7 +141,7 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 	var truck := body == "tow"
 	for y in size.y:
 		for x in size.x:
-			var p := _uv(x, y) / K
+			var p := _uv(x, y) / k
 			var u := p.x
 			var v := p.y
 			var c := Color(0, 0, 0, 0)
@@ -145,10 +171,15 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 							else: c = Color("3a1a1a")
 							if absf(v) < 3.6: rev.set_pixel(x, y, REV_LIT)
 						if u < -hl + 1.2 and absf(v) < 1.6: c = Color("d8d4c0") * 0.8   # plate
-						# turn signals at the four corners
-						if (u > hl - 2.2 and absf(v) > hw - 1.5) or (u < -hl + 1.8 and absf(v) > hw - 1.1):
+						# turn signals: amber at the front corners; at the back the corners are part of the
+						# red tail lamp and flash red (the North American way)
+						if u > hl - 2.2 and absf(v) > hw - 1.5:
 							c = AMBER_OFF
 							(_bl if v < 0.0 else _br).set_pixel(x, y, AMBER_LIT)
+						elif u < -hl + 1.8 and absf(v) > hw - 1.1:
+							c = TAIL
+							(_bl if v < 0.0 else _br).set_pixel(x, y, TAIL_LIT)
+							if tail_ok[0 if v < 0.0 else 1]: brake.set_pixel(x, y, TAIL_LIT)
 						if absf(absf(u) - wf) <= 3.4 and absf(v) >= hw - 0.6 and zz == 4: c = bodyc * 0.82   # arch lip
 				6:
 					if _rounded(u, v, hl - 0.6, hw - 0.6, 3.0):
@@ -159,10 +190,10 @@ func _slice(img: Image, brake: Image, rev: Image, head: Image, z: int, paint: Co
 							c.a = 1.0
 							if absf(v) > hw - 1.2: c = bodyc * 0.8
 				7, 8, 9:
-					var k := float(zz - 7)
-					var front := hl * 0.30 - k * 1.3
-					var back := -hl * 0.50 + k * 1.0
-					if u <= front and u >= back and absf(v) <= hw - 0.8 - k * 0.7:
+					var gk := float(zz - 7)
+					var front := hl * 0.30 - gk * 1.3
+					var back := -hl * 0.50 + gk * 1.0
+					if u <= front and u >= back and absf(v) <= hw - 0.8 - gk * 0.7:
 						c = GLASS
 						if zz == 9 and u > front - 1.5: c = GLASS_HI                       # windshield glint
 						if absf(u - (back + front) * 0.42) < 0.6: c = bodyc * 0.95        # B-pillar
@@ -199,8 +230,8 @@ func _damaged(c: Color, u: float, v: float, hl: float, hw: float, zz: int, rng: 
 	if (l > 0.05 or rt > 0.05) and absf(v) > hw - 1.6 and int(u * 3.0 + v) % 3 == 0 and rng.randf() < (l + rt) * 1.6:
 		return c.lerp(PRIMER, 0.7)
 	if rng.randf() < hit * 0.8:
-		var k := 0.5 + rng.randf() * 0.3
-		return Color(c.r * k, c.g * k, c.b * k, 1.0)
+		var dk := 0.5 + rng.randf() * 0.3
+		return Color(c.r * dk, c.g * dk, c.b * dk, 1.0)
 	return c
 
 ## A 1-px darker rim on every slice so the stack reads as a solid, outlined shape.

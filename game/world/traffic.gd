@@ -19,7 +19,7 @@ const SPAWN_MAX := 240.0
 const DESPAWN := 320.0
 
 const SPEED := { "highway": 27.8, "arterial": 16.7, "street": 13.9, "rural": 22.2, "gravel": 13.0, "ramp": 15.0 }
-const LANE := { "highway": [4.0, 7.6], "arterial": [2.0, 5.6], "street": [2.75], "rural": [2.25], "gravel": [1.75], "ramp": [2.0] }
+const LANE := { "highway": [4.0, 7.6], "arterial": [2.0, 5.6], "street": [2.25], "rural": [2.0], "gravel": [1.75], "ramp": [2.0] }
 
 const BODIES := [
 	{ "name": "HONDO CIVIL", "body": "sedan", "length": 4.4, "width": 1.72, "wheelbase": 2.62 },
@@ -275,11 +275,11 @@ func leader(car: TrafficCar, reach: float) -> Array:
 				if o.lead_obj == car and car.get_instance_id() < o.get_instance_id() and o.state == "drive": continue
 				_consider(car, path, o.pos, o.velocity_vec(), o.length, o.width, best, o)
 	if player and not ignore_player:
-		_consider(car, path, player.sim.pos, player.sim.world_velocity(), float(player.spec.length), float(player.spec.width), best, player)
+		_consider(car, path, player.sim.pos, player.sim.world_velocity(), float(player.spec.length) * CarArt.CAR_SCALE, float(player.spec.width) * CarArt.CAR_SCALE, best, player)
 	for o in extra:
 		if is_instance_valid(o):
 			var oc: PlayerCar = o
-			_consider(car, path, oc.sim.pos, oc.sim.world_velocity(), float(oc.spec.length), float(oc.spec.width), best, oc)
+			_consider(car, path, oc.sim.pos, oc.sim.world_velocity(), float(oc.spec.length) * CarArt.CAR_SCALE, float(oc.spec.width) * CarArt.CAR_SCALE, best, oc)
 	return best
 
 func _consider(car: TrafficCar, path: PackedVector2Array, p: Vector2, vel: Vector2, olen: float, owid: float, best: Array, who) -> void:

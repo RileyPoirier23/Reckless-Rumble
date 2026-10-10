@@ -208,12 +208,12 @@ func _steer_chasers(dt: float, c: PlayerCar) -> void:
 		var ahead := c.sim.pos + c.sim.world_velocity() * clampf(d / 45.0, 0.2, 1.4)
 		if c.sim.speed() < 3.0 and d < 60.0:
 			# you've stopped: they pull in behind you
-			var behind := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 3.0)
+			var behind := c.sim.pos - c.sim.forward() * (float(c.spec.length) * CarArt.CAR_SCALE * 0.5 + 3.0)
 			k.set_path(PackedVector2Array([k.sim.pos, behind]))
 			k.speed_cap = 12.0
 		elif state == "stop":
 			# lit up, not running (yet): they sit on your bumper and wait for you to pull over
-			var tail := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 9.0)
+			var tail := c.sim.pos - c.sim.forward() * (float(c.spec.length) * CarArt.CAR_SCALE * 0.5 + 9.0)
 			k.set_path(_route(k.sim.pos, tail, k.sim.forward()) if d > 45.0 else PackedVector2Array([k.sim.pos, tail, tail + c.sim.world_velocity() * 0.6]))
 			k.speed_cap = c.sim.speed() + 5.0 if d < 30.0 else 58.0
 		elif d < 45.0 and _sees(k, c, d):

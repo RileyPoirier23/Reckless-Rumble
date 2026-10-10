@@ -123,8 +123,8 @@ func _blocker(fwd: Vector2, v: float) -> Array:
 		if o == self or not is_instance_valid(o): continue
 		var oc: PlayerCar = o
 		if oc.sim.pos.distance_squared_to(sim.pos) < (look + 10.0) * (look + 10.0):
-			cands.append([oc.sim.pos, oc.sim.world_velocity(), float(oc.spec.width)])
-	var half := float(spec.width) * 0.5
+			cands.append([oc.sim.pos, oc.sim.world_velocity(), float(oc.spec.width) * CarArt.CAR_SCALE])
+	var half := float(spec.width) * CarArt.CAR_SCALE * 0.5
 	for c in cands:
 		var rel: Vector2 = c[0] - sim.pos
 		var ahead := rel.dot(fwd)
@@ -132,7 +132,7 @@ func _blocker(fwd: Vector2, v: float) -> Array:
 		var lat := rel.dot(right)
 		var clear := half + float(c[2]) * 0.5 + 0.7
 		if absf(lat - _pass) > clear: continue
-		var gap := ahead - float(spec.length)
+		var gap := ahead - float(spec.length) * CarArt.CAR_SCALE
 		if gap < float(best[0]):
 			best[0] = gap
 			best[1] = (c[1] as Vector2).dot(fwd)
@@ -169,7 +169,7 @@ func _inputs(dt: float) -> Array:
 	# something in the way: go round it if the road's wide enough, follow it if it isn't
 	var blk := _blocker(fwd, v)
 	var road: Dictionary = city.map.road_at(sim.pos).get("road", {})
-	var room := float(road.get("w", 9.0)) * 0.5 - float(spec.width) * 0.5 - 0.6 if not road.is_empty() else 2.0
+	var room := float(road.get("w", 9.0)) * 0.5 - float(spec.width) * CarArt.CAR_SCALE * 0.5 - 0.6 if not road.is_empty() else 2.0
 	var want := 0.0
 	var follow := INF
 	# no passing into a corner: an offset taken on the way in points it at the far kerb on the way out
@@ -254,6 +254,10 @@ func _lights(dt: float, _st: float) -> void:
 	view.headlights = lights_on
 	head_light.visible = lights_on
 	head_light.rotation = sim.heading
+	head_light.texture_scale = 1.4
+	head_light.offset = Vector2(80.0 * head_light.texture_scale, 0)
+	tail_light.visible = lights_on or view.braking
+	tail_light.energy = 1.4 if view.braking else 0.6
 	if lights.a <= 0.0: return
 	_flash_t2 += dt
 	if _bar == null:
@@ -263,10 +267,11 @@ func _lights(dt: float, _st: float) -> void:
 		_bar_light = PointLight2D.new()
 		_bar_light.texture = city._light_tex(Color(1, 1, 1))
 		_bar_light.texture_scale = 1.4
+		CarArt.reach_road(_bar_light)
 		add_child(_bar_light)
 	var bar := _bar as LightBar
 	bar.heading = sim.heading
-	bar.width = float(spec.width)
+	bar.width = float(spec.width) * CarArt.CAR_SCALE
 	bar.on = siren
 	bar.t = _flash_t2
 	_bar_light.visible = siren

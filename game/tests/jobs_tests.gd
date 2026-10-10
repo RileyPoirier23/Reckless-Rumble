@@ -247,9 +247,37 @@ func _init() -> void:
 	var line := Jobs.street_line({ "street": { "rep": 7, "pinks": 0 } }, fri)
 	check("the phone says pink slips on the night", line.begins_with("PINK SLIPS") and Jobs.street_line({}, 0).ends_with("REP 0"), line)
 	# moose and deer
-	check("no moose downtown", Wildlife.odds(19.0, "fall", "street", "downtown") == 0.0 and Wildlife.odds(19.0, "fall", "arterial", "") == 0.0)
-	check("dusk on a country road is when they're out", Wildlife.odds(19.0, "summer", "rural", "rural") > Wildlife.odds(13.0, "summer", "rural", "rural") * 5.0)
-	check("the fall rut brings more out", Wildlife.odds(19.0, "fall", "highway", "") > Wildlife.odds(19.0, "summer", "highway", ""))
+	var lutes: Dictionary = MapData.WILD[0]
+	check("no moose downtown, or anywhere off the wildlife stretches", Wildlife.odds(19.0, "fall", "street", "downtown", lutes) == 0.0 and Wildlife.odds(19.0, "fall", "rural", "rural") == 0.0)
+	check("dusk on a country road is when they're out", Wildlife.odds(19.0, "summer", "rural", "rural", lutes) > Wildlife.odds(13.0, "summer", "rural", "rural", lutes) * 5.0)
+	check("the fall rut brings more out", Wildlife.odds(19.0, "fall", "highway", "", lutes) > Wildlife.odds(19.0, "summer", "highway", "", lutes))
+	# the stretches: country roads only, clear of every town, each with signs at its ends
+	var wild_bad := ""
+	for z in MapData.WILD:
+		for zz in MapData.ZONES:
+			if (z.r as Rect2).intersects(zz.r): wild_bad += "%s/%s " % [z.id, zz.id]
+		var on_road := false
+		for rd in map.roads:
+			if String(rd.name) in (z.roads as Array) and String(rd.cls) in Wildlife.ROADS:
+				for rp in rd.pts:
+					if (z.r as Rect2).has_point(rp): on_road = true
+		if not on_road: wild_bad += "%s has no road " % z.id
+		if map.wild_signs.filter(func(sg): return sg.zone == z.id).size() < 1: wild_bad += "%s has no sign " % z.id
+	check("every wildlife stretch is out in the country, on its road, with a sign", wild_bad == "", wild_bad)
+	var signs_ok := map.wild_signs.all(func(sg): return map.road_at(sg.p, 1.0).is_empty() and map.river_at(sg.p) == 0)
+	check("the crossing signs stand off the road and out of the water", signs_ok and map.wild_signs.size() >= 10, "%d signs" % map.wild_signs.size())
+	var town_spawn := 0
+	var wr := RandomNumberGenerator.new()
+	wr.seed = 31
+	for i in 3000:
+		var wp := Vector2(wr.randf_range(0, 7200), wr.randf_range(0, 3400))
+		var whit: Dictionary = map.road_at(wp)
+		var wroad: Dictionary = whit.get("road", {})
+		var wz := map.wild_zone_at(wp, String(wroad.get("name", "")))
+		if Wildlife.spawn_ok(map, wp, wroad, wz) and (not map.zone_at(wp).is_empty() or wz.is_empty()): town_spawn += 1
+	check("no animal ever comes out in a town or off the stretches", town_spawn == 0, "%d" % town_spawn)
+	check("nothing on the Trans-Canada by the city, or Irishtown Rd at the gas bar", map.wild_zone_at(Vector2(5500, 820)).is_empty() and map.wild_zone_at(Vector2(5620, 1200)).is_empty())
+	check("moose country is mostly moose, deer country mostly deer", Wildlife.pick_kind("summer", 0.2, "moose") == "moose" and Wildlife.pick_kind("summer", 0.2, "deer") == "deer")
 	var moose_n := 0
 	for i in 1000:
 		if Wildlife.pick_kind("fall", float(i) / 1000.0) == "moose": moose_n += 1

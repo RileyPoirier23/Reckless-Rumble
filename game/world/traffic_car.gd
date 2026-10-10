@@ -54,8 +54,9 @@ static var _cone: ImageTexture
 func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float) -> void:
 	spec = body.duplicate()
 	paint = p
-	length = float(body.length)
-	width = float(body.width)
+	# the size it's drawn at (and bumps into things at): bigger than life, like every car on the road
+	length = float(body.length) * CarArt.CAR_SCALE
+	width = float(body.width) * CarArt.CAR_SCALE
 	a = na
 	b = nb
 	s = ns
@@ -79,28 +80,22 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	shape.shape = rect
 	add_child(shape)
 	view = CarView.new()
-	view.art = CarArt.new(spec, paint, 0.0, rng.randi())
+	view.art = CarArt.new(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE)
 	add_child(view)
 	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
 	head_light.texture = _cone
 	head_light.energy = 1.0
-	head_light.color = Color(1.0, 0.95, 0.82)
-	head_light.offset = Vector2(56, 0)
+	head_light.color = Color(1.0, 0.97, 0.9)
+	head_light.texture_scale = 1.2
+	head_light.offset = Vector2(64.0 * 1.2, 0)      # the lamp end of the beam on the bumper
+	CarArt.reach_road(head_light)
 	head_light.visible = false
 	add_child(head_light)
 	_place()
 
 static func _cone_tex() -> ImageTexture:
-	var img := Image.create(128, 72, false, Image.FORMAT_RGBA8)
-	for y in 72:
-		for x in 128:
-			var dx := float(x) / 128.0
-			var dy := absf(float(y) - 36.0) / 36.0
-			var spread := 0.2 + dx * 0.8
-			var al := clampf(1.0 - dy / spread, 0.0, 1.0) * clampf(1.0 - dx, 0.0, 1.0) * clampf(dx * 6.0, 0.0, 1.0)
-			img.set_pixel(x, y, Color(1, 1, 1, al * 0.8))
-	return ImageTexture.create_from_image(img)
+	return CarArt.beam_tex(128, 72, 0.8)
 
 func sort_point() -> Vector2:
 	return global_position
@@ -148,7 +143,10 @@ func drive(dt: float) -> void:
 		gone = true
 		return
 	var yielding := _siren_behind()
-	pull = move_toward(pull, 1.6 * yielding, dt * 1.2)
+	# move over for the siren, as far as the road goes (not up onto the sidewalk)
+	var lanes: Array = Traffic.LANE[road.cls]
+	var room := clampf(float(road.get("w", 9.0)) / 2.0 - float(lanes[mini(lane_i, lanes.size() - 1)]) - width / 2.0 - 0.2, 0.0, 1.6)
+	pull = move_toward(pull, room * yielding, dt * 1.2)
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
@@ -300,7 +298,7 @@ func _place() -> void:
 	view.headlights = dark
 	head_light.visible = dark and pos.distance_to(traffic.player.sim.pos) < 80.0 if traffic.player else false
 	head_light.rotation = heading
-	head_light.position = Vector2(cos(heading), sin(heading)) * length * PX * 0.4
+	head_light.position = Vector2(cos(heading), sin(heading)) * length * PX * 0.5
 
 # ------------------------------------------------------------------ crashes
 
@@ -331,7 +329,7 @@ func _refresh_art() -> void:
 	for k in damage: total += damage[k]
 	if absf(total - _art_damage) < 0.1: return
 	_art_damage = total
-	view.art = CarArt.new(spec, paint, damage, rng.randi())
+	view.art = CarArt.new(spec, paint, damage, rng.randi(), CarArt.CAR_SCALE)
 
 func _wrecked(dt: float) -> void:
 	wreck_t += dt

@@ -68,7 +68,7 @@ Your car burns fuel by the work the engine does: about 45 minutes of steady high
 
 ## Moose and deer
 
-Out on the country roads and the highways they come out at dusk and dawn, and all night, more in the fall when the moose are in rut. A deer at the roadside bolts across when you come up on it; a moose walks out and stands in the road looking at you. The horn moves them along. Their eyes shine in your headlights: a deer's at bumper height, a moose's too high for low beams to catch, so use your high beams. Hit a deer and it's a bent bumper (it gets up and limps off); hit a moose at more than about 55 km/h and it comes through the windshield, with its own death-screen captions.
+Only on the wildlife stretches, marked with yellow crossing signs at each end: moose country up Lutes Mountain, Irishtown, the Canaan woods, Route 112 north and the Trans-Canada through the woods, and deer country along Berry Mills, Boundary Creek, Scotch Settlement, Parkindale and Route 106 south. Never in town, in a village or on the city end of the highway. There they come out at dusk and dawn, and all night, more in the fall when the moose are in rut. A deer at the roadside bolts across when you come up on it; a moose walks out and stands in the road looking at you. The horn moves them along. Their eyes shine in your headlights: a deer's at bumper height, a moose's too high for low beams to catch, so use your high beams. Hit a deer and it's a bent bumper (it gets up and limps off); hit a moose at more than about 55 km/h and it comes through the windshield, with its own death-screen captions.
 
 ## Street races and the police
 

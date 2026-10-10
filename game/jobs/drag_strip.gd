@@ -113,7 +113,7 @@ func _race() -> void:
 	drive.save.cash = int(drive.save.cash) - int(purse.fee)
 	won -= int(purse.fee)
 	var c: PlayerCar = drive.car
-	drive._teleport(Vector2(LINE_X - float(c.spec.length) * 0.5, LANE_Y[1]), 0.0)
+	drive._teleport(Vector2(LINE_X - float(c.spec.length) * CarArt.CAR_SCALE * 0.5, LANE_Y[1]), 0.0)
 	c.sim.w_wheel = 0.0
 	c.sim.gear = 1
 	c.locked = false
@@ -125,7 +125,7 @@ func _race() -> void:
 	rng.seed = int(Time.get_ticks_usec())
 	var spread := float(opp_info.spread)
 	var rts: Array = opp_info.rt
-	opp.setup(spec, Vector2(LINE_X - float(spec.length) * 0.5, LANE_Y[0]), clampf(1.0 - spread * rng.randf() * 0.5, 0.75, 1.0),
+	opp.setup(spec, Vector2(LINE_X - float(spec.length) * CarArt.CAR_SCALE * 0.5, LANE_Y[0]), clampf(1.0 - spread * rng.randf() * 0.5, 0.75, 1.0),
 		rng.randf_range(float(rts[0]), float(rts[1])))
 	var opp_dial := snappedf(sim_et(spec) + spread * 0.4 + 0.03, 0.01)
 	lanes = [_lane(String(opp_info.name), opp_dial, opp.sim.pos.x), _lane("YOU", dial, c.sim.pos.x)]
@@ -339,7 +339,7 @@ class DragRacer extends Node2D:
 		rt = reaction
 		if visible_car:
 			view = CarView.new()
-			view.art = CarArt.new(spec, Color(String(spec.get("paint", "#c8342c"))), 0.0, 9)
+			view.art = CarArt.new(spec, Color(String(spec.get("paint", "#c8342c"))), 0.0, 9, CarArt.CAR_SCALE)
 			add_child(view)
 		position = at * CarArt.PX
 

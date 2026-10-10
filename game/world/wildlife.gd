@@ -9,7 +9,7 @@ extends Node2D
 
 const MOOSE := { "len": 2.9, "wid": 0.95, "mass": 450.0, "height": 1.9, "walk": 1.4, "run": 7.0 }
 const DEER := { "len": 1.6, "wid": 0.5, "mass": 70.0, "height": 1.0, "walk": 1.2, "run": 10.0 }
-const ROADS := ["rural", "highway", "gravel", "ramp"]
+const ROADS := ["rural", "highway", "gravel"]
 const MAX_AROUND := 3
 
 var drive: Node
@@ -23,10 +23,13 @@ func setup(the_drive: Node) -> void:
 	rng.seed = int(Time.get_ticks_usec())
 
 ## How likely an animal turns up ahead in the next few seconds (0..1): the hour, the season, the
-## road, and whether it's town. Moose are dusk and dawn animals; the fall rut brings them out.
-static func odds(hour: float, season: String, road_cls: String, style: String) -> float:
+## road, and whether you're in one of the wildlife stretches (MapData.WILD, the ones with the
+## yellow signs): nowhere else, and never in town. Moose are dusk and dawn animals; the fall rut
+## brings them out.
+static func odds(hour: float, season: String, road_cls: String, style: String, wild := {}) -> float:
+	if wild.is_empty(): return 0.0
 	if not road_cls in Wildlife.ROADS: return 0.0
-	if style in ["downtown", "oldtown", "commercial", "residential", "industrial"]: return 0.0
+	if style in ["downtown", "oldtown", "commercial", "residential", "industrial", "village"]: return 0.0
 	var h := fmod(hour, 24.0)
 	var t := 0.04                                          # broad daylight: now and then
 	if (h >= 17.5 and h < 21.5) or (h >= 5.0 and h < 8.0): t = 0.35   # dusk and dawn
@@ -36,9 +39,11 @@ static func odds(hour: float, season: String, road_cls: String, style: String) -
 	if road_cls == "gravel": t *= 1.3
 	return clampf(t, 0.0, 0.6)
 
-## Moose or deer: deer are commoner, but the fall is moose season.
-static func pick_kind(season: String, x: float) -> String:
-	return "moose" if x < (0.45 if season == "fall" else 0.3) else "deer"
+## Moose or deer: it's mostly the stretch's own animal (moose country, deer country), and the fall
+## is moose season.
+static func pick_kind(season: String, x: float, zone_kind := "moose") -> String:
+	var moose := (0.45 if season == "fall" else 0.3) if zone_kind == "moose" else 0.08
+	return "moose" if x < moose else "deer"
 
 func _physics_process(dt: float) -> void:
 	var c: PlayerCar = drive.car
@@ -50,23 +55,34 @@ func _physics_process(dt: float) -> void:
 	_roll_t -= dt
 	if _roll_t <= 0.0:
 		_roll_t = 4.0
-		var hit: Dictionary = drive.world.map.road_at(c.sim.pos)
+		var map: MapData = drive.world.map
+		var hit: Dictionary = map.road_at(c.sim.pos)
 		var road: Dictionary = hit.get("road", {})
-		var style := String(drive.world.map.zone_at(c.sim.pos).get("style", "rural"))
-		if animals.size() < MAX_AROUND and c.sim.speed() > 8.0 and rng.randf() < odds(drive.sky.time_h, drive.sky.season, String(road.get("cls", "")), style):
-			spawn_ahead(c, pick_kind(drive.sky.season, rng.randf()))
+		var style := String(map.zone_at(c.sim.pos).get("style", "rural"))
+		var wild := map.wild_zone_at(c.sim.pos, String(road.get("name", "")))
+		if animals.size() < MAX_AROUND and c.sim.speed() > 8.0 and rng.randf() < odds(drive.sky.time_h, drive.sky.season, String(road.get("cls", "")), style, wild):
+			spawn_ahead(c, pick_kind(drive.sky.season, rng.randf(), String(wild.kind)), wild)
 
-## An animal at the roadside somewhere ahead of you, facing the road.
-func spawn_ahead(c: PlayerCar, kind: String) -> Animal:
+## An animal at the roadside somewhere ahead of you, facing the road: only on the stretch's own
+## road, inside the stretch.
+func spawn_ahead(c: PlayerCar, kind: String, wild := {}) -> Animal:
 	var map: MapData = drive.world.map
 	var ahead := c.sim.pos + c.sim.forward() * rng.randf_range(110.0, 180.0)
 	var rd := map.nearest_road(ahead, 40.0)
 	if rd.is_empty(): return null
+	if not spawn_ok(map, rd.point, rd.road, wild): return null
 	var dir: Vector2 = rd.dir
 	var side := 1.0 if rng.randf() < 0.5 else -1.0
 	var half := float((rd.road as Dictionary).w) * 0.5
 	var p: Vector2 = rd.point + Vector2(-dir.y, dir.x) * side * (half + rng.randf_range(2.5, 6.0))
 	return spawn_at(kind, p, (rd.point - p).angle())
+
+## Whether an animal can come out at this point on this road.
+static func spawn_ok(map: MapData, p: Vector2, road: Dictionary, wild: Dictionary) -> bool:
+	if wild.is_empty() or not (wild.r as Rect2).has_point(p): return false
+	if not String(road.get("name", "")) in (wild.roads as Array): return false
+	if not String(road.get("cls", "")) in Wildlife.ROADS: return false
+	return map.zone_at(p).is_empty()
 
 func spawn_at(kind: String, p: Vector2, h: float) -> Animal:
 	var a := Animal.new()
@@ -118,7 +134,7 @@ class Animal extends AnimatableBody2D:
 		sync_to_physics = false
 		_shape = CollisionShape2D.new()
 		var r := RectangleShape2D.new()
-		r.size = Vector2(float(data.len), float(data.wid)) * CarArt.PX
+		r.size = Vector2(float(data.len), float(data.wid)) * CarArt.PX * CarArt.CAR_SCALE
 		_shape.shape = r
 		add_child(_shape)
 		_place()
@@ -215,7 +231,7 @@ class Animal extends AnimatableBody2D:
 		queue_redraw()
 
 	func _draw() -> void:
-		var px := CarArt.PX
+		var px := CarArt.PX * CarArt.CAR_SCALE      # drawn to the same scale as the cars
 		var f := Vector2.from_angle(heading)
 		var r := Vector2(-f.y, f.x)
 		var L := float(data.len) * px

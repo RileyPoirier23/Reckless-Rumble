@@ -333,7 +333,7 @@ func _tow(dt: float) -> void:
 		return
 	if stage == "hook":
 		# the boom is at the back of the wrecker: line it up with either end of the car
-		var hitch := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 0.6)
+		var hitch := c.sim.pos - c.sim.forward() * (float(c.spec.length) * CarArt.CAR_SCALE * 0.5 + 0.6)
 		var near := minf(hitch.distance_to(target.end(1.0)), hitch.distance_to(target.end(-1.0)))
 		if near < 4.0 and c.sim.speed() < 1.0:
 			if Input.is_action_pressed("use"):
@@ -354,7 +354,7 @@ func _tow(dt: float) -> void:
 			stage = "find"
 		return
 	if stage == "deliver":
-		var hitch2 := c.sim.pos - c.sim.forward() * (float(c.spec.length) * 0.5 + 0.6)
+		var hitch2 := c.sim.pos - c.sim.forward() * (float(c.spec.length) * CarArt.CAR_SCALE * 0.5 + 0.6)
 		target.follow(hitch2)
 		if c.sim.pos.distance_to(tow_dest.p) < 18.0 and c.sim.speed() < 1.5:
 			var km := (c.sim.odometer_m - _odo0) / 1000.0
@@ -575,7 +575,7 @@ class TowTarget extends Node2D:
 		label = "%s %s" % [String(spec.get("make", "")).to_upper(), String(spec.get("model", "")).to_upper()]
 		view = CarView.new()
 		var hit := { "front": rng.randf() * 0.7, "rear": rng.randf() * 0.3, "left": rng.randf() * 0.4, "right": rng.randf() * 0.4 }
-		view.art = CarArt.new(spec, Color(String(spec.get("paint", "#8a8e94"))), hit, rng.randi())
+		view.art = CarArt.new(spec, Color(String(spec.get("paint", "#8a8e94"))), hit, rng.randi(), CarArt.CAR_SCALE)
 		view.blink_left = true
 		view.blink_right = true
 		add_child(view)
@@ -583,7 +583,7 @@ class TowTarget extends Node2D:
 
 	## One end of the car: +1 the nose, -1 the tail.
 	func end(side: float) -> Vector2:
-		return pos + Vector2(cos(heading), sin(heading)) * float(spec.get("length", 4.5)) * 0.5 * side
+		return pos + Vector2(cos(heading), sin(heading)) * float(spec.get("length", 4.5)) * CarArt.CAR_SCALE * 0.5 * side
 
 	func hook(by_nose: bool) -> void:
 		hooked = true
@@ -595,7 +595,7 @@ class TowTarget extends Node2D:
 
 	## Trailer kinematics: the lifted end sits on the hitch, the wheels on the ground follow it.
 	func follow(hitch: Vector2) -> void:
-		var l := float(spec.get("length", 4.5))
+		var l := float(spec.get("length", 4.5)) * CarArt.CAR_SCALE
 		var reach := l * 0.5 + float(spec.get("wheelbase", 2.6)) * 0.5
 		var dir := (hitch - _rear)
 		if dir.length() < 0.01: return

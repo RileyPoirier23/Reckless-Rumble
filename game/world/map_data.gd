@@ -16,8 +16,8 @@ const CELL := 32.0                       # spatial index cell (metres)
 const CLS := {
 	"highway":  { "w": 26.0, "shoulder": 3.0, "rank": 5 },
 	"arterial": { "w": 16.0, "shoulder": 0.0, "rank": 4 },
-	"street":   { "w": 11.0, "shoulder": 0.0, "rank": 2 },
-	"rural":    { "w": 9.0,  "shoulder": 2.5, "rank": 3 },
+	"street":   { "w": 9.0,  "shoulder": 0.0, "rank": 2 },
+	"rural":    { "w": 8.0,  "shoulder": 2.5, "rank": 3 },
 	"gravel":   { "w": 7.0,  "shoulder": 0.0, "rank": 1 },
 	"ramp":     { "w": 8.0,  "shoulder": 1.5, "rank": 3 },
 }
@@ -40,6 +40,7 @@ var lots: Array = []            # { r: Rect2, kind: "asphalt"|"gravel"|"runway"|
 var buildings: Array = []       # { r: Rect2, h, kind, name, neon, zone }
 var lights: Array = []          # { p, type, seed }
 var landmarks: Array = []       # { name, p, dest }
+var wild_signs: Array = []      # { p, dir, kind }: the yellow MOOSE / DEER CROSSING diamonds
 var river_pts: PackedVector2Array
 var river_hw: PackedFloat32Array
 var rail_pts: PackedVector2Array
@@ -78,6 +79,7 @@ func build() -> void:
 	_villages()
 	_landmarks()
 	_index_roads()
+	_wild_signs()
 	_find_bridges_and_crossings()
 	_buildings()
 	_salvage()
@@ -362,6 +364,58 @@ func _reserve(r: Rect2) -> void:
 		if c.r.intersects(r): c.reserved = true
 
 # ------------------------------------------------------------------ queries
+
+## Where the moose and deer are: stretches of country road through the woods, with the yellow
+## signs at each end. Never in town or a village, on the city end of the Trans-Canada, or on a
+## ramp. Moose country up north and along the big highway; deer in the farm woods.
+const WILD := [
+	{ "id": "lutes", "label": "LUTES MOUNTAIN", "kind": "moose", "roads": ["LUTES MOUNTAIN RD"], "r": Rect2(4200, 0, 440, 1520) },
+	{ "id": "irishtown", "label": "IRISHTOWN", "kind": "moose", "roads": ["IRISHTOWN RD"], "r": Rect2(5560, 0, 240, 980) },
+	{ "id": "tch", "label": "TRANS-CANADA", "kind": "moose", "roads": ["TRANS-CANADA HWY"], "r": Rect2(3620, 1180, 660, 640) },
+	{ "id": "canaan", "label": "CANAAN WOODS", "kind": "moose", "roads": ["ROUTE 885 - CANAAN RD"], "r": Rect2(640, 0, 220, 2360) },
+	{ "id": "r112", "label": "ROUTE 112 NORTH", "kind": "moose", "roads": ["ROUTE 112"], "r": Rect2(3040, 0, 300, 1880) },
+	{ "id": "berry", "label": "BERRY MILLS", "kind": "deer", "roads": ["BERRY MILLS RD"], "r": Rect2(4640, 960, 420, 740) },
+	{ "id": "boundary", "label": "BOUNDARY CREEK", "kind": "deer", "roads": ["BOUNDARY CREEK RD"], "r": Rect2(3740, 1320, 370, 580) },
+	{ "id": "scotch", "label": "SCOTCH SETTLEMENT", "kind": "deer", "roads": ["SCOTCH SETTLEMENT RD"], "r": Rect2(2040, 1440, 420, 910) },
+	{ "id": "parkindale", "label": "PARKINDALE", "kind": "deer", "roads": ["PARKINDALE RD"], "r": Rect2(1860, 2530, 300, 770) },
+	{ "id": "r106", "label": "ROUTE 106 SOUTH", "kind": "deer", "roads": ["ROUTE 106"], "r": Rect2(2820, 2380, 480, 920) },
+]
+
+## The wildlife stretch here ({} when there isn't one). Given a road name, only that road counts.
+func wild_zone_at(m: Vector2, road_name := "") -> Dictionary:
+	if not zone_at(m).is_empty(): return {}
+	for z in WILD:
+		if (z.r as Rect2).has_point(m) and (road_name == "" or road_name in (z.roads as Array)): return z
+	return {}
+
+## A crossing sign where each zone road enters its stretch, on the right shoulder, facing the
+## traffic coming in.
+func _wild_signs() -> void:
+	wild_signs.clear()
+	for z in WILD:
+		var zr: Rect2 = z.r
+		for rd in roads:
+			if not String(rd.name) in (z.roads as Array): continue
+			var pts: PackedVector2Array = rd.pts
+			for i in pts.size() - 1:
+				var a := pts[i]
+				var b := pts[i + 1]
+				var ina := zr.has_point(a)
+				if ina == zr.has_point(b): continue
+				# find where the road crosses the edge
+				var lo := 0.0
+				var hi := 1.0
+				for k in 12:
+					var mid := (lo + hi) / 2.0
+					if zr.has_point(a.lerp(b, mid)) == ina: lo = mid
+					else: hi = mid
+				var p := a.lerp(b, (lo + hi) / 2.0)
+				var into := (b - a).normalized() if not ina else (a - b).normalized()
+				var right := Vector2(-into.y, into.x)
+				var off := float(rd.w) / 2.0 + float(CLS[String(rd.cls)].shoulder) + 2.0
+				var sp := p - into * 6.0 + right * off
+				if road_at(sp, 1.0).is_empty() and river_at(sp) == 0:
+					wild_signs.append({ "p": sp, "dir": into, "kind": String(z.kind), "zone": String(z.id) })
 
 func zone_at(m: Vector2) -> Dictionary:
 	for z in ZONES:

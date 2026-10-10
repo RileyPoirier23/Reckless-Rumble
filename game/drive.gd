@@ -715,7 +715,7 @@ func _process(dt: float) -> void:
 		night = lamps
 		world.set_night(night)
 	car.lights_on = night or sky.fog > 0.4 or sky.rain > 0.5 or sky.snow > 0.5
-	car.tail_light.visible = car.lights_on
+	car.tail_light.visible = car.lights_on or car.view.braking
 	_light_t -= dt
 	if _light_t <= 0.0:
 		_light_t = 0.12
