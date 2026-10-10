@@ -1,4 +1,4 @@
-## The car catalogue: three hundred and some parody cars, 1955 to 2019, from kei trucks to
+## The car catalogue: just shy of five hundred parody cars, 1955 to 2018, from kei trucks to
 ## hypercars, plus the four hand-made cars in data/cars.
 ##
 ## Every catalogue car is one line of TABLE (at the bottom of this file): make, model, year,
