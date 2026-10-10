@@ -1,6 +1,7 @@
 ## Headless tests for the desk itself (the scene, not just the rules): the shift clock and the
 ## line, warnings, ASK, the notebook and the sticker log, the binder, the controls, Desk 2.2's
-## stolen parts, winter week and wider audit, and Desk 2.3's weekly stolen lists and overtime.
+## stolen parts, winter week and wider audit, Desk 2.3's weekly stolen lists and overtime, and
+## Desk 2.4's tool drawer, the tools at the desk, the relaxed clock, and faces that age.
 ## godot --headless --path game -s tests/desk_tests.gd
 extends SceneTree
 
@@ -62,6 +63,11 @@ func _init() -> void:
 	_audit_more()
 	_list_desk()
 	_overtime_desk()
+	_drawer_desk()
+	_tools_desk()
+	_relaxed_desk()
+	_saved_desk()
+	_ages_desk()
 	_wipe_overtime()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
@@ -916,5 +922,277 @@ func _overtime_desk() -> void:
 	sc._tab_step(1)
 	check("the next OVERTIME starts over from December 2, the best streak still on the books", sc.day == CounterRules.OVERTIME_START and DeskBook.files.is_empty()
 		and DeskBook.citations == 0 and int(DeskBook.overtime.days) == 0 and int(DeskBook.overtime.best) == 9)
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.4: Gus's tool drawer
+
+func _drawer_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(191)
+	sc.start_day(0)
+	sc.press()
+	sc.close_up()
+	check("Gus's drawer is under the first day-end sheet: the tread gauge and the date wheel tonight",
+		sc.phase == "day_end" and sc.drawer_tools().map(func(t): return String(t.id)) == ["gauge", "wheel"])
+	sc._tab_step(1)
+	check("LB/RB pull it open, at the first tool", sc.phase == "drawer" and sc.drawer_sel == 0)
+	sc.cash = 300
+	sc.cur = sc._drawer_rect(0).get_center()
+	sc.press()
+	check("short of the price: nothing bought, and Gus says by how much", DeskBook.tools.is_empty() and sc.cash == 300 and sc.drawer_line.contains("$450 SHORT"), sc.drawer_line)
+	sc.cash = 2000
+	sc.heard = []
+	sc.press()
+	check("buy the tread gauge: off the till, into the drawer, the till rings and Gus has a word",
+		DeskBook.tools == ["gauge"] and sc.cash == 1250 and sc.drawer_line == String(DeskTools.tool("gauge").gus) and sc.heard.has("till"))
+	sc.press()
+	check("...and only the once", DeskBook.tools == ["gauge"] and sc.cash == 1250 and sc.drawer_line.contains("YOU'VE GOT ONE"))
+	sc._tab_step(1)
+	check("LB/RB move along the drawer, the cursor with them", sc.drawer_sel == 1 and sc._drawer_row_at(sc.cur) == 1)
+	sc.press()
+	check("buy the date wheel too", DeskBook.tools == ["gauge", "wheel"] and sc.cash == 350)
+	check("the loupe isn't in the drawer before there's a stolen list", not sc.buy_tool("loupe") and DeskBook.tools.size() == 2)
+	sc._cancel()
+	check("B shuts the drawer: back to the sheet", sc.phase == "day_end")
+	sc.cur = CounterScene.DRAWER_HANDLE.get_center()
+	sc.press()
+	check("...and a click on its handle opens it again", sc.phase == "drawer")
+	sc.cur = sc._drawer_shut_rect().get_center()
+	sc.press()
+	sc.cur = Vector2(320, 200)
+	sc.press()
+	check("shut it and go home: Tuesday morning, the tools still in the drawer", sc.phase == "brief" and sc.day == 1 and DeskBook.tools == ["gauge", "wheel"])
+	# the drawer's front is where the stamps sit by day: a click straight through from the last
+	# stamp goes home; move off it and back, and a click opens it
+	sc.press()
+	sc.cur = sc._button_rect(2).get_center()
+	sc.close_up()
+	sc.press()
+	check("a click straight through from the stamps goes home, not into the drawer", sc.phase == "brief" and sc.day == 2)
+	sc.press()
+	sc.cur = sc._button_rect(2).get_center()
+	sc.close_up()
+	sc.cur = Vector2(320, 200)
+	sc._drawer_hover()
+	sc.cur = sc._button_rect(2).get_center()
+	sc.press()
+	check("...but off it and back on, a click on its front opens it", sc.phase == "drawer")
+	done(sc)
+	# in the story a tool comes out of Leo's own money (the shop's till there is only the day's)
+	DeskBook.reset()
+	var keep_cash := StoryState.cash
+	sc = desk(192)
+	sc.story = { "type": "counter", "day": 10 }
+	sc.start_day(10)
+	sc.press()
+	sc.close_up()
+	StoryState.cash = 1000
+	var till := sc.cash
+	sc._tab_step(1)
+	var ok := sc.buy_tool("lamp") == false and sc.buy_tool("wheel")
+	check("in the story a tool's paid out of Leo's own money, not the day's till", ok and StoryState.cash == 100 and sc.cash == till and sc.purse_label() == "YOUR OWN MONEY")
+	StoryState.cash = keep_cash
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.4: the tools at the desk
+
+func _tools_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(201)
+	sc.start_day(15)
+	sc.press()
+	# an expired registration, and a temporary permit in the pocket that somebody made up
+	var c: Dictionary = {}
+	for i in 60:
+		c = sc.rules.customer(15, "clean", { "plain": true })
+		sc.rules.excuse(c, 15, "expired_reg")
+		sc.rules._proof(c, "expired_reg", 15, "bad")
+		if DeskTools.forged(c, "permit"): break
+	sc.waiting.push_front(c)
+	sc.next_customer()
+	sc.inspecting = true
+	var lapse := field(sc, "reg", "expiry")
+	sc.pick(lapse)
+	sc.pick(lapse)
+	check("no tools: the same thing twice just puts it back down", sc.pick_a.is_empty() and sc.verdict.is_empty())
+	check("...and a seal's nothing to pick", not sc.fields().any(func(f): return f.key == "seal"))
+	DeskBook.tools = ["gauge", "wheel", "loupe", "lamp"]
+	sc.pick(lapse)
+	check("with a tool that reads it, the inspect hint offers it", DeskTools.tool_for(sc.pick_a, DeskBook.tools) == "wheel")
+	sc.pick(lapse)
+	check("the date wheel: the registration twice, it's expired, and that's the question", sc.verdict.good == false and String(sc.verdict.text).begins_with("EXPIRED")
+		and sc.verdict.get("tool", "") == "DATE WHEEL" and sc.ask_list()[0] == "expired_reg")
+	sc.ask("expired_reg")
+	var seal := field(sc, "permit", "seal")
+	check("out comes the permit; with the UV lamp its seal is a thing to pick", not seal.is_empty())
+	sc.pick(seal)
+	sc.pick(seal)
+	check("the UV lamp on a made-up permit: no glow", sc.verdict.good == false and String(sc.verdict.text).contains("FAKE") and sc.lit.get("permit", true) == false)
+	sc.inspecting = false
+	stamp_now(sc, "DENIED")
+	check("...and turning it away is still Leo's call to make (the right one)", sc.result.correct)
+	sc.press()
+	# the gauge on the tread, the loupe on the plate
+	var bald := sc.rules.customer(15, "fails_inspection")
+	while int(Array(bald.sheet.tread).filter(func(x): return x < 1.6).size()) == 0: bald = sc.rules.customer(15, "fails_inspection")
+	sc.waiting.push_front(bald)
+	sc.next_customer()
+	check("a new customer: nothing lit", sc.lit.is_empty())
+	sc.inspecting = true
+	var tread: Dictionary = {}
+	for f in sc.fields(): if f.key == "measure" and String(f.val.kind) == "tread": tread = f
+	sc.pick(tread)
+	sc.pick(tread)
+	check("the tread gauge: the tread twice, it fails, no binder", sc.verdict.good == false and sc.verdict.get("tool", "") == "TREAD GAUGE" and sc.ask_list()[0] == "fails_inspection")
+	var plate := field(sc, "car", "plate")
+	sc.pick(plate)
+	sc.pick(plate)
+	check("the loupe: the plate on the car twice, read against the stolen list", sc.verdict.get("tool", "") == "LOUPE" and sc.verdict.good == true)
+	sc.pick(plate)
+	sc.pick(field(sc, "reg", "plate"))
+	check("...and a tool doesn't get in the way of putting two things side by side", sc.verdict.text == "MATCH" and not sc.verdict.has("tool"))
+	sc.inspecting = false
+	stamp_now(sc, "APPROVED")
+	check("the tools never stamp: a bald tire approved is still a citation", not sc.result.correct and sc.result.citation != "")
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.4: the relaxed clock
+
+func _relaxed_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(211)
+	sc.fresh = true
+	sc.start_day(0)
+	check("the wall clock starts at its usual pace: ten minutes a day", not DeskBook.relaxed and sc.relax_line().contains("OFF (10 MIN A DAY)"))
+	sc.toggle_relaxed()
+	check("{R} on the brief puts it on the relaxed clock: fifteen minutes a day", DeskBook.relaxed and sc.relax_line().contains("ON (15 MIN A DAY)"))
+	sc._tab_step(1)
+	check("...and it stays that way along the week picker", DeskBook.relaxed and sc.day == 8)
+	sc.press()
+	sc.toggle_relaxed()
+	check("...and only flips on the brief", DeskBook.relaxed)
+	done(sc)
+	# the same day both ways: the same line and the same calls; only the real time is longer
+	var runs: Array = []
+	for relaxed in [false, true]:
+		DeskBook.reset()
+		DeskBook.book_seed = 5
+		DeskBook.relaxed = relaxed
+		var s2 := desk(212)
+		s2.start_day(10)
+		var line: Array = s2.arrivals.map(func(x): return "%s %s %.1f" % [x.c.kind, str(x.c.get("seed", "")), x.t])
+		var calls: Array = []
+		var secs := 0.0
+		var hold := 0.0
+		s2.press()
+		for i in 6000:
+			var was := s2.clock
+			s2.tick(0.5)
+			secs += 0.5
+			if s2.phase == "counter":
+				hold += s2.clock - was
+				# (a slow clerk: seventy minutes on the clock with each one, and whoever's at the window at six)
+				if hold >= 70.0 or s2.clock >= CounterRules.SHIFT_LEN:
+					stamp_now(s2, "APPROVED" if CounterRules.find_problems(s2.c, 10, s2.bolo_now()).is_empty() else "DENIED")
+					calls.append("%s %s %s %d" % [s2.c.kind, s2.stamped, s2.result.correct, int(s2.result.money)])
+					hold = 0.0
+			if s2.phase == "result": s2.press()
+			if s2.phase == "day_end": break
+		runs.append({ "line": line, "calls": calls, "secs": secs, "walked": int(s2.day_log.walked), "end": s2.phase })
+		done(s2)
+	check("relaxed or not: the same line, the same calls, the same people left at six", runs[0].end == "day_end" and runs[1].end == "day_end" and runs[0].line == runs[1].line
+		and runs[0].calls == runs[1].calls and runs[0].walked == runs[1].walked and runs[0].walked > 0, "%d / %d calls, %d / %d walked, %s" % [runs[0].calls.size(), runs[1].calls.size(), runs[0].walked, runs[1].walked,
+		"same line" if runs[0].line == runs[1].line else "%s vs %s" % [runs[0].line.slice(0, 3), runs[1].line.slice(0, 3)]])
+	check("...and the day takes half as long again in real time", absf(runs[1].secs / runs[0].secs - CounterScene.RELAXED_STRETCH) < 0.1, "%.0f s / %.0f s" % [runs[0].secs, runs[1].secs])
+	# somebody at the window: the horn still waits ninety minutes on the clock, which is longer in real time
+	DeskBook.reset()
+	DeskBook.relaxed = true
+	sc = desk(213)
+	sc.start_day(10)
+	sc.press()
+	sc.waiting.push_front(sc.rules.customer(10, "clean"))
+	sc.next_customer()
+	sc.waiting.append(sc.rules.customer(10, "clean"))
+	var real := 0.0
+	while sc.honk_t <= 0.0 and real < 400.0:
+		sc.tick(0.25)
+		real += 0.25
+	check("relaxed: the next one honks after ninety minutes on the clock, two and a quarter real minutes", absf(sc.clock - CounterRules.HONK_AFTER) < 1.0 and absf(real - 135.0) < 1.0, "%.1f s, %.1f min" % [real, sc.clock])
+	done(sc)
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.4: the drawer and the clock are kept
+
+func _saved_desk() -> void:
+	# through JSON, in the story's save, in overtime's file
+	DeskBook.reset()
+	DeskBook.tools = ["gauge", "lamp"]
+	DeskBook.relaxed = true
+	var d: Variant = JSON.parse_string(JSON.stringify(DeskBook.to_dict()))
+	DeskBook.reset()
+	DeskBook.from_dict(d as Dictionary)
+	check("the tools and the relaxed clock survive the save, through JSON", DeskBook.tools == ["gauge", "lamp"] and DeskBook.relaxed)
+	var was := StoryState.active
+	StoryState.active = true
+	StoryState.flags = {}
+	DeskBook.close_book()
+	DeskBook.reset()
+	DeskBook.open_book()
+	check("...and ride along in the story's save", DeskBook.tools == ["gauge", "lamp"] and DeskBook.relaxed)
+	StoryState.active = was
+	StoryState.flags = {}
+	# overtime: a tool bought at the day's end and the clock are in the file at clock-out
+	_wipe_overtime()
+	DeskBook.reset()
+	var sc := desk(221)
+	sc.fresh = true
+	sc.start_day(49)
+	sc.toggle_relaxed()
+	sc._tab_step(1)
+	check("a new overtime keeps the clock picked on the brief", sc.overtime and DeskBook.relaxed and DeskBook.tools.is_empty())
+	sc.press()
+	sc.close_up()
+	sc.cash = 5000
+	sc._tab_step(1)
+	var bought := sc.buy_tool("loupe")
+	sc._cancel()
+	sc.end_day()
+	check("buy the loupe in overtime and clock out: saved", bought and FileAccess.file_exists(TEST_OVERTIME))
+	done(sc)
+	DeskBook.reset()
+	sc = desk(222)
+	sc.fresh = true
+	sc.start_day(0)
+	check("a new session: the normal clock and an empty drawer", not DeskBook.relaxed and DeskBook.tools.is_empty())
+	sc._tab_step(-1)
+	check("pick OVERTIME: the loupe and the relaxed clock are back with its book", sc.overtime and DeskBook.tools == ["loupe"] and DeskBook.relaxed and sc.cash == 5000 - 1150)
+	sc._tab_step(1)
+	check("back to week 1: a fresh book with nothing in the drawer, on the clock the picker shows", not sc.overtime and DeskBook.tools.is_empty() and DeskBook.relaxed)
+	done(sc)
+	_wipe_overtime()
+	DeskBook.reset()
+
+# ------------------------------------------------------------------ Desk 2.4: faces that age
+
+func _ages_desk() -> void:
+	DeskBook.reset()
+	var sc := desk(231)
+	sc.start_day(1)
+	sc.press()
+	sc.waiting.push_front(booked(sc, "jayden"))
+	sc.next_customer()
+	var then := sc.face_age()
+	var later := CounterRules.days_between(CounterRules.WEEK_START, [2021, 5, 4])
+	sc.start_day(later)
+	sc.press()
+	sc.waiting.push_front(sc.rules.scripted(DeskRegulars.spec("jayden", DeskRegulars.OT + 1, "?", later), later))
+	sc.next_customer()
+	check("faces age with the calendar: Jayden's 19 in the run, 21 at the window in May 2021", then == 19 and sc.face_age() == 21, "%d / %d" % [then, sc.face_age()])
+	sc.waiting.push_front(CounterRules.audit_customer({ "no": 9, "day": later - 1, "stamp": "APPROVED", "correct": true, "kind": "regular", "seed": 77, "id": "" }))
+	sc.next_customer()
+	check("...and Hachey, at the window with a file, is as old as he is that day", sc.c.kind == "audit" and sc.window_age() == CounterRules.age_on(CounterRules.HACHEY.dob, later) and sc.window_age() == 64)
 	done(sc)
 	DeskBook.reset()

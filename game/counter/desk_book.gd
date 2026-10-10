@@ -2,8 +2,10 @@
 ## worked out), the station's sticker log (every inspection sticker issued, last fall's pages
 ## included), the filing cabinet (every work order he's stamped, which is how the regulars and
 ## the people he turned away remember him, and what the Ministry's auditor pulls), the
-## Ministry's tally on him, the seed of the police's weekly stolen lists, and the overtime
-## record (the job after the run: the day he's on, the till, the days kept and the streaks).
+## Ministry's tally on him, the seed of the police's weekly stolen lists, the overtime record
+## (the job after the run: the day he's on, the till, the days kept and the streaks), the tools
+## bought out of Gus's drawer (DeskTools), and the wall clock's pace (relaxed: the days run
+## half as long again, and nothing else changes).
 ##
 ## Static, like StoryState. In the story it lives in StoryState.flags["desk_book"], so it saves
 ## and starts over with the story; free play starts a fresh book every time, except overtime,
@@ -58,6 +60,10 @@ static var overtime := {}
 ## Where free play keeps overtime between sessions (the tests point it somewhere else).
 const OVERTIME_PATH := "user://driveboss_overtime.json"
 static var overtime_path := OVERTIME_PATH
+## The tools out of Gus's drawer (DeskTools ids, in the order they were bought).
+static var tools: Array = []
+## The relaxed wall clock: the same day, half as long again in real time.
+static var relaxed := false
 
 ## A blank book.
 static func reset() -> void:
@@ -72,10 +78,13 @@ static func reset() -> void:
 	audits = []
 	book_seed = 0
 	overtime = {}
+	tools = []
+	relaxed = false
 
 static func to_dict() -> Dictionary:
 	var d := { "notes": notes, "stickers": stickers, "citations": citations, "warnings": warnings,
-		"meetings": meetings, "old_log": old_log, "files": files, "audits": audits, "book_seed": book_seed }
+		"meetings": meetings, "old_log": old_log, "files": files, "audits": audits, "book_seed": book_seed,
+		"tools": tools, "relaxed": relaxed }
 	if not overtime.is_empty(): d.overtime = overtime
 	return d
 
@@ -87,6 +96,8 @@ static func from_dict(d: Dictionary) -> void:
 	warnings = int(d.get("warnings", 0))
 	meetings = int(d.get("meetings", 0))
 	old_log = bool(d.get("old_log", false))
+	for t in d.get("tools", []): if DeskTools.tool(String(t)).size() > 0 and not tools.has(String(t)): tools.append(String(t))
+	relaxed = bool(d.get("relaxed", false))
 	# a book from before the weekly lists gets a seed of its own
 	book_seed = int(d.get("book_seed", randi()))
 	# the save is JSON: numbers come back as floats

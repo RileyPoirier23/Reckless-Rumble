@@ -306,7 +306,7 @@ const HACHEY_SAYS := ["GOOD MORNING. DON'T MIND ME. I'M JUST GOING TO STAND HERE
 ## ...and when the file he pulls is a box: the Ministry doesn't care what's in the parts room, only that you agree with yourself.
 const HACHEY_BOX := "ONE OF YOUR BOXES. THE MINISTRY DOESN'T CARE WHAT'S IN YOUR PARTS ROOM. THE MINISTRY CARES IF YOU SIGN THE SAME WAY TWICE."
 const HACHEY_LOCAL := "THE ONE ON MAIN. I TAKE IT BLACK. I WRITE DOWN HOW LONG THE LINE IS."
-const HACHEY_ASK := "I'M NOT THE CUSTOMER, MR. COVINGTON. I'M THE MINISTRY. THE FILE IS THE CUSTOMER."
+const HACHEY_ASK := "I'M NOT THE CUSTOMER. I'M THE MINISTRY. THE FILE IS THE CUSTOMER."
 const MASK_LINES := ["IT'S A COSTUME. IT'S HALLOWEEN, BUD.", "OH. RIGHT. FORGOT I HAD IT ON. IT'S VERY COMFORTABLE.", "...FINE. BUT YOU'RE NO FUN."]
 ## Undercover people don't know local things. Ask them anything and they stumble.
 const STING_ASK := ["THE, UH... TIM BURTONS? THE ONE ON MOUNTAIN STREET. AVENUE. MOUNTAIN... PLACE?",
@@ -343,6 +343,13 @@ static func days_between(a: Array, b: Array) -> int:
 
 static func today(day: int) -> Array:
 	return date_add(WEEK_START, day)
+
+## How old somebody born on `dob` ([y, m, d]) is on `day`: in overtime people have birthdays too.
+static func age_on(dob: Array, day: int) -> int:
+	var t := today(day)
+	var age := int(t[0]) - int(dob[0])
+	if int(t[1]) * 100 + int(t[2]) < int(dob[1]) * 100 + int(dob[2]): age -= 1
+	return age
 
 static func day_name(day: int) -> String:
 	return DAYS[posmod(day, 7)]
@@ -630,7 +637,8 @@ func customer(day: int, want := "", fixed := {}) -> Dictionary:
 	var fcar: Dictionary = fixed.get("car", {})
 	var m := model(String(fcar.get("catalogue", "")))
 	var t := today(day)
-	var age := maxi(1, YEAR - int(m.year))
+	# the car's age on the day (in overtime the kilometres keep going up)
+	var age := maxi(1, int(t[0]) - int(m.year))
 	var car := {
 		"make": m.make, "model": m.model, "year": m.year, "paint": m.paint, "len": m.len, "wid": m.wid,
 		"wheelbase": m.wheelbase, "body": m.body, "side_body": m.side_body, "class": m["class"], "cat": m.id,
@@ -765,6 +773,20 @@ func _transfer(c: Dictionary, day: int) -> void:
 		"issued": date_add(today(day), -(200 + rng.randi() % 2000)) }
 	if not c.docs.has("old_reg"): c.docs.append("old_reg")
 	c.request = "FULL INSPECTION"
+
+## A car back from last time that came over from another province: it's still on the same old
+## ownership (the province, the plate, the day it was issued), still transferring. Whoever's on
+## the ownership here is on the old one too, the brand followed it honestly, and an inspection is
+## the full one (unless booking the wrong one is the problem it came back with).
+static func _still_from_away(c: Dictionary, old: Dictionary) -> void:
+	var o: Dictionary = old.duplicate(true)
+	o.owner = c.reg.owner
+	o.vin = c.sheet.vin
+	o.brand = String(c.reg.get("brand", "CLEAN"))
+	c.old_reg = o
+	c.reg.prev = String(o.prov)
+	if not c.docs.has("old_reg"): c.docs.append("old_reg")
+	if c.request == "SAFETY INSPECTION" and not c.flags.has("out_of_province"): c.request = "FULL INSPECTION"
 
 ## Branded salvage, here and (if it came from away) on the old ownership too: the brand
 ## followed it honestly.
@@ -1291,6 +1313,7 @@ func scripted(spec: Dictionary, day: int) -> Dictionary:
 	if not cast.is_empty():
 		if not who.has("face"): who.face = int(cast.seed)
 		if not who.has("fem"): who.fem = int(cast.female)
+		# (the cast's ages are Year 1's: born that long before 2019, older in overtime)
 		if not who.has("dob"): who.dob = [YEAR - int(cast.age), 6, 15]
 	for k in ["face", "fem"]: if who.has(k): who[k] = int(who[k])
 	if who.has("dob"): who.dob = (who.dob as Array).map(func(x): return int(x))
@@ -1303,13 +1326,15 @@ func scripted(spec: Dictionary, day: int) -> Dictionary:
 	if spec.get("from_away", false):
 		r._transfer(c, day)
 		r._ensure_history(c, day)
+	# what's still on the car from last time: the ownership it came with from another province
+	# (here first, so anything after it reads the car as being from away), a part put on
+	# somewhere else (and its invoice), a salvage brand (and its certificate)
+	var kept: Dictionary = spec.get("kept", {})
+	if kept.has("old_reg") and c.has("reg"): _still_from_away(c, kept.old_reg)
 	if spec.has("excuse"): r.excuse(c, day, String(spec.excuse))
 	# a proof that won't hold up, for a problem whose proof keeps its name when it's bad (a bad
 	# bill of sale is bos_forged, and a bad pink card is expired insurance: ask for those instead)
 	if spec.get("forged", false) and PROOFS.has(prob) and not prob in ["name_mismatch", "no_insurance"]: r._proof(c, prob, day, "bad")
-	# what's still on the car from last time: a part put on somewhere else (and its invoice), a
-	# salvage brand (and its certificate)
-	var kept: Dictionary = spec.get("kept", {})
 	if kept.has("invoice") and c.has("sheet"):
 		c.sheet.part = String(kept.part)
 		c.sheet.serial = String(kept.serial)
@@ -1820,7 +1845,7 @@ static func _judge(c: Dictionary, stamp: String, day: int, bolo_list: Array) -> 
 		"sting":
 			match stamp:
 				"WRENCH": r.heat = 60; r.citation = "UNDERCOVER STING: VIN TAMPERING. $2,000 FINE AND A FILE WITH YOUR NAME ON IT"; r.correct = false; r.line = "He badges you. \"Thought so.\""
-				"DENIED": r.line = "\"No worries, man. Wrong garage.\" He writes something in his phone."
+				"DENIED": r.line = "\"No worries. Wrong garage.\" He writes something in his phone."
 				"REPORT": r.heat = -15; r.line = "The cops come and go. One of them shakes your hand. The Familia hears about it."; r.trust = -10
 				_: r.line = "He leaves."
 			return r
@@ -1940,7 +1965,7 @@ static func _judge_box(c: Dictionary, stamp: String, probs: Array, r: Dictionary
 			r.line = "The police come to look at a box of %s. They look at it hard. It stays a box of %s." % [String(o.part).to_lower(), String(o.part).to_lower()]
 		"WRENCH":
 			r.correct = false
-			r.line = "The courier looks at Bay 3. Then at you. \"I just need a signature, man.\""
+			r.line = "The courier looks at Bay 3. Then at you. \"I just need a signature.\""
 	return r
 
 ## Audit week: Hachey covers your stamp with his thumb and you stamp the file again. The

@@ -5,17 +5,22 @@
 ## and the end of the run. Then Desk 2.2: a stolen part on a car and in a box, winter week's
 ## taxi and studs, Hachey pulling a box, and the new end of the run. Then Desk 2.3: Hachey
 ## reading a stolen car's file against its own week's list, and overtime (the picker, a cab in
-## January, the streak, Mrs. Doiron's studs in May, the day-end record, Friday's bills).
+## January, the streak, Mrs. Doiron's studs in May, the day-end record, Friday's bills). Then
+## Desk 2.4: Gus's tool drawer under the day-end sheet, buying a tool, the date wheel and the UV
+## lamp at the desk, and the relaxed clock on the week picker. `--only 24` takes just those.
 extends Node
 
 var scene: CounterScene
 var out := "user://counter_shots"
+var only := ""
 
 func _ready() -> void:
 	var a := OS.get_cmdline_user_args()
 	var k := a.find("--counter-demo")
 	if k >= 0 and k + 1 < a.size(): out = a[k + 1]
 	if a.has("--pad"): Hints.pad = true      # the controller's prompts
+	var o := a.find("--only")
+	if o >= 0 and o + 1 < a.size(): only = a[o + 1]
 	DirAccess.make_dir_recursive_absolute(out)
 	_run()
 
@@ -34,6 +39,10 @@ func _serve(c: Dictionary) -> void:
 	scene.next_customer()
 
 func _run() -> void:
+	if only == "24":
+		await _desk24()
+		await _done()
+		return
 	# Wednesday of week two: the binder, and a line building in the lot
 	scene.start_day(9)
 	await _shot("01_brief")
@@ -128,6 +137,10 @@ func _run() -> void:
 	await _desk21()
 	await _desk22()
 	await _desk23()
+	await _desk24()
+	await _done()
+
+func _done() -> void:
 	# the room goes quiet before the lights go off (a sound still playing at exit leaks)
 	for p in scene.audio.get_children(): if p is AudioStreamPlayer: (p as AudioStreamPlayer).stop()
 	await get_tree().create_timer(0.5).timeout
@@ -448,3 +461,83 @@ func _desk23() -> void:
 	await _shot("43_overtime_friday")
 	scene.overtime = false
 	if FileAccess.file_exists(DeskBook.overtime_path): DirAccess.remove_absolute(DeskBook.overtime_path)
+
+func _desk24() -> void:
+	DeskBook.reset()
+	scene.overtime = false
+	scene.fresh = false
+	# the end of a good Thursday in week 2: Gus's drawer under the day-end sheet
+	scene.start_day(10)
+	scene.press()
+	scene.cash = 2140
+	scene.clock = CounterRules.SHIFT_LEN - 1.0
+	scene.arrivals = []
+	scene.tick(0.1)
+	scene.close_up()
+	scene.day_log.merge({ "seen": 11, "correct": 10, "earned": 1065, "dirty": 600 }, true)
+	scene.cur = CounterScene.DRAWER_HANDLE.get_center()
+	await _shot("44_day_end_drawer")
+	# pull it open, and buy the date wheel
+	scene._tab_step(1)
+	scene.cur = scene._drawer_rect(1).get_center()
+	scene._drawer_hover()
+	await _shot("45_drawer")
+	scene.press()
+	await _shot("46_drawer_bought")
+	scene._cancel()
+	# the next week (the lamp's in the drawer too by now): an expired registration, and a
+	# temporary permit somebody made up
+	DeskBook.tools = ["wheel", "lamp"]
+	scene.start_day(15)
+	scene.press()
+	scene.clock = 140.0
+	scene.tick(0.01)
+	var c: Dictionary = {}
+	for i in 60:
+		c = scene.rules.customer(15, "clean", { "plain": true })
+		scene.rules.excuse(c, 15, "expired_reg")
+		scene.rules._proof(c, "expired_reg", 15, "bad")
+		if DeskTools.forged(c, "permit"): break
+	_serve(c)
+	scene.tab = scene._tabs_today().find("DOCUMENTS")
+	scene.inspecting = true
+	var lapse := _field("reg", "expiry")
+	scene.pick(lapse)
+	scene.cur = (lapse.r as Rect2).get_center()
+	await _shot("47_wheel_again")
+	scene.pick(lapse)
+	scene.cur = Vector2(60, 250)
+	await _shot("48_wheel_expired")
+	scene.ask("expired_reg")
+	scene.verdict = {}
+	var seal := _field("permit", "seal")
+	scene.pick(seal)
+	scene.pick(seal)
+	scene.cur = (seal.r as Rect2).get_center() + Vector2(14, 10)
+	await _shot("49_lamp_fake")
+	scene.inspecting = false
+	scene.verdict = {}
+	scene.stamp("DENIED")
+	await get_tree().create_timer(0.1).timeout
+	scene.press()
+	# ...and a bill of sale that's real: it glows
+	var b := scene.rules.customer(15, "clean", { "plain": true })
+	scene.rules.excuse(b, 15, "name_mismatch")
+	_serve(b)
+	scene.ask("name_mismatch")
+	scene.inspecting = true
+	var bs := _field("bos", "seal")
+	scene.pick(bs)
+	scene.pick(bs)
+	scene.cur = Vector2(60, 250)
+	await _shot("50_lamp_real")
+	scene.inspecting = false
+	scene.verdict = {}
+	# the relaxed clock, next to the week picker
+	DeskBook.reset()
+	scene.fresh = true
+	scene.start_day(14)
+	scene.toggle_relaxed()
+	await _shot("51_brief_relaxed")
+	scene.fresh = false
+	DeskBook.reset()
