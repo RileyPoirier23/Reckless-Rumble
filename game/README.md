@@ -260,6 +260,7 @@ The driving tests (16 checks) run headless on every push:
 | `sim/car_sim.gd` | The physics: tires, engine, clutch, gearbox, heat, damage. No drawing |
 | `render/car_art.gd` | Draws the car pixel by pixel as 16 stacked slices |
 | `render/car_view.gd` | Stacks and rotates the slices, with body roll, steering wheels and lights |
+| `ui/hud_layout.gd` | Where every driving HUD panel goes (the test checks nothing overlaps or covers the car) |
 | `world/player_car.gd` | Input, collisions, tire marks, smoke and steam |
 | `world/ai_car.gd` | A car with somebody else driving it: the same sim, steered down a line of points at the speed the corners allow |
 | `world/path_track.gd` | A line to drive and how far along it a car is (laps included) |
@@ -269,6 +270,7 @@ The driving tests (16 checks) run headless on every push:
 | `render/engine_audio.gd` | The engine and tire sounds, made live from the sim |
 | `data/cars/silvio.json` | The car itself: weight, torque curve, gears, brakes, tires |
 | `counter/rules.gd` | The counter's rules: customers, papers, problems, comparisons, ASK answers and proofs, the binder, the shift's arrivals, stamps, warnings and pay. No drawing |
+| `counter/desk_tools.gd` | Gus's tool drawer: the tools, their prices, and what each one reads when you pick a fact twice |
 | `counter/counter_scene.gd` | The counter: the shift clock, the line in the lot, desk, documents, inspect, ASK, stamps, the binder, the books, the day and the week |
 | `counter/desk_book.gd` | Leo's notebook, the sticker log, the filing cabinet (every stamp) and the Ministry's tally; rides along in the story save |
 | `counter/regulars.gd` | The regulars' visits and the people you turned away coming back, from what's in the filing cabinet |
