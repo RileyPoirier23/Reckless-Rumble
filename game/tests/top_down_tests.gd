@@ -35,6 +35,8 @@ func _init() -> void:
 	_parked()
 	_knots()
 	_supercars_and_lamps()
+	_fenders_and_mirrors()
+	_ambulance_and_trucks()
 	_async()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
@@ -550,3 +552,83 @@ class FakeDrive extends Node:
 	var furniture: RoadFurniture
 	var sky: WorldSky
 	var ysort := Node2D.new()
+
+## Every wheel sits under its fender: no tyre's top shows through the body over it, slammed or
+## not, whatever the fitment (a poked tyre stands outside the body, so its outside rows don't
+## count), and nothing hangs in the air off the side (a mirror's arm reaches down to the door).
+func _fenders_and_mirrors() -> void:
+	var through: Array = []
+	var hanging: Array = []
+	var ids: Array = ["silvio", "charjer", "supreem", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "mazduh_myata_1990",
+		"daihatsoo_hijinx_1999", "acurra_en_ess_eks_1991", "chevrolay_suburbian_2015", "fjord_econolean_1995"]
+	for id: String in ids:
+		for m: Dictionary in [{}, { "drop": 1.0 }, { "drop": 1.0, "offset": "stance" }, { "drop": 1.0, "offset": "tucked" }, { "drop": -1.0 }]:
+			var p := _plan(id, m)
+			for w: Array in p.wheels:
+				var xc: float = w[0]
+				var yc: float = w[1]
+				var r: float = w[2]
+				var ww: int = w[3]
+				for x in range(int(xc - r * 0.7), int(xc + r * 0.7) + 1):
+					# (the tyre's top slice, as the plan stacks it)
+					var top := float(maxi(0, int(round(r * CarArt.RISE + CarArt.RISE * sqrt(maxf(0.0, r * r - pow(float(x) + 0.5 - xc, 2.0))))) - 1))
+					for y in range(int(round(yc - ww / 2.0)), int(round(yc + ww / 2.0))):
+						if y < 0 or y >= p.sy or x < 0 or x >= p.sx: continue
+						var i := p.idx(x, y)
+						if p.h0[i] < 0 or absf(float(y) + 0.5 - p.cy) > p.hw[x] - 0.5: continue
+						if float(p.h0[i]) < top and through.size() < 12: through.append("%s %s (%d,%d) body %d tyre %.1f" % [id, str(m), x, y, p.h0[i], top])
+			for i2 in p.h0.size():
+				if p.h0[i2] < 0 or p.belt[i2] < 999 or (p.m0[i2] & 255) == CarArt.M_GRILLE: continue
+				var x2 := i2 % p.sx
+				var y2 := i2 / p.sx
+				var av := absf(float(y2) + 0.5 - p.cy)
+				if p.hw[x2] <= 0.0 or av <= p.hw[x2] + 0.01: continue
+				# out past the side: something must hold it up, the body beside it reaching its foot
+				var yin := y2 - 1 if float(y2) > p.cy else y2 + 1
+				var ok := p.b0[i2] <= 0
+				for yy: int in [yin, yin - 1 if float(y2) > p.cy else yin + 1]:
+					if yy >= 0 and yy < p.sy and p.h0[p.idx(x2, yy)] >= p.b0[i2]: ok = true
+				if not ok and hanging.size() < 12: hanging.append("%s %s (%d,%d) %d..%d" % [id, str(m), x2, y2, p.b0[i2], p.h0[i2]])
+	check("every tyre sits under its fender: none shows through the body over it, slammed or not", through.is_empty(), str(through.slice(0, 4)))
+	check("nothing hangs in the air off the side: mirrors reach down to the doors", hanging.is_empty(), str(hanging.slice(0, 4)))
+
+## The ambulance from above: AMBULANCE across its hood (mirrored, for the mirror of the car
+## ahead), the star of life on its roof, its stripes down the sides; a step van's windshield is
+## glass; a semi's tandem stays under its frame.
+func _ambulance_and_trucks() -> void:
+	for id: String in ["fjord_e_fiddy_ambulanz_2014", "ambulance"]:
+		var spec := CarCatalog.spec(id)
+		var a := CarArt.new(spec, Color("f2f2ee"), 0.0, 5, CarArt.CAR_SCALE)
+		var img := a.atlas.get_image()
+		var red := 0
+		var blue := 0
+		var orange := 0
+		for yy in img.get_height():
+			for xx in img.get_width():
+				var c := img.get_pixel(xx, yy)
+				if c == Color("c8201c"): red += 1
+				elif c == Color("1f4fb0"): blue += 1
+				elif c == Color("f07818"): orange += 1
+		var p := CarArt.plan_of(spec, {}, { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }, CarArt.CAR_SCALE, CarGen.design(spec), CarArt._plan_key(spec, {}, {}, CarArt.CAR_SCALE))
+		# the word on the hood: red marks on the hood's top, ahead of the windshield
+		var hood_red := 0
+		var d := CarGen.design(spec)
+		var top_z := p.n - 1
+		for i in p.h0.size():
+			var x := i % p.sx
+			if p.h0[i] < 0 or p.ux[x] < float(d.cowl_x): continue
+			var z: int = p.h0[i]
+			if img.get_pixel(z * p.sx + x, i / p.sx) == Color("c8201c"): hood_red += 1
+		check("%s: AMBULANCE across the hood, the star of life on the roof, red and orange stripes down the sides" % id,
+			hood_red > 30 and blue > 40 and red > 200 and orange > 100, "hood %d, blue %d, red %d, orange %d" % [hood_red, blue, red, orange])
+	var step := _plan("grumpman_step_up_van_2004")
+	var glass := 0
+	for i3 in step.m0.size():
+		if step.h0[i3] >= 0 and (step.m0[i3] & 255) == CarArt.M_GLASS: glass += 1
+	check("a step van has its windshield from above", glass > 20, "%d" % glass)
+	for id2: String in ["kenwerth_tee_six_eighty_ate_2016", "freightlinear_cascadeeya_2013"]:
+		var tp := _plan(id2)
+		var x_tail := float(CarArt.MX)
+		var behind := 0.0
+		for w: Array in tp.wheels: behind = maxf(behind, x_tail - (float(w[0]) - float(w[2])))
+		check("%s's tandem stays under its frame" % id2, behind <= 1.0 and tp.wheels.size() >= 10, "%.1f px out, %d wheels" % [behind, tp.wheels.size()])

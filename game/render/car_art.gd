@@ -148,6 +148,7 @@ class Plan:
 	var face := PackedByteArray()   # which way a visible side faces: 1 left/right, 2 front, 3 rear
 	var ux := PackedFloat32Array()  # per column: 0 rear bumper .. 1 nose
 	var hw := PackedFloat32Array()  # per column: half width (px)
+	var sill := PackedInt32Array()  # per column: the body's bottom before the arches cut it (the flank's bands go from here)
 	var doors := PackedByteArray()  # per column: 1 door shut line, 2 handle
 	var wheels: Array = []          # [x centre, y centre, radius, width, front, outward sign]
 	var front_spots: Array[Vector2] = []
@@ -380,6 +381,7 @@ class _Shaper:
 		p.face.resize(cnt)
 		p.ux.resize(p.sx)
 		p.hw.resize(p.sx)
+		p.sill.resize(p.sx)
 		p.doors.resize(p.sx)
 		_lines()
 		_stance()
@@ -483,7 +485,9 @@ class _Shaper:
 			"notch": return float(d.deck_x)
 			"fast", "hatch": return float(d.tail_x) + 0.005
 			"pickup": return float(d.cab_x)
-			"boxtruck": return float(d.get("box_x", 1.0))
+			# (a step van's box comes right up to its windshield: the glass is just that and the
+			# door windows beside it)
+			"boxtruck": return float(d.get("box_x", 1.0)) if String(d.get("cab", "")) != "step" else float(d.roof_f) - 0.05
 			"open":
 				# a Jepp's tub is open all the way back to the tailgate
 				if fam == "offroad": return 0.03 + 2.0 / maxf(1.0, float(p.lpx))
@@ -552,7 +556,8 @@ class _Shaper:
 		if cls in ["muscle", "pony", "sports", "exotic"] or fam in ["sports", "mid", "wedge", "rear"]: hip = 0.6
 		if String(d.get("flare", "none")) != "none": hip = maxf(hip, 1.3)
 		if String(mods.get("fenders", "stock")) == "flared": hip = maxf(hip, 2.2)
-		var dually := art.has("dually")
+		# (a box truck's duals tuck in under the box: no hips)
+		var dually := art.has("dually") and fam != "boxtruck"
 		var ra := float(d.tire_r) * float(p.lpx) * 1.3
 		# the engine behind the seats: the back track wider and the hips over it fat
 		var mid := fam in ["mid", "wedge"]
@@ -647,6 +652,7 @@ class _Shaper:
 		p.camber = maxi(1, int(round(p.tire_w * 0.5))) if fit == "stance" else 0
 		p.stretch = fit == "stretch"
 		var xs := [X(float(d.wr)), X(float(d.wf))]
+		if art.has("tractor"): xs[0] = X(CarGen.tandem(d).x)
 		if fam == "trailer":
 			# tandem axles at the back, duals on each; no front wheels (the tractor carries that end)
 			for ax: float in [0.0, -r * 2.2]:
@@ -668,9 +674,9 @@ class _Shaper:
 				if art.has("dually") and i == 0:
 					p.wheels.append([float(xs[i]), p.cy + s * (vc - p.tire_w - 1.0), r, p.tire_w, false, s])
 				if art.has("tractor") and i == 0:
-					# tandem axles: a second pair of duals a wheel's width behind the first
+					# tandem axles: a second pair of duals behind the first, under the frame
 					for dv: float in [0.0, -float(p.tire_w) - 1.0]:
-						p.wheels.append([float(xs[i]) - r * 2.2, p.cy + s * (vc + dv), r, p.tire_w, false, s])
+						p.wheels.append([X(CarGen.tandem(d).y), p.cy + s * (vc + dv), r, p.tire_w, false, s])
 					p.wheels.append([float(xs[i]), p.cy + s * (vc - p.tire_w - 1.0), r, p.tire_w, false, s])
 		for w: Array in p.wheels:
 			if w[4]: p.front_spots.append(Vector2(float(w[0]) - p.sx / 2.0, float(w[1]) - p.cy))
@@ -740,12 +746,17 @@ class _Shaper:
 				if dx < ra:
 					arch_z = maxf(arch_z, float(wv[2]) * rise + rise * sqrt(maxf(0.0, ra * ra - dx * dx)) + arch_gap - float(p.zoff))
 					arch_v = minf(arch_v, absf(float(wv[1]) - p.cy) - float(wv[3]) / 2.0 - 1.0)
+			# the fender stands over its tyre: where the shoulder rolls over toward the side it
+			# would dip below the tread, so over a wheel it rolls over less, keeping a skin's
+			# thickness over the arch, and the tyre's top never shows through it
+			var roll := drop_s
+			if arch_z > -99.0: roll = clampf(sh[x] - (arch_z + 1.0), 0.0, drop_s)
 			for y in p.sy:
 				var v := float(y) + 0.5 - p.cy
 				var av := absf(v)
 				if av > w: continue
 				var vn := av / w
-				var hz := sh[x] - drop_s * pow(vn, 5.0)
+				var hz := sh[x] - roll * pow(vn, 5.0)
 				if u > float(d.cowl_x) or gh[x] == 0: hz -= crown * vn * vn
 				var bz := zb[x]
 				if av > arch_v: bz = maxf(bz, arch_z)
@@ -757,6 +768,7 @@ class _Shaper:
 				p.h0[i] = hi
 				p.b0[i] = maxi(0, lo)
 				p.belt[i] = int(round(sh[x])) + p.zoff
+				p.sill[x] = maxi(0, int(round(zb[x])) + p.zoff)
 				var reg := CarArt.R_BODY
 				if u > float(d.cowl_x) + 0.01: reg = CarArt.R_HOOD
 				elif gh[x] == 0 and u < 0.5: reg = CarArt.R_DECK
@@ -1250,8 +1262,13 @@ class _Shaper:
 					if y2 < 0 or y2 >= p.sy: continue
 					var i2 := p.idx(x, y2)
 					if p.h0[i2] >= 0 and k == 0: continue
+					# its arm reaches down to the door's top where the shoulder has rolled away
+					# under it, so the mirror never hangs in the air off the side
+					var foot := bz - (3 if big else 1)
+					var yin := y2 - int(s) * (k + 1)
+					if yin >= 0 and yin < p.sy and p.h0[p.idx(x, yin)] >= 0: foot = mini(foot, p.h0[p.idx(x, yin)] - 1)
 					p.h0[i2] = bz + (1 if big else 0)
-					p.b0[i2] = bz - (3 if big else 1)
+					p.b0[i2] = maxi(0, foot)
 					p.belt[i2] = 999
 					p.m0[i2] = mat
 
@@ -1518,7 +1535,8 @@ class _Shaper:
 		p.lz1 = maxi(p.lz1, rz0 + 2)
 
 	## An ambulance's box from above: a red beacon on each of its top corners, a light bar across
-	## its front edge over the cab (red and clear lenses), and the air conditioner on the roof.
+	## its front edge over the cab (red and clear lenses), and the air conditioner at the back of
+	## the roof (the star of life has the middle).
 	func _ambulance_roof() -> void:
 		var bx := mini(int(round(X(float(d.get("box_x", 1.0))))), x_nose)
 		var top := 0
@@ -1538,7 +1556,7 @@ class _Shaper:
 				elif front and x == bx - 2 and av < w * 0.55:
 					# the light bar: red and clear lenses in turn
 					mat = CarArt.M_BEACON | ((1 if int(av / 2.0) % 2 == 0 else 2) << 16)
-				elif p.ux[x] > 0.2 and p.ux[x] < 0.34 and av < w * 0.45:
+				elif p.ux[x] > 0.06 and p.ux[x] < 0.16 and av < w * 0.45:
 					mat = CarArt.M_STEEL | ((1 if (x % 3) != 0 else 2) << 8)
 					hgt = 2
 				if mat < 0: continue
@@ -1635,6 +1653,16 @@ class _Shaper:
 						continue
 					p.h0[i] = floor_z
 					p.m0[i] = CarArt.M_BED | (((x - x_tail) % 3) << 8)
+					# the wheel tubs: the bed floor humps up over the back tyres (a slammed truck's
+					# tyres would come up through a flat floor)
+					for w: Array in p.wheels:
+						var r: float = w[2]
+						var dx := absf(float(x) + 0.5 - float(w[0]))
+						if dx >= r or absf(float(y) + 0.5 - float(w[1])) > float(w[3]) / 2.0 + 1.0: continue
+						var tub := int(round(r * CarArt.RISE + CarArt.RISE * sqrt(r * r - dx * dx))) + 1
+						if tub > p.h0[i]:
+							p.h0[i] = tub
+							p.m0[i] = CarArt.M_BED
 			if bed != "tonneau": _bed_load(load if load != "" else ("spare" if mods.get("spare", false) or art.has("spare") else ""), xc, floor_z, rail)
 			if art.has("toolbox"):
 				for x in range(xc - 4, xc - 1):
@@ -1688,7 +1716,9 @@ class _Shaper:
 			# the box: a flat roof with its ribs, white or the fleet's colour (an ambulance's box
 			# and a fire engine's body are smooth, no skylight, no vents)
 			var smooth := art.has("ambulance") or art.has("fire")
-			var bx := int(round(X(float(d.get("box_x", 0.0)))))
+			# (a step van's box runs right up to its windshield: stop the box's roof there, so
+			# its glass and hood stay glass and hood)
+			var bx := int(round(X(minf(float(d.get("box_x", 0.0)), float(d.get("roof_f", 1.0)) - 0.01))))
 			for x in range(x_tail, mini(bx, p.sx)):
 				for y in p.sy:
 					var i8 := p.idx(x, y)
@@ -2114,6 +2144,8 @@ class _Painter:
 	var fire_pump := Vector2.ZERO      # the pump panel, as fractions along the truck
 	var fire_arch := Vector3.ZERO      # the back wheel: x, half the arch's width, how high it reaches (slices)
 	var fire_cols := PackedFloat32Array()  # the compartments' edges (px)
+	var amb := Vector4.ZERO            # an ambulance's box: where it ends (px), its top (m), the side door's edges (px)
+	var marks := PackedByteArray()     # per pixel of the plan: lettering and emblems on the tops (1 red, 2 blue, 3 white)
 	var black_roof: Array[Color] = []  # a floating roof: the roof and its pillars in gloss black
 	# per column
 	var door0 := PackedByteArray()     # the front doors' span
@@ -2235,6 +2267,7 @@ class _Painter:
 			var front0 := fire_arch.x + fire_arch.y + 1.0
 			var pump_x := ux0 + fire_pump.x * float(p.lpx)
 			fire_cols = PackedFloat32Array([ux0 + 0.012 * float(p.lpx), fire_arch.x - fire_arch.y - 1.0, front0, (front0 + pump_x) * 0.5, pump_x])
+		if fleet == "ambulance": _ambulance_marks()
 		# per column
 		door0.resize(p.sx)
 		door1.resize(p.sx)
@@ -2331,6 +2364,8 @@ class _Painter:
 		var b: int = p.b0[i]
 		var m: int = p.m0[i]
 		var c := _top_colour(m, x, y)
+		if not marks.is_empty() and marks[i] != 0 and (m & 255) == CarArt.M_PAINT:
+			c = [c, Color("c8201c"), Color("1f4fb0"), Color("f4f6fa")][marks[i]]
 		# pop-up headlamps: the panels light where the lamps stand up
 		if (m & 255) == CarArt.M_PAINT and (m >> 21) & 1 == 1: _lamp(2, x, y, top, CarArt.HEAD)
 		# the rim of every top (where the next pixel over drops away) gets an ink line
@@ -2366,7 +2401,10 @@ class _Painter:
 			elif inner and z <= belt: sc = riser
 			elif z > belt: sc = _glass_side(i, x, y, z, belt)
 			else:
-				var t := clampf(float(z - b) / maxf(1.0, float(mini(belt, top) - b)), 0.0, 1.0)
+				# (how high up the flank, from the sill: over an arch the bands carry straight on
+				# instead of humping up round the wheel)
+				var b_s := mini(b, p.sill[x]) if (m & 255) == CarArt.M_PAINT else b
+				var t := clampf(float(z - b_s) / maxf(1.0, float(mini(belt, top) - b_s)), 0.0, 1.0)
 				match face:
 					2: sc = _front_face(x, y, z, top)
 					3: sc = _rear_face(x, y, z)
@@ -2671,8 +2709,7 @@ class _Painter:
 				if absf(t - 0.3) < 0.04 or absf(t - 0.55) < 0.04 or absf(t - 0.8) < 0.04: c = CarArt.INK
 			"bus":
 				if absf(t - 0.85) < 0.08: c = Color("2a5a9a")
-			"ambulance":
-				if absf(t - 0.72) < 0.07: c = Color("c8201c")
+			"ambulance": c = _amb_flank(c, x, z)
 			"packer":
 				if absf(t - 0.6) < 0.12: c = Color("f0f0ec") if (x + z) % 4 != 0 else Color("2a6a3a")
 			"fire": c = _fire_flank(c, x, z, t)
@@ -2681,6 +2718,79 @@ class _Painter:
 				if decal >= 0 and t > 0.35 and t < 0.75 and p.ux[x] > 0.15 and p.ux[x] < 0.85:
 					c = decal_c if (t < 0.42 or t > 0.68 or (x * 3 + z) % 4 == 0) else Color("f0f0ec")
 		if portholes and absf(t - 0.72) < 0.1 and p.ux[x] > wf - 0.08 and p.ux[x] < wf + 0.02 and x % 3 == 0: c = CarArt.CHROME[2]
+		return c
+
+	## Where an ambulance's flank and tops carry its outfit, from the plan: the box's length and
+	## height, its side door, and on the tops AMBULANCE mirrored across the hood (so it reads in
+	## the mirror of the car ahead; squeezed to the hood's width) and the star of life on the roof.
+	func _ambulance_marks() -> void:
+		fire_k = p.zl / maxf(1.0, float(d.L))
+		var L := float(d.L)
+		var lpx := float(p.lpx)
+		var bx := float(CarArt.MX) + float(d.get("box_x", 0.6)) * lpx
+		amb = Vector4(bx, float(d.h) * L, bx - 1.0 / L * lpx, bx - 0.18 / L * lpx)
+		marks.resize(p.sx * p.sy)
+		# the word: the small face, mirrored, its letters' tops toward the windshield
+		var word := "AMBULANCE"
+		var cols: Array = []           # each column of the word, rows as bits (top row = bit 0)
+		for ch in word:
+			var g: Array = PixelFont.small_glyph(ch)
+			var gw := int(g[0])
+			var rows: Array = g[1]
+			for cx in gw:
+				var bits := 0
+				for ry in rows.size():
+					for run: Array in rows[ry]:
+						if cx >= int(run[0]) and cx < int(run[1]): bits |= 1 << ry
+				cols.append(bits)
+			cols.append(0)
+		cols.pop_back()
+		# (read from the front the word runs from the car's right to its left; mirrored, it runs
+		# from its left, -y, to its right)
+		var x_cowl := float(CarArt.MX) + float(d.cowl_x) * lpx
+		var x_nose := float(CarArt.MX) + float(d.nose_x) * lpx
+		var xt := int(round((x_cowl + x_nose) * 0.5 - 2.0))
+		var half := 0.0
+		for x in range(xt, xt + 5): half = maxf(half, p.hw[clampi(x, 0, p.sx - 1)])
+		var span := minf(float(cols.size()), half * 2.0 * 0.84)
+		if x_nose - x_cowl >= 7.0 and span >= 12.0:
+			for k in int(span):
+				var bits: int = cols[mini(cols.size() - 1, int(float(k) / span * float(cols.size())))]
+				var y := int(round(p.cy - span * 0.5)) + k
+				for r in 5:
+					if bits & (1 << r) == 0: continue
+					var x := xt + r
+					if x >= 0 and x < p.sx and y >= 0 and y < p.sy: marks[p.idx(x, y)] = 1
+		# the star of life on the box's roof, its arms crossing the roof, the staff along the box
+		var sc := Vector2(float(CarArt.MX) + float(d.get("box_x", 0.6)) * lpx * 0.56, p.cy)
+		var sr := minf(p.gr, 0.7 * lpx / L)
+		if sr >= 4.0:
+			var arm := maxf(1.0, sr * 0.3)
+			for x in range(int(sc.x - sr) - 1, int(sc.x + sr) + 2):
+				for y in range(int(sc.y - sr) - 1, int(sc.y + sr) + 2):
+					if x < 0 or y < 0 or x >= p.sx or y >= p.sy: continue
+					var v := Vector2(float(x) + 0.5, float(y) + 0.5) - sc
+					var dmin := 99.0
+					for k in 3:
+						var a := Vector2.from_angle(float(k) * PI / 3.0)
+						if absf(v.dot(a)) <= sr: dmin = minf(dmin, absf(v.dot(a.orthogonal())))
+					if dmin <= arm: marks[p.idx(x, y)] = 3 if absf(v.y) < 0.6 and absf(v.x) < sr * 0.8 and sr >= 6.0 else 2
+
+	## An ambulance's flank at slice z, by height: a red band at a metre and a bit with an orange
+	## one under it the whole way along, a red header under the box's roof edge, the side door's
+	## shut lines and its window, and the red flashers on the box's upper corners.
+	func _amb_flank(c: Color, x: int, z: int) -> Color:
+		var zm := (float(z) - float(p.zoff)) / fire_k
+		if zm > 1.08 and zm < 1.24: return Color("c8201c")
+		if zm > 0.96 and zm < 1.05: return Color("f07818")
+		var xf := float(x) + 0.5
+		if xf > amb.x: return c
+		var top := amb.y
+		if zm > top - 0.3 and zm < top - 0.18: return Color("c8201c")
+		if zm > top - 0.62 and zm < top - 0.4 and (xf < float(CarArt.MX) + 4.0 or (xf > amb.x - 4.0 and xf < amb.x - 1.0)): return Color("e02a1e")
+		if zm > 0.45 and zm < top - 0.4:
+			if absf(xf - amb.z) < 0.6 or absf(xf - amb.w) < 0.6: return c.darkened(0.3)
+			if xf > amb.z + 1.0 and xf < amb.w - 1.0 and zm > 1.8 and zm < 2.35: return CarArt.GLASS_HI if zm > 2.25 else CarArt.GLASS
 		return c
 
 	## A fire engine's flank at slice z: the white reflective stripe at a metre up, the roll-up
@@ -2749,6 +2859,8 @@ class _Painter:
 			if vn < 0.22 and zz >= bump_top - 1.0: return Color("d8d4c0")
 			# a fire engine's tailboard: red and yellow chevrons across it
 			if fleet == "fire": return Color("e8c020") if (x + y + z) % 4 < 2 else Color("c8201c")
+			# an ambulance's rear step: diamond plate
+			if fleet == "ambulance": return CarArt.CHROME[3] if (x + y) % 2 == 0 and zz == bump_top else CarArt.CHROME[1 + (x + y + z) % 2]
 			match bumper:
 				1: return CarArt.CHROME[2 if zz == bump_top else 1]
 				2: return CarArt.TRIM
@@ -2777,6 +2889,16 @@ class _Painter:
 				if ok: _lamp(1, x, y, z, CarArt.REV_LIT)
 				return Color("d8d8d0")
 			return (CarArt.SMOKED if smoked else CarArt.TAIL) if ok else Color("3a1a1a")
+		if fleet == "ambulance" and float(x) + 0.5 < amb.x:
+			# the box's back doors: split down the middle, a window in each, the stripes across
+			# them and the flashers up on the corners
+			var zm := (zz - float(p.zoff)) / fire_k
+			if zm > 1.08 and zm < 1.24: return Color("c8201c")
+			if zm > 0.96 and zm < 1.05: return Color("f07818")
+			if zm > amb.y - 0.3 and zm < amb.y - 0.18: return Color("c8201c")
+			if zm > amb.y - 0.62 and zm < amb.y - 0.4 and vn > 0.74: return Color("e02a1e")
+			if vn < 0.06 and zm > 0.6 and zm < amb.y - 0.35: return _paint_c(1, CarArt.R_BODY, x, y, 0.6)
+			if vn > 0.16 and vn < 0.66 and zm > 1.75 and zm < 2.35: return CarArt.GLASS_HI if zm > 2.25 else CarArt.GLASS
 		if vn < 0.22 and zz < mid + 2.0 and zz > bump_top: return Color("d8d4c0")      # the plate
 		return _paint_c(2, CarArt.R_BODY, x, y, 0.6)
 

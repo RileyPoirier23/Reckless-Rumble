@@ -92,6 +92,7 @@
  "class": "fleet",
  "art": {
   "cutaway": true,
-  "ambulance": true
+  "ambulance": true,
+  "dually": true
  }
 }
