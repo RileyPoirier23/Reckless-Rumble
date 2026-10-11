@@ -48,12 +48,12 @@ static func sprite(who: String, pose := "stand", frame := 0) -> ImageTexture:
 		seed = int(StoryState.avatar.seed)
 		female = int(StoryState.avatar.female)
 		age = int(StoryState.avatar.age)
-	var t := ImageTexture.create_from_image(image(seed, female, age, OUTFITS.get(who, {}), pose, frame))
+	var t := ImageTexture.create_from_image(image(seed, female, age, OUTFITS.get(who, {}), pose, frame, cast.get("look", {})))
 	_cache[key] = t
 	return t
 
-static func image(seed: int, female: int, age: int, outfit: Dictionary, pose: String, frame: int) -> Image:
-	var civ := Face.civilian(seed, female, age)
+static func image(seed: int, female: int, age: int, outfit: Dictionary, pose: String, frame: int, pin := {}) -> Image:
+	var civ := Face.civilian(seed, female, age, pin)
 	var b := _Body.new(civ, outfit, pose, frame)
 	b.paint()
 	return b.p.img
@@ -113,6 +113,7 @@ class _Body:
 	func paint() -> void:
 		_legs()
 		_torso()
+		if fem: _waist()
 		_arms_back()
 		_neck()
 		_head()
@@ -121,6 +122,14 @@ class _Body:
 		_hat()
 		_arms_front()
 		p.outline(Color("120e14"))
+
+	## A woman's figure: the top comes in a pixel each side between the chest and the hips.
+	func _waist() -> void:
+		if kind in ["coveralls", "hivis", "police"]: return
+		var x0 := C - tw / 2
+		for y in range(torso_y + 7, leg_y - 5):
+			p.px(x0, y, Color(0, 0, 0, 0))
+			p.px(x0 + tw - 1, y, Color(0, 0, 0, 0))
 
 	# ------------------------------------------------------------ legs and shoes
 	func _legs() -> void:
@@ -257,11 +266,18 @@ class _Body:
 			# eyes look the way the head turns (facing right; the sprite flips for left)
 			p.px(C - 1, eye_y, ink)
 			p.px(C + 3, eye_y, ink)
-			if not fem or true: pass
 			p.px(C - 2, eye_y, Color("f0ece4"))
 			p.px(C + 2, eye_y, Color("f0ece4"))
-			p.hline(C - 2, eye_y - 2 + (1 if int(look.brows) == 2 else 0), 2, brow)
-			p.hline(C + 2, eye_y - 2 + (1 if int(look.brows) == 2 else 0), 2, brow)
+			var brow_y := eye_y - 2 + (1 if int(look.brows) == 2 else 0)
+			if fem:
+				# lashes at the outer corners, and the brows a shade thinner
+				p.px(C - 2, eye_y - 1, ink)
+				p.px(C + 3, eye_y - 1, ink)
+				p.px(C - 2, brow_y, brow)
+				p.px(C + 2, brow_y, brow)
+			else:
+				p.hline(C - 2, brow_y, 2, brow)
+				p.hline(C + 2, brow_y, 2, brow)
 		# nose: a shadow on the far side and a nostril
 		p.px(C + 3, eye_y + 2, skin_d)
 		p.px(C + 2, eye_y + 2, skin.darkened(0.1))

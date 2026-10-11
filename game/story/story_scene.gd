@@ -237,7 +237,7 @@ func _phone(who: String, text: String) -> void:
 	var col := Color(cst.get("color", "8a8478"))
 	draw_rect(Rect2(r.position, Vector2(r.size.x, 22)), col.darkened(0.3))
 	if not cst.is_empty():
-		draw_texture_rect(Face.small_texture(int(cst.seed), int(cst.female), int(cst.age)), Rect2(r.position + Vector2(3, 3), Vector2(16, 16)), false)
+		draw_texture_rect(Face.small_texture(int(cst.seed), int(cst.female), int(cst.age), cst.get("look", {})), Rect2(r.position + Vector2(3, 3), Vector2(16, 16)), false)
 	PixelFont.draw(self, r.position + Vector2(23, 8), String(cst.get("name", who)), Color("f3ead2"))
 	# the bubble
 	var shown_text := text.substr(0, int(shown))
@@ -281,7 +281,7 @@ func _box(who: String, text: String) -> void:
 			tex = Face.texture(int(StoryState.avatar.seed), int(StoryState.avatar.female), int(StoryState.avatar.age))
 			name = StoryState.manager()
 		elif not cast.is_empty():
-			tex = Face.texture(int(cast.seed), int(cast.female), int(cast.age))
+			tex = Face.texture(int(cast.seed), int(cast.female), int(cast.age), cast.get("look", {}))
 			name = cast.name
 			col = Color(cast.color)
 		if tex:

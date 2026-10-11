@@ -26,7 +26,7 @@ const CAST := {
 	"DOM":       { "name": "DOM TORTELLINI", "seed": 777001, "female": 0, "age": 46, "color": "e0402e" },
 	"MIA":       { "name": "MIA TORTELLINI", "seed": 777002, "female": 1, "age": 38, "color": "e07a9a" },
 	"SAL":       { "name": "SAL", "seed": 777013, "female": 0, "age": 33, "color": "a85a4a" },
-	"ARIES":     { "name": "ARIES", "seed": 140014, "female": 1, "age": 14, "color": "7ab8e0" },
+	"ARIES":     { "name": "ARIES", "seed": 140014, "female": 1, "age": 14, "color": "7ab8e0" , "look": { "hair": 9, "build": 0, "brows": 1, "hairColor": 3 } },
 	"TOBY":      { "name": "TOBY CORMIER", "seed": 506506, "female": 0, "age": 31, "color": "ffa020" },
 	"TREMBLAY":  { "name": "CONST. TREMBLAY", "seed": 911911, "female": 1, "age": 41, "color": "4a7ab8" },
 	"DARRELL":   { "name": "DARRELL (SELLER)", "seed": 900900, "female": 0, "age": 58, "color": "8a8478" },
@@ -36,8 +36,8 @@ const CAST := {
 	"HATCH":     { "name": "DALE HATCH", "seed": 551155, "female": 0, "age": 56, "color": "c8a050" },
 	"JOHNNY":    { "name": "JOHNNY TRAM", "seed": 270027, "female": 0, "age": 27, "color": "40c0e0" },
 	"FRANKIE16": { "name": "FRANKIE", "seed": 130624, "female": 0, "age": 16, "color": "e07a3a" },
-	"ARIES17":   { "name": "ARIES", "seed": 140014, "female": 1, "age": 17, "color": "7ab8e0" },
-	"ARIES21":   { "name": "ARIES", "seed": 140014, "female": 1, "age": 21, "color": "7ab8e0" },
+	"ARIES17":   { "name": "ARIES", "seed": 140014, "female": 1, "age": 17, "color": "7ab8e0" , "look": { "hair": 9, "build": 0, "brows": 1, "hairColor": 3 } },
+	"ARIES21":   { "name": "ARIES", "seed": 140014, "female": 1, "age": 21, "color": "7ab8e0" , "look": { "hair": 9, "build": 0, "brows": 1, "hairColor": 3 } },
 }
 
 const SCENES := {

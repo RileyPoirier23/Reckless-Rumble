@@ -359,6 +359,10 @@ void fragment() {
 		var rt: Node = load("res://tests/race_test.gd").new()
 		rt.main = self
 		add_child(rt)
+	elif OS.get_cmdline_user_args().has("--mission-test"):
+		var mt: Node = load("res://tests/mission_test.gd").new()
+		mt.main = self
+		add_child(mt)
 	elif OS.get_cmdline_user_args().has("--jobs-demo"):
 		var jd: Node = load("res://tests/jobs_demo.gd").new()
 		jd.main = self

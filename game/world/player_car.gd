@@ -130,13 +130,38 @@ func _feed_smoke(dt: float, half_wb: float, half_tr: float, thrown: float, snow:
 		var at := _wheel_world(half_wb if i < 2 else -half_wb, (-half_tr if i % 2 == 0 else half_tr))
 		field.add(at, clampf((slip - 4.5) / 6.0, 0.2, 1.0) * dt * 3.0 * lerpf(0.15, 1.0, smoke_build), out + sim.world_velocity() * PX * 0.3, col)
 
-## The smoke lives on the parent (so it stays where it was puffed out): it goes with the car.
+## The smoke lives on the parent (so it stays where it was puffed out). Freeing a CPUParticles2D
+## that's been emitting crashes the engine (4.5 updates them off the main thread), so the car's
+## particle nodes are never freed: they're stopped and kept for the next car on the same parent.
+static var _spare: Array[CPUParticles2D] = []
+
 func _exit_tree() -> void:
 	for p in smoke + [steam, engine_smoke, burn_cloud]:
-		if is_instance_valid(p): p.queue_free()
+		if is_instance_valid(p):
+			p.emitting = false
+			_spare.append(p)
+	smoke.clear()
+	steam = null
+	engine_smoke = null
+	burn_cloud = null
 
 func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
+	var parent := get_parent()
+	for i in range(_spare.size() - 1, -1, -1):
+		var q: CPUParticles2D = _spare[i]
+		if not is_instance_valid(q) or not q.is_inside_tree():
+			_spare.remove_at(i)
+			continue
+		if q.get_parent() == parent:
+			_spare.remove_at(i)
+			_set_up_particles(q, col, life, amount)
+			return q
 	var p := CPUParticles2D.new()
+	_set_up_particles(p, col, life, amount)
+	parent.add_child.call_deferred(p)
+	return p
+
+func _set_up_particles(p: CPUParticles2D, col: Color, life: float, amount: int) -> void:
 	p.amount = amount
 	p.lifetime = life
 	p.local_coords = false
@@ -153,8 +178,13 @@ func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	p.color_ramp = ramp
 	p.z_index = 2500
 	p.z_as_relative = false
-	get_parent().add_child.call_deferred(p)
-	return p
+	# a reused node: back to a plain puff before the caller dresses it
+	p.texture = null
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINT
+	p.damping_min = 0.0
+	p.damping_max = 0.0
+	p.scale_amount_curve = null
+	p.restart()
 
 ## How many seconds of wheelspin it takes for the smoke to build all the way up.
 const SMOKE_BUILD_S := 5.0
