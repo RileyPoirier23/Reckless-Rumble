@@ -281,6 +281,10 @@ void fragment() {
 		var cmd: Node = load("res://tests/cam_demo.gd").new()
 		cmd.main = self
 		add_child(cmd)
+	elif OS.get_cmdline_user_args().has("--tour-demo"):
+		var tdm: Node = load("res://tests/tour_demo.gd").new()
+		tdm.main = self
+		add_child(tdm)
 	elif OS.get_cmdline_user_args().has("--smoke-demo"):
 		var smd: Node = load("res://tests/smoke_demo.gd").new()
 		smd.main = self

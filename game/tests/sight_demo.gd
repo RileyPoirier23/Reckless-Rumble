@@ -65,7 +65,7 @@ func _run() -> void:
 	main.sight.on = true
 	await _wait(2.0)
 	await _shot("wide_on")
-	# tucked in behind a building: it goes see-through
+	# tucked in behind a building: its outline shows over the roof
 	main.zoom_mult = 1.0
 	var best: BuildingNode = null
 	for n in main.ysort.get_children():

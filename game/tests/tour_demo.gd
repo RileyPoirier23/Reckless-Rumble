@@ -1,0 +1,50 @@
+## A drive-by of the town's buildings, day and night: godot --path game -- --tour-demo <out_dir>
+extends Node
+
+var main: Node
+var out := "user://tour_shots"
+
+func _ready() -> void:
+	var a := OS.get_cmdline_user_args()
+	var k := a.find("--tour-demo")
+	if k >= 0 and k + 1 < a.size(): out = a[k + 1]
+	DirAccess.make_dir_recursive_absolute(out)
+	main.hud.show_help = false
+	_run()
+
+func _wait(s: float) -> void:
+	await get_tree().create_timer(s, true, false, true).timeout
+
+func _shot(name: String) -> void:
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out, name])
+	print("shot ", name)
+
+func _run() -> void:
+	main.sky.set_season("summer")
+	main.sky.pick_weather("clear")
+	main.sky.forced = true
+	main.traffic.enabled = false
+	if OS.get_environment("TOUR_ZOOM") != "": main.zoom_mult = float(OS.get_environment("TOUR_ZOOM"))
+	# a spread of places: houses in town, downtown, the country
+	var picks := []
+	var seen := {}
+	for b in main.world.map.buildings:
+		var kinds: Array = OS.get_environment("TOUR_KINDS").split(",") if OS.get_environment("TOUR_KINDS") != "" else ["house", "shop", "farmhouse", "warehouse", "bigbox"]
+		var key := "%s/%s" % [b.kind, b.zone] if OS.get_environment("TOUR_KINDS") == "" else "%s/%d" % [b.kind, int((b.r as Rect2).position.x / 400.0)]
+		if seen.has(key) or picks.size() >= 6: continue
+		if not b.kind in kinds: continue
+		seen[key] = true
+		picks.append(b)
+	for i in picks.size():
+		var b: Dictionary = picks[i]
+		var c: Vector2 = (b.r as Rect2).get_center()
+		var rd: Dictionary = main.world.map.nearest_road(c, 80.0)
+		if rd.is_empty(): continue
+		for night in [false, true]:
+			main.sky.time_h = 22.0 if night else 13.0
+			main._teleport(rd.point, (rd.dir as Vector2).angle())
+			await _wait(2.0)
+			main.hud.msgs.clear()
+			await _shot("%d_%s_%s_%s" % [i, b.kind, b.zone, "night" if night else "day"])
+	get_tree().quit()

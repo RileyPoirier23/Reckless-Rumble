@@ -1,20 +1,21 @@
 ## What Leo can see from the driver's seat, Project Zomboid style. Every building near the car
 ## throws a shadow away from it: the ground in a building's shadow is darker, and anybody driving
-## in there (traffic, the police, a racer) fades out until they come round the corner. A building
-## standing between the camera and the car goes see-through, so the car's never lost behind one.
+## in there (traffic, the police, a racer) fades out until they come round the corner. Buildings
+## stay solid: when one stands between the camera and your car, the car's outline shows over it
+## (Ghost), so it's never lost and the house never turns to glass.
 ## Settings > Graphics > LINE OF SIGHT turns it off.
 class_name Sight
 extends CanvasGroup
 
 const SHADE := 0.5                 # how dark a shadow is
 const REACH := 2400.0              # how far a shadow runs out past its building (px)
-const CUT_ALPHA := 0.28            # a building in the way, see-through
 const FADE_S := 0.18               # how quickly things fade in and out (s)
 
 var drive: Node
 var on := true
 var shadows: Array[PackedVector2Array] = []    # this frame's shadow polygons, world px
 var _draw_node: Node2D
+var ghost: Ghost
 
 func _ready() -> void:
 	z_index = -3990                 # over the ground, the roads and the skid marks, under everything that stands up
@@ -42,17 +43,15 @@ func hidden(p: Vector2) -> bool:
 func update_sight(dt: float, eye: Vector2, view_r: float) -> void:
 	shadows.clear()
 	var k := minf(1.0, dt / FADE_S)
+	var hidden_car := false
 	var movers: Array[Node2D] = []
 	for n in drive.ysort.get_children():
 		if n is BuildingNode:
 			var b := n as BuildingNode
 			# a building off the screen can't cover the car, and its shadow falls away off the screen too
-			if b.global_position.distance_to(eye) > view_r + b.reach():
-				if b.modulate.a != 1.0: b.modulate.a = 1.0
-				continue
-			# in the way of the car: see-through
-			var want := CUT_ALPHA if on and b.covers(eye) else 1.0
-			b.modulate.a = lerpf(b.modulate.a, want, k)
+			if b.global_position.distance_to(eye) > view_r + b.reach(): continue
+			if b.modulate.a != 1.0: b.modulate.a = 1.0
+			if b.covers(eye): hidden_car = true
 			if not on or not b.blocks_sight(): continue
 			var s := shadow_of(b.world_corners(), eye, REACH)
 			if s.size() >= 3: shadows.append(s)
@@ -62,6 +61,14 @@ func update_sight(dt: float, eye: Vector2, view_r: float) -> void:
 			movers.append(n)
 	visible = on and not shadows.is_empty()
 	_draw_node.queue_redraw()
+	# the car behind a building: its outline over the roof
+	if ghost == null:
+		ghost = Ghost.new()
+		drive.add_child(ghost)
+	ghost.car = drive.car
+	ghost.strength = lerpf(ghost.strength, 1.0 if hidden_car else 0.0, k)
+	ghost.visible = ghost.strength > 0.02
+	if ghost.visible: ghost.queue_redraw()
 	# whoever's in a shadow fades out until they're in sight
 	for o in movers:
 		var target := 0.0 if on and hidden(o.global_position) else 1.0
@@ -73,3 +80,31 @@ class Polys extends Node2D:
 	var sight: Sight
 	func _draw() -> void:
 		for s in sight.shadows: draw_colored_polygon(s, Color.BLACK)
+
+## Your car seen through whatever's in the way: its outline and a faint fill, over the buildings.
+class Ghost extends Node2D:
+	var car: PlayerCar
+	var strength := 0.0
+
+	func _ready() -> void:
+		z_index = 3200
+		z_as_relative = false
+
+	func _draw() -> void:
+		if car == null or not is_instance_valid(car) or car.view == null or car.view.art == null: return
+		var art: CarArt = car.view.art
+		if art.atlas == null: return
+		var sz := Vector2(art.size)
+		var half := sz / 2.0
+		var h := car.view.heading
+		var top := car.global_position + CarView.screen_up * art.roof_z * CarView.STEP * CarView.lift_k
+		# the roof's shape, faint, and a bright edge round the whole car's footprint
+		draw_set_transform(top, h, Vector2.ONE)
+		var z := clampi(int(art.roof_z) - 1, 0, art.n - 1)
+		draw_texture_rect_region(art.atlas, Rect2(-half, sz), Rect2(float(z) * sz.x, 0.0, sz.x, sz.y), Color(1, 1, 1, 0.35 * strength))
+		var r := Rect2(-Vector2(art.length_px, art.width_px) / 2.0, Vector2(art.length_px, art.width_px))
+		draw_rect(r, Color(1.0, 0.95, 0.75, 0.85 * strength), false, 1.5)
+		# the nose, so you can tell which way it's pointing
+		draw_line(Vector2(r.end.x, -r.size.y * 0.3), Vector2(r.end.x + 4.0, 0.0), Color(1.0, 0.95, 0.75, 0.85 * strength), 1.5)
+		draw_line(Vector2(r.end.x, r.size.y * 0.3), Vector2(r.end.x + 4.0, 0.0), Color(1.0, 0.95, 0.75, 0.85 * strength), 1.5)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
