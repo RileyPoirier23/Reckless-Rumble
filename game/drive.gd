@@ -285,6 +285,10 @@ void fragment() {
 		var tdm: Node = load("res://tests/tour_demo.gd").new()
 		tdm.main = self
 		add_child(tdm)
+	elif OS.get_cmdline_user_args().has("--rut-demo"):
+		var rdm: Node = load("res://tests/rut_demo.gd").new()
+		rdm.main = self
+		add_child(rdm)
 	elif OS.get_cmdline_user_args().has("--smoke-demo"):
 		var smd: Node = load("res://tests/smoke_demo.gd").new()
 		smd.main = self
@@ -1004,6 +1008,7 @@ func _process(dt: float) -> void:
 	dash.beacons = car.beacons
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
+	_brush(dt)
 	# the smoke drifts off downwind and rises up the screen
 	smoke_field.wind = wind * CarArt.PX * 0.5
 	smoke_field.step(dt, CarView.screen_up * 9.0)
@@ -1054,6 +1059,49 @@ func _depth_sort(up: Vector2) -> void:
 
 ## Put the car somewhere, stopped dead: the body and the wheels too (wheels left spinning from
 ## before would drive it off again, or creep it out of a parking spot with the handbrake on).
+var _leaves: Array[CPUParticles2D] = []
+var _leaf_i := 0
+
+## Driving through the bushes, the tall grass and the hedges: they go flat under the car, leaves
+## (or snow) fly up off them, and each one costs you a little speed.
+func _brush(_dt: float) -> void:
+	if car == null or car.sim.speed() < 1.0: return
+	var half_w := float(car.spec.get("width", 1.8)) * CarArt.CAR_SCALE * 0.45
+	var hits: Array = world.trample(car.sim.pos, half_w)
+	if hits.is_empty(): return
+	car.sim.vx *= pow(0.985, float(hits.size()))
+	var col := Color("4a7a32")
+	match sky.season:
+		"fall": col = Color("c8641e")
+		"winter": col = Color("e8ecf2")
+		"spring": col = Color("6a9a3a")
+	for h in hits:
+		if _leaves.size() < 6:
+			var pt := CPUParticles2D.new()
+			pt.one_shot = true
+			pt.emitting = false
+			pt.amount = 14
+			pt.lifetime = 0.9
+			pt.explosiveness = 0.9
+			pt.spread = 180.0
+			pt.initial_velocity_min = 20.0
+			pt.initial_velocity_max = 60.0
+			pt.damping_min = 40.0
+			pt.damping_max = 70.0
+			pt.scale_amount_min = 1.0
+			pt.scale_amount_max = 2.0
+			pt.z_index = 2600
+			pt.z_as_relative = false
+			add_child(pt)
+			_leaves.append(pt)
+		var p2: CPUParticles2D = _leaves[_leaf_i % _leaves.size()]
+		_leaf_i += 1
+		p2.global_position = (h[0] as Vector2) * PX
+		p2.color = col
+		p2.gravity = CarView.screen_up * -30.0
+		p2.restart()
+		p2.emitting = true
+
 ## Which way the camera faces, by Settings > UI > CAMERA (T flips through them):
 ## - top_down: north is always up; the car turns, the map doesn't.
 ## - chase: behind the car and turning with it, so up on the screen is always ahead. It swings round

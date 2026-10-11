@@ -561,6 +561,13 @@ func _update_look(dt: float, br: float) -> void:
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + 10 + side, front, fs, mark_col)
+		# rolling over soft ground: every tire leaves its track (deeper when it's spinning)
+		var rt: Array = Skids.rut(sim.surface, city.sky.snow_cover if city and city.sky else 0.0)
+		var rolling := sim.speed() > 0.6
+		for fr in 2:
+			var wp := front if fr == 0 else rear
+			var rs := 0.0 if rt.is_empty() or not rolling else float(rt[1]) * (1.0 + 0.4 * clampf(float(sim.wheel_slip[2 * (1 - fr) + side]) / 8.0, 0.0, 1.0))
+			skids.mark(skid_base + 20 + fr * 2 + side, wp, rs, rt[0] if not rt.is_empty() else mark_col, float(rt[2]) * CarArt.CAR_SCALE if not rt.is_empty() else 3.0, 6.0)
 		# a front-driver's burnout (the reverse-to-drive slam) smokes the fronts
 		smoke[2 + side].global_position = _wheel_world(half_wb + back, out_v)
 		smoke[2 + side].global_rotation = thrown + outward

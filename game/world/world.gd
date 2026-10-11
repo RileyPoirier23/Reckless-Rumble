@@ -84,6 +84,32 @@ static func light_tex(c: Color) -> GradientTexture2D:
 func _light_tex(c: Color) -> GradientTexture2D:
 	return light_tex(c)
 
+## Plants that a car flattens when it drives through them (the rocks, stumps, logs and bales stay put).
+const TRAMPLES := ["shrub", "alder", "lupine", "flowers", "fern", "grass", "cattail", "blueberry"]
+
+## A car's been through here (`p` metres, `r` metres round it): the soft growth it went over is
+## flattened for good. Returns where, for the leaves to fly: [[point m, kind]].
+func trample(p: Vector2, r: float) -> Array:
+	var hits: Array = []
+	var k := Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK))
+	var ch: Chunk = chunks.get(k)
+	if ch == null: return hits
+	var any := false
+	for d in ch.decor:
+		if d.size() > 4 and d[4]: continue
+		if not String(d[1]) in TRAMPLES: continue
+		var dp: Vector2 = d[0]
+		if absf(dp.x - p.x) > r + 1.5 or absf(dp.y - p.y) > r + 1.5: continue
+		if dp.distance_to(p) < r + float(d[2]) / PX * 0.35:
+			if d.size() < 5: d.append(true)
+			else: d[4] = true
+			hits.append([dp, String(d[1])])
+			any = true
+	if any: ch.layers["decor"].queue_redraw()
+	for n in ch.get_children():
+		if n is Yards: hits.append_array((n as Yards).trample(p, r))
+	return hits
+
 func ambient() -> float:
 	return sky.temperature()
 
@@ -918,7 +944,13 @@ class Layer extends Node2D:
 		for d in chunk.decor:
 			var r: int = d[2]
 			var tex := DecorArt.texture(String(d[1]), s, snow, int(d[3]), r)
-			draw_texture(tex, ((d[0] as Vector2) * PX - DecorArt.origin(r)).round())
+			var at := ((d[0] as Vector2) * PX - DecorArt.origin(r)).round()
+			if d.size() > 4 and d[4]:
+				# run over: pressed flat into the ground and bruised dark
+				var sz := Vector2(tex.get_size())
+				draw_texture_rect(tex, Rect2(at + Vector2(-sz.x * 0.1, sz.y * 0.35), Vector2(sz.x * 1.2, sz.y * 0.45)), false, Color(0.6, 0.65, 0.5, 0.85))
+			else:
+				draw_texture(tex, at)
 
 	func _canopy(w: World) -> void:
 		var s := w.sky.season

@@ -72,6 +72,20 @@ func _yard(b: Dictionary) -> Dictionary:
 	y.beds = rng.randf() < 0.75
 	y.hedge = front_d > 3.0 and rng.randf() < 0.4
 	y.shrubs = rng.randi_range(0, 3)
+	# the bushes, where they stand (so a car through the hedge leaves a gap)
+	var bushes: Array = []
+	var front_face := c + f * ((r.size.x if f.x != 0.0 else r.size.y) / 2.0)
+	var half_house := (r.size.x if f.y != 0.0 else r.size.y) / 2.0
+	for i in int(y.shrubs):
+		bushes.append({ "p": front_face + side * (half_house - 0.6) * (1.0 if i % 2 == 0 else -1.0) + f * (0.6 + float(i / 2) * 1.2), "r": rng.randf_range(0.6, 0.9), "col": Color("3a6a2e") if i % 3 != 2 else Color("4a7a3a"), "flat": false })
+	if y.hedge:
+		for sgn2: float in [-1.0, 1.0]:
+			var h0 := front_face + side * sgn2 * (half_house + 2.0)
+			var x2 := 0.4
+			while x2 < front_d - 0.4:
+				bushes.append({ "p": h0 + f * x2, "r": 0.55, "col": Color("2e5a2a"), "flat": false })
+				x2 += 0.7
+	y.bushes = bushes
 	y.mailbox = front_d > 2.0 and rng.randf() < 0.8
 	y.flower = [Color("e04a6a"), Color("f0d040"), Color("9a5ad0"), Color("f08a30"), Color("f4f0e8")][rng.randi() % 5]
 	return y
@@ -126,16 +140,11 @@ func _draw() -> void:
 						if rng.randf() < 0.5: draw_rect(Rect2(_at(q + d * 0.2 + f * 0.1) - Vector2(1, 1), Vector2(2, 2)), Color("3a7a2a"))
 						x += 0.45
 		# shrubs at the front corners of the house, and a cedar hedge down the lot line
-		for i in int(y.shrubs):
-			var sp := front_face + side * (half_house - 0.6) * (1.0 if i % 2 == 0 else -1.0) + f * (0.6 + float(i / 2) * 1.2)
-			_bush(sp, rng.randf_range(0.6, 0.9), winter, Color("3a6a2e") if i % 3 != 2 else Color("4a7a3a"))
-		if y.hedge:
-			for sgn2: float in [-1.0, 1.0]:
-				var h0 := front_face + side * sgn2 * (half_house + 2.0)
-				var x2 := 0.4
-				while x2 < fd - 0.4:
-					_bush(h0 + f * x2, 0.55, winter, Color("2e5a2a"))
-					x2 += 0.7
+		for bu in y.bushes:
+			if bu.flat:
+				draw_circle(_at(bu.p), float(bu.r) * PX * 0.9, (bu.col as Color).darkened(0.35))      # run over
+			else:
+				_bush(bu.p, bu.r, winter, bu.col)
 		# the mailbox at the end of the walk
 		if y.mailbox:
 			var mp := front_face + f * fd + side * 1.2
@@ -264,3 +273,15 @@ func _bush(p: Vector2, r: float, winter: bool, col: Color) -> void:
 	draw_circle(c + Vector2(-rp * 0.25, -rp * 0.25), rp * 0.6, col.lightened(0.15))
 	draw_circle(c + Vector2(-rp * 0.4, -rp * 0.4), rp * 0.25, col.lightened(0.3))
 	if winter: draw_circle(c + Vector2(0, -rp * 0.3), rp * 0.7, Color(0.93, 0.95, 0.98, 0.9))
+
+## A car's been through here: flatten the bushes and hedge it went over. [[point m, kind]] for the leaves.
+func trample(p: Vector2, r: float) -> Array:
+	var hits: Array = []
+	for y in yards:
+		for bu in y.bushes:
+			if bu.flat: continue
+			if (bu.p as Vector2).distance_to(p) < r + float(bu.r):
+				bu.flat = true
+				hits.append([bu.p, "shrub"])
+	if not hits.is_empty(): queue_redraw()
+	return hits

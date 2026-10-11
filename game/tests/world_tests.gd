@@ -228,6 +228,13 @@ func _init() -> void:
 	check("a house's long wall has a door and windows", slots.any(func(q): return q.kind == "door") and slots.filter(func(q): return q.kind == "window").size() >= 2, str(slots.size()))
 	check("a house has a pitched roof, a shop a flat one", hs.style().roof == "gable" and bn.style().roof == "flat")
 	hs.free()
+	# soft ground keeps your tracks; the road doesn't
+	check("tires leave ruts in mud, snow, grass and gravel, not on the road", not Skids.rut("mud", 0.0).is_empty() and not Skids.rut("snow", 0.0).is_empty()
+		and not Skids.rut("grass", 0.0).is_empty() and not Skids.rut("gravel", 0.0).is_empty() and Skids.rut("asphalt", 0.0).is_empty())
+	var sk := Skids.new()
+	for i in 20: sk.mark(99, Vector2(i * 2.0, 0), 0.5, Color.BLACK, 4.0, 6.0)
+	check("a rut's laid in pieces, not one per frame", sk.alphas.size() > 3 and sk.alphas.size() < 10 and sk.widths[0] == 4.0, str(sk.alphas.size()))
+	sk.free()
 	var gmap := MapData.get_map()
 	var over := []
 	for gb in gmap.buildings:
