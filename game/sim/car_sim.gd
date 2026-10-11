@@ -20,6 +20,7 @@ enum Assist { SIM, STREET, ARCADE }
 
 var spec: Dictionary
 var assist := Assist.SIM
+var esc_off := false                  # the stability control stands down (a donut, a slide on purpose)
 var auto_gearbox := true
 var direct_steer := false             # a steering wheel: steer_in is the road wheels' angle over full lock
 
@@ -536,6 +537,19 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	vx += dvx * h
 	vy += dvy * h
 	yaw_rate += mz / iz * h
+	# stability control (STREET some, ARCADE lots; off on SIM, and off while you're doing a donut or
+	# a handbrake slide on purpose, see esc_off): a real car brakes one wheel to stop a spin. Here it
+	# pulls the yaw back toward what the steering's asking for and bleeds off the sideways slide,
+	# harder the further the back's stepped out
+	var esc := 0.0 if esc_off or assist == Assist.SIM else (1.0 if assist == Assist.ARCADE else 0.6)
+	if esc > 0.0 and avx > 4.0:
+		var want := vx * tan(steer) / L
+		var beta := atan2(vy, avx)
+		var k := clampf((absf(beta) - 0.08) * 4.0, 0.0, 1.0) * esc
+		if absf(yaw_rate) > absf(want) + 0.1: k = maxf(k, clampf((absf(yaw_rate) - absf(want) - 0.1) * 1.5, 0.0, 1.0) * esc)
+		if k > 0.0:
+			yaw_rate = lerpf(yaw_rate, want, minf(1.0, k * 7.0 * h))
+			vy = lerpf(vy, 0.0, minf(1.0, k * 2.5 * h))
 	# below walking pace, blend to the kinematic model so parking isn't twitchy
 	if avx < 2.0:
 		var k := 1.0 - avx / 2.0

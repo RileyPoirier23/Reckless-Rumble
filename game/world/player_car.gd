@@ -237,26 +237,42 @@ func _inputs(dt: float) -> Array:
 		_st_lag += (st - _st_lag) * (1.0 - exp(-dt / (0.06 + 0.45 * impaired)))
 		st = _st_lag * (1.0 + 0.35 * impaired) + sin(_drunk_t * 0.9) * 0.16 * impaired + sin(_drunk_t * 2.3 + 1.0) * 0.06 * impaired
 		th = clampf(th * (1.0 + 0.4 * impaired * sin(_drunk_t * 1.7)), 0.0, 1.0)
-	if sim.assist != CarSim.Assist.SIM:
-		var v := sim.speed()
-		# on purpose: full lock and the gas at a crawl (a donut), or a slide off the handbrake. The
-		# aids step back, the way you'd switch traction control off in a real car
-		show_off = sim.assist == CarSim.Assist.STREET and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or _hb_t < 2.0)
-		# traction control: back off the gas while the rears spin up
-		var spin := sim.drive_slip()
-		var tc_limit := 2.0 if sim.assist == CarSim.Assist.STREET else 1.5
-		if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off:
-			th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.15, 1.0)
-		if not wheel:
-			# stability: steer into a slide for you, and don't let the stick over-rotate at speed
-			# (how much less lock at speed is a setting: Settings > Controls > SPEED STEERING)
-			var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
-			var help := 0.75 if sim.assist == CarSim.Assist.STREET else 0.9
-			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off:
-				st = clampf(st + beta * help * 1.6, -1.0, 1.0)
-			var at_speed := lerpf(1.0, 0.5 if sim.assist == CarSim.Assist.STREET else 0.45, clampf(float(GameSettings.get_v("controls", "speed_steer")), 0.0, 1.5))
-			st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
+	var aided := PlayerCar.aids(sim, th, st, hb, _hb_t, wheel, float(GameSettings.get_v("controls", "speed_steer")))
+	th = aided[0]
+	st = aided[1]
+	show_off = aided[2]
+	sim.esc_off = show_off
 	return [th, br, st, hb]
+
+## The driving aids (STREET and ARCADE): traction control, steering into a slide for you, and
+## less lock at speed. Takes the gas, the steering and the handbrake as the player gave them, and
+## gives back [gas, steering, showing off]. Showing off is a donut at a crawl or a slide off the
+## handbrake: the aids step back for that, the way you'd switch traction control off.
+## `speed_steer` is Settings > Controls > SPEED STEERING (how much less lock at speed).
+static func aids(sim: CarSim, th: float, st: float, hb: float, hb_t: float, wheel: bool, speed_steer: float) -> Array:
+	if sim.assist == CarSim.Assist.SIM: return [th, st, false]
+	var v := sim.speed()
+	var street := sim.assist == CarSim.Assist.STREET
+	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb_t < 2.0)
+	# traction control: back off the gas while the driven tires spin up
+	var spin := sim.drive_slip()
+	var tc_limit := 2.0 if street else 1.5
+	if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off:
+		th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.1 if street else 0.0, 1.0)
+	# and off the gas while the back's stepping out (stability control cuts the power too)
+	var slide := absf(atan2(sim.vy, maxf(absf(sim.vx), 1.0)))
+	if slide > 0.15 and v > 4.0 and hb < 0.1 and not show_off:
+		th *= clampf(1.0 - (slide - 0.15) * (2.5 if street else 4.0), 0.1, 1.0)
+	if not wheel:
+		# a wheel turns the road wheels one for one: no help that would move them without the rim.
+		# Stability: steer into a slide for you, and don't let the stick over-rotate at speed
+		var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
+		var help := 0.75 if street else 0.9
+		if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off:
+			st = clampf(st + beta * help * 1.6, -1.0, 1.0)
+		var at_speed := lerpf(1.0, 0.5 if street else 0.45, clampf(speed_steer, 0.0, 1.5))
+		st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
+	return [th, st, show_off]
 
 func _lights(dt: float, st: float) -> void:
 	# high beams: tap to switch, hold to flash (hands off while a menu's up; the lamps still work)

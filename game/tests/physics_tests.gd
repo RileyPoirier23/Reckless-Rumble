@@ -266,5 +266,19 @@ func _init() -> void:
 	var tired := car()
 	tired.set_wear({ "engine": 0.4 })
 	check("a tired engine isn't a blown one", not tired.engine_blown and tired.power_mult() > 0.5, "%.2f" % tired.power_mult())
+	# the aids keep a keyboard driver on the road: no spins on STREET or ARCADE in a hard lane
+	# change, full lock, the gas mid-corner, a lift mid-corner or braking into a turn. SIM still bites
+	var H := load("res://tests/handling.gd")
+	var spun := []
+	var sim_spins := 0
+	for id in ["silvio", "charjer"]:
+		var hs: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
+		for m in H.MOVES:
+			for a in [CarSim.Assist.STREET, CarSim.Assist.ARCADE]:
+				var w: float = H.worst_slide(hs, a, m)
+				if w > 35.0: spun.append("%s %s %s %d" % [id, ["SIM", "STREET", "ARCADE"][a], m, int(w)])
+			if H.worst_slide(hs, CarSim.Assist.SIM, m) > 45.0: sim_spins += 1
+	check("the aids keep a keyboard driver out of a spin (STREET and ARCADE)", spun.is_empty(), str(spun))
+	check("...and SIM doesn't (it's a rear-driver; you catch it yourself)", sim_spins >= 3, "%d of %d" % [sim_spins, 2 * H.MOVES.size()])
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
