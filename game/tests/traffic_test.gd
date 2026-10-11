@@ -68,6 +68,33 @@ func _go(i: int) -> void:
 	main.sky.forced = true
 	main._teleport(SPOTS[i][0], 0.0)
 	main.car.sim.vx = 0.0
+	# on the highway: a slow one in the right lane with a quick one coming up behind it, so there's
+	# an overtake to be had (14 cars spread over kilometres rarely meet in 150 s on their own)
+	if SPOTS[i][1] == "trans-canada": _stage_overtake()
+
+func _stage_overtake() -> void:
+	var map: MapData = main.world.map
+	var spot: Vector2 = SPOTS[phase][0]
+	var best := -1
+	var best_nb := -1
+	var bd := INF
+	for n in map.g_adj.size():
+		for e in map.g_adj[n]:
+			if String(e[2].cls) != "highway": continue
+			var mid: Vector2 = (map.g_pos[n] + map.g_pos[int(e[0])]) * 0.5
+			var d := mid.distance_to(spot)
+			if d < bd and map.g_pos[n].distance_to(map.g_pos[int(e[0])]) > 150.0:
+				bd = d
+				best = n
+				best_nb = int(e[0])
+	if best < 0: return
+	var lanes: Array = Traffic.LANE.highway
+	var slow: TrafficCar = main.traffic.place_car(best, best_nb, 80.0, float(lanes[lanes.size() - 1]))
+	var quick: TrafficCar = main.traffic.place_car(best, best_nb, 30.0, float(lanes[lanes.size() - 1]))
+	if slow != null: slow.temper = 0.55
+	if quick != null:
+		quick.temper = 1.15
+		quick.v = 20.0
 
 func _chain(c) -> String:
 	var out := ""
@@ -206,6 +233,8 @@ func _process(dt: float) -> void:
 		check("%s: nobody stuck for a minute and a half" % name, stuck_max < 90.0, "%.0f s: %s" % [stuck_max, _why])
 		if stuck_max >= 90.0 and is_instance_valid(_stuck_car): _dump(_stuck_car)
 		check("%s: traffic moves" % name, avg > 12.0, "%.0f km/h" % avg)
+		if SPOTS[phase][1] == "trans-canada":
+			check("%s: somebody pulls out and passes on the two-lane" % name, main.traffic.lane_changes > 0, "%d lane changes" % main.traffic.lane_changes)
 		if phase + 1 < SPOTS.size() and not only_first:
 			_go(phase + 1)
 		elif seed_i + 1 < seeds.size():

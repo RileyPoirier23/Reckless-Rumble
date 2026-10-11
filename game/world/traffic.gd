@@ -58,6 +58,13 @@ var enabled := true
 var ignore_player := false
 static var clock := 0.0        # game seconds: what the signals cycle on (they stop when the game does)
 
+var honk_cb: Callable         # the drive scene's audio: honk(dist, pitch)
+var lane_changes := 0         # overtakes so far (the soak test counts them)
+
+## A driver leans on the horn (at the player, mostly): the drive scene hears it by distance.
+func honk(from: Vector2, pitch := 1.0) -> void:
+	if honk_cb.is_valid() and player != null: honk_cb.call(from.distance_to(player.sim.pos), pitch)
+
 func setup(the_world: World, the_sky: WorldSky, the_ysort: Node2D, the_player: PlayerCar) -> void:
 	world = the_world
 	map = world.map
@@ -657,6 +664,16 @@ func _put(p: Vector2, c) -> void:
 	var k := Vector2i(floori(p.x / 20.0), floori(p.y / 20.0))
 	if not _grid.has(k): _grid[k] = []
 	_grid[k].append(c)
+
+## Every car in traffic within about `r` metres of a point (by the grid's 20 m cells).
+func near(p: Vector2, r: float) -> Array:
+	var out: Array = []
+	var k0 := Vector2i(floori((p.x - r) / 20.0), floori((p.y - r) / 20.0))
+	var k1 := Vector2i(floori((p.x + r) / 20.0), floori((p.y + r) / 20.0))
+	for y in range(k0.y, k1.y + 1):
+		for x in range(k0.x, k1.x + 1):
+			out.append_array(_grid.get(Vector2i(x, y), []))
+	return out
 
 ## The nearest thing on `car`'s own path within `reach` metres: [gap (m), its speed along
 ## the path, what it is]. The path is the lane it will actually drive (round the corner if

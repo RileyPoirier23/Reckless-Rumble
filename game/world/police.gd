@@ -259,10 +259,13 @@ func _steer_chasers(dt: float, c: PlayerCar) -> void:
 	_route_t -= dt
 	if _route_t > 0.0: return
 	_route_t = 0.7
+	var nth := 0                       # which chaser this is: the first tails you, the second boxes
 	for k in cruisers:
 		if not k.siren: continue
 		var d: float = k.sim.pos.distance_to(c.sim.pos)
 		var ahead := c.sim.pos + c.sim.world_velocity() * clampf(d / 45.0, 0.2, 1.4)
+		var role := nth
+		nth += 1
 		if c.sim.speed() < 3.0 and d < 60.0:
 			# you've stopped: they pull in behind you
 			var behind := c.sim.pos - c.sim.forward() * (float(c.spec.length) * CarArt.CAR_SCALE * 0.5 + 3.0)
@@ -274,8 +277,17 @@ func _steer_chasers(dt: float, c: PlayerCar) -> void:
 			k.set_path(_route(k.sim.pos, tail, k.sim.forward()) if d > 45.0 else PackedVector2Array([k.sim.pos, tail, tail + c.sim.world_velocity() * 0.6]))
 			k.speed_cap = c.sim.speed() + 5.0 if d < 30.0 else 58.0
 		elif d < 45.0 and _sees(k, c, d):
-			k.set_path(PackedVector2Array([k.sim.pos, ahead, ahead + c.sim.world_velocity() * 0.8 + c.sim.forward() * 4.0]))
-			k.speed_cap = maxf(c.sim.speed() + 6.0, 9.0) if d < 18.0 else 58.0
+			if role == 1 and state == "chase" and c.sim.speed() > 8.0:
+				# the second car boxes you: it goes for the road ahead of you, and once it's there
+				# it slows to your pace and sits across your nose, the first one still on your tail
+				var fwd := c.sim.forward()
+				var in_front := (k.sim.pos - c.sim.pos).dot(fwd) > 4.0
+				var spot := c.sim.pos + fwd * (14.0 if in_front else 26.0) + c.sim.world_velocity() * 0.5
+				k.set_path(PackedVector2Array([k.sim.pos, spot, spot + fwd * 12.0]))
+				k.speed_cap = maxf(c.sim.speed() - 2.5, 6.0) if in_front else 62.0
+			else:
+				k.set_path(PackedVector2Array([k.sim.pos, ahead, ahead + c.sim.world_velocity() * 0.8 + c.sim.forward() * 4.0]))
+				k.speed_cap = maxf(c.sim.speed() + 6.0, 9.0) if d < 18.0 else 58.0
 		else:
 			k.set_path(_route(k.sim.pos, ahead, k.sim.forward()))
 			k.speed_cap = 58.0

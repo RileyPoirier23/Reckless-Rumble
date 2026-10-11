@@ -62,7 +62,16 @@ var hitch_back := 0.0        # from the tractor's middle back to the fifth wheel
 var highway_only := false    # semis stay on the Trans-Canada
 var big := false             # buses and trucks stick to the bigger roads where they can
 var _art_damage := -1.0
-var pull := 0.0              # moved over (m, right) for a siren coming up behind
+var pull := 0.0              # moved over (m, right) for a siren coming up behind, or out of your way
+var lane_from := 0           # a lane change: sliding from this lane to lane_i, lane_t of the way
+var lane_t := 1.0
+var _lane_wait := 0.0        # seconds stuck behind something slow (an overtake wants a few)
+var _lane_free := 0.0        # seconds with the right lane clear (moving back wants a few)
+var _honk_t := 0.0           # until the next time this driver will lean on the horn
+var patience := 3.0          # seconds blocked before the horn comes out
+var horn_pitch := 1.0
+var evade := 0.0             # 0..1: you're coming at them in their lane; they brake and pull right
+var lane_changes := 0        # how many times it's pulled out or back (the soak test counts them)
 
 static var _cone: ImageTexture
 
@@ -83,6 +92,8 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	var d := traffic.map.g_pos[b] - traffic.map.g_pos[a]
 	heading = d.angle()
 	temper = 0.88 + rng.randf() * 0.25
+	patience = rng.randf_range(1.5, 6.0)
+	horn_pitch = rng.randf_range(0.82, 1.18)
 	# what the car is changes how it's driven: a kei truck crawls off the line, a sports car doesn't
 	var cls := String(body.get("class", ""))
 	a_max = float(CLASS_ACCEL.get(cls, A_MAX))
@@ -137,7 +148,73 @@ func desired_speed(road: Dictionary) -> float:
 
 func _lane(road: Dictionary) -> float:
 	var lanes: Array = Traffic.LANE[road.cls]
-	return float(lanes[mini(lane_i, lanes.size() - 1)]) + pull
+	var to := float(lanes[mini(lane_i, lanes.size() - 1)])
+	if lane_t < 1.0: to = lerpf(float(lanes[mini(lane_from, lanes.size() - 1)]), to, smoothstep(0.0, 1.0, lane_t))
+	return to + pull
+
+## Nothing in lane `li` of this road alongside or just ahead or behind (them, or you).
+func _lane_clear(road: Dictionary, li: int, din: Vector2) -> bool:
+	var lanes: Array = Traffic.LANE[road.cls]
+	var want := float(lanes[mini(li, lanes.size() - 1)])
+	var nrm := Vector2(-din.y, din.x)
+	var mine := (pos - traffic.map.g_pos[a]).dot(nrm)
+	var side_to := want - mine
+	for o in traffic.near(pos, 45.0):
+		if o == self: continue
+		var rel: Vector2 = o.pos - pos
+		var along := rel.dot(din)
+		var side := rel.dot(nrm)
+		if absf(side - side_to) < 2.4 and along > -14.0 - o.v * 1.2 and along < 30.0: return false
+	if traffic.player != null:
+		var relp: Vector2 = traffic.player.sim.pos - pos
+		if absf(relp.dot(nrm) - side_to) < 2.6 and relp.dot(din) > -16.0 and relp.dot(din) < 32.0: return false
+	return true
+
+## Two lanes going this way: pull out past something slow once it's been slow a while and the
+## passing lane's clear; drift back right once it's been clear a while. Never within a junction's
+## reach, never in a slide, and the big stuff (semis, buses) stays right.
+func _lane_change(dt: float, road: Dictionary, din: Vector2, db: float, gap: float, v_lead: float, v0: float) -> void:
+	var lanes: Array = Traffic.LANE[road.cls]
+	if lanes.size() < 2 or db < 45.0 or s < 12.0 or big or highway_only or state != "drive":
+		_lane_wait = 0.0
+		return
+	if lane_t < 1.0: return
+	# (the lanes run from the centre line outward: the last is the right lane, the one before it
+	# the passing lane)
+	var right := lanes.size() - 1
+	var passing := right - 1
+	if lane_i >= right:
+		var slow := gap < 32.0 and v_lead < v0 * 0.82 and v > 4.0
+		_lane_wait = _lane_wait + dt if slow else 0.0
+		if _lane_wait > 1.6 + patience * 0.5 and _lane_clear(road, passing, din):
+			lane_from = lane_i
+			lane_i = passing
+			lane_t = 0.0
+			_lane_wait = 0.0
+			lane_changes += 1
+			traffic.lane_changes += 1
+	else:
+		var free := gap > 55.0 or v_lead > v0 * 0.95
+		_lane_free = _lane_free + dt if free else 0.0
+		if _lane_free > 3.0 and _lane_clear(road, right, din):
+			lane_from = lane_i
+			lane_i = right
+			lane_t = 0.0
+			_lane_free = 0.0
+
+## You, coming at them in their lane (or sliding across it): they brake and pull right.
+func _player_threat(din: Vector2) -> float:
+	var pc: PlayerCar = traffic.player
+	if pc == null: return 0.0
+	var rel: Vector2 = pc.sim.pos - pos
+	var along := rel.dot(din)
+	if along < 2.0 or along > 55.0: return 0.0
+	var nrm := Vector2(-din.y, din.x)
+	if absf(rel.dot(nrm)) > 2.6: return 0.0
+	var closing := -pc.sim.world_velocity().dot(din) + v
+	if closing < 6.0: return 0.0
+	# time to meet, under three seconds: the nearer, the harder they get out of the way
+	return clampf(1.0 - (along / closing) / 3.0, 0.0, 1.0)
 
 ## A siren coming up behind: move over and slow down (0 = carry on, 1 = pulled over).
 func _siren_behind() -> float:
@@ -204,13 +281,16 @@ func drive(dt: float) -> void:
 		gone = true
 		return
 	var yielding := _siren_behind()
-	# move over for the siren, as far as the road goes (not up onto the sidewalk)
-	var lanes: Array = Traffic.LANE[road.cls]
-	var room := clampf(float(road.get("w", 9.0)) / 2.0 - float(lanes[mini(lane_i, lanes.size() - 1)]) - width / 2.0 - 0.2, 0.0, 1.6)
-	pull = move_toward(pull, room * yielding, dt * 1.2)
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
+	var din0 := (B - A).normalized()
+	evade = maxf(_player_threat(din0), evade - dt * 0.8)
+	# move over for the siren (or out of your way), as far as the road goes (not up onto the sidewalk)
+	var lanes: Array = Traffic.LANE[road.cls]
+	var room := clampf(float(road.get("w", 9.0)) / 2.0 - float(lanes[mini(lane_i, lanes.size() - 1)]) - width / 2.0 - 0.2, 0.0, 1.6)
+	pull = move_toward(pull, room * maxf(yielding, evade), dt * (2.5 if evade > 0.3 else 1.2))
+	lane_t = minf(1.0, lane_t + dt / 1.8)
 	if c_next < 0:
 		c_next = c_after if c_after >= 0 and traffic.map.g_adj[b].any(func(e: Array) -> bool: return int(e[0]) == c_after) else traffic.next_node(a, b, self)
 		c_after = -1
@@ -238,7 +318,7 @@ func drive(dt: float) -> void:
 		var lat_err := (pos - A).dot(nrm) - _lane(road)
 		pos -= nrm * clampf(lat_err, -1.5 * dt, 1.5 * dt)
 	# --- how fast it wants to go: the limit, then slower for the bend ahead
-	var v0 := desired_speed(road) * (1.0 - 0.55 * yielding)
+	var v0 := desired_speed(road) * (1.0 - 0.55 * yielding) * (1.0 - 0.7 * evade)
 	# still swinging round onto this road (out of a hairpin): slow until it's pointing down it
 	var herr := absf(angle_difference(heading, din.angle()))
 	if herr > 0.3: v0 = minf(v0, lerpf(v0, 5.0, clampf((herr - 0.3) / 0.9, 0.0, 1.0)))
@@ -266,6 +346,15 @@ func drive(dt: float) -> void:
 	lead_obj = lead[2]
 	var gap: float = lead[0]
 	var v_lead: float = lead[1]
+	_lane_change(dt, road, din, db, gap, v_lead, v0)
+	# the horn: you cut in close in front of them, or you've been sat in their way a while
+	_honk_t = maxf(0.0, _honk_t - dt)
+	if lead_obj == traffic.player and _honk_t <= 0.0 and traffic.player != null:
+		var cut_off := gap < 5.0 and v > 6.0 and v_lead < v - 2.0
+		var blocked := v < 0.8 and wait_t > patience and traffic.player.sim.speed() < 1.0 and gap < 14.0
+		if cut_off or blocked:
+			traffic.honk(pos, horn_pitch)
+			_honk_t = 2.5 + patience * 0.8
 	if traffic.junctions.has(b) and not boxes.has(b) and (db < 50.0 or db < traffic.stop_line(b, a) + 25.0):
 		# (a bus waits with its nose at the line, not its middle out in the junction)
 		var stop_d := db - traffic.stop_line(b, a) - maxf(0.0, length * 0.5 - 3.0)
@@ -325,8 +414,9 @@ func drive(dt: float) -> void:
 		if n != b and pos.distance_to(map.g_pos[n]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0 + maxf(0.0, length * 0.5 - 3.0): _leave_box(n)
 	# --- lights
 	var turning := db < 40.0 and absf(turn_ahead) > 0.5 and absf(turn_ahead) < 2.8
-	view.blink_left = turning and turn_ahead < 0.0
-	view.blink_right = turning and turn_ahead > 0.0
+	var changing := lane_t < 0.85
+	view.blink_left = turning and turn_ahead < 0.0 or changing and lane_i < lane_from
+	view.blink_right = turning and turn_ahead > 0.0 or changing and lane_i > lane_from
 	view.braking = acc < -0.8 or v < 0.2
 	_place()
 

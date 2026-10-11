@@ -241,6 +241,7 @@ void fragment() {
 	traffic = Traffic.new()
 	add_child(traffic)
 	traffic.setup(world, sky, ysort, car)
+	traffic.honk_cb = audio.honk
 	furniture = RoadFurniture.new()
 	add_child(furniture)
 	furniture.setup(self)
