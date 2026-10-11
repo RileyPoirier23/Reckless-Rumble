@@ -174,6 +174,12 @@ func _wheel() -> void:
 	check("pedals on one axis", bool(one.combined) and int(one.gas_axis) == 1)
 	check("one axis: the gas reads", Wheel.pedal(-1.0, float(one.gas_rest), float(one.gas_full)) == 1.0 and Wheel.pedal(-1.0, float(one.brake_rest), float(one.brake_full)) == 0.0)
 	check("nothing's plugged in: no wheel", not Wheel.active())
+	# a third pedal: the clutch on axis 3, resting at +1
+	var cl := [0.0, 1.0, -1.0, -1.0]
+	var three: Dictionary = SettingsScreen.Wizard.solve(rest, left, right, gas, brk, cl)
+	check("the wizard finds the clutch", int(three.clutch_axis) == 3 and float(three.clutch_rest) == 0.0 and float(three.clutch_full) == -1.0)
+	check("no third pedal: no clutch axis", int(res.clutch_axis) == -1 and int(SettingsScreen.Wizard.solve(rest, left, right, gas, brk, rest).clutch_axis) == -1)
+	check("the clutch reads as a pedal", Wheel.pedal(-1.0, float(three.clutch_rest), float(three.clutch_full)) == 1.0 and Wheel.pedal(0.0, float(three.clutch_rest), float(three.clutch_full)) == 0.0)
 
 # ------------------------------------------------------------------ a wheel only drives
 

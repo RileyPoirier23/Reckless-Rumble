@@ -77,6 +77,7 @@ func rows() -> Array:
 		"CONTROLS":
 			for r in Controls.REBIND: out.append({ "kind": "bind", "action": r[0], "label": r[1], "desc": "ACCEPT TO PRESS A NEW KEY OR BUTTON. LEFT/RIGHT PICKS THE KEYBOARD OR CONTROLLER COLUMN. DELETE CLEARS IT." })
 			out.append({ "kind": "choice", "sec": "controls", "key": "transmission", "label": "GEARBOX", "opts": ["auto", "manual"], "desc": "AUTOMATIC, OR SHIFT IT YOURSELF ON THE SHOULDER BUTTONS (Q AND E ON A KEYBOARD, WHERE G SWITCHES IT TOO)." })
+			out.append({ "kind": "choice", "sec": "controls", "key": "clutch", "label": "CLUTCH", "opts": ["auto", "pedal"], "desc": "PEDAL: THE CLUTCH IS YOURS (A WHEEL'S THIRD PEDAL, OR THE CLUTCH KEY). LET IT OUT WITH NO REVS AND IT STALLS. MANUAL GEARBOX ONLY." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "pad_deadzone", "label": "STICK DEAD ZONE", "min": 0.04, "max": 0.3, "step": 0.02, "desc": "HOW FAR THE STICK MOVES BEFORE THE CAR STEERS. RAISE IT IF THE CAR WANDERS ON ITS OWN." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "pad_curve", "label": "STICK CURVE", "min": 1.0, "max": 2.6, "step": 0.1, "desc": "1.0 IS STRAIGHT. HIGHER MEANS GENTLER NEAR THE MIDDLE, FULL LOCK STILL AT THE END." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "speed_steer", "label": "LESS LOCK AT SPEED", "min": 0.0, "max": 1.5, "step": 0.1, "desc": "HOW MUCH THE STICK AND KEYS STEER LESS AT SPEED, SO YOU DON'T SPIN IT ON THE HIGHWAY. 0 IS NONE." })
@@ -283,7 +284,7 @@ func _finish_bind(en: Array) -> void:
 
 # ------------------------------------------------------------------ the wheel wizard
 
-const WIZ_STEPS := ["wake", "rest", "left", "right", "gas", "brake", "up", "down", "g1", "g2", "g3", "g4", "g5", "g6", "gr", "done"]
+const WIZ_STEPS := ["wake", "rest", "left", "right", "gas", "brake", "clutch", "up", "down", "g1", "g2", "g3", "g4", "g5", "g6", "gr", "done"]
 const WIZ_GEARS := { "g1": "gear_1", "g2": "gear_2", "g3": "gear_3", "g4": "gear_4", "g5": "gear_5", "g6": "gear_6", "gr": "gear_r" }
 const WIZ_TEXT := {
 	"wake": "PRESS THE GAS AND THE BRAKE ONCE EACH AND TURN THE WHEEL A LITTLE (SO THEY WAKE UP). LET GO, THEN PRESS A BUTTON ON THE WHEEL.",
@@ -292,6 +293,7 @@ const WIZ_TEXT := {
 	"right": "NOW ALL THE WAY RIGHT, HOLD IT, AND PRESS A BUTTON.",
 	"gas": "LET GO. PUSH THE GAS ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON.",
 	"brake": "LET GO OF THE GAS. PUSH THE BRAKE ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON.",
+	"clutch": "LET GO. GOT A CLUTCH? PUSH IT ALL THE WAY DOWN, HOLD IT, AND PRESS A BUTTON. NO CLUTCH? PRESS %s.",
 	"up": "PULL THE RIGHT PADDLE: THAT SHIFTS UP. NO PADDLES? PRESS %s.",
 	"down": "NOW THE LEFT PADDLE: THAT SHIFTS DOWN. NO PADDLES? PRESS %s.",
 	"g1": "GOT AN H-SHIFTER? PUT IT IN 1ST. NO SHIFTER? PRESS %s.",
@@ -344,7 +346,7 @@ func _start_wizard() -> void:
 	var devs: Array[int] = [d]
 	for o in Wheel.connected():
 		if o != d and (Wheel.looks_like_rig(o) or not Input.is_joy_known(o)): devs.append(o)
-	wiz = { "dev": d, "devs": devs, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [], "held": [], "up": -1, "down": -1,
+	wiz = { "dev": d, "devs": devs, "step": 0, "t": 0.0, "sum": [], "n": 0, "rest": [], "left": [], "right": [], "gas": [], "brake": [], "clutch": [], "held": [], "up": -1, "down": -1,
 		"rig_held": {}, "gears": {} }
 	wheel_press(d, wiz.held)        # whatever's held as it starts doesn't count
 	rig_press(devs, wiz.rig_held)
@@ -395,13 +397,18 @@ func _wizard(dt: float) -> void:
 		wiz[step] = wb
 		wiz.step = int(wiz.step) + 1
 		return
+	if step == "clutch" and wb < 0:
+		wiz.clutch = []                               # no third pedal
+		wiz.step = int(wiz.step) + 1
+		return
 	if step == "done":
-		var res := Wizard.solve(wiz.rest, wiz.left, wiz.right, wiz.gas, wiz.brake)
+		var res := Wizard.solve(wiz.rest, wiz.left, wiz.right, wiz.gas, wiz.brake, wiz.clutch)
 		# which device each axis was on: the wheel is whatever turned, the pedals whatever was pressed
 		var devs: Array = wiz.devs
 		var d := int(devs[int(res.steer_axis) / JOY_AXIS_MAX])
 		var pd := int(devs[int(res.gas_axis) / JOY_AXIS_MAX])
 		for k in ["steer_axis", "gas_axis", "brake_axis"]: res[k] = int(res[k]) % JOY_AXIS_MAX
+		if int(res.clutch_axis) >= 0: res.clutch_axis = int(res.clutch_axis) % JOY_AXIS_MAX
 		GameSettings.set_v("wheel", "name", Input.get_joy_name(d))
 		GameSettings.set_v("wheel", "guid", Input.get_joy_guid(d))
 		GameSettings.set_v("wheel", "ids", Wheel.ids_of(d))
@@ -422,6 +429,7 @@ func _wizard(dt: float) -> void:
 		_changed("bindings")
 		var paddles := "" if int(wiz.up) < 0 else ", PADDLES ON BUTTONS %d AND %d" % [int(wiz.up), int(wiz.down)]
 		if not gears.is_empty(): paddles += ", A %d-POSITION SHIFTER" % gears.size()
+		if int(res.clutch_axis) >= 0: paddles += ", A CLUTCH ON AXIS %d (TURN IT ON UNDER CONTROLS > CLUTCH)" % int(res.clutch_axis)
 		wiz = {}
 		note = "THE WHEEL'S SET UP. STEERING ON AXIS %d, GAS ON %d, BRAKE ON %d%s%s%s." % [int(res.steer_axis), int(res.gas_axis), int(res.brake_axis), " (ONE AXIS)" if res.combined else "", " (THE PEDAL SET'S OWN PLUG)" if pd != d else "", paddles]
 		return
@@ -430,7 +438,7 @@ func _wizard(dt: float) -> void:
 
 ## Working the calibration out from what the axes read at each step (pure: the tests use it).
 class Wizard:
-	static func solve(rest: Array, left: Array, right: Array, gas: Array, brake: Array) -> Dictionary:
+	static func solve(rest: Array, left: Array, right: Array, gas: Array, brake: Array, clutch := []) -> Dictionary:
 		var n := rest.size()
 		# steering: the axis that moved most between full left and full right
 		var sa := 0
@@ -447,7 +455,15 @@ class Wizard:
 		for i in n:
 			if i == sa: continue
 			if ba < 0 or absf(float(brake[i]) - float(rest[i])) > absf(float(brake[ba]) - float(rest[ba])): ba = i
-		return { "steer_axis": sa, "steer_center": float(rest[sa]), "steer_min": lo, "steer_max": hi,
+		# the clutch, if a third pedal moved: whatever moved most that isn't the others, and moved enough
+		var ca := -1
+		if clutch.size() == n:
+			for i in n:
+				if i == sa or i == ga or i == ba: continue
+				if ca < 0 or absf(float(clutch[i]) - float(rest[i])) > absf(float(clutch[ca]) - float(rest[ca])): ca = i
+			if ca >= 0 and absf(float(clutch[ca]) - float(rest[ca])) < 0.25: ca = -1
+		return { "clutch_axis": ca, "clutch_rest": float(rest[ca]) if ca >= 0 else -1.0, "clutch_full": float(clutch[ca]) if ca >= 0 else 1.0,
+			"steer_axis": sa, "steer_center": float(rest[sa]), "steer_min": lo, "steer_max": hi,
 			"steer_sign": 1.0 if float(right[sa]) > float(left[sa]) else -1.0,
 			"gas_axis": ga, "gas_rest": float(rest[ga]), "gas_full": float(gas[ga]),
 			"brake_axis": ba, "brake_rest": float(rest[ba]), "brake_full": float(brake[ba]),

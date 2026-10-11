@@ -4,12 +4,12 @@ class_name StoryMissions
 extends RefCounted
 
 const COVINGTON := Vector2(5570, 1566)
-const TIMS_MOUNTAIN := Vector2(5470, 1132)
+const TIMS_MOUNTAIN := Vector2(5470, 1092)
 const AIRSTRIP := Vector2(6640, 1022)
 const AIRSTRIP_FENCE := Vector2(6620, 1034)     # where Airstrip Rd ends at the runway: the Familia's meet is on the other side
 # the Mountain: Mountain Rd climbs from Main to the hairpin, then Magnet Hill Rd goes over the hill
 const MOUNTAIN_FOOT := Vector2(5900, 1420)
-const HAIRPIN := Vector2(5180, 860)
+const HAIRPIN := Vector2(5290, 970)           # the apex of the hairpin at the top of Mountain Rd
 const HILL_TOP := Vector2(5000, 720)
 const GENERAL := Vector2(6005, 1500)
 const BRY_SHOP := Vector2(6316, 921)           # Bry's Fjord Service, on its lot off Industrial Dr          # the Port Rumble General's emergency doors, on John St by the Rumble Centre
@@ -22,7 +22,7 @@ const BRIDGE := Vector2(6110, 1600)           # the Gunningsville Bridge
 const SCHOOL := Vector2(5840, 1850)           # Port Rumble High, in Riverside
 const MINISTRY := Vector2(6250, 1505)         # the Ministry office on Main
 const WAREHOUSE := Vector2(6280, 1000)        # Industrial Dr, outside the warehouse
-const S_BEND := Vector2(5600, 1180)           # Mountain Rd, the S-bend below the Tim Burtons
+const S_BEND := Vector2(5620, 1127)           # Mountain Rd, the S-bend below the Tim Burtons
 
 const MISSIONS := {
 	"last_call": {
@@ -43,7 +43,7 @@ const MISSIONS := {
 	},
 	"drive_it_home": {
 		"title": "IT RUNS. GREAT.",
-		"car": "silvio", "start": Vector2(5470, 1130), "heading": -PI / 2.0,
+		"car": "silvio", "start": TIMS_MOUNTAIN, "heading": -PI / 2.0,
 		"time": 22.4, "season": "fall", "weather": "cloudy", "gasket": true,
 		"intro": ["YOUR CAR. $840. IT'S LEAKING SOMETHING.", "GET IT HOME BEFORE IT GETS HOT."],
 		"objectives": [{ "text": "DRIVE IT HOME TO COVINGTON AUTO. STOP AT THE BAY DOORS.", "to": COVINGTON, "radius": 14.0, "stop": true }],
@@ -161,13 +161,13 @@ const MISSIONS := {
 	},
 	"the_mountain": {
 		"title": "THE MOUNTAIN",
-		"car": "supreem", "start": MOUNTAIN_FOOT, "heading": -2.2524,         # facing up Mountain Rd
+		"car": "supreem", "start": MOUNTAIN_FOOT, "heading": -PI / 2.0,         # facing up Vaughan Harvey, which becomes Mountain Rd
 		"time": 23.0, "season": "winter", "weather": "snow", "tires": "winter",
 		"intro": ["HATCH'S CHARJER, UP MOUNTAIN RD, LIKE EVERY NIGHT.", "TREMBLAY: \"LEO. DON'T.\""],
 		# a chase: he drives the road to the top of the hill; catch him first (ram him, or sit on
 		# his bumper long enough that he's got nowhere to go)
 		"objectives": [{ "text": "CATCH DALE HATCH BEFORE HE'S OVER THE HILL.", "to": HILL_TOP, "radius": 25.0,
-			"chase": { "car": "charjer", "paint": "#16161c", "start": Vector2(5868, 1444), "heading": -2.2524, "skill": 0.78, "cap": 30.0, "tires": "winter" } }],
+			"chase": { "car": "charjer", "paint": "#16161c", "start": Vector2(5870, 1355), "heading": -2.2524, "skill": 0.78, "cap": 30.0, "tires": "winter" } }],
 	},
 	"detailing": {
 		"title": "DETAILING",

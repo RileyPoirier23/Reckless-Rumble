@@ -11,13 +11,14 @@ static var _loaded := false
 
 const DEFAULTS := {
 	"controls": { "transmission": "auto", "pad_deadzone": 0.14, "pad_curve": 1.7, "speed_steer": 1.0,
-		"trigger_deadzone": 0.06, "kb_ramp": true, "vibration": 1.0, "prompts": "auto" },
+		"trigger_deadzone": 0.06, "kb_ramp": true, "vibration": 1.0, "prompts": "auto", "clutch": "auto" },
 	# action -> [[kind, code, value, device], ...] where kind is key, joybtn or joyaxis; absent = defaults
 	"bindings": {},
 	"wheel": { "enabled": false, "guid": "", "name": "", "ids": "", "pedals_guid": "", "pedals_name": "", "pedals_ids": "",
 		"steer_axis": 0, "steer_center": 0.0, "steer_min": -1.0, "steer_max": 1.0, "steer_sign": 1.0,
 		"gas_axis": 2, "gas_rest": -1.0, "gas_full": 1.0,
 		"brake_axis": 3, "brake_rest": -1.0, "brake_full": 1.0,
+		"clutch_axis": -1, "clutch_rest": -1.0, "clutch_full": 1.0,
 		"combined": false, "rotation": 900.0, "range": 0.0, "ratio": 14.0,
 		"steer_dz": 0.0, "steer_gamma": 1.0, "pedal_dz": 0.03, "pedal_sat": 0.97 },
 	"display": { "mode": "windowed", "size": "1280x720", "vsync": true, "max_fps": 0, "stretch": "integer" },

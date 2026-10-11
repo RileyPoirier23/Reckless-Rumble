@@ -114,6 +114,8 @@ static func card_lines() -> Array:
 	var out: Array = []
 	var was := Hints.pad
 	for r in Controls.REBIND:
+		# the clutch only matters in pedal mode: keep the card to what you're using
+		if String(r[0]) == "clutch" and String(GameSettings.get_v("controls", "clutch")) != "pedal": continue
 		Hints.pad = false
 		var k := Hints.key(String(r[0]))
 		Hints.pad = true

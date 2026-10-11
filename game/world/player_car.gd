@@ -325,6 +325,9 @@ func _inputs(dt: float) -> Array:
 	var br: float = ins[1]
 	var st: float = ins[2]
 	var hb: float = ins[3]
+	# the clutch is yours in pedal mode with a manual gearbox (a wheel's third pedal, or the key)
+	sim.manual_clutch = String(GameSettings.get_v("controls", "clutch")) == "pedal" and not sim.auto_gearbox
+	sim.clutch_in = clampf(float(ins[4]), 0.0, 1.0) if ins.size() > 4 and sim.manual_clutch else 0.0
 	# a wheel turns the road wheels one for one: no help that would move them without the rim
 	var wheel := Wheel.active()
 	sim.direct_steer = wheel

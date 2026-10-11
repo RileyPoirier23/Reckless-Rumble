@@ -16,10 +16,10 @@ const ROUTES := [
 		"pts": [Vector2(5760, 1390), Vector2(6250, 1390), Vector2(6250, 1505), Vector2(5760, 1583)],
 		"blurb": "ST GEORGE, KING, MAIN, LUTZ. TWO LAPS. FOUR CORNERS THAT KNOW YOUR NAME." },
 	{ "id": "riverside", "name": "RIVERSIDE LOOP", "laps": 2, "loop": true, "buy_in": 300,
-		"pts": [Vector2(5560, 1850), Vector2(6120, 1850), Vector2(6120, 1970), Vector2(5560, 1970)],
+		"pts": [Vector2(5560, 1850), Vector2(6110, 1850), Vector2(6110, 1970), Vector2(5560, 1970)],
 		"blurb": "CLEVELAND AND TRITES, TWICE. THE HOUSES ARE CLOSE AND THE CURTAINS TWITCH." },
 	{ "id": "northend", "name": "NORTH END SPRINT", "laps": 1, "loop": false, "buy_in": 500,
-		"pts": [Vector2(5780, 1110), Vector2(6260, 1110), Vector2(6260, 1390), Vector2(5900, 1390), Vector2(5900, 1562)],
+		"pts": [Vector2(5780, 1110), Vector2(6250, 1110), Vector2(6250, 1390), Vector2(5900, 1390), Vector2(5900, 1562)],
 		"blurb": "MORTON, CHESTER, ST GEORGE, DOWN VAUGHAN HARVEY TO MAIN. NO LAPS. NO SECOND CHANCES." },
 ]
 

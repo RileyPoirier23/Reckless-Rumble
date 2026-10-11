@@ -40,6 +40,10 @@ var w_eng := 0.0       # engine speed (rad/s)
 var w_wheel := 0.0     # driven-axle wheel speed (rad/s)
 var front_w := 0.0     # front wheel speed (only used for the lock-up look)
 var clutch_locked := false
+var manual_clutch := false            # the clutch is the driver's (a third pedal, or the clutch key)
+var clutch_in := 0.0                  # that pedal: 0 up (engaged), 1 on the floor
+var stalled := false                  # let the clutch out on a dead engine: it's off until you start it
+var _starter := 0.0
 var shift_timer := 0.0
 var boost := 0.0       # 0..1 of max boost
 var reverse_hold := 0.0
@@ -131,6 +135,8 @@ func reset_parts() -> void:
 	w_eng = idle_w()
 	clutch_locked = false
 	clutch_cond = 1.0
+	stalled = false
+	_starter = 0.0
 	turbo_cond = 1.0
 	pads_mm = 10.0
 	fluid = 1.0
@@ -287,6 +293,15 @@ func step(dt: float, throttle: float, brake: float, steer_in: float, handbrake: 
 	if auto_gearbox: _auto_shift(dt, throttle)
 	odometer_m += absf(vx) * dt
 
+## The engine dies: the clutch came out on it at a walking pace with no revs.
+func _stall() -> void:
+	if stalled: return
+	stalled = true
+	clutch_locked = false
+	w_eng = 0.0
+	_starter = 0.0
+	say("STALLED: clutch in (or neutral) and a touch of gas to start it")
+
 func shift(to: int) -> void:
 	if to == gear or to > gear_count() or to < -1: return
 	# Street: no catastrophic money shift (the rest still hurts)
@@ -399,6 +414,16 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fuel := throttle if shift_timer <= 0.0 else throttle * 0.15
 	if e_rpm >= limiter: fuel = 0.0            # rev limiter cuts fuel
 	if engine_blown: fuel = 0.0
+	# stalled: it's dead until the starter turns it over (clutch in, or neutral, and a touch of gas)
+	if stalled:
+		fuel = 0.0
+		if (clutch_in > 0.6 or gr == 0.0) and throttle > 0.05:
+			_starter += h
+			if _starter > 0.6:
+				stalled = false
+				_starter = 0.0
+				w_eng = idle_w()
+		else: _starter = 0.0
 	# running on fumes it coughs; dry, it doesn't run at all
 	var has_gas := not burn_fuel or fuel_l > 0.0
 	if not has_gas or (burn_fuel and fuel_l < 0.8 and randf() < 0.3): fuel = 0.0
@@ -406,10 +431,15 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var te := fuel * curve_torque(e_rpm) * boost_mult * power_mult() - friction
 	_power_w = maxf(0.0, (te + friction) * w_eng)
 	# idle: the ECU holds idle when nothing else drives the engine
-	if not clutch_locked and e_rpm < float(spec.engine.idle_rpm) and not engine_blown and has_gas:
+	if not clutch_locked and e_rpm < float(spec.engine.idle_rpm) and not engine_blown and has_gas and not stalled:
 		te += 160.0 * (1.0 - e_rpm / float(spec.engine.idle_rpm)) + friction
-	# anti-stall: the auto-clutch opens before the engine drops under idle
-	if clutch_locked and w_eng * RPM < float(spec.engine.idle_rpm) * 0.85: clutch_locked = false
+	# anti-stall: the auto-clutch opens before the engine drops under idle. Working the clutch
+	# yourself, it only opens if you push the pedal: let it out too soon and the engine stalls
+	var yours := manual_clutch and not arcade()
+	if clutch_locked and w_eng * RPM < float(spec.engine.idle_rpm) * 0.85:
+		if yours and clutch_in < 0.3:
+			if w_eng * RPM < float(spec.engine.idle_rpm) * 0.45: _stall()
+		else: clutch_locked = false
 	# clutch engagement: launches slip the clutch, shifts open it
 	var engage := 0.0
 	if gr != 0.0 and handbrake < 0.5:
@@ -417,8 +447,10 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		# launch: the auto-clutch lets the engine rev toward a launch rpm that rises with throttle,
 		# then bites; once rolling (or already locked) it stays fully in
 		var launch := 1100.0 + 2600.0 * throttle
-		if clutch_locked or wheel_e_rpm > 1500.0: engage = 1.0
+		if yours: engage = clampf((1.0 - clutch_in) * 1.25, 0.0, 1.0)     # the pedal is the bite
+		elif clutch_locked or wheel_e_rpm > 1500.0: engage = 1.0
 		else: engage = clampf((e_rpm - launch * 0.75) / (launch * 0.55), 0.06 if throttle < 0.05 else 0.0, 1.0)
+	if yours and clutch_in > 0.5: clutch_locked = false
 	if handbrake >= 0.5: clutch_locked = false
 	var tc_max: float = float(spec.engine.clutch_torque) * engage * ((0.15 + 0.85 * clutch_cond) if clutch_cond > 0.08 else 0.0)
 	# --- the driven axles: FWD drives the front, RWD the rear, AWD both through a locked centre.
@@ -462,7 +494,10 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# a stopped wheel with the brake on stays stopped, up to what the brake can hold (the clutch
 	# slips and the engine idles against it, the way an automatic sits at a light)
 	var held := t_sh > 0.0 and absf(w_wheel) <= 0.05
-	if held: clutch_locked = false
+	if held:
+		# sat on the brake in gear with the clutch out: an automatic slips, a real clutch stalls it
+		if yours and clutch_in < 0.3 and gr != 0.0 and clutch_locked: _stall()
+		clutch_locked = false
 	if clutch_locked and gr != 0.0:
 		# engine and wheels turn together
 		var i_tot := iw + ie * gr * gr
@@ -497,7 +532,8 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 			clutch_locked = true
 			w_eng = w_wheel * gr
 	w_eng = maxf(w_eng, 0.0)
-	if not clutch_locked and not engine_blown: w_eng = maxf(w_eng, idle_w() * 0.6)
+	if not clutch_locked and not engine_blown and not stalled: w_eng = maxf(w_eng, idle_w() * 0.6)
+	if stalled: w_eng = 0.0
 	rpm = w_eng * RPM
 	# --- the free-rolling axles: brake force up to grip; past grip they lock (unless ABS)
 	front_locked = false

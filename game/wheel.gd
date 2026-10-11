@@ -178,7 +178,8 @@ static func axis(dev: int, i: int, rest: float) -> float:
 	var v := Input.get_joy_axis(dev, i as JoyAxis)
 	return rest if v == 0.0 else v
 
-## [gas, brake, steer, handbrake] from the wheel (and its pedals).
+## [gas, brake, steer, handbrake, clutch] from the wheel (and its pedals). The clutch is the third
+## pedal if the wizard found one, else the clutch button.
 static func inputs(lock_rad: float) -> Array:
 	var w: Dictionary = GameSettings.data.get("wheel", GameSettings.DEFAULTS.wheel)
 	var st := steer(axis(device, int(w.steer_axis), float(w.steer_center)), float(w.steer_center), float(w.steer_min), float(w.steer_max), float(w.steer_sign),
@@ -190,4 +191,7 @@ static func inputs(lock_rad: float) -> Array:
 		brk = pedal(axis(pedals, int(w.gas_axis), float(w.gas_rest)), float(w.gas_rest), float(w.brake_full), float(w.pedal_dz), float(w.pedal_sat))
 	else:
 		brk = pedal(axis(pedals, int(w.brake_axis), float(w.brake_rest)), float(w.brake_rest), float(w.brake_full), float(w.pedal_dz), float(w.pedal_sat))
-	return [gas, brk, st, Input.get_action_strength("handbrake")]
+	var cl := Input.get_action_strength("clutch")
+	if int(w.get("clutch_axis", -1)) >= 0:
+		cl = pedal(axis(pedals, int(w.clutch_axis), float(w.clutch_rest)), float(w.clutch_rest), float(w.clutch_full), float(w.pedal_dz), float(w.pedal_sat))
+	return [gas, brk, st, Input.get_action_strength("handbrake"), cl]

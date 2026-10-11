@@ -18,6 +18,7 @@ const DEFAULTS := {
 	"shift_up": [KEY_E, JOY_BUTTON_RIGHT_SHOULDER],
 	"shift_down": [KEY_Q, JOY_BUTTON_LEFT_SHOULDER],
 	"gearbox": [KEY_G],                                    # on a pad the gearbox is a setting, not a button
+	"clutch": [KEY_SHIFT],                                 # the clutch pedal, when the clutch is yours (Settings)
 	"use": [KEY_F, KEY_ENTER, JOY_BUTTON_A],
 	"horn": [KEY_H, JOY_BUTTON_X],
 	"blink_left": [KEY_Z, JOY_BUTTON_DPAD_LEFT],
@@ -45,7 +46,7 @@ const DEFAULTS := {
 ## What the settings screen lets you rebind, in order, and what it calls them.
 const REBIND := [
 	["throttle", "GAS"], ["brake", "BRAKE / REVERSE"], ["steer_left", "STEER LEFT"], ["steer_right", "STEER RIGHT"],
-	["handbrake", "HANDBRAKE"], ["shift_up", "SHIFT UP"], ["shift_down", "SHIFT DOWN"], ["gearbox", "AUTO / MANUAL"],
+	["handbrake", "HANDBRAKE"], ["shift_up", "SHIFT UP"], ["shift_down", "SHIFT DOWN"], ["gearbox", "AUTO / MANUAL"], ["clutch", "CLUTCH (PEDAL MODE)"],
 	["use", "USE"], ["horn", "HORN"], ["blink_left", "LEFT BLINKER"], ["blink_right", "RIGHT BLINKER"], ["hazards", "HAZARDS"],
 	["high_beams", "HIGH BEAMS"], ["map", "MAP"], ["jobs", "GIGS"], ["reset", "TOW HOME"], ["hydraulics", "HYDRAULICS / LIGHT BAR"], ["help", "CONTROLS CARD"], ["pause", "PAUSE"],
 ]
@@ -245,8 +246,8 @@ static func label(en: Array) -> String:
 			return "AXIS %d%s" % [a, dir]
 	return "?"
 
-## Gas, brake, steering and handbrake for the car this frame: from the wheel if one's set up,
-## otherwise from the pad or the keyboard. On the keyboard the pedals and the steering ease in
+## Gas, brake, steering, handbrake and clutch for the car this frame: from the wheel if one's set
+## up, otherwise from the pad or the keyboard. On the keyboard the pedals and the steering ease in
 ## (keys are all or nothing), and back out quicker.
 static func drive_inputs(dt: float, steer_lock := 0.55) -> Array:
 	if Wheel.active(): return Wheel.inputs(steer_lock)
@@ -254,15 +255,16 @@ static func drive_inputs(dt: float, steer_lock := 0.55) -> Array:
 	var br := trigger("brake")
 	var st := steer_axis()
 	var hb := Input.get_action_strength("handbrake")
+	var cl := Input.get_action_strength("clutch")
 	if not Hints.pad and bool(GameSettings.get_v("controls", "kb_ramp")):
 		_kb[0] = move_toward(float(_kb[0]), th, dt * (4.0 if th > float(_kb[0]) else 8.0))
 		_kb[1] = move_toward(float(_kb[1]), br, dt * (6.0 if br > float(_kb[1]) else 12.0))
 		var s0 := float(_kb[2])
 		var turning_in := absf(st) > absf(s0) and (signf(st) == signf(s0) or is_zero_approx(s0))
 		_kb[2] = move_toward(s0, st, dt * (3.5 if turning_in else 7.0))
-		return [_kb[0], _kb[1], _kb[2], hb]
+		return [_kb[0], _kb[1], _kb[2], hb, cl]
 	_kb = [th, br, st]
-	return [th, br, st, hb]
+	return [th, br, st, hb, cl]
 
 ## The stick, read raw with a proper round dead zone and a response curve (both in Settings):
 ## small movements make small corrections, full lock is still at the end of the travel.

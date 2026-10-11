@@ -46,7 +46,35 @@ func ok_num(c: CarSim) -> bool:
 		if is_nan(float(v)) or is_inf(float(v)): return false
 	return true
 
+## The clutch in your own hands: dump it with no revs and the engine stalls; clutch in and a
+## touch of gas starts it again; slip it out with revs and the car pulls away.
+func clutch_tests() -> void:
+	var c := car()
+	c.manual_clutch = true
+	c.gear = 1
+	c.clutch_in = 1.0
+	run(c, 0.5, 0.0)
+	check("clutch in: the engine idles in gear", not c.stalled and c.rpm > 500.0, "%d rpm" % int(c.rpm))
+	c.clutch_in = 0.0
+	run(c, 1.0, 0.0)
+	check("dump the clutch with no gas: it stalls", c.stalled and c.rpm < 50.0 and c.vx < 1.0, "%d rpm, %.1f m/s" % [int(c.rpm), c.vx])
+	run(c, 1.0, 0.5)
+	check("stalled and clutch out: gas does nothing", c.stalled, "")
+	c.clutch_in = 1.0
+	run(c, 1.0, 0.3)
+	check("clutch in and a touch of gas: it starts", not c.stalled and c.rpm > 500.0, "%d rpm" % int(c.rpm))
+	for i in 240:
+		c.clutch_in = maxf(0.0, 1.0 - i / 120.0)
+		c.step(1.0 / 120.0, 0.5, 0.0, 0.0, 0.0)
+	run(c, 2.0, 0.6)
+	check("slip it out with revs: it pulls away", not c.stalled and c.vx > 1.5 and ok_num(c), "%.1f m/s" % c.vx)
+	var a := car()
+	a.gear = 1
+	run(a, 2.0, 0.6)
+	check("auto clutch: never stalls", not a.stalled and a.vx > 1.0, "%.1f m/s" % a.vx)
+
 func _init() -> void:
+	clutch_tests()
 	# every drivetrain gets off the line and up to speed
 	var times := {}
 	for d in ["RWD", "FWD", "AWD"]:

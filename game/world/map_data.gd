@@ -142,7 +142,8 @@ func _highways() -> void:
 	add_road("WHEELER BLVD", "arterial", [Vector2(5900, 820), Vector2(6160, 1060), Vector2(6520, 1060)])
 	add_road("CHAMPLAIN ST", "street", [Vector2(6360, 1060), Vector2(6360, 1200)], "dieppe")
 	# Mountain Road: downtown up to Magnet Hill
-	add_road("MOUNTAIN RD", "arterial", [Vector2(5900, 1390), Vector2(5780, 1250), Vector2(5700, 1180), Vector2(5600, 1100), Vector2(5400, 1020), Vector2(5180, 860)])
+	add_road("MOUNTAIN RD", "arterial", [Vector2(5900, 1390), Vector2(5780, 1250), Vector2(5700, 1180), Vector2(5650, 1140), Vector2(5590, 1115),
+		Vector2(5530, 1070), Vector2(5400, 1020), Vector2(5330, 950), Vector2(5250, 990), Vector2(5180, 860)])     # the S-bend, then the hairpin
 	# Route 106: Main St through downtown, then Salisbury Rd out along the river
 	add_road("MAIN ST", "arterial", [Vector2(7000, 1395), Vector2(6800, 1420), Vector2(6500, 1462), Vector2(6250, 1505), Vector2(6000, 1548),
 		Vector2(5700, 1592)], "")
@@ -167,7 +168,7 @@ func _highways() -> void:
 	add_road("ROUTE 885 - CANAAN RD", "rural", [Vector2(800, 2400), Vector2(760, 1800), Vector2(750, 1500), Vector2(700, 0)], "", false, 30.0)
 	# back roads: Lutes Mountain, Irishtown, Boundary Creek
 	add_road("LUTES MOUNTAIN RD", "rural", [Vector2(4650, 1790), Vector2(4550, 1450), Vector2(4300, 1150), Vector2(4250, 700), Vector2(4300, 0)], "", false, 26.0)
-	add_road("IRISHTOWN RD", "rural", [Vector2(5600, 1100), Vector2(5650, 700), Vector2(5700, 300), Vector2(5750, 0)], "", false, 22.0)
+	add_road("IRISHTOWN RD", "rural", [Vector2(5590, 1115), Vector2(5650, 700), Vector2(5700, 300), Vector2(5750, 0)], "", false, 22.0)
 	add_road("BOUNDARY CREEK RD", "gravel", [Vector2(4075, 1935), Vector2(4000, 1700), Vector2(4100, 1520), Vector2(4550, 1450)], "", false, 18.0)
 	add_road("BERRY MILLS RD", "gravel", [Vector2(5000, 1730), Vector2(4900, 1350), Vector2(4700, 1000)], "", false, 25.0)
 	add_road("SCOTCH SETTLEMENT RD", "gravel", [Vector2(2400, 2390), Vector2(2300, 2000), Vector2(2150, 1600), Vector2(1900, 1420), Vector2(1500, 1400), Vector2(750, 1500)], "", false, 30.0)
@@ -285,7 +286,7 @@ func _landmarks() -> void:
 	landmarks.append({ "name": "TIDAL BORE PARK", "p": Vector2(5885, 1568), "dest": true })
 	for x in [5856, 5884, 5912]: lights.append({ "p": Vector2(x, 1584), "type": "lamp", "seed": x })
 	_tims(Vector2(6145, 1472), "downtown")
-	_tims(Vector2(5470, 1120), "")
+	_tims(Vector2(5470, 1082), "")
 	_tims(Vector2(3350, 2125), "salisbury")
 	# Magnet Hill: the hill where cars roll uphill, the casino, the zoo
 	add_road("MAGNET HILL RD", "street", [Vector2(5180, 860), Vector2(5100, 820), Vector2(5040, 770), Vector2(5000, 720)], "magnet")
