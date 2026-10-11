@@ -720,5 +720,16 @@ func _no_clipping() -> void:
 	var wide := _plan("silvio", { "widebody": "widebody" })
 	var narrow := _plan("silvio", {})
 	check("wide arches take a wider fitment", absf(float(wide.wheels[0][1]) - wide.cy) > absf(float(narrow.wheels[0][1]) - narrow.cy))
+	# lit lamps on the end turned away from the camera stay hidden behind the car
+	var cv := CarView.new()
+	CarView.screen_up = Vector2(0, -1)
+	cv.heading = PI / 2.0                 # nose down the screen, toward the camera
+	var e1 := cv.ends_seen()
+	cv.heading = -PI / 2.0                # nose up the screen, away
+	var e2 := cv.ends_seen()
+	cv.heading = 0.0                      # side on: both ends show
+	var e3 := cv.ends_seen()
+	cv.free()
+	check("lamps on the end turned away from the camera don't glow through the car", e1 == [false, true] and e2 == [true, false] and e3 == [true, true])
 	var skinny := _plan("silvio", { "special": "drag" })
 	check("a drag car's front tyres are skinny", skinny.tire_wf < skinny.tire_w)

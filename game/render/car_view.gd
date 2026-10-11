@@ -191,23 +191,37 @@ func _draw() -> void:
 			if lift_k > 1.05 and z < art.wheel_n - 1: _front_wheels(screen_up * ((z + 0.5) * STEP * lift_k + lift), z)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## Which ends of the car face the camera: [the back, the front]. The lit lamps are drawn over
+## the whole stack (unshaded, so the night doesn't dim them), so the lamps on an end turned away
+## from the camera are left out, or a car driving down the screen would show its tail lamps
+## through its own trunk lid.
+func ends_seen() -> Array:
+	var away := Vector2(cos(heading), sin(heading)).dot(screen_up)    # + the nose points up the screen
+	return [away > -0.3, away < 0.3]
+
 ## The lit lamps on one slice: the tails glow with the headlights on and brighten when braking.
-func _lamp_slice(ci: CanvasItem, z: int, off: Vector2, half: Vector2, bl: bool, br: bool) -> void:
+## Only the halves of the car whose end faces the camera (see ends_seen); the roof's lamps always.
+func _lamp_slice(ci: CanvasItem, z: int, off: Vector2, half: Vector2, bl: bool, br: bool, ends := [true, true]) -> void:
 	var lz := z - art.lamp_z0
 	if lz < 0 or lz >= art.lamp_n or art.lamp_tex.is_empty(): return
 	ci.draw_set_transform(off, heading, Vector2.ONE)
 	var sz := Vector2(art.size)
 	var dst := Rect2(-half, sz)
 	var src := Rect2(float(lz) * sz.x, 0.0, sz.x, sz.y)
-	if braking: ci.draw_texture_rect_region(art.lamp_tex.brake, dst, src)
-	elif headlights: ci.draw_texture_rect_region(art.lamp_tex.brake, dst, src, Color(0.6, 0.6, 0.6))
-	if reversing: ci.draw_texture_rect_region(art.lamp_tex.rev, dst, src)
-	if headlights: ci.draw_texture_rect_region(art.lamp_tex.head, dst, src)
 	if beacons and art.has_beacons and beacon_on():
 		ci.draw_texture_rect_region(art.lamp_tex.beacon, dst, src)
 	if high_beams and art.lamp_tex.has("bar"): ci.draw_texture_rect_region(art.lamp_tex.bar, dst, src)
-	if bl: ci.draw_texture_rect_region(art.lamp_tex.bl, dst, src)
-	if br: ci.draw_texture_rect_region(art.lamp_tex.br, dst, src)
+	for e in 2:
+		if not ends[e]: continue
+		# the back half (e 0) or the front half (e 1) of the slice
+		var d2 := Rect2(dst.position + Vector2(sz.x * 0.5 * e, 0.0), Vector2(sz.x * 0.5, sz.y))
+		var s2 := Rect2(src.position + Vector2(sz.x * 0.5 * e, 0.0), Vector2(sz.x * 0.5, sz.y))
+		if braking: ci.draw_texture_rect_region(art.lamp_tex.brake, d2, s2)
+		elif headlights: ci.draw_texture_rect_region(art.lamp_tex.brake, d2, s2, Color(0.6, 0.6, 0.6))
+		if reversing: ci.draw_texture_rect_region(art.lamp_tex.rev, d2, s2)
+		if headlights: ci.draw_texture_rect_region(art.lamp_tex.head, d2, s2)
+		if bl: ci.draw_texture_rect_region(art.lamp_tex.bl, d2, s2)
+		if br: ci.draw_texture_rect_region(art.lamp_tex.br, d2, s2)
 
 ## The lamps, on their own unshaded layer over the body.
 class LampLayer extends Node2D:
@@ -221,10 +235,11 @@ class LampLayer extends Node2D:
 		var bl := view.blink_left and CarView.blink_on()
 		var br := view.blink_right and CarView.blink_on()
 		var n := view.art.n
+		var ends := view.ends_seen()
 		for z in range(view.art.lamp_z0, view.art.lamp_z0 + view.art.lamp_n):
 			var body_k := maxf(0.0, (float(z) - 1.5) / float(maxi(1, n - 1)))
 			var off := CarView.screen_up * (z * CarView.STEP * CarView.lift_k + view.lift) + (fwd * view.lean.x + rt * view.lean.y) * body_k
-			view._lamp_slice(self, z, off, half, bl, br)
+			view._lamp_slice(self, z, off, half, bl, br, ends)
 		if view.light_bar: _light_bar(half, fwd, rt)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -276,8 +291,11 @@ class GlowLayer extends Node2D:
 		var br := view.blink_right and CarView.blink_on()
 		var tex := CarView.glow_tex()
 		var n := art.n
+		var ends := view.ends_seen()
 		for sp: Array in art.lamp_spots:
 			var kind: int = sp[0]
+			# (a lamp on an end turned away from the camera is behind the car: no glow over it)
+			if kind <= 4 and not ends[1 if (sp[1] as Vector3).x > 0.0 else 0]: continue
 			var strength := 0.0
 			var c: Color = sp[2]
 			match kind:

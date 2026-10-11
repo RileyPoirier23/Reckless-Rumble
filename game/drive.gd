@@ -277,6 +277,10 @@ void fragment() {
 		var idm: Node = load("res://tests/incident_demo.gd").new()
 		idm.main = self
 		add_child(idm)
+	elif OS.get_cmdline_user_args().has("--orbit-demo"):
+		var od: Node = load("res://tests/orbit_demo.gd").new()
+		od.main = self
+		add_child(od)
 	elif OS.get_cmdline_user_args().has("--cam-demo"):
 		var cmd: Node = load("res://tests/cam_demo.gd").new()
 		cmd.main = self
