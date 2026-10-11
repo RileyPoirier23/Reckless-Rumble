@@ -615,6 +615,14 @@ func _draw() -> void:
 				else: _back(it)
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## A filled quad, skipped when it's edge-on to the camera (no area: nothing to see, and nothing
+## for the triangulator to choke on).
+func _quad(pts: PackedVector2Array, col: Color) -> void:
+	var area := 0.0
+	for i in pts.size(): area += pts[i].cross(pts[(i + 1) % pts.size()])
+	if absf(area) < 0.5: return
+	draw_colored_polygon(pts, col)
+
 ## A thing on the sidewalk, standing up off it (`up` is how the camera stands things up).
 func _prop(it: Dictionary, base: Vector2, up: Vector2) -> void:
 	var d: Vector2 = it.dir
@@ -636,35 +644,35 @@ func _prop(it: Dictionary, base: Vector2, up: Vector2) -> void:
 			var back := _right(d) * 0.25 * PX
 			draw_line(a + up * 2.0, a, Color("3a3a3e"), 1.0)
 			draw_line(b + up * 2.0, b, Color("3a3a3e"), 1.0)
-			draw_colored_polygon(PackedVector2Array([a + up * 3.0, b + up * 3.0, b + up * 3.0 + back, a + up * 3.0 + back]), Color("8a5a32"))
+			_quad(PackedVector2Array([a + up * 3.0, b + up * 3.0, b + up * 3.0 + back, a + up * 3.0 + back]), Color("8a5a32"))
 			draw_line(a + up * 3.0 + back, b + up * 3.0 + back, Color("6a4428"), 1.0)
-			draw_colored_polygon(PackedVector2Array([a + up * 3.0 + back, b + up * 3.0 + back, b + up * 7.0 + back, a + up * 7.0 + back]), Color("7a4e2c"))
+			_quad(PackedVector2Array([a + up * 3.0 + back, b + up * 3.0 + back, b + up * 7.0 + back, a + up * 7.0 + back]), Color("7a4e2c"))
 		"bin":
 			draw_circle(base, 2.0, Color(0, 0, 0, 0.2))
 			draw_line(base, base + up * 5.0, Color("2a5a3a"), 4.0)
 			draw_circle(base + up * 5.0, 2.0, Color("1e3e2a"))
 		"news":
 			var col: Color = [Color("2a4a9a"), Color("c8281e"), Color("e8c020")][int(it.seed) % 3]
-			draw_colored_polygon(PackedVector2Array([base - along * 0.25, base + along * 0.25, base + along * 0.25 + up * 6.0, base - along * 0.25 + up * 6.0]), col)
+			_quad(PackedVector2Array([base - along * 0.25, base + along * 0.25, base + along * 0.25 + up * 6.0, base - along * 0.25 + up * 6.0]), col)
 			draw_rect(Rect2(base + up * 5.0 - Vector2(1.5, 1), Vector2(3, 1)), Color("dcdcd4"))
 		"cmb":
 			# the community mailbox: a grey bank of little doors
 			var a2 := base - along * 0.6
 			var b2 := base + along * 0.6
-			draw_colored_polygon(PackedVector2Array([a2, b2, b2 + up * 8.0, a2 + up * 8.0]), Color("9aa0a6"))
+			_quad(PackedVector2Array([a2, b2, b2 + up * 8.0, a2 + up * 8.0]), Color("9aa0a6"))
 			for k in 4:
 				var y := 2.0 + k * 1.6
 				draw_line(a2 + up * y, b2 + up * y, Color("6a7076"), 1.0)
-			draw_colored_polygon(PackedVector2Array([a2 + up * 8.0, b2 + up * 8.0, b2 + up * 9.0 + along * 0.05, a2 + up * 9.0 - along * 0.05]), Color("c8281e"))
+			_quad(PackedVector2Array([a2 + up * 8.0, b2 + up * 8.0, b2 + up * 9.0 + along * 0.05, a2 + up * 9.0 - along * 0.05]), Color("c8281e"))
 		"busstop":
 			# a glass shelter along the curb's back edge, its roof, and the sign on its pole
 			var out := _right(d) * 1.2 * PX
 			var a3 := base - along * 1.6 + out
 			var b3 := base + along * 1.6 + out
-			draw_colored_polygon(PackedVector2Array([a3, b3, b3 + up * 14.0, a3 + up * 14.0]), Color(0.7, 0.85, 0.95, 0.35))
+			_quad(PackedVector2Array([a3, b3, b3 + up * 14.0, a3 + up * 14.0]), Color(0.7, 0.85, 0.95, 0.35))
 			draw_line(a3, a3 + up * 14.0, Color("4a4e54"), 1.0)
 			draw_line(b3, b3 + up * 14.0, Color("4a4e54"), 1.0)
-			draw_colored_polygon(PackedVector2Array([a3 + up * 14.0, b3 + up * 14.0, b3 + up * 14.0 - out * 0.8, a3 + up * 14.0 - out * 0.8]), Color("3a3e44"))
+			_quad(PackedVector2Array([a3 + up * 14.0, b3 + up * 14.0, b3 + up * 14.0 - out * 0.8, a3 + up * 14.0 - out * 0.8]), Color("3a3e44"))
 			draw_line(a3 + up * 3.0, b3 + up * 3.0, Color("8a5a32"), 2.0)                # the bench inside
 			var sp := base - along * 2.4
 			draw_line(sp, sp + up * 16.0, POST, 1.0)

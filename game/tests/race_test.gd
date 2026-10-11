@@ -30,6 +30,7 @@ func _ready() -> void:
 		return
 	if not OS.get_cmdline_user_args().has("--police-only"): await _race_win()
 	await _police_ticket()
+	await _police_walk_off()
 	await _police_lose()
 	await _police_impound()
 	await _wildlife()
@@ -39,7 +40,7 @@ func _ready() -> void:
 	await _meet()
 	await _auction()
 	await _calendar()
-	var want := 12 if not OS.get_cmdline_user_args().has("--police-only") else 9
+	var want := 13 if not OS.get_cmdline_user_args().has("--police-only") else 10
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -176,9 +177,14 @@ func _police_ticket() -> void:
 	main.hold_car = true
 	var t := 0.0
 	var tickets0 := int(main.save.get("tickets", 0))
+	var walked_up := false
+	var ticket_at_window := false
 	while t < 30.0 and int(main.save.get("tickets", 0)) == tickets0:
 		await _wait(0.25)
 		t += 0.25
+		if p.walk == "talk" and p.officer != null and p.officer.pos.distance_to(p._window(main.car)) < 0.8: walked_up = true
+	ticket_at_window = walked_up
+	check("police: the officer gets out and walks up to your window before the ticket", ticket_at_window)
 	if int(main.save.get("tickets", 0)) == tickets0:
 		print("   no ticket: state %s, you at %s doing %.1f, cop at %s doing %.1f, want %.1f, bust_t %.1f, siren %s, path %d pts done %s" % [p.state, str(main.car.sim.pos.round()), main.car.sim.speed(), str(k.sim.pos.round()), k.sim.speed(), k.target_v, p.bust_t, str(k.siren), k.track.pts.size(), str(k.track.done)])
 		for ln in k.trace.slice(-12): print("      ", ln)
@@ -190,6 +196,28 @@ func _police_ticket() -> void:
 	await _wait(3.5)
 	main.hold_car = false
 	p.clear()
+	done += 1
+
+## Pulled over, and you drive off while the officer's walking up: it's a chase.
+func _police_walk_off() -> void:
+	var p: Police = main.police
+	main.save.heat = 0.0
+	var tickets0 := int(main.save.get("tickets", 0))
+	var k := _cruiser_behind(30.0)
+	main.car.sim.vx = 28.0
+	await _wait(1.0)
+	main.hold_car = true
+	var t := 0.0
+	while t < 20.0 and p.walk != "out":
+		await _wait(0.25)
+		t += 0.25
+	check("police: stopped, an officer gets out", p.walk == "out" and p.officer != null, "%s after %.1f s" % [p.walk, t])
+	main.hold_car = false
+	main.car.sim.vx = 12.0
+	await _wait(0.5)
+	check("police: drive off on the officer and it's a chase", p.chasing() and p.state == "chase" and p.offences.has("fleeing") and int(main.save.get("tickets", 0)) == tickets0, "%s %s" % [p.state, str(p.offences)])
+	p.clear()
+	check("police: the officer's gone when they clear off", p.officer == null and p.walk == "")
 	done += 1
 
 ## A chase you get out of: far enough away, long enough, they lose you.

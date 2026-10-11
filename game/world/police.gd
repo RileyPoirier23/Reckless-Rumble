@@ -39,6 +39,24 @@ var _route_t := 0.0
 var _spawn_t := 2.0
 var _next_id := 0
 var _hits := 0
+# the walk-up: you've stopped, and an officer gets out of the cruiser and comes to your window
+var officer: Officer
+var walk := ""                # "", "out" (walking up), "talk" (at your window), "back" (back to the car)
+var walk_t := 0.0
+var walk_car: AiCar           # the cruiser the officer got out of
+var _lined := false
+
+const WALK_MPS := 1.5
+const OFFICERS := ["CONSTABLE TREMBLAY", "CONSTABLE LEBLANC", "CONSTABLE GALLANT", "CONSTABLE ARSENEAU", "CONSTABLE MACKAY", "CONSTABLE THERIAULT"]
+## What they say when they get to your window: the first line is about you, the second about the car.
+const OPENERS := {
+	"speeding": ["\"EVENING. KNOW HOW FAST YOU WERE GOING?\" YOU DO. THEY DO TOO.", "\"IN A HURRY TONIGHT?\" A FLASHLIGHT IN YOUR EYES."],
+	"racing": ["\"THAT WASN'T A DRAG STRIP, BUD. THAT WAS MAIN STREET.\"", "\"YOUR BUDDY GOT AWAY. YOU DIDN'T.\""],
+	"fleeing": ["\"HANDS ON THE WHEEL. BOTH OF THEM. WHERE I CAN SEE THEM.\"", "\"YOU KNOW HOW MANY FORMS THAT CHASE IS?\""],
+	"ramming": ["\"YOU HIT MY CAR. MY CAR. WITH THE LIGHTS ON TOP.\""],
+	"red_light": ["\"THAT LIGHT WAS RED A WHILE, BUD.\""],
+	"stop_sign": ["\"IT SAYS STOP. NOT 'SLOW DOWN AND THINK ABOUT IT.'\""],
+}
 
 
 ## How strict they are (Settings > Difficulty): how far over they let slide, how long they give you
@@ -112,6 +130,11 @@ func _physics_process(dt: float) -> void:
 	if c == null or c.dead or not enabled or StoryState.active:
 		if not cruisers.is_empty() and (c == null or not c.dead): clear()
 		return
+	if walk != "":
+		_walkup(dt, c)
+		# walking up, at your window, or walking back with your ticket: everything waits. Walking
+		# back because you drove off: the chase is on without them
+		if walk != "" and not (walk == "back" and state == "chase"): return
 	if write_t > 0.0:
 		write_t -= dt
 		return
@@ -271,9 +294,89 @@ func _bust_check(dt: float, c: PlayerCar, close: float) -> bool:
 	if close < BUST_M and c.sim.speed() < 2.5: bust_t += dt
 	else: bust_t = maxf(0.0, bust_t - dt * 0.5)
 	if bust_t >= BUST_S:
-		_bust(c)
+		_start_walkup(c)
 		return true
 	return false
+
+# ------------------------------------------------------------------ the walk-up
+
+## You've stopped with a cruiser on you: the officer gets out of the nearest one and walks up to
+## your window. Drive off before the ticket's written and it's a chase.
+func _start_walkup(c: PlayerCar) -> void:
+	walk_car = _nearest(c)
+	if walk_car == null:
+		_bust(c)
+		return
+	walk_car.hold = true
+	officer = Officer.new()
+	officer.name_on = OFFICERS[rng.randi() % OFFICERS.size()]
+	officer.night = drive.night
+	drive.ysort.add_child(officer)
+	# out of the driver's door (the left side), a step clear of the car
+	officer.pos = walk_car.sim.pos - walk_car.sim.right() * (float(walk_car.spec.width) * CarArt.CAR_SCALE * 0.5 + 0.5) + walk_car.sim.forward() * 0.6
+	officer.heading = (c.sim.pos - officer.pos).angle()
+	walk = "out"
+	walk_t = 0.0
+	_lined = false
+	drive.hud.post("THE DOOR OPENS. AN OFFICER GETS OUT AND WALKS UP TO YOUR WINDOW.", 4.0)
+
+## Your window: the driver's side, by the front seat.
+func _window(c: PlayerCar) -> Vector2:
+	return c.sim.pos - c.sim.right() * (float(c.spec.width) * CarArt.CAR_SCALE * 0.5 + 0.55) + c.sim.forward() * 0.2
+
+func _walkup(dt: float, c: PlayerCar) -> void:
+	walk_t += dt
+	if officer == null or not is_instance_valid(officer):
+		walk = ""
+		return
+	officer.night = drive.night
+	if walk == "back":
+		var door := walk_car.sim.pos - walk_car.sim.right() * (float(walk_car.spec.width) * CarArt.CAR_SCALE * 0.5 + 0.5) if is_instance_valid(walk_car) else officer.pos
+		if officer.walk_to(door, WALK_MPS * 1.2, dt) or walk_t > 12.0: _end_walk()
+		return
+	# drove off on them: that's not a ticket anymore
+	if c.sim.speed() > 4.0 and walk != "back":
+		officer.heading = (c.sim.pos - officer.pos).angle()
+		officer.shout_t = 1.5
+		walk = "back"
+		walk_t = 0.0
+		if not offences.has("fleeing"): offences.append("fleeing")
+		add_heat(20.0)
+		state = "chase"
+		bust_t = 0.0
+		drive.hud.post("YOU DROVE OFF ON %s. NOW IT'S A CHASE." % officer.name_on, 4.0)
+		if is_instance_valid(walk_car): _to_chase(walk_car)
+		return
+	match walk:
+		"out":
+			if officer.walk_to(_window(c), WALK_MPS, dt) or walk_t > 15.0:
+				walk = "talk"
+				walk_t = 0.0
+				officer.heading = (c.sim.pos - officer.pos).angle()
+		"talk":
+			officer.flash = drive.night
+			if not _lined:
+				_lined = true
+				var key := "speeding"
+				for o in ["ramming", "fleeing", "racing", "red_light", "stop_sign"]:
+					if offences.has(o):
+						key = o
+						break
+				var lines: Array = OPENERS[key]
+				drive.hud.post("%s: %s" % [officer.name_on, String(lines[rng.randi() % lines.size()])], 4.0)
+			if walk_t > 3.2:
+				officer.flash = false
+				_bust(c)
+				walk = "back"
+				walk_t = 0.0
+
+func _end_walk() -> void:
+	if is_instance_valid(officer): officer.queue_free()
+	officer = null
+	walk = ""
+	if is_instance_valid(walk_car): walk_car.hold = false
+	walk_car = null
+	write_t = minf(write_t, 0.8)
 
 func _bust(c: PlayerCar) -> void:
 	var f := fine(top_over, offences)
@@ -290,13 +393,15 @@ func _bust(c: PlayerCar) -> void:
 		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP FOR POLICE", "ramming": "DAMAGE TO A POLICE VEHICLE", "stunting": "STUNT DRIVING",
 			"red_light": "RUNNING A RED LIGHT", "stop_sign": "FAILING TO STOP AT A STOP SIGN" }.get(o, String(o).to_upper()))
 	var what := ", ".join(lines) if not lines.is_empty() else "BEING YOU, AT NIGHT, IN THAT"
-	drive.hud.post("CONSTABLE TREMBLAY: \"LICENCE AND REGISTRATION.\"", 4.0)
+	var who := officer.name_on if officer != null else "CONSTABLE TREMBLAY"
+	drive.hud.post("%s: \"LICENCE AND REGISTRATION.\"" % who, 4.0)
 	drive.hud.post("TICKET: %s. $%d." % [what, f], 7.0)
 	if drive.jobs.active() and drive.jobs.kind in ["street", "pizza"]: drive.jobs.finish(false)
 	if take:
 		drive.hud.post("THEY TOW IT TO THE NORTHSIDE IMPOUND. $%d TO GET IT OUT. YOU PAY IT." % IMPOUND_FEE, 7.0)
 		drive.save.heat = 10.0
 		drive._teleport(Jobs.IMPOUND, 0.0)
+		_end_walk()
 	else:
 		drive.save.heat = heat() * 0.5
 		write_t = 3.0
@@ -394,9 +499,62 @@ func _remove(k: AiCar) -> void:
 
 ## Everybody off the road (a story scene, a new car, a test).
 func clear() -> void:
+	_end_walk()
 	for k in cruisers.duplicate(): _remove(k)
 	state = "calm"
 	offences = []
+
+## An officer on foot, from above: hat, shoulders, a hi-vis stripe, arms swinging as they walk,
+## and a flashlight at night.
+class Officer extends Node2D:
+	var pos := Vector2.ZERO          # metres, world
+	var heading := 0.0
+	var name_on := "CONSTABLE TREMBLAY"
+	var night := false
+	var flash := false               # the flashlight's on you
+	var shout_t := 0.0
+	var step := 0.0
+	var moving := false
+
+	func _ready() -> void:
+		z_index = 3100
+		z_as_relative = false
+		set_meta("no_sort", true)
+
+	## Walk toward a point; true once there.
+	func walk_to(at: Vector2, mps: float, dt: float) -> bool:
+		var d := at - pos
+		moving = d.length() > 0.15
+		if not moving: return true
+		heading = lerp_angle(heading, d.angle(), clampf(dt * 8.0, 0.0, 1.0))
+		pos += d.normalized() * minf(d.length(), mps * dt)
+		step += dt * mps * 4.0
+		return d.length() < 0.2
+
+	func _process(dt: float) -> void:
+		shout_t = maxf(0.0, shout_t - dt)
+		position = pos * CarArt.PX
+		rotation = heading
+		queue_redraw()
+
+	func _draw() -> void:
+		var u := CarArt.PX                                  # a metre
+		var swing := sin(step) * 0.18 * u if moving else 0.0
+		var navy := Color("1c2232")
+		if flash or night:
+			# the flashlight: a cone ahead of them, brighter when it's on you
+			var reach := 9.0 * u
+			draw_colored_polygon(PackedVector2Array([Vector2(0.2 * u, 0.2 * u), Vector2(reach, -2.2 * u), Vector2(reach, 2.2 * u)]), Color(1, 0.97, 0.85, 0.22 if flash else 0.1))
+		draw_circle(Vector2(0.05 * u, 0), 0.34 * u, Color(0, 0, 0, 0.3))           # shadow
+		# arms, swinging as they walk
+		draw_rect(Rect2(Vector2(swing - 0.12 * u, -0.34 * u), Vector2(0.24 * u, 0.1 * u)), navy)
+		draw_rect(Rect2(Vector2(-swing - 0.12 * u, 0.24 * u), Vector2(0.24 * u, 0.1 * u)), navy)
+		# shoulders, the hi-vis stripe across them, and the hat
+		draw_rect(Rect2(Vector2(-0.14 * u, -0.26 * u), Vector2(0.28 * u, 0.52 * u)), navy)
+		draw_rect(Rect2(Vector2(-0.04 * u, -0.26 * u), Vector2(0.06 * u, 0.52 * u)), Color("d8e040"))
+		draw_circle(Vector2.ZERO, 0.15 * u, Color("12141c"))
+		draw_rect(Rect2(Vector2(0.02 * u, -0.05 * u), Vector2(0.08 * u, 0.1 * u)), Color("e8c040"))   # the cap badge
+		if shout_t > 0.0: draw_circle(Vector2(0.35 * u, 0), 0.08 * u, Color(1, 1, 1, 0.8))
 
 ## The corner of the HUD where the heat shows, and the light bar when they're on you.
 class PoliceHud extends Control:
