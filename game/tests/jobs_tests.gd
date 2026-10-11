@@ -75,7 +75,7 @@ func _init() -> void:
 	check("every gig's blurb fits its two lines on the phone", long_blurbs.is_empty(), str(long_blurbs))
 	# street races
 	check("street racing opens late", Jobs.open_now("street", 23.0) and Jobs.open_now("street", 2.0) and not Jobs.open_now("street", 20.0))
-	check("Marco runs a different route every night", Jobs.street_route(0).id != Jobs.street_route(1).id and Jobs.street_route(4).id == Jobs.street_route(0).id)
+	check("Marco runs a different route every night", Jobs.street_route(0).id != Jobs.street_route(1).id and Jobs.street_route(StreetRace.ROUTES.size()).id == Jobs.street_route(0).id)
 	check("the winner takes the pot less Marco's tenth", StreetRace.purse(300, 4) == 1080, "%d" % StreetRace.purse(300, 4))
 	for r in StreetRace.ROUTES:
 		var pth := StreetRace.build_path(map, r)
@@ -89,11 +89,14 @@ func _init() -> void:
 		for i in wp.size() - 1: direct += (wp[i] as Vector2).distance_to(wp[i + 1])
 		if r.loop: direct += (wp[wp.size() - 1] as Vector2).distance_to(wp[0])
 		var near := true
+		var far_w := ""
 		for w in wp:
 			var bd := INF
 			for q in pth: bd = minf(bd, q.distance_to(w))
-			if bd > 30.0: near = false
-		check("route %s follows the roads through every waypoint" % r.id, pth.size() > 3 and jumps == 0 and near and L < direct * 1.35, "%.0f m (straight %.0f), %d off-road legs" % [L, direct, jumps])
+			if bd > 30.0:
+				near = false
+				far_w += "%s is %.0f m off; " % [str(w), bd]
+		check("route %s follows the roads through every waypoint" % r.id, pth.size() > 3 and jumps == 0 and near and L < direct * 1.35, "%.0f m (straight %.0f), %d off-road legs; %s" % [L, direct, jumps, far_w])
 		if r.loop: check("route %s comes back to the start" % r.id, pth[0].distance_to(pth[pth.size() - 1]) < 1.0)
 	var rr := RandomNumberGenerator.new()
 	rr.seed = 5

@@ -15,11 +15,11 @@ const TYPES := {
 	"hurry": { "hours": [6.0, 22.0], "w": 1.0, "tol": 0.8, "wants_speed": true,
 		"names": ["KAYLEE", "JORDAN", "MARC-ANDRE", "BRITTANY"],
 		"hi": ["\"I'M LATE FOR MY SHIFT AT THE CALL CENTRE. LIKE, LATE LATE.\"", "\"CAN YOU GO FASTER? I'LL TIP. PROBABLY.\""],
-		"talk": ["\"YOU CAN GO ON YELLOW. EVERYBODY GOES ON YELLOW.\"", "\"MY BOSS IS TEXTING ME IN ALL CAPS.\""] },
+		"talk": ["\"YOU CAN GO ON YELLOW. EVERYBODY GOES ON YELLOW.\"", "\"MY BOSS IS TEXTING ME IN ALL CAPS.\"", "\"IS THIS THE FAST WAY? THIS DOESN'T FEEL LIKE THE FAST WAY.\"", "\"I'LL GIVE YOU FIVE STARS IF WE BEAT THE BUS. THE BUS IS RIGHT THERE.\""] },
 	"nervous": { "hours": [9.0, 20.0], "w": 1.0, "tol": 0.3,
 		"names": ["MEMERE THERIAULT", "MRS. GALLANT", "AUNT RITA", "MR. BOURQUE"],
 		"hi": ["\"I'M GOING TO BINGO, DEAR. THERE'S NO RUSH. THERE'S NEVER A RUSH.\"", "\"MY GRANDSON SET THIS UP ON MY PHONE. ARE YOU THE CAR?\""],
-		"talk": ["\"OH! OH. YOU'RE FINE. YOU'RE FINE.\"", "\"MY LATE HUSBAND DROVE A CAR JUST LIKE THIS. SLOWER.\""] },
+		"talk": ["\"OH! OH. YOU'RE FINE. YOU'RE FINE.\"", "\"MY LATE HUSBAND DROVE A CAR JUST LIKE THIS. SLOWER.\"", "\"DO YOU KNOW THE THERIAULTS? ON PINE GLEN? NO? THEY KNOW YOU.\"", "\"I HAVE A MINT IN MY PURSE IF YOU WANT ONE. IT'S FROM CHRISTMAS.\""] },
 	"chatty": { "hours": [7.0, 23.0], "w": 1.2, "tol": 0.55,
 		"names": ["GERRY", "DENISE", "PAUL-EMILE", "SHANE"],
 		"hi": ["\"HOW'S IT GOING? YOU'RE NOT FROM AWAY, ARE YOU?\"", "\"GOOD NIGHT FOR A DRIVE. I SAY THAT EVERY NIGHT.\""],
@@ -27,11 +27,11 @@ const TYPES := {
 	"party": { "hours": [22.0, 28.0], "w": 1.6, "tol": 0.45, "sick": true,
 		"names": ["TYLER & THE BOYS", "CHELSEA (AND HER FRIEND)", "BIG DAVE", "THE BACHELORETTE PARTY"],
 		"hi": ["\"ARE YOU OUR RIDE? YOU'RE NOT OUR RIDE. YOU'LL DO.\"", "\"CAN WE STOP AT TIM BURTONS? NO? OKAY. OKAY.\""],
-		"talk": ["\"TURN IT UP. THERE'S NO RADIO? TURN UP THE ENGINE.\"", "\"I LOVE YOU, MAN. I DON'T KNOW YOU. I LOVE YOU.\""] },
+		"talk": ["\"TURN IT UP. THE RADIO. THE RUMBLE. NOT THE BORE. NEVER THE BORE.\"", "\"I LOVE YOU, MAN. I DON'T KNOW YOU. I LOVE YOU.\"", "\"DAVE'S ASLEEP. DAVE. DAVE'S ASLEEP ON ME.\"", "\"CAN WE DO THE HILL? THE ONE WHERE YOU ROLL UP? DAVE DOESN'T BELIEVE ME.\""] },
 	"quiet": { "hours": [0.0, 24.0], "w": 0.8, "tol": 1.2,
 		"names": ["A GUY IN A HOODIE", "NURSE ON NIGHTS", "SOMEONE'S DAD"],
 		"hi": ["(THEY NOD. THE HEADPHONES STAY IN.)", "\"HEY.\""],
-		"talk": ["(TINNY MUSIC FROM THE HEADPHONES.)"] },
+		"talk": ["(TINNY MUSIC FROM THE HEADPHONES.)", "(A LONG BREATH OUT. A LONG DAY, OR A LONG NIGHT.)", "\"...SORRY. WHAT? NO, IT'S FINE. KEEP GOING.\""] },
 }
 const ORDER := ["hurry", "nervous", "chatty", "party", "quiet"]
 

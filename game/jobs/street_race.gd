@@ -21,6 +21,12 @@ const ROUTES := [
 	{ "id": "northend", "name": "NORTH END SPRINT", "laps": 1, "loop": false, "buy_in": 500,
 		"pts": [Vector2(5780, 1110), Vector2(6250, 1110), Vector2(6250, 1390), Vector2(5900, 1390), Vector2(5900, 1562)],
 		"blurb": "MORTON, CHESTER, ST GEORGE, DOWN VAUGHAN HARVEY TO MAIN. NO LAPS. NO SECOND CHANCES." },
+	{ "id": "coverdale", "name": "THE COVERDALE RUN", "laps": 1, "loop": true, "buy_in": 400,
+		"pts": [Vector2(6110, 1529), Vector2(6110, 1780), Vector2(5700, 1786), Vector2(5700, 1592), Vector2(6000, 1548)],
+		"blurb": "OVER THE GUNNINGSVILLE, COVERDALE RD ALONG THE RIVER, BACK OVER THE CAUSEWAY AND UP MAIN. TWO BRIDGES, ONE LAP." },
+	{ "id": "salisbury", "name": "THE SALISBURY ROAD", "laps": 1, "loop": false, "buy_in": 600,
+		"pts": [Vector2(5420, 1640), Vector2(5000, 1730), Vector2(4650, 1790), Vector2(4075, 1935), Vector2(3560, 2112), Vector2(3440, 2153)],
+		"blurb": "COVINGTON CORNER TO SALISBURY ON ROUTE 106. SIX KILOMETRES OF BENDS, MOOSE AND NO STREETLIGHTS." },
 ]
 
 ## Who shows up. Each brings a car about as quick as yours.
@@ -34,7 +40,7 @@ const RACERS := [
 	{ "name": "CHANTAL 'THE ACCOUNTANT' GOGUEN", "skill": 0.92, "line": "\"I've done the math. You lose.\"" },
 ]
 ## Street rep you need before Marco lets you into each route.
-const REP_NEED := { "main_mile": 0, "riverside": 1, "downtown": 3, "northend": 5 }
+const REP_NEED := { "main_mile": 0, "riverside": 1, "coverdale": 2, "salisbury": 2, "downtown": 3, "northend": 5 }
 const PINKS_REP := 6
 ## Pink slips, Friday and Saturday nights once people know your name: one on one down the Main
 ## Street Mile, and the winner drives home in both cars. Each rival's car comes off the catalogue

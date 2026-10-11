@@ -57,6 +57,8 @@ var job_board: JobBoard
 var market: MarketRunner
 var police: Police
 var incidents: Incidents        # crashes out there and the police, ambulance and fire that come to them
+var radio: Radio                # three stations, a line every so often while you drive
+var roadside: Roadside          # somebody broken down on the shoulder now and then: stop and help, or don't
 var fuel: FuelStop
 var salvage: SalvageYard
 var auction: Auction
@@ -220,6 +222,12 @@ void fragment() {
 	police = Police.new()
 	add_child(police)
 	police.setup(self)
+	radio = Radio.new()
+	add_child(radio)
+	radio.setup(self)
+	roadside = Roadside.new()
+	add_child(roadside)
+	roadside.setup(self)
 	incidents = Incidents.new()
 	add_child(incidents)
 	incidents.setup(self)
@@ -1205,6 +1213,7 @@ func _inputs() -> void:
 			_store_car()
 			garage.open(save)
 			return
+	if Input.is_action_just_pressed("radio") and not modal_open(): radio.next_station()
 	if Input.is_action_just_pressed("map"):
 		_tip_used("map")
 		if map_screen.visible: map_screen.visible = false

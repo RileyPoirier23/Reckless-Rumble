@@ -237,6 +237,7 @@ The camera sits behind the car and turns with it, so up is always ahead (T for t
 | Gigs | J | R3 |
 | Tow it home | R | |
 | Hydraulics (hop; hold to keep hopping) | X | A |
+| Radio: next station, then off | N | |
 | Controls card | F1 | (in the pause menu) |
 | Camera angle (overhead, angled, low) | T | (Settings > UI) |
 | Pause: resume, how it works, settings, controls, quit to title | Esc | Start |
@@ -279,6 +280,12 @@ On the controller the stick has a response curve (small movements, small correct
 - **All-wheel drive** can't brake-burnout either (the brakes hold all four), but it's the drift platform if you build it that way: the CENTRE DIFF slot in the garage (AWD cars only) takes a viscous 60/40 front-biased centre (planted, won't drift), a rally 35/65 or a drift 20/80. The rear-biased ones let the back step out under power while the front pulls you through. A rear-driver drifts too; it just spins easier.
 
 **Reverse (automatic):** braking is only ever braking: hold the brake from any speed and the car stops and stays stopped. To back up, stop, let go of the brake, then hold it again; in reverse it's the same with the gas to go forward again.
+
+**The radio** (`world/radio.gd`): three stations out of Port Rumble while you drive, text only (the songs are whatever you're humming). CKPR 101.1 THE RUMBLE is the rock station by default, 103.9 THE BORE is talk, news and Gary from Dieppe, and CJMB 90.7 is community radio (the bingo numbers, the swap shop, Memere's kitchen). A line every half minute or so: the DJ, the weather and the hour, the season, the ads (the Large Stop, Canadian Tired, the Dieppe Speed Shop), and on the talk stations the odd word about you: the police asking for tips when your heat's up, Gary complaining about the racing on the Downtown Box once you've a name on the street, a shout-out to the Employee of the Month. N switches stations and then off; Settings > UI turns it off for good. A Night Drive gets more of it.
+
+**On the shoulder** (`world/roadside.gd`): every few minutes of free driving on the country roads or the highway, somebody's broken down ahead with the hazards on. Stop within a car length and give them a hand: a dead battery (a boost, and $40 for the trouble), an empty tank (the jerry can: four litres off you, $20 back), a flat (you hold the light), a belt (you lend your phone), or they've already called Toby and wave you on. Helping is a karma deed and an Employee of the Month count; drive past and nothing happens. They pull back into traffic once they're sorted.
+
+**More road:** six street race routes now (the Coverdale Run over both bridges, and the Salisbury Road out Route 106), twenty different mornings at the counter and ten ways Gus sends you home, and the HOPP-IN passengers have more to say.
 
 ## What can go wrong (on purpose)
 

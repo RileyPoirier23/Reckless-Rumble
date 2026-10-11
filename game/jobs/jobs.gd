@@ -27,7 +27,7 @@ const KINDS := {
 		"blurb": "Fri & Sat, back of the mall lot. Park it, pop the hood. The crowd votes.",
 		"pay": "$250 BEST IN SHOW. $20 TO GET IN." },
 	"cruise": { "title": "NIGHT DRIVE", "open": [21.0, 29.0],
-		"blurb": "No job. No GPS voice. Just the road and the radio you don't have yet.",
+		"blurb": "No job. No GPS voice. Just the road and the radio.",
 		"pay": "NOTHING. THAT'S THE POINT." },
 }
 const ORDER := ["pizza", "ride", "tow", "drag", "street", "meet", "cruise"]

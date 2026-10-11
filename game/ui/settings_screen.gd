@@ -108,6 +108,7 @@ func rows() -> Array:
 		"UI":
 			out.append({ "kind": "choice", "sec": "ui", "key": "messages", "label": "CHATTER", "opts": ["all", "important", "off"], "desc": "PASSENGERS, THE CROWD AT THE MEET: ALL OF IT, LESS OF IT, OR NONE. WHAT MATTERS ALWAYS SHOWS." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "tips", "label": "FIRST-TIME TIPS", "desc": "THE ONE-TIME HINTS ABOUT THE MAP, GIGS AND THE CONTROLS." })
+			out.append({ "kind": "toggle", "sec": "ui", "key": "radio", "label": "THE RADIO", "desc": "THREE STATIONS OUT OF PORT RUMBLE WHILE YOU DRIVE: THE DJ, THE NEWS, THE WEATHER, THE ADS, AND THE ODD WORD ABOUT YOU. N SWITCHES THEM." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "scan_tool", "label": "SCAN TOOL", "desc": "THE DIAGNOSTIC COMPUTER UNDER THE DASH: FAULT CODES, THE TIRES, THE WARNING LIGHTS." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_mode", "label": "CAMERA", "opts": ["chase", "follow", "top_down"], "desc": "CHASE TURNS WITH THE CAR. FREE ROAM SWINGS ROUND BEHIND WHERE YOU'RE GOING (RIGHT STICK LOOKS ROUND). TOP DOWN KEEPS NORTH UP. Y (TRIANGLE) OR T FLIPS THROUGH THEM WHILE YOU DRIVE." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_angle", "label": "CAMERA ANGLE", "opts": ["overhead", "angled", "low"], "desc": "STRAIGHT DOWN, TIPPED, OR DOWN LOW TO SEE THE SIDES OF THINGS. (THE Y KEY FLIPS THROUGH THEM TOO.)" })

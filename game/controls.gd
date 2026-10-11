@@ -32,6 +32,7 @@ const DEFAULTS := {
 	"help": [KEY_F1],
 	"camera": [KEY_T, JOY_BUTTON_Y],                       # Y / triangle flips the camera
 	"camera_tilt": [KEY_Y],                                # the angle's a setting (Y on the keyboard too)
+	"radio": [KEY_N],                                      # the next station, then off
 	"pause": [KEY_ESCAPE, JOY_BUTTON_START],
 	"inspect": [KEY_I, JOY_BUTTON_Y],
 	"click": [JOY_BUTTON_A],
@@ -48,7 +49,7 @@ const REBIND := [
 	["throttle", "GAS"], ["brake", "BRAKE / REVERSE"], ["steer_left", "STEER LEFT"], ["steer_right", "STEER RIGHT"],
 	["handbrake", "HANDBRAKE"], ["shift_up", "SHIFT UP"], ["shift_down", "SHIFT DOWN"], ["gearbox", "AUTO / MANUAL"], ["clutch", "CLUTCH (PEDAL MODE)"],
 	["use", "USE"], ["horn", "HORN"], ["blink_left", "LEFT BLINKER"], ["blink_right", "RIGHT BLINKER"], ["hazards", "HAZARDS"],
-	["high_beams", "HIGH BEAMS"], ["map", "MAP"], ["jobs", "GIGS"], ["reset", "TOW HOME"], ["hydraulics", "HYDRAULICS / LIGHT BAR"], ["help", "CONTROLS CARD"], ["pause", "PAUSE"],
+	["high_beams", "HIGH BEAMS"], ["map", "MAP"], ["jobs", "GIGS"], ["reset", "TOW HOME"], ["hydraulics", "HYDRAULICS / LIGHT BAR"], ["help", "CONTROLS CARD"], ["radio", "RADIO"], ["pause", "PAUSE"],
 ]
 const GEARS := [["gear_1", "1ST"], ["gear_2", "2ND"], ["gear_3", "3RD"], ["gear_4", "4TH"], ["gear_5", "5TH"], ["gear_6", "6TH"], ["gear_r", "REVERSE"]]
 
