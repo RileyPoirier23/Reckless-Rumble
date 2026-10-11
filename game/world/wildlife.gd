@@ -287,4 +287,5 @@ class Animal extends AnimatableBody2D:
 					draw_circle(e, 1.8, glow)
 
 	func _quad(c: Vector2, ax: Vector2, ay: Vector2, col: Color) -> void:
+		if absf(ax.cross(ay)) < 0.05: return      # edge-on: no area, and nothing for the triangulator to choke on
 		draw_colored_polygon(PackedVector2Array([c + ax + ay, c + ax - ay, c - ax - ay, c - ax + ay]), col)

@@ -615,13 +615,14 @@ func _draw() -> void:
 				else: _back(it)
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-## A filled quad, skipped when it's edge-on to the camera (no area: nothing to see, and nothing
-## for the triangulator to choke on).
+## A filled quad, skipped when it's edge-on to the camera (no area: nothing to see). Two
+## triangles straight to the GPU, not a polygon: a sliver a pixel wide (a post seen from the
+## side) can fail to triangulate.
 func _quad(pts: PackedVector2Array, col: Color) -> void:
 	var area := 0.0
 	for i in pts.size(): area += pts[i].cross(pts[(i + 1) % pts.size()])
 	if absf(area) < 0.5: return
-	draw_colored_polygon(pts, col)
+	draw_primitive(pts, PackedColorArray([col, col, col, col]), PackedVector2Array())
 
 ## A thing on the sidewalk, standing up off it (`up` is how the camera stands things up).
 func _prop(it: Dictionary, base: Vector2, up: Vector2) -> void:

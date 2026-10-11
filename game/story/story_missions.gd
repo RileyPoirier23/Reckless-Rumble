@@ -8,7 +8,7 @@ const TIMS_MOUNTAIN := Vector2(5470, 1132)
 const AIRSTRIP := Vector2(6640, 1022)
 const AIRSTRIP_FENCE := Vector2(6620, 1034)     # where Airstrip Rd ends at the runway: the Familia's meet is on the other side
 # the Mountain: Mountain Rd climbs from Main to the hairpin, then Magnet Hill Rd goes over the hill
-const MOUNTAIN_FOOT := Vector2(5950, 1545)
+const MOUNTAIN_FOOT := Vector2(5900, 1420)
 const HAIRPIN := Vector2(5180, 860)
 const HILL_TOP := Vector2(5000, 720)
 const GENERAL := Vector2(6005, 1500)

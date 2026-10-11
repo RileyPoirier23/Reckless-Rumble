@@ -58,6 +58,7 @@ var _b_light := {}
 var _b_sign := {}
 var _b_lot := {}
 var _b_seg := {}
+var _b_junc := {}
 var _b_river := {}
 var _b_rail := {}
 var _b_bridge := {}
@@ -198,6 +199,9 @@ func _bucket() -> void:
 	for l in map.lights: _add(_b_light, ck(l.p), l)
 	for sg in map.wild_signs: _add(_b_sign, ck(sg.p), sg)
 	for l in map.lots: _bucket_rect(_b_lot, l.r, l)
+	for j in map.junctions:
+		var R: float = float(j.reach) + 4.0
+		_bucket_rect(_b_junc, Rect2(j.p - Vector2(R, R), Vector2(R, R) * 2.0), j)
 	for ri in map.roads.size():
 		var g: Dictionary = road_geo[ri]
 		var SL: PackedVector2Array = g.SL
@@ -840,6 +844,52 @@ class Layer extends Node2D:
 			var uvs := PackedVector2Array()
 			for p in pts: uvs.append(p / 64.0)
 			draw_primitive(pts, PackedColorArray([tint, tint, tint, tint]), uvs, w.asphalt)
+		# the corners rounded off where roads meet: a kerb radius you can actually turn round
+		for j in w._b_junc.get(chunk.key, []):
+			_fillets(w, j, tint)
+
+	## The kerb radius at each corner of a junction: between every two neighbouring arms, the
+	## asphalt's edges meet at a point; an arc of radius r tangent to both replaces that point.
+	func _fillets(w: World, j: Dictionary, tint: Color) -> void:
+		var arms: Array = j.arms
+		var n: Vector2 = j.p
+		var r: float = j.r
+		for i in arms.size():
+			var A: Dictionary = arms[i]
+			var B: Dictionary = arms[(i + 1) % arms.size()]
+			var dA: Vector2 = A.d
+			var dB: Vector2 = B.d
+			var x := dA.cross(dB)
+			if absf(x) < 0.08: continue                # straight on, or back the way it came
+			var sA := signf(x)                         # (a bend's two corners come out on opposite sides)
+			# (orthogonal() turns the other way from the cross product's sign, hence the minus)
+			var pA := n - dA.orthogonal() * float(A.hw) * sA
+			var pB := n + dB.orthogonal() * float(B.hw) * sA
+			var den := dA.cross(dB)
+			var t := (pB - pA).cross(dB) / den
+			var C := pA + dA * t
+			if t < 0.0 or t > 40.0: continue
+			var phi := acos(clampf(dA.dot(dB), -1.0, 1.0))
+			if phi < 0.2 or phi > 2.6: continue     # (nearly straight on: no corner to round)
+			var tt := minf(r / tan(phi / 2.0), 30.0)
+			var Ta := C + dA * tt
+			var Tb := C + dB * tt
+			var u := (dA + dB).normalized()
+			var centre := C + u * (r / sin(phi / 2.0))
+			var pts := PackedVector2Array([C * PX, Ta * PX])
+			var a0 := (Ta - centre).angle()
+			var a1 := (Tb - centre).angle()
+			var sweep := wrapf(a1 - a0, -PI, PI)
+			var steps := maxi(6, int(absf(sweep) / 0.12))
+			for k in range(1, steps):
+				pts.append((centre + Vector2(r, 0).rotated(a0 + sweep * float(k) / steps)) * PX)
+			pts.append(Tb * PX)
+			# a fan of triangles from the corner (the arc's every point can see it), not a polygon:
+			# the tangent runs so close to the arc's first points that a triangulation can fail
+			var cols := PackedColorArray([tint, tint, tint])
+			for k in range(1, pts.size() - 1):
+				var tri := PackedVector2Array([pts[0], pts[k], pts[k + 1]])
+				draw_primitive(tri, cols, PackedVector2Array([tri[0] / 64.0, tri[1] / 64.0, tri[2] / 64.0]), w.asphalt)
 
 	func _other_road(w: World, p: Vector2, ri: int) -> bool:
 		for e in w.map._road_index.get(w.map._cell(p), []):

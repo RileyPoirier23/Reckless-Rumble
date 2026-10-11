@@ -43,6 +43,29 @@ func _init() -> void:
 			print("   on a road: ", b.kind, " ", b.name, " ", b.r, " ", m.road_at(b.r.get_center(), 0.0).road.name)
 	check("no building sits on a road", bad == 0, "%d" % bad)
 	check("Salisbury has a rail crossing", m.crossings.any(func(c): return m.zone_at(c.p).id == "salisbury"))
+	# ---- the junctions: nothing a car can't turn at (two junctions a car length apart, a 10-degree
+	# fork, a street that stops a metre short of the one it was meant to reach)
+	var acute := 0
+	var stubs := 0
+	var dead := 0
+	for n in m.g_pos.size():
+		var adj: Array = m.g_adj[n]
+		var p: Vector2 = m.g_pos[n]
+		if adj.size() == 1:
+			var B := MapData.BOUNDS
+			if not (p.x <= B.position.x + 2 or p.y <= B.position.y + 2 or p.x >= B.end.x - 2 or p.y >= B.end.y - 2): dead += 1
+		if adj.size() < 3: continue
+		for i in adj.size():
+			if adj[i][1] < 12.0 and m.g_adj[adj[i][0]].size() >= 3: stubs += 1
+			for j in range(i + 1, adj.size()):
+				if adj[i][2] == adj[j][2] or adj[i][2].limited or adj[i][2].cls == "ramp" or adj[j][2].cls == "ramp": continue
+				var d1: Vector2 = (m.g_pos[adj[i][0]] - p).normalized()
+				var d2: Vector2 = (m.g_pos[adj[j][0]] - p).normalized()
+				if rad_to_deg(acos(clampf(d1.dot(d2), -1, 1))) < 40.0: acute += 1
+	check("no junction is a car length from the next", stubs == 0, "%d" % stubs)
+	check("no two roads fork at under 40 degrees", acute == 0, "%d" % acute)
+	check("the only dead ends lead somewhere", dead <= 6, "%d" % dead)
+	check("junctions have kerb radii", m.junctions.size() > 150 and m.junction_at(Vector2(5900, 1390) + Vector2(5.5, 5.5)), "%d" % m.junctions.size())
 	var kinds := {}
 	for l in m.lights: kinds[l.type] = true
 	check("many kinds of light", kinds.size() >= 12, ", ".join(kinds.keys()))

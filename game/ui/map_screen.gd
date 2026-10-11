@@ -37,6 +37,9 @@ const ABOUT := {
 	"THE LUCHADOOROS": ["shop", "1TON'S CLUB: HYDRAULICS AND DONKS."],
 }
 const ZOOMS := [1.0, 2.5, 6.0]
+## The roads by class: colour, and width in pixels at each zoom.
+const ROAD_COL := { "highway": Color("f0b040"), "ramp": Color("d8a850"), "arterial": Color("f3ead2"), "rural": Color("d8d2c4"), "street": Color("a8a296"), "gravel": Color("8a7a60") }
+const ROAD_W := { "highway": [3.0, 5.0, 7.0], "ramp": [1.5, 3.0, 4.0], "arterial": [2.0, 4.0, 6.0], "rural": [1.5, 3.0, 5.0], "street": [1.0, 2.0, 4.0], "gravel": [1.0, 2.0, 3.0] }
 const ROW_H := 13
 const ROWS_VIS := 19
 
@@ -159,6 +162,9 @@ func _view() -> Rect2:
 	c.y = clampf(c.y, B.position.y + h / 2.0, B.end.y - h / 2.0)
 	return Rect2(c - Vector2(w, h) / 2.0, Vector2(w, h))
 
+func _road_w(cls: String) -> float:
+	return float((ROAD_W.get(cls, [1.0, 2.0, 3.0]) as Array)[zoom])
+
 func _scale() -> float:
 	var v := _view()
 	return minf(area.size.x / v.size.x, area.size.y / v.size.y)
@@ -203,8 +209,20 @@ func _draw() -> void:
 	PixelFont.draw(self, Vector2(178, 16), "PORT RUMBLE - SALISBURY - HAVELOCK", ASH, 2)
 	var zl := "ZOOM %s" % ["WHOLE MAP", "TOWN", "STREETS"][zoom]
 	PixelFont.draw(self, Vector2(630 - PixelFont.width(zl), 30), zl, ASH)
-	draw_rect(area, Color("2a3424"))
-	# the river
+	# the land, the built-up blocks, the lots, the river, the rail, then the roads with a dark
+	# casing under them (one pass of casings, one of fills, so they join up at the junctions)
+	draw_rect(area, Color("222a1f"))
+	for c in map.grid_cells:
+		var r := Rect2(_to(c.r.position), _to(c.r.end) - _to(c.r.position)).intersection(area)
+		if r.has_area(): draw_rect(r, Color("3b3d35") if c.style != "industrial" else Color("3e3a33"))
+	for l in map.lots:
+		var r := Rect2(_to(l.r.position), _to(l.r.end) - _to(l.r.position)).intersection(area)
+		if not r.has_area(): continue
+		match l.kind:
+			"park": draw_rect(r, Color("2f5a30"))
+			"runway": draw_rect(r, Color("55554f"))
+			"gravel": draw_rect(r, Color("4a4438"))
+			_: if zoom >= 1: draw_rect(r, Color("43433f"))
 	for i in range(0, world.river_l.size() - 1, 2):
 		var j := mini(i + 2, world.river_l.size() - 1)
 		var q := PackedVector2Array([_to(world.river_l[i]), _to(world.river_l[j]), _to(world.river_r[j]), _to(world.river_r[i])])
@@ -212,20 +230,30 @@ func _draw() -> void:
 		for p in q: inside = inside or area.has_point(p)
 		if not inside: continue
 		for k in q.size(): q[k] = q[k].clamp(area.position, area.end)
-		var rc := Color("6a4a32")
+		var rc := Color("3d5a70")
 		draw_primitive(q, PackedColorArray([rc, rc, rc, rc]), PackedVector2Array())
-	# the towns
-	for z in MapData.ZONES:
-		var r := Rect2(_to(z.r.position), _to(z.r.end) - _to(z.r.position)).intersection(area)
-		if r.has_area(): draw_rect(r, Color(0.5, 0.48, 0.42, 0.35))
-	# rail, roads
-	for i in map.rail_pts.size() - 1: _line(map.rail_pts[i], map.rail_pts[i + 1], Color("6a5a4a"), 1.0)
-	for rd in map.roads:
-		var col := Color("f0b040") if rd.cls == "highway" else (Color("e8e4dc") if rd.cls in ["arterial", "rural"] else Color("8a8478"))
-		var w := 2.0 if rd.cls in ["highway", "arterial"] else 1.0
-		if zoom >= 2: w += 1.0
-		var pts: PackedVector2Array = rd.pts
-		for i in pts.size() - 1: _line(pts[i], pts[i + 1], col, w)
+	for i in map.rail_pts.size() - 1: _line(map.rail_pts[i], map.rail_pts[i + 1], Color("6a5a4a"), 1.0 if zoom < 2 else 2.0)
+	for pass_i in 2:
+		for rd in map.roads:
+			var w := _road_w(String(rd.cls))
+			if pass_i == 0 and w < 2.0: continue
+			var col: Color = ROAD_COL.get(String(rd.cls), Color("9a948a")) if pass_i == 1 else INK
+			var pts: PackedVector2Array = rd.pts
+			for i in pts.size() - 1: _line(pts[i], pts[i + 1], col, w + (2.0 if pass_i == 0 else 0.0))
+	# close in: the buildings, and the streets' names along them
+	if zoom >= 2:
+		for b in map.buildings:
+			var r := Rect2(_to(b.r.position), _to(b.r.end) - _to(b.r.position))
+			if area.encloses(r) and r.size.x >= 2: draw_rect(r, Color("5a5852"))
+		for rd in map.roads:
+			if String(rd.name) == "": continue
+			var pts: PackedVector2Array = rd.pts
+			var best := 0.0
+			var at := Vector2.INF
+			for i in pts.size() - 1:
+				var L := _to(pts[i]).distance_to(_to(pts[i + 1]))
+				if L > best and _seen(_to(pts[i].lerp(pts[i + 1], 0.5))): best = L; at = _to(pts[i].lerp(pts[i + 1], 0.5))
+			if best > 40.0: _label(at + Vector2(-PixelFont.width(String(rd.name)) / 2.0, 2), String(rd.name), Color(ASH, 0.9))
 	# the way to the picked place
 	if not dests.is_empty():
 		if _route_for != sel:
@@ -263,6 +291,28 @@ func _draw() -> void:
 			var c := _to(z.r.get_center())
 			if _seen(c): _label(c + Vector2(0, -10), String(z.label), BONE, true)
 	draw_rect(area, Color(ASH, 0.6), false, 1.0)
+	# a scale bar, north, and what the colours mean
+	var bar_m := 1000.0
+	while bar_m * _scale() > 110.0: bar_m /= 2.0
+	var bx := area.position.x + 6
+	var by := area.end.y - 8
+	draw_rect(Rect2(bx - 2, by - 8, bar_m * _scale() + 4, 12), Color(0, 0, 0, 0.5))
+	draw_line(Vector2(bx, by), Vector2(bx + bar_m * _scale(), by), BONE, 1.0)
+	draw_line(Vector2(bx, by - 3), Vector2(bx, by), BONE, 1.0)
+	draw_line(Vector2(bx + bar_m * _scale(), by - 3), Vector2(bx + bar_m * _scale(), by), BONE, 1.0)
+	PixelFont.draw(self, Vector2(bx + 1, by - 7), dist_text(bar_m), BONE)
+	var nx := area.end.x - 10
+	var ny := area.position.y + 12
+	draw_colored_polygon(PackedVector2Array([Vector2(nx, ny - 8), Vector2(nx + 3, ny), Vector2(nx, ny - 2), Vector2(nx - 3, ny)]), BONE)
+	PixelFont.draw(self, Vector2(nx - 2, ny + 2), "N", BONE)
+	if zoom == 0:
+		var lx := area.end.x - 92
+		var ly := area.end.y - 30
+		draw_rect(Rect2(lx - 3, ly - 3, 90, 28), Color(0, 0, 0, 0.5))
+		for k in 3:
+			var cls: String = ["highway", "arterial", "street"][k]
+			draw_line(Vector2(lx, ly + 3 + k * 8), Vector2(lx + 14, ly + 3 + k * 8), ROAD_COL[cls], 2.0)
+			PixelFont.draw(self, Vector2(lx + 18, ly + k * 8), ["HIGHWAY", "MAIN ROADS", "STREETS"][k], ASH)
 	# the list
 	draw_rect(Rect2(10, 40, 160, ROWS_VIS * ROW_H + 6), Color(0, 0, 0, 0.4))
 	for i in range(scroll, mini(dests.size(), scroll + ROWS_VIS)):

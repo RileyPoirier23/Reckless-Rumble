@@ -36,6 +36,20 @@ func _run() -> void:
 		if not b.kind in kinds: continue
 		seen[key] = true
 		picks.append(b)
+	# TOUR_MAP=1: the big map at every zoom, from downtown, instead of the building tour
+	if OS.get_environment("TOUR_MAP") != "":
+		main._teleport(Vector2(5900, 1480), -PI / 2.0)
+		main.hold_car = true
+		await _wait(1.0)
+		main.map_screen.open()
+		main.map_screen.visible = true
+		for z in 3:
+			main.map_screen.zoom = z
+			main.map_screen.queue_redraw()
+			await _wait(0.3)
+			await _shot("map_zoom%d" % z)
+		get_tree().quit()
+		return
 	# TOUR_AT=x,y,heading_deg: one spot, day and night, instead of the building tour
 	if OS.get_environment("TOUR_AT") != "":
 		var sp := OS.get_environment("TOUR_AT").split(",")
