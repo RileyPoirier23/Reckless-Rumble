@@ -359,6 +359,25 @@ func _fleet() -> void:
 	for i in 200: semi._tow(1.0 / 30.0)
 	var amb := _art("fjord_e_fiddy_ambulanz_2014")
 	check("the ambulance has its roof lights, ready to flash", amb.has_beacons and amb.lamp_tex.has("beacon"))
+	# the fire engine: a light bar and beacons that flash, its ladders, hose bed and deck gun on top
+	var fire_spec := SaveGame.load_spec("fire")
+	var fire := CarArt.new(fire_spec, Color(String(fire_spec.paint)), 0.0, 5, CarArt.CAR_SCALE)
+	var fp := CarArt.plan_of(fire_spec, {}, { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }, CarArt.CAR_SCALE, CarGen.design(fire_spec),
+		CarArt._plan_key(fire_spec, {}, {}, CarArt.CAR_SCALE))
+	var on_top := {}
+	for i4 in fp.m2.size():
+		if fp.h2[i4] >= 0: on_top[fp.m2[i4] & 255] = true
+	var hose := false
+	for i5 in fp.m0.size():
+		if fp.h0[i5] >= 0 and (fp.m0[i5] & 255) == CarArt.M_CARGO: hose = true
+	check("the fire engine has its light bar and beacons, ready to flash", fire.has_beacons and fire.lamp_tex.has("beacon")
+		and fire.lamp_tex.beacon.get_image().get_used_rect().size.x > 0)
+	check("the fire engine carries ladders, a deck gun and a hose bed", on_top.has(CarArt.M_LADDER) and on_top.has(CarArt.M_CHROME) and hose)
+	var box_spec := fire_spec.duplicate(true)
+	box_spec.art = {}
+	check("the fire engine isn't a plain box truck any more, from above or side on", _differs(fire, CarArt.new(box_spec, Color(String(fire_spec.paint)), 0.0, 5, CarArt.CAR_SCALE))
+		and PixCars.image_of(fire_spec, 200, Color.RED).get_data() != PixCars.image_of(box_spec, 200, Color.RED).get_data())
+	check("fire is an art cue the catalogue knows", CarCatalog.ART_CUES.has("fire"))
 	var van := _plan("grumpman_step_up_van_2004")
 	var sky := false
 	var vent := false

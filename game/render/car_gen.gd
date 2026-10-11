@@ -196,7 +196,7 @@ static func _height(f: Dictionary, fam: String, era: int) -> float:
 		"minivan": h = 1.72
 		"kei": h = 1.64
 		"bubble": h = 1.42
-		"boxtruck": h = 3.1
+		"boxtruck": h = 3.1 if not f.art.has("fire") else 2.72
 	if cls == "luxury" and not fam in ["suv", "offroad", "pickup"]: h += 0.03
 	if cls == "exotic" and fam in ["sports", "coupe", "mid", "wedge"]: h -= 0.04
 	if f.body == "trike": h = 1.4
@@ -563,6 +563,7 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 		"boxtruck":
 			var model := String(f.model).to_lower()
 			g.cab = "cabover" if art.has("cabover") else ("step" if model.contains("step") else ("van" if model.contains("cube") or art.has("cutaway") else "conv"))
+			if art.has("fire"): g.cab = "fire"
 			g.rear = "boxtruck"
 			g.clear = 0.32
 			g.soft = 0.25
@@ -570,6 +571,18 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 			g.nose_bot = 0.36
 			g.tail_bot = 0.5
 			match String(g.cab):
+				"fire":
+					# a fire engine's custom cab: flat-faced, sat over the front axle, a crew cab
+					# with its roof up over the body, the pump panel behind it
+					g.hood_h = 1.5
+					g.cowl_rise = 0.06
+					g.cowl_d = 0.12
+					g.rake = 7.0
+					g.box_d = 3.3
+					g.ff = 0.36
+					g.nose_drop = 1.0
+					g.nose_bot = 0.42
+					g.belt_up = 0.24
 				"cabover":
 					g.hood_h = 1.25
 					g.cowl_rise = 0.05
@@ -603,6 +616,7 @@ static func _skeleton(f: Dictionary, fam: String, era: int, L: float, H: float, 
 					g.ff = 0.3
 					g.nose_drop = 0.5
 			g.cab_h = 2.3 if g.cab != "step" else H
+			if g.cab == "fire": g.cab_h = 3.0
 			g.doors = 2
 	_era(g, f, fam, L, us, r)
 	_modern(g, f, fam, L, r)
@@ -1133,6 +1147,7 @@ static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNu
 				dlo_r = float(d.cab_x) + 0.3 / L
 		"boxtruck":
 			dlo_rt = maxf(float(d.box_x), roof_f - 0.9 / L) + 0.08 / L
+			if d.cab == "fire": dlo_rt = float(d.box_x) + 0.14 / L
 			dlo_r = dlo_rt
 		"open":
 			dlo_rt = roof_f - 0.12
@@ -1170,6 +1185,12 @@ static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNu
 			doors.append([door_f, cab_x + 0.06 / L])
 		else:
 			doors.append([door_f - 0.01, cab_x + 0.08 / L])
+	elif d.rear == "boxtruck" and d.cab == "fire":
+		# the crew cab: the driver's door, a pillar, the crew's door behind it
+		var bxf := dlo_r + (a_bot - dlo_r) * 0.48
+		pillars.append([bxf, bxf, b_w * 1.3])
+		doors.append([door_f, bxf])
+		doors.append([bxf, dlo_r - 0.03 / L])
 	elif d.rear == "boxtruck":
 		doors.append([door_f, dlo_r])
 	elif fam in ["van"]:
@@ -1362,6 +1383,12 @@ static func _details(d: Dictionary, f: Dictionary, fam: String, era: int, r: Ran
 		if cls == "work_truck" or fam == "boxtruck": rim = "steel"
 	d.rim_style = rim
 	d.wall = wall
+	if art.has("fire"):
+		# polished aluminium discs, a chrome bumper, mud flaps and a step under the doors
+		d.rim_color = "#e6eaf0"
+		d.bumper = "chrome"
+		d.mudflaps = true
+		d.step = false
 	# the maker's signature parts on a modern car
 	var dna: Dictionary = d.dna
 	d.grille = "none"
@@ -4029,7 +4056,7 @@ class _Car:
 
 	## A bus's side: the school bus's black rub rails and its stop arm; the city bus's livery band and
 	## the route sign over its windshield. A box truck's job: the garbage packer's hopper, the
-	## ambulance's stripe and lights.
+	## ambulance's stripe and lights, the fire engine's whole outfit.
 	func _fleet_things() -> void:
 		var art: Dictionary = d.art
 		if lod == 0: return
@@ -4067,6 +4094,127 @@ class _Car:
 			p.rect(bx - int(lf * 0.03), int(Y(float(d.h))) - 2 * u, int(lf * 0.03), 2 * u, Color("e83020"))
 			p.rect(int(X(0.01)), int(Y(float(d.h))) - 2 * u, int(lf * 0.03), 2 * u, Color("e83020"))
 			if lod >= 2: p.text(int(X(0.15)), sy + int(lf * 0.03), "AMBULANCE", Color("c8201c"))
+		if art.has("fire"): _fire_side()
+
+	## A fire engine's side: a white reflective stripe the length of it with a gold line under it,
+	## the body's compartments behind roll-up aluminium shutters (one over the back wheel), the
+	## chrome pump panel behind the cab with its gauges and discharge caps, the ladders racked on
+	## top, the hose bed's folds showing at the back, a red light bar on the cab roof and red
+	## beacons on the body's back corners, the step under the doors and ENGINE 3 on the door.
+	func _fire_side() -> void:
+		var L := float(d.L)
+		var bx := X(float(d.box_x))
+		var top := int(Y(float(d.h)))
+		var rock := int(Y(float(d.rocker)))
+		# the stripe, down the whole truck
+		var s0 := int(Y(1.12 / L))
+		var s1 := int(Y(0.96 / L))
+		for xx in range(x_lo, x_hi + 1):
+			for yy in range(s0, s1):
+				if on_paint(xx, yy): p.img.set_pixel(xx, yy, Color("f4f2ea") if yy > s0 or lod < 2 else Color("ffffff"))
+			if lod >= 2 and on_paint(xx, s1): p.img.set_pixel(xx, s1, Color("d8a830"))
+		# the compartments: behind the back wheel, over it, and ahead of it to the pump panel
+		var wx := float(wheels[0][1])
+		var arch_top := int(float((wheels[0][3] as Vector2).y) - arch_r) - 2 * u
+		var c_top := top + 3 * u
+		var c_bot := s0 - 2 * u
+		var x_pump := int(bx - lf * 0.1)
+		var boxes: Array = [[int(X(0.012)), int(wx - arch_r) - 2 * u, c_bot], [int(wx - arch_r) + u, int(wx + arch_r) - u, arch_top]]
+		var front0 := int(wx + arch_r) + 2 * u
+		if float(x_pump - front0) > 1.5 / L * lf:
+			var mid := (front0 + x_pump) / 2
+			boxes.append([front0, mid - u, c_bot])
+			boxes.append([mid + u, x_pump - 2 * u, c_bot])
+		else:
+			boxes.append([front0, x_pump - 2 * u, c_bot])
+		for bxs: Array in boxes:
+			_shutter(int(bxs[0]), c_top, int(bxs[1]), int(bxs[2]))
+		# the pump panel: brushed chrome, gauges up top, discharge caps below
+		var px1 := int(bx) - u
+		var pt := top + 2 * u
+		var pb := int(Y(0.62 / L))
+		for xx in range(x_pump, px1):
+			for yy in range(pt, pb):
+				p.px(xx, yy, CarGen.CHROME[2] if (xx - x_pump) % (2 * u) < u else CarGen.CHROME[3])
+		p.frame(x_pump - 1, pt - 1, px1 - x_pump + 2, pb - pt + 2, CarGen.INK)
+		if lod >= 1:
+			var gr := maxf(1.5, lf * 0.007)
+			for k in 2:
+				var gx := x_pump + int(float(px1 - x_pump) * (0.3 + 0.4 * k))
+				var gy2 := pt + int(gr) + 2 * u
+				p.disc(gx, gy2, gr + 0.8, CarGen.INK)
+				p.disc(gx, gy2, gr, Color("ecebe4"))
+				p.px(gx + (1 if k == 0 else -1), gy2 - 1, Color("c8201c"))
+			for k2 in 2:
+				var cx2 := x_pump + int(float(px1 - x_pump) * (0.3 + 0.4 * k2))
+				var cy2 := pb - int(lf * 0.03) - k2 * int(lf * 0.025)
+				p.disc(cx2, cy2, gr * 1.3 + 0.8, CarGen.CHROME[0])
+				p.disc(cx2, cy2, gr * 1.3, CarGen.CHROME[3])
+				p.px(cx2 - 1, cy2 - 1, Color.WHITE)
+		# the hose bed at the back: the folds of hose showing over the top of the body
+		var hose_x1 := int(X(0.2))
+		var fold := maxi(2, 2 * u)
+		for xx in range(int(X(0.008)), hose_x1, fold + 1):
+			var hc := Color("e8c040") if ((xx / (fold + 1)) % 3) != 2 else Color("e0dcd0")
+			p.rect(xx, top - fold, fold, fold, hc)
+			p.px(xx, top - fold, hc.lightened(0.3))
+			p.px(xx + fold - 1, top - 1, hc.darkened(0.3))
+		p.hline(int(X(0.008)), top - fold - 1, hose_x1 - int(X(0.008)), CarGen.CHROME[2])
+		# the ladders, racked on edge along the top
+		var lx0 := hose_x1 + 2 * u
+		var lx1 := int(bx) - 2 * u
+		var lt := top - maxi(4, int(lf * 0.034)) - u
+		var lb := top - u - 1
+		for post: int in [lx0 + 2 * u, (lx0 + lx1) / 2, lx1 - 2 * u]:
+			p.rect(post, lb, u + 1, top - lb, CarGen.TRIM)
+		p.hline(lx0, lt, lx1 - lx0, Color("dfe3e8"))
+		p.hline(lx0, lt + 1, lx1 - lx0, Color("8a9098"))
+		p.hline(lx0, lb, lx1 - lx0, Color("c8ccd2"))
+		for xx in range(lx0, lx1, maxi(3, int(lf * 0.022))):
+			p.vline(xx, lt + 2, lb - lt - 2, Color("9aa0a8"))
+		# a red light bar across the front of the cab roof, red beacons on the body's back corners
+		var cab_top := _first_body(int(X(float(d.roof_f))) - 2 * u)
+		var lbx1 := int(X(float(d.roof_f))) - u
+		var lbx0 := lbx1 - maxi(8, int(lf * 0.16))
+		var bh := maxi(3, 2 * u + 1)
+		p.rect(lbx0, cab_top - bh, lbx1 - lbx0, bh, CarGen.TRIM)
+		var pods := maxi(3, (lbx1 - lbx0) / maxi(3, 3 * u + 1))
+		for k3 in pods:
+			var px0 := lbx0 + 1 + k3 * (lbx1 - lbx0 - 2) / pods
+			var pw := maxi(1, (lbx1 - lbx0 - 2) / pods - 1)
+			var lens := Color("f4f4ec") if k3 == pods / 2 else Color("e02a1e")
+			p.rect(px0, cab_top - bh + 1, pw, bh - 2, lens)
+			p.px(px0, cab_top - bh + 1, lens.lightened(0.5))
+		p.frame(lbx0 - 1, cab_top - bh - 1, lbx1 - lbx0 + 2, bh + 2, CarGen.INK)
+		p.rect(int(X(0.004)), top - 3 * u, 3 * u, 3 * u, Color("e02a1e"))
+		p.px(int(X(0.004)), top - 3 * u, Color("ff9a8a"))
+		p.frame(int(X(0.004)) - 1, top - 3 * u - 1, 3 * u + 2, 3 * u + 1, CarGen.INK)
+		# the step under the doors, diamond plate
+		var cuts: Array = d.door_cuts
+		if not cuts.is_empty():
+			var st0 := int(X(float((cuts[cuts.size() - 1] as Array)[1])))
+			var st1 := int(X(float((cuts[0] as Array)[0]))) - u
+			var sty := rock + u
+			p.rect(st0, sty, st1 - st0, 2 * u, CarGen.CHROME[1])
+			for xx in range(st0, st1, 2): p.px(xx, sty, CarGen.CHROME[3])
+			p.frame(st0 - 1, sty - 1, st1 - st0 + 2, 2 * u + 2, CarGen.INK)
+			if lf >= 220.0:
+				var dc: Array = cuts[0]
+				var tx := int((X(float(dc[0])) + X(float(dc[1]))) * 0.5) - Pix.text_w("ENGINE 3") / 2
+				p.text(tx, s0 - int(lf * 0.045), "ENGINE 3", Color("f4f2ea"))
+
+	## A roll-up shutter over a compartment: aluminium slats lit from above, a darker frame, the
+	## lift bar along the bottom.
+	func _shutter(x0: int, y0: int, x1: int, y1: int) -> void:
+		if x1 - x0 < 3 or y1 - y0 < 3: return
+		for yy in range(y0, y1):
+			var k := (yy - y0) / maxi(1, u)
+			var c: Color = CarGen.CHROME[2] if k % 2 == 0 else CarGen.CHROME[1]
+			if yy == y0: c = CarGen.CHROME[3]
+			if yy >= y1 - 2 * u: c = CarGen.CHROME[3] if yy == y1 - 2 * u else CarGen.CHROME[0]
+			p.hline(x0, yy, x1 - x0, c)
+		p.vline(x0, y0, y1 - y0, CarGen.CHROME[3])
+		p.frame(x0 - 1, y0 - 1, x1 - x0 + 2, y1 - y0 + 2, (pal.deep as Color))
 
 	## The wrecker's body: side boxes over the rear wheel, and the boom up the back.
 	func _wrecker(bx0: int, bx1: int, rail: int) -> void:

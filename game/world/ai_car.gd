@@ -259,6 +259,8 @@ func _lights(dt: float, _st: float) -> void:
 	head_light.offset = Vector2(80.0 * head_light.texture_scale, 0)
 	tail_light.visible = lights_on or view.braking
 	tail_light.energy = 1.4 if view.braking else 0.6
+	# running code: the rig's own roof lights in the art (an ambulance's, a fire engine's) flash too
+	view.beacons = siren
 	if lights.a <= 0.0: return
 	_flash_t2 += dt
 	if _bar == null:

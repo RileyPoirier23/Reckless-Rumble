@@ -1410,7 +1410,8 @@ class _Shaper:
 		var bus := art.has("bus")
 		var school := art.has("schoolbus")
 		var amb := art.has("ambulance")
-		if not (bus or school or amb): return
+		var fire := art.has("fire")
+		if not (bus or school or amb or fire): return
 		var rz0 := int(round(p.roof_z))
 		var x0 := x_tail + 2
 		var x1 := x_nose - 2
@@ -1438,6 +1439,7 @@ class _Shaper:
 						p.h2[i] = rz0 + 1
 						p.m2[i] = CarArt.M_BEACON if av < w * 0.7 else CarArt.M_TAIL
 		if amb: _ambulance_roof()
+		if fire: _fire_roof()
 		p.lz1 = maxi(p.lz1, rz0 + 2)
 
 	## An ambulance's box from above: a red beacon on each of its top corners, a light bar across
@@ -1469,6 +1471,66 @@ class _Shaper:
 				p.h2[i] = top + hgt
 				p.m2[i] = mat
 		p.lz1 = maxi(p.lz1, top + 3)
+
+	## A fire engine from above: the hose bed open at the back with its folds of hose, two ladders
+	## on the rack along the body's roof, a chrome deck gun just behind the cab, red beacons on
+	## the body's back corners and a light bar across the front of the cab roof (red, a white
+	## lens in the middle).
+	func _fire_roof() -> void:
+		var bx := mini(int(round(X(float(d.get("box_x", 1.0))))), x_nose)
+		var top := 0
+		for x in range(x_tail, bx - 3):
+			top = maxi(top, p.h0[p.idx(x, int(p.cy))])
+		var hose1 := x_tail + int(round(0.2 * float(p.lpx)))
+		for x in range(x_tail + 1, bx):
+			var w: float = p.hw[x]
+			for y in p.sy:
+				var i := p.idx(x, y)
+				if p.h0[i] < top - 1: continue
+				var av := absf(float(y) + 0.5 - p.cy)
+				# the hose bed: sunk into the body, the hose folded in it in yellow and white
+				if x < hose1 and x > x_tail + 1 and av < w - 1.4:
+					p.h0[i] = top - 2
+					p.m0[i] = CarArt.M_CARGO | ((x - x_tail) % 3 << 8) | (4 << 16)
+					continue
+				var mat := -1
+				var b := top + 1
+				var hgt := 1
+				if (x <= x_tail + 2) and av > w * 0.62 and av < w - 0.5:
+					mat = CarArt.M_BEACON | (1 << 16)
+				elif x > hose1 + 1 and x < bx - 4:
+					# two ladders on the rack: rails down their edges, rungs across
+					var lad := absf(av - w * 0.5)
+					if lad < w * 0.32:
+						var rail := lad > w * 0.32 - 1.0
+						if rail or (x - hose1) % 3 == 0:
+							mat = CarArt.M_LADDER | ((0 if rail else 1) << 8)
+							b = top + 2
+					if mat < 0 and ((x - hose1) % 9 == 4) and av < w - 0.8:
+						# the rack's crossbars under them
+						mat = CarArt.M_STEEL | (1 << 8)
+						b = top + 1
+				if mat < 0 and x >= bx - 4 and x < bx - 1 and av < 1.6:
+					# the deck gun, stood up behind the cab
+					mat = CarArt.M_CHROME | ((3 if av < 0.8 else 1) << 8)
+					hgt = 3
+				if mat < 0: continue
+				p.b2[i] = b
+				p.h2[i] = b + hgt - 1
+				p.m2[i] = mat
+		# the cab's light bar, across the front of its roof
+		var cab_top := 0
+		for x in range(bx, x_nose):
+			cab_top = maxi(cab_top, p.h0[p.idx(x, int(p.cy))])
+		for x in range(x_nose - 5, x_nose - 2):
+			for y in p.sy:
+				var i2 := p.idx(x, y)
+				var av2 := absf(float(y) + 0.5 - p.cy)
+				if p.h0[i2] < cab_top - 2 or av2 > p.hw[x] - 1.0: continue
+				p.b2[i2] = cab_top + 1
+				p.h2[i2] = cab_top + 1
+				p.m2[i2] = CarArt.M_BEACON | ((2 if av2 < 1.5 else 1) << 16)
+		p.lz1 = maxi(p.lz1, maxi(top, cab_top) + 4)
 
 	## A pickup's bed (and what's in it, or the cover over it); the box behind a box truck's cab.
 	func _bed_and_box() -> void:
@@ -1548,7 +1610,9 @@ class _Shaper:
 						p.h2[i7] = zr + 1
 						p.m2[i7] = CarArt.M_LADDER | (1 << 8)
 		elif rear == "boxtruck":
-			# the box: a flat roof with its ribs, white or the fleet's colour
+			# the box: a flat roof with its ribs, white or the fleet's colour (an ambulance's box
+			# and a fire engine's body are smooth, no skylight, no vents)
+			var smooth := art.has("ambulance") or art.has("fire")
 			var bx := int(round(X(float(d.get("box_x", 0.0)))))
 			for x in range(x_tail, mini(bx, p.sx)):
 				for y in p.sy:
@@ -1556,14 +1620,14 @@ class _Shaper:
 					if p.h0[i8] < 0: continue
 					var av5 := absf(float(y) + 0.5 - p.cy)
 					# the roof bows between its ribs: a shade darker over each one (an ambulance's box is smooth)
-					var rib := (x - x_tail) % 6 == 0 and not art.has("ambulance")
-					p.m0[i8] = _paint(2 if av5 >= p.hw[x] - 1.0 else (3 if rib else 4), CarArt.R_BOX)
+					var rib := (x - x_tail) % 6 == 0 and not smooth
+					if (p.m0[i8] & 255) != CarArt.M_CARGO: p.m0[i8] = _paint(2 if av5 >= p.hw[x] - 1.0 else (3 if rib else 4), CarArt.R_BOX)
 					# a translucent skylight strip down the middle of a parcel box
-					if not art.has("ambulance") and av5 < p.hw[x] * 0.14 and x > x_tail + 2 and x < bx - 3:
+					if not smooth and av5 < p.hw[x] * 0.14 and x > x_tail + 2 and x < bx - 3:
 						p.m0[i8] = CarArt.M_PLATE
 					p.belt[i8] = 999
 			# a roof vent or two near the front of the box
-			if not art.has("ambulance"):
+			if not smooth:
 				for k: int in [5, 12]:
 					var xv := bx - k
 					if xv <= x_tail + 2: continue
@@ -1956,7 +2020,11 @@ class _Painter:
 	var grille_none := false
 	var chrome_frame := false
 	var seat_c := Color("26262a")
-	var fleet := ""                    # schoolbus, bus, ambulance, packer: the outfit's bands down the side
+	var fleet := ""                    # schoolbus, bus, ambulance, packer, fire: the outfit's bands down the side
+	var fire_k := 1.0                  # a fire engine's slices per metre (its stripe and compartments go by height)
+	var fire_pump := Vector2.ZERO      # the pump panel, as fractions along the truck
+	var fire_arch := Vector3.ZERO      # the back wheel: x, half the arch's width, how high it reaches (slices)
+	var fire_cols := PackedFloat32Array()  # the compartments' edges (px)
 	var black_roof: Array[Color] = []  # a floating roof: the roof and its pillars in gloss black
 	# per column
 	var door0 := PackedByteArray()     # the front doors' span
@@ -2059,9 +2127,20 @@ class _Painter:
 			var hides: Array[Color] = [Color("3e3e46"), Color("9a7650"), Color("8a2a24"), Color("d0c4a4")]
 			if int(d.year) >= 1995: hides = [Color("3e3e46"), Color("3e3e46"), Color("9a7650"), Color("8a2a24")]
 			seat_c = hides[absi(String(d.get("id", d.model)).hash()) % hides.size()]
-		for fk: String in ["schoolbus", "bus", "ambulance", "packer"]:
+		for fk: String in ["schoolbus", "bus", "ambulance", "packer", "fire"]:
 			if d.art.has(fk) and fleet == "": fleet = fk
 		if String(d.family) == "trailer": fleet = "trailer"
+		if fleet == "fire":
+			# where the fire engine's stripe, compartments and pump panel fall
+			fire_k = p.zl / maxf(1.0, float(d.L))
+			var box_u := float(d.get("box_x", 1.0))
+			fire_pump = Vector2(box_u - 0.1, box_u - 0.004)
+			var wv0: Array = p.wheels[0]
+			fire_arch = Vector3(float(wv0[0]), float(wv0[2]) * 1.25, float(wv0[2]) * 2.0 * CarArt.RISE + 2.0)
+			var ux0 := float(CarArt.MX)
+			var front0 := fire_arch.x + fire_arch.y + 1.0
+			var pump_x := ux0 + fire_pump.x * float(p.lpx)
+			fire_cols = PackedFloat32Array([ux0 + 0.012 * float(p.lpx), fire_arch.x - fire_arch.y - 1.0, front0, (front0 + pump_x) * 0.5, pump_x])
 		# per column
 		door0.resize(p.sx)
 		door1.resize(p.sx)
@@ -2417,6 +2496,7 @@ class _Painter:
 			1: return [Color("8a5a34"), Color("6a4428"), Color("a87a4a")][shade % 3]  # firewood
 			2: return Color("b88a52") if shade == 0 else Color("8a6436")           # boxes
 			3: return [Color("5a3a22"), Color("4a2e1a"), Color("6a4628")][shade % 3]  # mulch
+			4: return [Color("e8c040"), Color("b88a1c"), Color("e4e0d4")][shade % 3]  # folded hose
 		return Color("6a6e74").lightened(_hn(x, y, 5) * 0.1)
 
 	## A roof sign from above: its top edge in the sign's colour.
@@ -2467,11 +2547,29 @@ class _Painter:
 				if absf(t - 0.72) < 0.07: c = Color("c8201c")
 			"packer":
 				if absf(t - 0.6) < 0.12: c = Color("f0f0ec") if (x + z) % 4 != 0 else Color("2a6a3a")
+			"fire": c = _fire_flank(c, x, z, t)
 			"trailer":
 				# the outfit's name down the side, as big as it gets
 				if decal >= 0 and t > 0.35 and t < 0.75 and p.ux[x] > 0.15 and p.ux[x] < 0.85:
 					c = decal_c if (t < 0.42 or t > 0.68 or (x * 3 + z) % 4 == 0) else Color("f0f0ec")
 		if portholes and absf(t - 0.72) < 0.1 and p.ux[x] > wf - 0.08 and p.ux[x] < wf + 0.02 and x % 3 == 0: c = CarArt.CHROME[2]
+		return c
+
+	## A fire engine's flank at slice z: the white reflective stripe at a metre up, the roll-up
+	## aluminium shutters over the compartments (higher over the back wheel), their frames in the
+	## paint, and the brushed chrome pump panel behind the cab.
+	func _fire_flank(c: Color, x: int, z: int, t: float) -> Color:
+		var zm := (float(z) - float(p.zoff)) / fire_k
+		if zm > 0.96 and zm < 1.12: return Color("f2f0e8")
+		var u: float = p.ux[x]
+		var xf := float(x) + 0.5
+		if u > fire_pump.x and u < fire_pump.y and zm > 0.62 and t < 0.94:
+			return CarArt.CHROME[2] if x % 2 == 0 else CarArt.CHROME[3]
+		if u > 0.012 and u < fire_pump.x and zm > 1.22 and t < 0.9:
+			for cx: float in fire_cols:
+				if absf(xf - cx) < 0.6: return pal[0]
+			if absf(xf - fire_arch.x) < fire_arch.y and float(z - p.zoff) < fire_arch.z: return c
+			return CarArt.CHROME[2] if z % 2 == 0 else CarArt.CHROME[1]
 		return c
 
 	## The nose at slice z: bumper, grille, headlamps, turn signals.
@@ -2518,6 +2616,8 @@ class _Painter:
 		if zz <= bump_top:
 			if not art.bumper_rear: return Color("1a1a1e")
 			if vn < 0.22 and zz >= bump_top - 1.0: return Color("d8d4c0")
+			# a fire engine's tailboard: red and yellow chevrons across it
+			if fleet == "fire": return Color("e8c020") if (x + y + z) % 4 < 2 else Color("c8201c")
 			match bumper:
 				1: return CarArt.CHROME[2 if zz == bump_top else 1]
 				2: return CarArt.TRIM

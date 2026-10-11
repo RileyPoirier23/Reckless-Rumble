@@ -37,7 +37,7 @@ const SIDE_BODY := {
 const ART_CUES := ["chrome", "nochrome", "round", "quad", "popups", "fins", "twotone", "vinyl", "wood", "rack", "norack",
 	"stripes", "scoop", "wing", "spoiler", "spare", "nospare", "bullbar", "beacon", "snorkel", "sunroof", "ttops", "topper",
 	"ladder", "toolbox", "cargo", "open", "crew", "ext", "cabover", "ute", "dually", "hardtop", "spotlight", "plow",
-	"portholes", "strakes", "split", "bus", "schoolbus", "tractor", "sleeper", "packer", "ambulance", "cutaway"]
+	"portholes", "strakes", "split", "bus", "schoolbus", "tractor", "sleeper", "packer", "ambulance", "cutaway", "fire"]
 
 ## A line about the car you get for free with some of the cues.
 const QUIRK_TEXT := {

@@ -102,7 +102,7 @@ func setup(body: Dictionary, p: Color, na: int, nb: int, ns: float, lane: float)
 	view.build(spec, paint, 0.0, rng.randi(), CarArt.CAR_SCALE, looks)
 	# now and then the ambulance is on a call: its lights going (by where it showed up, so the
 	# traffic's dice aren't touched)
-	view.beacons = art_cues.has("ambulance") and int(ns * 7.0) % 5 < 2
+	view.beacons = (art_cues.has("ambulance") or art_cues.has("fire")) and int(ns * 7.0) % 5 < 2
 	add_child(view)
 	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
