@@ -512,12 +512,24 @@ class Autopilot extends Node:
 				return -1.0
 			if wait_s > 0.0 and v < 0.4 and dist < 3.0:
 				_stopped_t += dt
-				if _stopped_t >= wait_s:
+				if _stopped_t >= wait_s and not _junction_busy(n):
 					_cleared[n] = true
 					_stopped_t = 0.0
 					return -1.0
 			return dist
 		return -1.0
+
+	## Somebody in the junction, or coming at it fast enough to be in it before we're through.
+	func _junction_busy(n: int) -> bool:
+		var tr: Traffic = drive.traffic
+		var c: Vector2 = tr.map.g_pos[n]
+		var rad := float(tr.junctions[n].get("radius", 6.0))
+		for o in tr.cars:
+			var d: float = o.pos.distance_to(c)
+			if d < rad + 1.0: return true
+			var toward := Vector2.from_angle(o.heading).dot((c - o.pos).normalized())
+			if d < 32.0 and toward > 0.6 and o.v > 1.5 and d / maxf(o.v, 0.1) < 4.0: return true
+		return false
 
 	func _controls(th: float, br: float, steer: float, hb := 0.0) -> void:
 		_press("throttle", th)

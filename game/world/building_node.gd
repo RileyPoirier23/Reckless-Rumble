@@ -56,7 +56,7 @@ func colors() -> Array:
 		"casino": return [Color("2a1a3a"), Color("1e1228"), Color("3a2a4a")]
 		"plant": return [Color("9a948a"), Color("7a746a"), Color("6a665e")]
 		"tower": return [Color("b8b8bc"), Color("8a8a90"), Color("c8c8cc")]
-		"pumps": return [Color("d8d8d0"), Color("a8a8a0"), Color("e8e8e0")]
+		"pumps": return [Color("b8b8b2"), Color("8a8a84"), Color("a4a6a8")]
 		"junk": return [Color("6a5040"), Color("3a2c24"), Color("5a4a40")]
 	return [Color("7a6a5a"), Color("5a4e42"), Color("5e5e62")]
 
@@ -443,7 +443,11 @@ func _flat_roof(c: Array, st: Dictionary) -> void:
 	draw_colored_polygon(roof, base)
 	var k := String(data.kind)
 	if k == "pumps":
-		draw_polyline(roof + PackedVector2Array([roof[0]]), (c[1] as Color), 2.0)
+		# the canopy: a pale underside lit from below at night, and a fascia band round it in the
+		# station's colours
+		var band := Color("c8322a") if hash(position) % 2 == 0 else Color("2a5ab0")
+		draw_polyline(roof + PackedVector2Array([roof[0]]), band, 4.0)
+		draw_polyline(roof + PackedVector2Array([roof[0]]), band.lightened(0.35), 1.0)
 		return
 	# the membrane's seams
 	var inner := fp.grow(-3.0)
