@@ -371,6 +371,10 @@ void fragment() {
 		var ls: Node = load("res://tests/lights_shot.gd").new()
 		ls.main = self
 		add_child(ls)
+	elif OS.get_cmdline_user_args().has("--preview-frames"):
+		var pf: Node = load("res://tests/preview_frames.gd").new()
+		pf.main = self
+		add_child(pf)
 	elif OS.get_cmdline_user_args().has("--jobs-demo"):
 		var jd: Node = load("res://tests/jobs_demo.gd").new()
 		jd.main = self
