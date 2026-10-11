@@ -18,7 +18,7 @@ func _init() -> void:
 			"card", "avatar", "counter", "credits": pass
 			_: bad.append(st.type)
 	check("every step points at a real scene or mission", bad.is_empty(), str(bad))
-	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay", "bay_fox", "hairpin", "meet", "black"]
+	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "tims_snow", "apartment", "bay", "bay_fox", "hairpin", "hairpin_gap", "meet", "black"]
 	var who_bad := []
 	var set_bad := []
 	var lines := 0
@@ -356,8 +356,100 @@ func _karma() -> void:
 	check("the Silvio is Frankie's before the first snow (Leo gives it to him at eighteen)", int(at.get("eighteen", 99)) < int(at.get("first_snow", -1)))
 	check("endings: Hatch trips over the green book Gus told Leo about",
 		str(StoryScript.SCENES.bay_three.lines).contains("green book") and str(StoryScript.SCENES.hatch_counter.lines).contains("green book"))
+	_flags_and_voices()
 	StoryState.flags = was
 	StoryState.active = was_active
+
+
+## No dead flags, no dead choices, and everybody gets their moments: every flag the script sets
+## (a "flag" line, a choice, a medal on the runway) is read back somewhere (a line, an option or a
+## step that asks for it, or the credits), every choice counts for karma, each chapter has Mikey,
+## Aries, Gus and Frankie in it, Toby and Tremblay get real scenes, and the house rules hold.
+func _flags_and_voices() -> void:
+	var set_here := {}            # flag -> where it's set
+	var read := {}                # flag -> true
+	var read_code := { "frankie_dead": true }     # EndCredits.line_text reads this one
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			var w := String(ln[0])
+			if w == "flag": set_here[String(ln[1])] = id
+			if w == "choice":
+				for o in ln[1]:
+					set_here[String(o[1])] = id
+					if o.size() > 2 and o[2] is Dictionary: _reads(o[2], read)
+			if ln.size() > 2 and ln[2] is Dictionary: _reads(ln[2], read)
+	for st in StoryScript.STEPS:
+		if st.has("if"): _reads(st["if"], read)
+	for t in ["gold", "silver", "bronze"]: set_here["launch_" + t] = "launch_control"
+	var dead := []
+	for f in set_here:
+		if not read.has(f) and not read_code.has(f): dead.append("%s (%s)" % [f, set_here[f]])
+	check("flags: every flag the story sets is read back somewhere", dead.is_empty(), str(dead))
+	var unset := []
+	for f in read:
+		if not set_here.has(f): unset.append(f)
+	check("flags: every flag a line asks for is one the story can set", unset.is_empty(), str(unset))
+	# every choice changes something later on: at least one line or step asks for each option
+	var dead_choice := []
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			if String(ln[0]) != "choice": continue
+			for o in ln[1]:
+				if not read.has(String(o[1])): dead_choice.append(String(o[1]))
+	check("choices: every option is paid off somewhere later", dead_choice.is_empty(), str(dead_choice))
+	# the chapters: who speaks in each (a line in a scene, in the cast or on the phone)
+	var chapters := {}
+	var cur := "PROLOGUE"
+	for st in StoryScript.STEPS:
+		if st.type == "card" and (String(st.title).begins_with("CHAPTER") or String(st.title) == "PROLOGUE"): cur = String(st.title)
+		if st.type != "scene": continue
+		if not chapters.has(cur): chapters[cur] = {}
+		for ln in StoryScript.SCENES[st.id].lines:
+			var w := String(ln[0])
+			if w in ["*", "choice", "set", "cast", "cash", "debt", "flag", "pose"]: continue
+			chapters[cur][w.rstrip("0123456789")] = true
+	var quiet := []
+	for ch in chapters:
+		for who in ["MIKEY", "ARIES", "GUS", "FRANKIE"]:
+			if who == "FRANKIE" and ch == "PROLOGUE": continue
+			if not chapters[ch].has(who): quiet.append("%s: no %s" % [ch, who])
+	check("chapters: Mikey, Aries, Gus and Frankie each get a moment in every chapter", quiet.is_empty() and chapters.size() == 9, str(quiet) + " " + str(chapters.keys()))
+	var toby := 0
+	var tremblay := 0
+	for id in StoryScript.SCENES:
+		var sc: Dictionary = StoryScript.SCENES[id]
+		var standing: Array = (sc.get("cast", []) as Array).map(func(c): return String(c[0]))
+		if standing.has("TOBY"): toby += 1
+		if standing.has("TREMBLAY"): tremblay += 1
+	check("Toby and Tremblay each stand in scenes of their own, not just on the phone", toby >= 2 and tremblay >= 2, "%d / %d" % [toby, tremblay])
+	# the house rules: nobody named Vinny, Hatch calls Leo kid and Frank Frankie
+	var vinny := false
+	var hatch_kid := false
+	var hatch_frankie := false
+	for id in StoryScript.SCENES:
+		for ln in StoryScript.SCENES[id].lines:
+			if ln.size() < 2 or not ln[1] is String: continue
+			var t := String(ln[1])
+			if t.to_upper().contains("VINNY"): vinny = true
+			if String(ln[0]) == "HATCH":
+				if t.contains("kid"): hatch_kid = true
+				if t.contains("Frankie"): hatch_frankie = true
+	check("house rules: nobody's called Vinny; Hatch says kid and calls Frank Frankie", not vinny and hatch_kid and hatch_frankie)
+	var ai := RegEx.create_from_string("\\b(AI|A\\.I\\.|ARTIFICIAL INTELLIGENCE|GENERATED)\\b")
+	var credits_ai := ""
+	for r in EndCredits.ROLL:
+		if ai.search(String(r[0]).to_upper()): credits_ai += String(r[0]) + "; "
+	check("credits: no mention of AI", credits_ai == "", credits_ai)
+	# Aries is alive at the end of every ending, and still Leo's sister
+	var aries_end := true
+	for id in ["clean_end", "middle_end", "street_end"]:
+		if not str(StoryScript.SCENES[id].lines).contains("ARIES"): aries_end = false
+	check("Aries is there in every ending", aries_end)
+
+
+func _reads(cond: Dictionary, into: Dictionary) -> void:
+	if cond.has("flag"): into[String(cond.flag)] = true
+	if cond.has("not_flag"): into[String(cond.not_flag)] = true
 
 
 ## Is this person, in this pose, standing in one of the set's cars? ("" if not)
