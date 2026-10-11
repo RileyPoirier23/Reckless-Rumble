@@ -261,10 +261,10 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 				draw_line(p + upn * py, p + dir * ww + upn * py, Color(0, 0, 0, 0.22), 1.0)
 				py += 4.0
 			var wy := wh * 0.72
-			var wx := 2.0
-			while wx + 3.0 < ww - 1.0:
-				_quad(p + dir * wx + upn * wy, p + dir * (wx + 3.0) + upn * wy, p + dir * (wx + 3.0) + upn * (wy + 3.0), p + dir * wx + upn * (wy + 3.0), Color("26323e"))
-				wx += 5.0
+			var wx := 3.0
+			while wx + 7.0 < ww - 2.0:
+				_quad(p + dir * wx + upn * wy, p + dir * (wx + 7.0) + upn * wy, p + dir * (wx + 7.0) + upn * (wy + 6.0), p + dir * wx + upn * (wy + 6.0), Color("26323e"))
+				wx += 10.0
 			draw_line(p, p + upn * wh, TRIM, 1.5)
 			draw_line(p + dir * ww, p + dir * ww + upn * wh, TRIM, 1.5)
 			# the apron out front: a dark strip of oil-stained concrete
@@ -276,12 +276,11 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 			draw_line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, Color("8a8e92"), 1.0)
 			draw_polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), Color("d8d4cc"), 1.0)
 			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 2.5, p - dir * 1.0 + n * 2.5, Color("8a8884"))
-			var mb := p - dir * 12.0 + n * 7.0
-			_quad(mb, mb + dir * 8.0, mb + dir * 8.0 + upn * 10.0, mb + upn * 10.0, Color("2a1e1c"))
-			_quad(mb + dir * 1.0 + upn * 1.0, mb + dir * 7.0 + upn * 1.0, mb + dir * 7.0 + upn * 9.0, mb + dir * 1.0 + upn * 9.0, Color("f4ece0"))
-			draw_line(mb + dir * 1.5 + upn * 7.0, mb + dir * 6.5 + upn * 7.0, Color("8a2a22"), 1.0)
-			draw_line(mb + dir * 1.5 + upn * 4.5, mb + dir * 6.5 + upn * 4.5, Color("6a6058"), 1.0)
-			draw_line(mb + dir * 1.5 + upn * 2.5, mb + dir * 5.0 + upn * 2.5, Color("6a6058"), 1.0)
+			var mb := p - dir * 40.0 + n * 14.0
+			_quad(mb, mb + dir * 22.0, mb + dir * 22.0 + upn * 28.0, mb + upn * 28.0, Color("2a1e1c"))
+			_quad(mb + dir * 2.0 + upn * 2.0, mb + dir * 20.0 + upn * 2.0, mb + dir * 20.0 + upn * 26.0, mb + dir * 2.0 + upn * 26.0, Color("f4ece0"))
+			draw_line(mb + dir * 4.0 + upn * 21.0, mb + dir * 18.0 + upn * 21.0, Color("8a2a22"), 2.0)
+			for row in 4: draw_line(mb + dir * 4.0 + upn * (16.0 - row * 3.5), mb + dir * (12.0 + float(row % 2) * 5.0) + upn * (16.0 - row * 3.5), Color("6a6058"), 1.0)
 			continue
 		if String(sl.kind) == "door":
 			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("4a2e22") if k != "shop" else Color("26323e"))
@@ -351,19 +350,23 @@ func window_slots(L: float, H: float) -> Array:
 		return out
 	# shops: a storefront at street level; everything else floors of windows
 	var row0 := 6.0
-	if k == "garage" and L > 40.0:
-		# a service garage: roll-up bay doors along the front, the office with its door at the end
-		var bays := clampi(int((L - 22.0) / 24.0), 1, 4)
-		var bw := minf(20.0, (L - 22.0) / float(bays) - 4.0)
-		var bh := minf(H * 0.78, 24.0)
+	if k == "garage" and L > 120.0:
+		# a service garage (12 px to the metre): roll-up bay doors three and a half metres wide
+		# spread along the front, the office with its window and door at the end
+		var office := 70.0
+		var usable := L - office - 12.0
+		var bays := clampi(int(usable / 56.0), 1, 4)
+		var bw := 42.0
+		var gap := (usable - float(bays) * bw) / float(bays + 1)
+		var bh := minf(H * 0.8, 40.0)
 		for j in bays:
-			out.append({ "x": 4.0 + float(j) * (bw + 4.0), "z": 0.0, "w": bw, "h": bh, "kind": "bay" })
-		out.append({ "x": L - 18.0, "z": 3.0, "w": 9.0, "h": minf(H * 0.4, 12.0), "kind": "window" })
-		out.append({ "x": L - 8.0, "z": 0.0, "w": 6.0, "h": minf(H * 0.5, 16.0), "kind": "door" })
+			out.append({ "x": 12.0 + gap + float(j) * (bw + gap), "z": 0.0, "w": bw, "h": bh, "kind": "bay" })
+		out.append({ "x": L - office + 8.0, "z": 12.0, "w": 26.0, "h": minf(H * 0.4, 22.0), "kind": "window" })
+		out.append({ "x": L - 26.0, "z": 0.0, "w": 14.0, "h": minf(H * 0.6, 30.0), "kind": "door" })
 		return out
-	if k == "coffee" and L < maxf(fp.size.x, fp.size.y) - 1.0 and L >= 24.0:
+	if k == "coffee" and L < maxf(fp.size.x, fp.size.y) - 1.0 and L >= 80.0:
 		# the short wall of a coffee shop: the drive-thru window, with its menu board and a ledge
-		out.append({ "x": L * 0.5 - 6.0, "z": 5.0, "w": 12.0, "h": minf(H * 0.4, 12.0), "kind": "drivethru" })
+		out.append({ "x": L * 0.5 - 2.0, "z": 12.0, "w": 28.0, "h": minf(H * 0.4, 22.0), "kind": "drivethru" })
 		return out
 	if k in ["shop", "coffee"] and L > 30.0:
 		out.append({ "x": 6.0, "z": 3.0, "w": L * 0.55, "h": minf(H * 0.4, 16.0), "kind": "store" })

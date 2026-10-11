@@ -36,6 +36,21 @@ func _run() -> void:
 		if not b.kind in kinds: continue
 		seen[key] = true
 		picks.append(b)
+	# TOUR_AT=x,y,heading_deg: one spot, day and night, instead of the building tour
+	if OS.get_environment("TOUR_AT") != "":
+		var sp := OS.get_environment("TOUR_AT").split(",")
+		var at := Vector2(float(sp[0]), float(sp[1]))
+		var hd := deg_to_rad(float(sp[2])) if sp.size() > 2 else 0.0
+		for night in [false, true]:
+			main.sky.time_h = 22.0 if night else 13.0
+			main._teleport(at, hd)
+			main.hold_car = true
+			await _wait(6.0)
+			print("at ", at, " zone ", main.world.map.zone_at(at).get("label", "?"), " buildings near: ", main.world.map.buildings.filter(func(b): return (b.r as Rect2).get_center().distance_to(at) < 80.0).map(func(b): return "%s %s" % [b.name, str(b.r)]))
+			main.hud.msgs.clear()
+			await _shot("at_%s" % ("night" if night else "day"))
+		get_tree().quit()
+		return
 	# TOUR_WEATHER=summer:clear,fall:rain,winter:snow,...: every season and weather named, day and
 	# night, at the first couple of places, instead of the building tour
 	if OS.get_environment("TOUR_WEATHER") != "":
