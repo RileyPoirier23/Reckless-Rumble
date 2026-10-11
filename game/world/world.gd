@@ -714,6 +714,60 @@ class Layer extends Node2D:
 				draw_line((p + o) * PX, (a + dir * e + o) * PX, col, width)
 			s += dash * 2.0 if dash > 0.0 else 2.0
 
+	## The road's wear, the same every time you drive by: manhole covers down the middle of the city
+	## streets, storm drains at the curb, dark tar patches, and cracks (worse on the back roads).
+	## Under snow you don't see any of it.
+	func _wear(w: World) -> void:
+		if w.sky.snow_cover > 0.4: return
+		for e in w._b_seg.get(chunk.key, []):
+			var ri: int = e[0]
+			var si: int = e[1]
+			var rd: Dictionary = w.map.roads[ri]
+			var a: Vector2 = rd.pts[si]
+			var b: Vector2 = rd.pts[si + 1]
+			var L := a.distance_to(b)
+			if L < 4.0: continue
+			var d := (b - a) / L
+			var n := d.orthogonal()
+			var half := float(rd.w) / 2.0
+			var rng := RandomNumberGenerator.new()
+			rng.seed = ri * 7919 + si * 104729
+			var city: bool = rd.zone != "" and rd.cls in ["street", "arterial"]
+			var x := rng.randf_range(4.0, 20.0)
+			while x < L - 2.0:
+				var p := a + d * x
+				var roll := rng.randf()
+				if city and roll < 0.3:
+					# a manhole cover in the lane, and a storm drain at the curb
+					var mp := p + n * rng.randf_range(-half * 0.5, half * 0.5)
+					draw_circle(mp * PX, 0.45 * PX, Color("2a2a2c"))
+					draw_arc(mp * PX, 0.45 * PX, 0.0, TAU, 12, Color("4a4a4c"), 1.0)
+					draw_line((mp - Vector2(0.25, 0)) * PX, (mp + Vector2(0.25, 0)) * PX, Color("3a3a3c"), 1.0)
+					var side := -1.0 if rng.randf() < 0.5 else 1.0
+					var dp := p + n * side * (half - 0.35)
+					var g0 := (dp - d * 0.4 - n * side * 0.2) * PX
+					draw_primitive(PackedVector2Array([g0, g0 + d * 0.8 * PX, g0 + (d * 0.8 + n * side * 0.4) * PX, g0 + n * side * 0.4 * PX]), PackedColorArray([Color("1e1e20"), Color("1e1e20"), Color("1e1e20"), Color("1e1e20")]), PackedVector2Array())
+					for k in 4: draw_line(g0 + d * (0.15 + k * 0.17) * PX, g0 + (d * (0.15 + k * 0.17) + n * side * 0.4) * PX, Color("4a4a4c"), 1.0)
+				elif roll < 0.55:
+					# a tar patch, darker than the road round it
+					var pw := rng.randf_range(1.0, 2.6)
+					var ph := rng.randf_range(0.8, 1.8)
+					var pc := p + n * rng.randf_range(-half * 0.7, half * 0.7)
+					var q0 := pc - d * pw / 2.0 - n * ph / 2.0
+					var col := Color(0.0, 0.0, 0.0, 0.18)
+					draw_primitive(PackedVector2Array([q0 * PX, (q0 + d * pw) * PX, (q0 + d * pw + n * ph) * PX, (q0 + n * ph) * PX]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+				else:
+					# a crack wandering across a lane
+					var cp := p + n * rng.randf_range(-half * 0.8, half * 0.8)
+					var pts := PackedVector2Array([cp * PX])
+					var dir := (d * rng.randf_range(-1.0, 1.0) + n * rng.randf_range(-1.0, 1.0)).normalized()
+					for k in rng.randi_range(3, 6):
+						dir = dir.rotated(rng.randf_range(-0.7, 0.7))
+						cp += dir * rng.randf_range(0.4, 1.0)
+						pts.append(cp * PX)
+					draw_polyline(pts, Color(0.0, 0.0, 0.0, 0.32), 1.0)
+				x += rng.randf_range(10.0, 30.0) if rd.cls in ["rural", "gravel"] else rng.randf_range(14.0, 40.0)
+
 	func _marks(w: World) -> void:
 		var snowy := clampf(w.sky.snow_cover * 1.5, 0.0, 0.85)
 		var yellow := Color("d8b23a").lerp(Color(0.9, 0.9, 0.95, 0.15), snowy)
@@ -748,6 +802,7 @@ class Layer extends Node2D:
 				"ramp":
 					_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
 					_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
+		_wear(w)
 		# parking stalls
 		for l in w._b_lot.get(chunk.key, []):
 			if not l.lines: continue
