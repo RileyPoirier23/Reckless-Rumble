@@ -331,6 +331,7 @@ class Autopilot extends Node:
 	var _rg := 0.0                     # time spent getting out of reverse
 	var _blocked_t := 0.0              # sat behind a car that isn't moving
 	var _pass_t := 0.0                 # going round it
+	var _busy_t := 0.0                 # waiting on a junction somebody's in
 
 	func _physics_process(dt: float) -> void:
 		var car: PlayerCar = drive.car
@@ -481,7 +482,10 @@ class Autopilot extends Node:
 			if _cleared.has(n):
 				# done our stop there, but not in it yet: still don't pull out in front of anybody
 				var dn: float = p.distance_to(tr.map.g_pos[n]) - float(tr.junctions[n].get("radius", 6.0))
-				if dn > -1.0 and dn < 6.0 and _junction_busy(n): return maxf(dn, 0.5)
+				if dn > -1.0 and dn < 6.0 and _junction_busy(n):
+					_busy_t += dt
+					return maxf(dn, 0.5)
+				_busy_t = 0.0
 				continue
 			var j: Dictionary = tr.junctions[n]
 			# the arm we're coming in on
@@ -529,9 +533,12 @@ class Autopilot extends Node:
 		var tr: Traffic = drive.traffic
 		var c: Vector2 = tr.map.g_pos[n]
 		var rad := float(tr.junctions[n].get("radius", 6.0))
+		if _busy_t > 6.0: return false          # waited long enough: whoever's in there isn't moving, creep through
+		var fwd := Vector2.from_angle(drive.car.sim.heading)
 		for o in tr.cars:
 			var d: float = o.pos.distance_to(c)
-			if d < rad + 1.0: return true
+			# (somebody sat still in it, or going our way ahead of us, isn't crossing our path)
+			if d < rad + 1.0 and o.v > 0.5 and Vector2.from_angle(o.heading).dot(fwd) < 0.7: return true
 			var toward := Vector2.from_angle(o.heading).dot((c - o.pos).normalized())
 			if d < 32.0 and toward > 0.6 and o.v > 1.5 and d / maxf(o.v, 0.1) < 4.0: return true
 		return false

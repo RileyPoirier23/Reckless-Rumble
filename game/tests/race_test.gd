@@ -206,6 +206,9 @@ func _police_lose() -> void:
 	while t < 40.0 and p.chasing():
 		await _wait(0.5)
 		t += 0.5
+	if p.chasing():
+		for kk in p.cruisers: print("   cruiser at %.0f m, siren %s, sees %s" % [kk.sim.pos.distance_to(main.car.sim.pos), str(kk.siren), str(p._sees(kk, main.car, kk.sim.pos.distance_to(main.car.sim.pos)))])
+		print("   lost_t %.1f of %.1f, seen %s, incidents %d" % [p.lost_t, p.lose_s(), str(p.seen), main.incidents.scenes.size() if main.incidents.get("scenes") != null else -1])
 	check("police: get far enough away and they lose you", not p.chasing(), "%.1f s" % t)
 	check("police: losing them keeps the heat", p.heat() > 20.0, "%.0f" % p.heat())
 	p.clear()
