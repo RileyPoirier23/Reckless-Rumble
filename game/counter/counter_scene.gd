@@ -1531,6 +1531,7 @@ func _draw_window() -> void:
 	for i in 8: draw_rect(Rect2(WINDOW.position.x + i * 40 + 6, 34, 1, 76), Color("7e7e7a"))
 	draw_rect(Rect2(WINDOW.position.x + 60, 38, 6, 56), Color("c8a030"))
 	draw_rect(Rect2(WINDOW.position.x + 236, 38, 6, 56), Color("c8a030"))
+	_draw_bay_dressing()
 	_draw_lot()
 	if phase in ["counter", "stamping", "result"] and c.kind == "audit":
 		var box: bool = c.has("slip")
@@ -1553,6 +1554,58 @@ func _draw_window() -> void:
 			if quirk.length() > 76: quirk = quirk.substr(0, 73) + "..."
 			PixelFont.draw_centered(self, WINDOW.get_center().x, 36, quirk, Color("3a3a40"))
 	draw_rect(WINDOW, Color("2a2a30"), false, 3.0)
+
+## What's in the bay besides the car: a tire stack and the red toolbox by the left post, the
+## workbench on the right with the tool board over it, Gus at it (he never stops), the fire
+## extinguisher, the calendar, the coffee maker that's always on.
+func _draw_bay_dressing() -> void:
+	var o := WINDOW.position
+	var t := Time.get_ticks_msec() / 1000.0
+	# the tire stack
+	for i in 4:
+		var y := 100.0 - i * 7.0
+		draw_rect(Rect2(o.x + 10, y, 30, 7), Color("1c1c20"))
+		draw_rect(Rect2(o.x + 13, y + 2, 24, 3), Color("2c2c32"))
+		draw_rect(Rect2(o.x + 22, y + 2, 6, 3), Color("8a8e94"))
+	# the toolbox, drawers shut, one not
+	draw_rect(Rect2(o.x + 14, 44, 36, 28), Color("a82a22"))
+	for i in 4: draw_rect(Rect2(o.x + 16, 47 + i * 6, 32, 1), Color("6a1a14"))
+	draw_rect(Rect2(o.x + 16, 59, 34, 5), Color("c83a30"))
+	draw_rect(Rect2(o.x + 30, 50, 4, 1), Color("e8e4dc"))
+	# the workbench, with the vise and the rag
+	draw_rect(Rect2(o.x + 252, 78, 60, 4), Color("7a5a3a"))
+	draw_rect(Rect2(o.x + 254, 82, 3, 26), Color("5a4028"))
+	draw_rect(Rect2(o.x + 307, 82, 3, 26), Color("5a4028"))
+	draw_rect(Rect2(o.x + 296, 72, 10, 6), Color("4a4e54"))
+	draw_rect(Rect2(o.x + 262, 75, 10, 3), Color("c8342c"))
+	# the tool board over it: wrenches and a hammer on their hooks
+	draw_rect(Rect2(o.x + 250, 36, 64, 34), Color("5a5048"))
+	for i in 6:
+		var x := o.x + 255 + i * 10.0
+		draw_rect(Rect2(x, 40, 2, 14 + (i % 3) * 4), Color("b8bcc0"))
+		draw_rect(Rect2(x - 1, 40, 4, 3), Color("d8dce0"))
+	draw_rect(Rect2(o.x + 258, 60, 14, 2), Color("3a2a1c"))
+	draw_rect(Rect2(o.x + 270, 58, 6, 6), Color("4a4e54"))
+	# the extinguisher, the calendar, the coffee maker
+	draw_rect(Rect2(o.x + 232, 44, 2, 6), Color("1c1c20"))
+	draw_rect(Rect2(o.x + 230, 50, 6, 14), Color("c8342c"))
+	draw_rect(Rect2(o.x + 244, 38, 4, 2), Color("8a8e94"))
+	draw_rect(Rect2(o.x + 316, 40, 12, 16), Color("f0ece4"))
+	draw_rect(Rect2(o.x + 316, 40, 12, 4), Color("c8342c"))
+	PixelFont.draw(self, Vector2(o.x + 318, 46), str(int(CounterRules.today(day)[2])), INK)
+	draw_rect(Rect2(o.x + 286, 64, 8, 12), Color("1c1c20"))
+	draw_rect(Rect2(o.x + 287, 70, 6, 5), Color("6a3a1c"))
+	if fmod(t, 1.0) < 0.5: draw_rect(Rect2(o.x + 289, 60 - fmod(t, 0.5) * 6.0, 2, 2), Color(1, 1, 1, 0.25))     # the steam
+	# Gus at the bench: shoulders, the ball cap, an arm going at something
+	if phase in ["idle", "counter", "stamping", "result"]:
+		var gx := o.x + 274.0
+		var gy := 86.0
+		var swing := sin(t * 5.0) * 2.0
+		draw_rect(Rect2(gx - 7, gy, 14, 22), Color("2c3a5a"))                       # coveralls
+		draw_rect(Rect2(gx - 4, gy - 9, 8, 9), Color("c8a888"))                       # the head
+		draw_rect(Rect2(gx - 5, gy - 11, 10, 4), Color("1e1e22"))                     # the cap
+		draw_rect(Rect2(gx - 5, gy + 2, 3, 12 + swing), Color("2c3a5a"))             # the working arm
+		draw_rect(Rect2(gx - 6, gy + 13 + swing, 4, 3), Color("c8a888"))
 
 ## The lot through the bay door's windows: the line, nose to tail, first in line nearest the door.
 func _draw_lot() -> void:
@@ -1965,6 +2018,19 @@ func _ledger_row(y: float, label: String, value: String, col: Color, left := LED
 		draw_rect(Rect2(x, y + 8, 2, 1), Color(ASH, 0.35))
 		x += 6.0
 
+## What Gus has to say about the day, from the doorway of bay one, wiping his hands.
+func _gus_day_line() -> String:
+	var seen: int = day_log.seen
+	var right: int = day_log.correct
+	var cites: int = day_log.citations.size()
+	if seen == 0: return "\"NOBODY? THE SIGN'S ON. I CHECKED THE SIGN.\""
+	if cites >= 2: return "\"THE MINISTRY WROTE YOU UP TWICE. YOUR FATHER GOT WRITTEN UP ONCE. IN 1991. HE STILL TALKED ABOUT IT.\""
+	if right == seen and seen >= 4: return "\"EVERY ONE RIGHT. DON'T LET IT GO TO YOUR HEAD. IT WENT TO MINE ONCE.\""
+	if right == seen: return "\"CLEAN DAY. SHORT DAY. SAME THING, SOME DAYS.\""
+	if int(day_log.dirty) > 0: return "\"THERE'S CASH IN THE DRAWER THAT ISN'T ON PAPER. I DIDN'T SEE IT. I'M SAYING I DIDN'T SEE IT.\""
+	if right * 2 < seen: return "\"READ THE PAPERS, KID. ALL OF THEM. THE BOTTOM OF THEM TOO.\""
+	return "\"NOT BAD. GO HOME. EAT SOMETHING THAT ISN'T FROM THE TIM BURTONS.\""
+
 func _draw_day_end() -> void:
 	var r := Rect2(110, 30, 420, 300)
 	_panel(r, 0.96)
@@ -1980,6 +2046,7 @@ func _draw_day_end() -> void:
 		PixelFont.draw(self, Vector2(LEDGER_L, y), l, RED.lightened(0.3))
 		y += 8
 	PixelFont.draw(self, Vector2(LEDGER_L, y + 2), "LICENCE: %d OF %d CITATIONS, %d OF %d MINISTRY MEETINGS." % [DeskBook.citations, CounterRules.REVOKE_AT, DeskBook.meetings, CounterRules.MEETINGS_TO_REVOKE], ASH)
+	PixelFont.draw(self, Vector2(LEDGER_L, y + 14), "GUS: " + _gus_day_line(), Color(BONE, 0.8))
 	if not story.is_empty():
 		PixelFont.draw_centered(self, 320, 296, "LEO'S PAY: $%d.  BAY 3 CASH GOES TO THE FAMILIA: OWED $%d." % [60 + int(day_log.earned * 0.15), maxi(0, StoryState.debt - int(day_log.dirty))], GOLD)
 		PixelFont.draw_centered(self, 320, 312, Hints.fmt("{desk_click}: CLOCK OUT"), Color(BONE, 0.7 + 0.3 * sin(Time.get_ticks_msec() / 250.0)), 2)
