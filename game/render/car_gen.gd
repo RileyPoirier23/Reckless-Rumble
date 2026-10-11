@@ -5297,7 +5297,7 @@ static func rim_px(rim: String, rt: float, ang: float, sa: float, lit: float, rc
 			# dark of the arch reflected round its middle, and where it steps down into the barrel
 			# its inside edge in shadow on the lit side
 			if tl < 0.3: k = 1 if lit > 0.0 else 2
-			elif tl < 0.62 and lit < 0.6: k = mini(k, 1 if lit > -0.6 else 2)
+			elif tl < 0.74 and lit < 0.6: k = mini(k, 1 if lit > -0.6 else 2)
 		return ramp[k]
 	if rt > 1.0 - lip - barrel:
 		# the barrel's inside: in the lip's shadow on the upper left, lit low on the right
