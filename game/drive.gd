@@ -24,7 +24,7 @@ var map_screen: MapScreen
 var audio: EngineAudio
 var snow_fx: CPUParticles2D
 var rain_fx: CPUParticles2D
-var fog_rect: ColorRect
+var fog_rect: TextureRect
 var flash_rect: ColorRect
 var white_out := 0.0             # a white flash that fades on its own (a black-out in the prologue)
 var clouds: Node2D
@@ -107,10 +107,24 @@ func _ready() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "HudLayer"
 	add_child(layer)
-	fog_rect = ColorRect.new()
+	# the fog: clear round the car, thicker the further off (a radial wash over the screen)
+	fog_rect = TextureRect.new()
 	fog_rect.size = Vector2(640, 360)
 	fog_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	fog_rect.color = Color(1, 1, 1, 0)
+	fog_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fog_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	var fog_tex := GradientTexture2D.new()
+	fog_tex.fill = GradientTexture2D.FILL_RADIAL
+	fog_tex.fill_from = Vector2(0.5, 0.5)
+	fog_tex.fill_to = Vector2(1.0, 0.5)
+	fog_tex.width = 128
+	fog_tex.height = 72
+	var fog_grad := Gradient.new()
+	fog_grad.offsets = PackedFloat32Array([0.0, 0.3, 0.7, 1.0])
+	fog_grad.colors = PackedColorArray([Color(1, 1, 1, 0.1), Color(1, 1, 1, 0.45), Color(1, 1, 1, 0.9), Color(1, 1, 1, 1.0)])
+	fog_tex.gradient = fog_grad
+	fog_rect.texture = fog_tex
+	fog_rect.modulate = Color(1, 1, 1, 0)
 	layer.add_child(fog_rect)
 	flash_rect = ColorRect.new()
 	flash_rect.size = Vector2(640, 360)
@@ -1031,7 +1045,7 @@ func _process(dt: float) -> void:
 	snow_fx.initial_velocity_max = 34.0 + sky.wind * 6.0
 	var fogc := Color(0.75, 0.77, 0.8) if sky.daylight() > 0.4 else Color(0.18, 0.2, 0.26)
 	if sky.snow > 0.5: fogc = Color(0.9, 0.92, 0.96) if sky.daylight() > 0.4 else Color(0.3, 0.32, 0.4)
-	fog_rect.color = Color(fogc.r, fogc.g, fogc.b, sky.fog * 0.55)
+	fog_rect.modulate = Color(fogc.r, fogc.g, fogc.b, sky.fog * 0.8)
 	white_out = maxf(0.0, white_out - dt * 0.8)
 	flash_rect.color = Color(1, 1, 1, maxf(white_out, sky.flash * 0.55 * (1.0 if bool(GameSettings.get_v("graphics", "flashes")) else 0.0)))
 	if sky.thunder_in >= 0.0 and sky.thunder_in < dt:

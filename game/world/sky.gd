@@ -70,6 +70,16 @@ func set_season(s: String) -> void:
 		"spring": wet = 0.5; snow_cover = 0.05; ice = 0.0
 	pick_weather()
 
+## The weather all the way in, now (a demo, a test): no 25-minute blend.
+func snap() -> void:
+	var w: Dictionary = WEATHER[weather]
+	cloud = w.cloud
+	fog = w.fog
+	wind = w.wind
+	rain = w.rain if temperature() >= -0.5 or weather == "freezing" else 0.0
+	snow = w.snow if temperature() < -0.5 or w.snow > 0.0 else 0.0
+	if weather == "freezing": ice = maxf(ice, 0.5)
+
 func pick_weather(force := "") -> void:
 	if force != "":
 		weather = force

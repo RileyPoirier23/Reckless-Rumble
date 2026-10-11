@@ -36,6 +36,27 @@ func _run() -> void:
 		if not b.kind in kinds: continue
 		seen[key] = true
 		picks.append(b)
+	# TOUR_WEATHER=summer:clear,fall:rain,winter:snow,...: every season and weather named, day and
+	# night, at the first couple of places, instead of the building tour
+	if OS.get_environment("TOUR_WEATHER") != "":
+		for i in mini(2, picks.size()):
+			var b0: Dictionary = picks[i]
+			var rd0: Dictionary = main.world.map.nearest_road((b0.r as Rect2).get_center(), 80.0)
+			if rd0.is_empty(): continue
+			for w in OS.get_environment("TOUR_WEATHER").split(","):
+				var parts := w.split(":")
+				main.sky.set_season(parts[0])
+				main.sky.pick_weather(parts[1])
+				main.sky.forced = true
+				main.sky.snap()
+				for night in [false, true]:
+					main.sky.time_h = 22.0 if night else 13.0
+					main._teleport(rd0.point, (rd0.dir as Vector2).angle())
+					await _wait(2.5)
+					main.hud.msgs.clear()
+					await _shot("w%d_%s_%s_%s" % [i, parts[0], parts[1], "night" if night else "day"])
+		get_tree().quit()
+		return
 	for i in picks.size():
 		var b: Dictionary = picks[i]
 		var c: Vector2 = (b.r as Rect2).get_center()

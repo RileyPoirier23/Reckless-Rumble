@@ -1020,6 +1020,12 @@ class Layer extends Node2D:
 					continue
 				var s := sky.surface(g, ranks[i], noise[i * 3])
 				match s:
+					"snow":
+						# packed snow on the pavement: whiter the more there is and the less it's
+						# plowed (a lot goes white, a highway stays mostly black), the odd bare patch
+						var plow := 0.4 if ranks[i] >= 4 else (0.7 if ranks[i] >= 3 else 1.0)
+						var cover := clampf(sky.snow_cover * plow * 1.3, 0.0, 1.0) * (0.55 + 0.45 * clampf(noise[i * 3 + 2] + 0.6, 0.0, 1.0))
+						draw_rect(Rect2(m * PX - Vector2(1, 1), Vector2(step * PX + 1, step * PX + 1)), Color(0.9, 0.92, 0.96, 0.75 * cover))
 					"ice": draw_circle(m * PX + Vector2(12, 12), step * PX * 0.8, Color(0.62, 0.72, 0.86, 0.3))
 					"wet":
 						# puddles: small, in the low spots, catching the light
@@ -1029,15 +1035,26 @@ class Layer extends Node2D:
 							draw_circle(m * PX + Vector2(6, 6), rad, Color(0.22, 0.27, 0.36, 0.42))
 							draw_line(m * PX + Vector2(6 - rad * 0.5, 6 - rad * 0.3), m * PX + Vector2(6 + rad * 0.3, 6 - rad * 0.3), Color(0.75, 0.82, 0.95, 0.3), 1.0)
 					"leaves": draw_rect(Rect2(m * PX, Vector2(3, 2)), Color("c8642a"))
-		# snow banks along the edges of plowed roads
+		# snow banks along the edges of plowed roads, and the wheel tracks everybody's worn down the
+		# lanes of the rest (two dark lines a track apart each way)
 		if sky.snow_cover > 0.3:
 			for e in w._b_seg.get(chunk.key, []):
 				var rd: Dictionary = w.map.roads[e[0]]
-				if MapData.CLS[rd.cls].rank < 3 or rd.zone != "": continue
 				var g: Dictionary = w.road_geo[e[0]]
 				var si: int = e[1]
-				draw_line(g.L[si] * PX, g.L[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
-				draw_line(g.R[si] * PX, g.R[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+				var rank: int = MapData.CLS[rd.cls].rank
+				if rank >= 3 and rd.zone == "":
+					draw_line(g.L[si] * PX, g.L[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+					draw_line(g.R[si] * PX, g.R[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+				var plow := 0.4 if rank >= 4 else (0.7 if rank >= 3 else 1.0)
+				if sky.snow_cover * plow < 0.25: continue
+				var a: Vector2 = g.L[si].lerp(g.R[si], 0.5) * PX
+				var b: Vector2 = g.L[si + 1].lerp(g.R[si + 1], 0.5) * PX
+				var nrm := (b - a).normalized().orthogonal()
+				for lane_off in [-2.3, 2.3]:
+					for wheel_off in [-0.75, 0.75]:
+						var o: Vector2 = nrm * (float(lane_off) + float(wheel_off)) * PX
+						draw_line(a + o, b + o, Color(0.3, 0.32, 0.36, 0.5), 0.3 * PX)
 
 	func _decor(w: World) -> void:
 		var s := w.sky.season
