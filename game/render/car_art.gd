@@ -403,6 +403,7 @@ class _Shaper:
 		_bed_and_box()
 		_bolt_ons()
 		_specials()
+		_tyres_win()
 		_finish()
 		return p
 
@@ -732,6 +733,44 @@ class _Shaper:
 					p.h1[i2] = hi
 					p.m1[i2] = CarArt.M_TIRE | ((1 if ring == 0 and lean == 0 else 0) << 16) | ((1 if ring == ww - 1 and lean == 0 else 0) << 21) \
 						| ((1 if lean > 0 else 0) << 22) | (mini(ring, 15) << 24)
+
+	## A tyre is solid: nothing on the body layer shares its slices in its own footprint. The
+	## fenders are cut round the tyres already; this catches what wraps round into the arch from
+	## elsewhere (a bumper's end, a running board, a skid plate) under big mud tyres on a lift,
+	## and trims it: what stands over the tyre sits on top of it, what's inside it goes.
+	func _tyres_win() -> void:
+		var rise := CarArt.RISE
+		for w: Array in p.wheels:
+			var xc: float = w[0]
+			var yc: float = w[1]
+			var r: float = w[2]
+			var ww: int = w[3]
+			var s := float(w[5])
+			var zmax := 2.0 * r * rise
+			for x in range(int(floor(xc - r)), int(ceil(xc + r)) + 1):
+				var dx := float(x) + 0.5 - xc
+				if absf(dx) > r or x < 0 or x >= p.sx: continue
+				var dz := rise * sqrt(maxf(0.0, r * r - dx * dx))
+				var zb := maxi(0, int(round(r * rise - dz)))
+				var zt := maxi(zb, int(round(r * rise + dz)) - 1)
+				var y_out := int(round(yc - ww / 2.0)) + (ww - 1 if s > 0.0 else 0)
+				for ring in ww + p.camber:
+					var y := y_out - int(s) * ring
+					if y < 0 or y >= p.sy: continue
+					# the tyre's slices in this cell (a leaning tyre's rows move in up top)
+					var lo := -1
+					var hi := -1
+					for z in range(zb, zt + 1):
+						var sh := CarArt.wheel_lean(float(z), p.camber, zmax)
+						if ring < sh or ring >= sh + ww: continue
+						if lo < 0: lo = z
+						hi = z
+					if lo < 0: continue
+					var i := p.idx(x, y)
+					if p.h0[i] < 0 or (p.m0[i] & 255) == CarArt.M_TIRE: continue
+					if p.b0[i] > hi or p.h0[i] < lo: continue
+					if p.h0[i] > hi: p.b0[i] = hi + 1          # stands over the tyre: it sits on top
+					else: p.h0[i] = -1                       # inside it: gone
 
 	# ------------------------------------------------------------ the body
 
