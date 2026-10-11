@@ -1964,6 +1964,7 @@ class _Car:
 		_wells()
 		_underbody()
 		_flares()
+		_underglow()
 		_wheels()
 		_cycle_fender()
 		_damage_fx()
@@ -2944,12 +2945,22 @@ class _Car:
 					head_at = _sweep_lamp(head, nose, lens, reflector, lights_on)
 			if lod >= 1: _grille(nose, head_at)
 			if front > 0.12 and head_at.x >= 0.0 and lod >= 1: _crack(int(head_at.x) - int(lf * 0.03), int(head_at.y))
+			if mods.get("halo", false) and head_at.x >= 0.0 and lod >= 1:
+				# angel eyes: a ring round the headlamp, ice blue, burning white when they're on
+				var hr := maxf(1.5, lf * 0.016)
+				var hc := Vector2(head_at.x - hr - 1.0, head_at.y)
+				p.ring(int(hc.x), int(hc.y), hr, Color("f2fbff") if lights_on else Color("9cd0f4"))
+				if lights_on: _bloom(int(hc.x), int(hc.y), hr * 2.2, Color("cfeaff"))
 			if lights_on and head_at.x >= 0.0: _bloom(int(head_at.x), int(head_at.y), maxf(4.0, lf * 0.045), Color("fff8de"))
 		else:
 			p.rect(nose - 2 * u, int(Y(float(d.hood_h))) + u, 3 * u, 3 * u, CarGen.WELL)
 		if rear < 0.4:
 			var red := CarGen.LAMP_RED if not lights_on else Color("ff3a2e")
 			var red_hi := Color("ff7a7a") if not lights_on else Color("ffc4b0")
+			if mods.get("smoked", false):
+				# smoked lenses: near black until they light, and a little darker when they do
+				red = Color("3a1418") if not lights_on else Color("e02a20")
+				red_hi = Color("5a2a2e") if not lights_on else Color("ff8a78")
 			var tw := maxi(3, int(lf * 0.034))
 			var ty2 := _first_body(tail + tw / 2) + maxi(1, u)
 			var tail_at := Vector2(tail, ty2 + int(lf * 0.012))
@@ -4579,6 +4590,29 @@ class _Car:
 						var sy := yy + k
 						if body_at(xx, sy) or Vector2(float(xx) - cx, float(sy) - cy).length() > r_tire: break
 						p.img.set_pixel(xx, sy, p.img.get_pixel(xx, sy).darkened(0.45))
+
+	## The body shop's underglow: a neon strip under the sills, lighting the gap under the car and
+	## washing the road in its colour (brighter with the lights on, past the outline at night).
+	func _underglow() -> void:
+		var ug: Variant = mods.get("underglow", "")
+		if not (ug is Color or (ug is String and String(ug) != "")) or lod == 0: return
+		var c := CarGen._col(ug, Color.TRANSPARENT)
+		var lit: bool = mods.get("lights_on", false) or mods.get("glow", false)
+		var x0 := int(float(wheels[0][1]) + arch_r * 0.6)
+		var x1 := int(float(wheels[1][1]) - arch_r * 0.6)
+		var y0 := int(sill) + 1
+		# the tube itself, tucked under the rocker
+		p.hline(x0, y0 - 1, x1 - x0, c.lerp(Color.WHITE, 0.55))
+		for xx in range(int(X(0.04)), int(X(0.96))):
+			var edge := minf(float(xx - int(X(0.04))), float(int(X(0.96)) - xx)) / maxf(1.0, lf * 0.08)
+			var fade := clampf(edge, 0.0, 1.0)
+			for yy in range(y0, gy + 2):
+				var under := p.img.get_pixel(xx, yy)
+				if under.a > 0.6 and yy < gy: continue
+				# brighter under the car than out on the road
+				var a := (0.55 if yy < gy else 0.32) * fade * (1.0 if lit else 0.6)
+				if a <= 0.02: continue
+				p.img.set_pixel(xx, yy, Color(under.lerp(c, a), maxf(under.a, a)) if under.a > 0.01 else Color(c, a))
 
 	## A cycle fender: a thin painted arc hugging the top of an open front wheel, on a stay to
 	## the hub, the way a hot rod wears them.

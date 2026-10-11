@@ -15,6 +15,7 @@ var lean := Vector2.ZERO           # in the car's frame: x = pitch (+ = nose dip
 var braking := false
 var reversing := false
 var headlights := false
+var high_beams := false            # brights on: an off-road LED roof bar lights with them
 var wheel_turn := 0.0              # for the tread flicker
 var blink_left := false            # the turn signal switch (the lamp pulses on its own)
 var blink_right := false
@@ -43,11 +44,38 @@ static func set_angle(name: String) -> void:
 static var view_centre := Vector2.ZERO
 static var view_radius := 0.0
 
+## How dark it is out, 0 broad day .. 1 the dead of night: the scene sets it from the sky. Lit
+## lamps glow with it (and an underglow lights the road under the car).
+static var night := 0.0
+
+## A lamp's glow: a few hard-edged rings, brightest in the middle, so it stays pixel art.
+static var _glow_tex: ImageTexture
+static func glow_tex() -> ImageTexture:
+	if _glow_tex == null:
+		var n := 17
+		var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+		for y in n:
+			for x in n:
+				var d := Vector2(x - n / 2, y - n / 2).length()
+				var a := 0.0
+				if d < 2.0: a = 0.6
+				elif d < 4.6: a = 0.32
+				elif d < 8.0: a = 0.12
+				img.set_pixel(x, y, Color(1, 1, 1, a))
+		_glow_tex = ImageTexture.create_from_image(img)
+	return _glow_tex
+
+## The beacons' flash: on a little under half the time, three times a second.
+static func beacon_on() -> bool:
+	return fmod(Time.get_ticks_msec() / 1000.0, 0.34) < 0.17
+
 ## The flasher relay: about 85 flashes a minute, a little longer on than off.
 static func blink_on() -> bool:
 	return fmod(Time.get_ticks_msec() / 1000.0, 0.7) < 0.38
 
 var _lamps: LampLayer
+var _glows: GlowLayer
+var _under: GlowLayer
 var _drawn_up := Vector2.ZERO
 var _drawn_k := 1.0
 var _job: CarArt.Job              # a new look being drawn on a worker thread
@@ -80,6 +108,20 @@ func _ready() -> void:
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	_lamps.material = mat
 	add_child(_lamps)
+	# the glows add light: round the lit lamps over the car, and the underglow on the road under it
+	var add := CanvasItemMaterial.new()
+	add.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	add.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_glows = GlowLayer.new()
+	_glows.view = self
+	_glows.material = add
+	add_child(_glows)
+	_under = GlowLayer.new()
+	_under.view = self
+	_under.under = true
+	_under.material = add
+	_under.show_behind_parent = true
+	add_child(_under)
 
 func _process(dt: float) -> void:
 	_steer_vis = move_toward(_steer_vis, clampf(steer, -0.7, 0.7), STEER_RATE * dt)
@@ -93,6 +135,8 @@ func _process(dt: float) -> void:
 	_drawn_k = lift_k
 	queue_redraw()
 	if _lamps: _lamps.queue_redraw()
+	if _glows: _glows.queue_redraw()
+	if _under: _under.queue_redraw()
 
 ## A stack drawn straight onto another canvas (the garage's preview): no lean, no lamps, the
 ## front wheels straight, the stack rising toward the top of the screen.
@@ -115,6 +159,10 @@ static func paint_stack(ci: CanvasItem, the_art: CarArt, at: Vector2, h: float) 
 ## How high the roof stands, in screen pixels (for light bars and signs that sit on it).
 func roof_px() -> float:
 	return (art.roof_z if art else 12.0) * STEP * lift_k + lift
+
+## Where slice z of the car stands on the screen, up from its shadow (px).
+func slice_px(z: float) -> float:
+	return z * STEP * lift_k + lift
 
 func _draw() -> void:
 	if art == null or art.atlas == null: return
@@ -157,8 +205,9 @@ func _lamp_slice(ci: CanvasItem, z: int, off: Vector2, half: Vector2, bl: bool, 
 	elif headlights: ci.draw_texture_rect_region(art.lamp_tex.brake, dst, src, Color(0.6, 0.6, 0.6))
 	if reversing: ci.draw_texture_rect_region(art.lamp_tex.rev, dst, src)
 	if headlights: ci.draw_texture_rect_region(art.lamp_tex.head, dst, src)
-	if beacons and art.has_beacons and fmod(Time.get_ticks_msec() / 1000.0, 0.34) < 0.17:
+	if beacons and art.has_beacons and beacon_on():
 		ci.draw_texture_rect_region(art.lamp_tex.beacon, dst, src)
+	if high_beams and art.lamp_tex.has("bar"): ci.draw_texture_rect_region(art.lamp_tex.bar, dst, src)
 	if bl: ci.draw_texture_rect_region(art.lamp_tex.bl, dst, src)
 	if br: ci.draw_texture_rect_region(art.lamp_tex.br, dst, src)
 
@@ -167,7 +216,7 @@ class LampLayer extends Node2D:
 	var view: CarView
 	func _draw() -> void:
 		if view == null or view.art == null or view.art.lamp_tex.is_empty(): return
-		if not (view.braking or view.reversing or view.headlights or view.blink_left or view.blink_right or view.beacons): return
+		if not (view.braking or view.reversing or view.headlights or view.blink_left or view.blink_right or view.beacons or view.high_beams or view.light_bar): return
 		var half := Vector2(view.art.size) / 2.0
 		var fwd := Vector2(cos(view.heading), sin(view.heading))
 		var rt := Vector2(-sin(view.heading), cos(view.heading))
@@ -181,25 +230,87 @@ class LampLayer extends Node2D:
 		if view.light_bar: _light_bar(half, fwd, rt)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	## The wrecker's roof bar: two amber lamps on the cab, flashing turn about when it's on.
+	## The wrecker's roof bar: two amber lamps on the cab, flashing turn about when it's on. It
+	## stands on the cab's roof just behind the windshield, as wide as the roof is there.
 	func _light_bar(half: Vector2, fwd: Vector2, rt: Vector2) -> void:
-		var z := view.art.roof_z
-		var off := CarView.screen_up * (z * CarView.STEP * CarView.lift_k + view.lift + 1.0) + (fwd * view.lean.x + rt * view.lean.y)
+		var spot: Vector3 = view.art.roof_front
+		var off := CarView.screen_up * (view.slice_px(spot.z) + 1.0) + (fwd * view.lean.x + rt * view.lean.y)
 		draw_set_transform(off, view.heading, Vector2.ONE)
 		var k: float = view.art.k
-		var x := half.x * 0.22                     # over the cab, a little ahead of the middle
-		var w := view.art.width_px * 0.78
+		var x := spot.x - 1.5 * k
+		var w := minf(view.art.roof_w, view.art.width_px * 0.86)
 		draw_rect(Rect2(x - 1.5 * k, -w / 2.0, 3.0 * k, w), Color("2a2a2e"))
 		var phase := int(Time.get_ticks_msec() / 160) % 4
 		for side: float in [-1.0, 1.0]:
 			var lit: bool = view.beacons and (phase < 2) == (side < 0.0)
 			var r := Rect2(x - 1.0 * k, (-w / 2.0 + 0.5 * k) if side < 0.0 else (w / 2.0 - w * 0.42), 2.0 * k, w * 0.42 - 0.5 * k)
 			draw_rect(r, Color("ffb020") if lit else Color("6a4a14"))
-			if lit:
-				draw_circle(r.get_center(), 9.0 * k, Color(1.0, 0.65, 0.1, 0.16))
-				draw_circle(r.get_center(), 4.0 * k, Color(1.0, 0.75, 0.2, 0.22))
+			if lit: draw_rect(Rect2(r.position.x, r.position.y, r.size.x, 1.0), Color("ffe6a0"))
 		# the bar's lens, white in the middle
 		draw_rect(Rect2(x - 0.5 * k, -1.0 * k, k, 2.0 * k), Color("e8e4dc"))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## The glows: round every lit lamp at night (a pixel-stepped halo in the lamp's colour, at the
+## lamp's own height on the stack, so it never floats off the body), the wrecker's amber bar's,
+## and under the car its underglow, washing the road in its colour.
+class GlowLayer extends Node2D:
+	var view: CarView
+	var under := false
+
+	func _draw() -> void:
+		if view == null or view.art == null: return
+		var art: CarArt = view.art
+		var fwd := Vector2(cos(view.heading), sin(view.heading))
+		var rt := Vector2(-fwd.y, fwd.x)
+		var dark := CarView.night
+		if under:
+			if art.underglow.a <= 0.0: return
+			# a pool of light just past the car's outline, in steps, brighter at night
+			var a := 0.14 + 0.55 * dark
+			draw_set_transform(CarView.screen_up * view.lift, view.heading, Vector2.ONE)
+			var hl := Vector2(art.length_px * 0.43, art.width_px * 0.5)
+			for k in 3:
+				var g := float(k + 1) * 2.0 * art.k
+				draw_rect(Rect2(-hl - Vector2(g * 0.6, g), hl * 2.0 + Vector2(g * 1.2, g * 2.0)), Color(art.underglow, a * [0.5, 0.3, 0.16][k]))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			return
+		var bl := view.blink_left and CarView.blink_on()
+		var br := view.blink_right and CarView.blink_on()
+		var tex := CarView.glow_tex()
+		var n := art.n
+		for sp: Array in art.lamp_spots:
+			var kind: int = sp[0]
+			var strength := 0.0
+			var c: Color = sp[2]
+			match kind:
+				0:
+					if view.braking: strength = 0.55 + 0.45 * dark
+					elif view.headlights: strength = 0.45 * dark
+					c = Color(1.0, 0.16, 0.1)
+				1: if view.reversing: strength = 0.25 + 0.6 * dark
+				2:
+					if view.headlights: strength = 0.9 * dark
+					c = c.lerp(Color(1.0, 0.95, 0.82), 0.6)
+				3: if bl: strength = 0.35 + 0.5 * dark
+				4: if br: strength = 0.35 + 0.5 * dark
+				5: if view.beacons and CarView.beacon_on(): strength = 0.5 + 0.5 * dark
+				6: if view.high_beams: strength = 0.95 * dark + 0.1
+			if strength <= 0.02: continue
+			var at: Vector3 = sp[1]
+			var body_k := maxf(0.0, (at.z - 1.5) / float(maxi(1, n - 1)))
+			var pos := fwd * at.x + rt * at.y + CarView.screen_up * view.slice_px(at.z) + (fwd * view.lean.x + rt * view.lean.y) * body_k
+			var r := art.k * (2.6 + minf(3.0, sqrt(float(sp[3])) * 0.45))
+			if kind == 2 or kind == 6: r *= 1.3
+			draw_texture_rect(tex, Rect2(pos - Vector2(r, r), Vector2(r, r) * 2.0), false, Color(c, strength))
+		if view.light_bar and view.beacons:
+			# the wrecker's amber bar, flashing side to side
+			var spot: Vector3 = art.roof_front
+			var w := minf(art.roof_w, art.width_px * 0.86)
+			var phase := int(Time.get_ticks_msec() / 160) % 4
+			var side := -1.0 if phase < 2 else 1.0
+			var pos2 := fwd * (spot.x - 1.5 * art.k) + rt * side * w * 0.28 + CarView.screen_up * (view.slice_px(spot.z) + 1.0)
+			var r2 := art.k * 6.0
+			draw_texture_rect(tex, Rect2(pos2 - Vector2(r2, r2), Vector2(r2, r2) * 2.0), false, Color(1.0, 0.62, 0.12, 0.45 + 0.45 * dark))
 
 func _front_wheels(off: Vector2, z: int) -> void:
 	var ws := Vector2(art.wheel_size)

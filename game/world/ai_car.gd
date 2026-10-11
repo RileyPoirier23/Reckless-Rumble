@@ -266,6 +266,10 @@ func _lights(dt: float, _st: float) -> void:
 	if _bar == null:
 		_bar = LightBar.new()
 		_bar.z_index = 1
+		# lit, it shines through the night's darkness
+		var mat := CanvasItemMaterial.new()
+		mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_bar.material = mat
 		add_child(_bar)
 		_bar_light = PointLight2D.new()
 		_bar_light.texture = city._light_tex(Color(1, 1, 1))
@@ -276,6 +280,14 @@ func _lights(dt: float, _st: float) -> void:
 	bar.heading = sim.heading
 	bar.width = float(spec.width) * CarArt.CAR_SCALE
 	bar.roof = view.roof_px() + 1.0
+	if view.art != null:
+		# on the roof itself: its middle, as wide as the roof is there, at the roof's own height
+		bar.roof = view.slice_px(view.art.roof_mid.z) + 1.0
+		bar.along = view.art.roof_mid.x
+		bar.half_px = view.art.roof_w * 0.5
+		bar.k = view.art.k
+		# a rig with its own lights in the art (the ambulance, the fire engine) doesn't need one
+		bar.visible = not view.art.has_beacons
 	bar.on = siren
 	bar.cols = bar_cols
 	bar.t = _flash_t2
@@ -285,11 +297,15 @@ func _lights(dt: float, _st: float) -> void:
 		_bar_light.color = bar_cols[0] if red else bar_cols[1]
 		_bar_light.energy = 2.4
 
-## The bar on the roof: off, it's a dark strip; on, it flashes red and blue, side to side.
+## The bar on the roof: off, a dark housing with its lenses dull; on, it flashes side to side in
+## its two colours (red and blue: police), each lit lens with its glow, the clear one in the middle.
 class LightBar extends Node2D:
 	var heading := 0.0
 	var width := 1.8
 	var roof := 17.0              # how high the cruiser's roof stands on the screen (px)
+	var along := 0.0              # where the roof's middle is, along the car from its centre (px)
+	var half_px := 0.0            # half the roof's width (px): 0 goes by the car's width
+	var k := CarArt.K * CarArt.CAR_SCALE
 	var on := false
 	var cols: Array = [Color(1.0, 0.18, 0.12), Color(0.2, 0.4, 1.0)]
 	var t := 0.0
@@ -298,19 +314,23 @@ class LightBar extends Node2D:
 		queue_redraw()
 
 	func _draw() -> void:
-		var px := CarArt.PX
 		var f := Vector2(cos(heading), sin(heading))
-		var r := Vector2(-f.y, f.x)
-		var half := width * 0.42 * px
-		var c := CarView.screen_up * roof        # up on the roof, over the top slice (roof_px: lifted with the camera angle)
+		var half := half_px - 0.5 * k if half_px > 0.0 else width * 0.42 * CarArt.PX
+		var c := CarView.screen_up * roof + f * along   # up on the roof, over its middle (lifted with the camera angle)
 		var phase := fmod(t * 3.0, 1.0) < 0.5
+		var tex := CarView.glow_tex()
+		draw_set_transform(c, heading, Vector2.ONE)
+		var th := 2.0 * k
+		draw_rect(Rect2(-th / 2.0 - 0.5, -half - 0.5, th + 1.0, half * 2.0 + 1.0), Color("15161c"))
 		for side: float in [-1.0, 1.0]:
-			var a: Vector2 = c + r * side * half
-			var b: Vector2 = c + r * side * 0.12 * px
-			var col := Color("1a1a22")
 			var lit: bool = on and (side < 0.0) == phase
-			if on:
-				col = (cols[0] if side < 0.0 else cols[1]) if lit else col.lightened(0.2)
-			draw_line(a + f * 0.1 * px, b + f * 0.1 * px, col, 0.45 * px)
-			if lit: draw_line(a + f * 0.1 * px, b + f * 0.1 * px, Color(1, 1, 1, 0.55), 0.15 * px)
-		draw_line(c - r * 0.12 * px, c + r * 0.12 * px, Color("dcdcdc"), 0.45 * px)
+			var col: Color = cols[0] if side < 0.0 else cols[1]
+			var lens := Rect2(-th / 2.0, (-half if side < 0.0 else 0.6 * k), th, half - 0.6 * k)
+			draw_rect(lens, col if lit else col.darkened(0.62))
+			if lit:
+				draw_rect(Rect2(lens.position, Vector2(th, 1.0)), col.lerp(Color.WHITE, 0.6))
+				var g := lens.get_center()
+				var r := 5.5 * k
+				draw_texture_rect(tex, Rect2(g - Vector2(r, r), Vector2(r, r) * 2.0), false, Color(col, 0.55 + 0.35 * CarView.night))
+		draw_rect(Rect2(-th / 2.0, -0.6 * k, th, 1.2 * k), Color("e8eaee") if on else Color("8a8c92"))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

@@ -328,6 +328,15 @@ func _wheels() -> void:
 	for m2: Dictionary in [{ "drop": 1.0, "stagger": "staggered" }, { "drop": 1.0, "spacers": 2 }]:
 		if not _differs("silvio", low, m2, {}, {}): fit_same.append(m2)
 	check("every fitment, staggered rears and spacers show side-on", fit_same.is_empty(), str(fit_same))
+	# the lights: angel eyes, smoked tails, underglow, side on, by day and with the lights on
+	var light_same: Array = []
+	for lm: Dictionary in [{ "halo": true }, { "smoked": true }, { "underglow": "#3a8ad8" }]:
+		for on: bool in [false, true]:
+			var base_m := { "lights_on": on }
+			var m3 := base_m.duplicate()
+			m3.merge(lm)
+			if not _differs("silvio", base_m, m3, {}, {}): light_same.append([lm, on])
+	check("halo headlights, smoked tails and underglow show side-on, lights off and on", light_same.is_empty(), str(light_same))
 	var cam := Pix.new(48, 48, 1)
 	CarGen.wheel(cam, 24, 24, 20.0, "fivespoke", false, { "camber": 1.0 })
 	var upright := Pix.new(48, 48, 1)

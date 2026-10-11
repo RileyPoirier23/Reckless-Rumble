@@ -131,6 +131,25 @@ func _knots() -> void:
 	check("hardly anybody turns up the bridge's dead-end stub", stub < 12, "%d of 400" % stub)
 	car.free()
 
+var lamp_bad: Array = []
+
+## A car's lamps where its lamps are: two headlamps in the front half no higher than the roof,
+## two stop lamps in the back half, every glow's spot inside the car's outline and its stack.
+func _lamps_on_the_body(id: String, a: CarArt) -> void:
+	var heads := 0
+	var tails := 0
+	for sp: Array in a.lamp_spots:
+		var at: Vector3 = sp[1]
+		if absf(at.x) > a.size.x / 2.0 or absf(at.y) > a.size.y / 2.0 or at.z < 0.0 or at.z > float(a.n):
+			lamp_bad.append("%s: kind %d off the car at %s" % [id, int(sp[0]), str(at)])
+		match int(sp[0]):
+			2:
+				heads += 1
+				if at.x < 0.0 or at.z > a.roof_z + 1.0: lamp_bad.append("%s: a headlamp at %s" % [id, str(at)])
+			0:
+				if at.x < 0.0: tails += 1
+	if heads < 2 or tails < 2: lamp_bad.append("%s: %d headlamps, %d stop lamps" % [id, heads, tails])
+
 ## Every catalogue car, the fleet and a trailer draw: an atlas of slices, lamps, a wheel stack.
 func _every_car() -> void:
 	var bad: Array = []
@@ -142,7 +161,10 @@ func _every_car() -> void:
 		ok = ok and absi(a.length_px - int(round(float(spec.length) * CarArt.PX * CarArt.CAR_SCALE))) <= 1
 		ok = ok and a.atlas.get_image().get_used_rect().size.x > a.length_px * 0.8
 		if not ok: bad.append(id)
+		_lamps_on_the_body(id, a)
 	check("every car and every fleet vehicle draws from above", bad.is_empty(), str(bad.slice(0, 6)))
+	check("every car's lamps sit on its body: headlamps up front, tail lamps at the back, none floating", lamp_bad.is_empty(),
+		"%d bad: %s" % [lamp_bad.size(), str(lamp_bad.slice(0, 6))])
 	var tr := CarArt.new({ "body": "trailer", "length": 13.6, "width": 2.55, "track": 2.1 }, Color.WHITE, 0.0, 1, CarArt.CAR_SCALE, { "decal": 2 })
 	check("a semi's trailer draws, with no front wheels of its own", tr.atlas != null and tr.wheel_spots.is_empty() and tr.n > 30, "%d slices" % tr.n)
 
@@ -282,7 +304,21 @@ func _mods() -> void:
 	var stance := _art("silvio", { "offset": "stance" })
 	check("a stanced wheel leans its top in (its stack is wider than the tyre)", stance.wheel_size.y > _art("silvio").wheel_size.y)
 	check("staggered rears are wider than the fronts", int(_plan("silvio", { "stagger": "staggered" }).wheels[0][3]) > int(_plan("silvio", { "stagger": "staggered" }).wheels[2][3]))
-	for r4: String in ["FITMENT", "STAGGER", "SPACERS", "LIP DEPTH", "TIRES"]:
+	# the lights the body shop sells: angel eyes, smoked tails, underglow, an LED bar on the roof
+	var halo := _art("silvio", { "halo": true })
+	var plain := _art("silvio")
+	check("halo headlights ring the lamps, lit with them", _differs(plain, halo) and halo.lamp_tex.head.get_image().get_data() != plain.lamp_tex.head.get_image().get_data())
+	check("smoked tails darken the lenses", _differs(plain, _art("silvio", { "smoked": true })))
+	check("underglow goes under the car in its colour", _art("silvio", { "underglow": "#3a8ad8" }).underglow == Color("#3a8ad8") and plain.underglow.a == 0.0)
+	var led := _art("fjord_f_one_fiddy_1996", { "roof": "lightbar" })
+	check("an LED roof bar lights on its own (with the high beams), not with the headlamps", led.lamp_tex.bar.get_image().get_used_rect().size.x > 0
+		and _art("fjord_f_one_fiddy_1996").lamp_tex.bar.get_image().get_used_rect().size.x == 0)
+	# light bars sit on the roofs: a cruiser's over the middle of its roof, the wrecker's just behind its windshield
+	var cruiser := _art("charjer")
+	var wrecker := _art("tow")
+	check("a light bar's spot is on the roof", absf(cruiser.roof_mid.x) < cruiser.length_px * 0.3 and absf(cruiser.roof_mid.z - cruiser.roof_z) <= 2.0
+		and wrecker.roof_front.x > wrecker.roof_mid.x and wrecker.roof_front.z >= wrecker.roof_z - 3.0, "%s %s / %s" % [str(cruiser.roof_mid), str(wrecker.roof_front), str(wrecker.roof_mid)])
+	for r4: String in ["FITMENT", "STAGGER", "SPACERS", "LIP DEPTH", "TIRES", "HEADLIGHTS", "TAIL LIGHTS", "UNDERGLOW"]:
 		if not GarageScreen.LOOK_ROWS.has(r4): check("the garage sells %s" % r4, false)
 	var slick := _plan("silvio", { "tire": "slicks" })
 	check("drag slicks are wider at the back than the front", int(slick.wheels[0][3]) > int(slick.wheels[2][3]), "%d / %d" % [int(slick.wheels[0][3]), int(slick.wheels[2][3])])

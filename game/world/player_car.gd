@@ -259,6 +259,8 @@ func _lights(dt: float, st: float) -> void:
 	# the texture's left edge (the lamp end of the beam) sits on the front bumper
 	head_light.offset = Vector2(80.0 * head_light.texture_scale, 0)
 	view.headlights = on
+	# an LED roof bar comes on with the brights (flashing them too)
+	view.high_beams = on and beam > 0.5
 	# blinkers: they cancel themselves when you straighten out after a turn
 	if hands and Input.is_action_just_pressed("blink_left"): blink = 0 if blink == -1 else -1
 	if hands and Input.is_action_just_pressed("blink_right"): blink = 0 if blink == 1 else 1
