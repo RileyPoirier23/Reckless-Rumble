@@ -247,6 +247,25 @@ func _mods() -> void:
 	for m: Dictionary in looks:
 		if not _differs(stock, _art("silvio", m)): same.append(m)
 	check("every body-shop option changes the car from above", same.is_empty(), str(same))
+	# every rim, lip depth and tyre shows from above on the back wheels (the atlas) and the front
+	# ones (their own stacks, so they can steer)
+	var wheel_same: Array = []
+	var opts: Array = []
+	for rim: String in PixCars.RIMS: opts.append({ "rim": rim })
+	for t: String in CarGen.TIRES: opts.append({ "tire": t })
+	for dp: float in [0.0, 0.5, 1.0]: opts.append({ "lip_depth": dp })
+	var base := _art("silvio", { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 })
+	for o: Dictionary in opts:
+		var m2 := { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 }
+		m2.merge(o, true)
+		if m2 == { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 }: continue
+		var a2 := _art("silvio", m2)
+		if not _differs(base, a2) or a2.wheel_tex.get_image().get_data() == base.wheel_tex.get_image().get_data(): wheel_same.append(o)
+	check("every rim, lip depth and tyre shows from above, back wheels and front", wheel_same.is_empty(), str(wheel_same))
+	var slick := _plan("silvio", { "tire": "slicks" })
+	check("drag slicks are wider at the back than the front", int(slick.wheels[0][3]) > int(slick.wheels[2][3]), "%d / %d" % [int(slick.wheels[0][3]), int(slick.wheels[2][3])])
+	var saved_w := SaveGame.car_looks(JSON.parse_string(JSON.stringify({ "id": "silvio", "looks": { "rim": "threepiece", "lip_depth": 0.75, "tire": "whitewall" }, "parts": {} })))
+	check("rims, lip depth and tyres come back from the save", saved_w.rim == "threepiece" and float(saved_w.lip_depth) == 0.75 and saved_w.tire == "whitewall")
 	var truck := _art("fjord_f_one_fiddy_2015")
 	var truck_same: Array = []
 	for m2: Dictionary in [{ "bed": "tonneau" }, { "bed": "rollbar" }, { "bed": "rollbar_lights" }, { "spare": true }, { "load": "lumber" }, { "ladder": true }]:

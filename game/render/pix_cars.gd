@@ -9,9 +9,10 @@
 ## draw()/image() with just a body name ("coupe", "pickup"...) still work and draw a generic car
 ## of that body and year. x = rear bumper, y = where the tyres touch the ground, facing right
 ## (flip for left).
-## mods: rim (mesh, fivespoke, tenspoke, multispoke, turbofan, deepdish, dish, steel, hubcap,
-##   beadlock, wire), rim_color, rim_size, caliper, drop (-1 lifted .. 1 slammed), tire (stock,
-##   mud, lowpro), spoiler (none, ducktail, wing, gt), kit ({lip, skirts, diffuser}), fenders
+## mods: rim (RIMS: mesh, fivespoke, tenspoke, multispoke, turbofan, deepdish, dish, steel, hubcap,
+##   beadlock, wire, split, crossspoke, threepiece, blade, sixspoke, steelie, laced, donk), rim_color,
+##   rim_size, lip_depth (0 flat .. 1 very deep), caliper, drop (-1 lifted .. 1 slammed), tire
+##   (CarGen.TIRES: stock, lowpro, whitewall, letters, offroad, slicks; and mud), spoiler (none, ducktail, wing, gt), kit ({lip, skirts, diffuser}), fenders
 ##   (stock, flared), livery (none, slash, split, sponsor, flames), stripes (none, racing, side,
 ##   rally), stripe_color (left out: dark on pale paint, light on dark),
 ##   tint, finish (gloss, matte, metallic, pearl, chrome), year, exhaust (single, dual, quad,
@@ -82,7 +83,8 @@ const BODIES := {
 	},
 }
 
-const RIMS := ["mesh", "fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish", "dish", "steel", "hubcap", "beadlock", "wire"]
+const RIMS := ["mesh", "fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish", "dish", "steel", "hubcap", "beadlock", "wire",
+	"split", "crossspoke", "threepiece", "blade", "sixspoke", "steelie", "laced", "donk"]
 
 static func body_of(spec: Dictionary) -> String:
 	var b := String(spec.get("body", "sedan"))

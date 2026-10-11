@@ -589,7 +589,8 @@ class _Shaper:
 		p.tire_r = r
 		var tw_m := 0.21
 		if fam in ["pickup", "suv", "offroad", "van", "boxtruck"] or String(d.cls) in ["sports", "exotic", "muscle"]: tw_m = 0.25
-		if CarGen._tire_kind(mods) == "mud" or CarGen._donk(mods): tw_m = 0.3
+		var kind := CarGen._tire_kind(mods)
+		if kind in ["mud", "offroad"] or CarGen._donk(mods): tw_m = 0.3
 		if fam in ["kei", "bubble"]: tw_m = 0.17
 		p.tire_w = maxi(2, int(round(tw_m * px)))
 		var track := float(spec.get("track", float(spec.get("width", 1.8)) * 0.85)) * px
@@ -609,9 +610,14 @@ class _Shaper:
 			xs = []
 		# (a mid-engined car's back wheels sit out under its fat hips)
 		var vc_r := vc + (1.0 if fam in ["mid", "wedge"] else 0.0)
+		# drag slicks: the back tyres half as wide again, growing in toward the middle
+		var tw_r := p.tire_w
+		if kind == "slicks":
+			tw_r = p.tire_w + maxi(1, int(round(p.tire_w * 0.5)))
+			vc_r -= float(tw_r - p.tire_w) / 2.0
 		for i in xs.size():
 			for s: float in [-1.0, 1.0]:
-				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, p.tire_w, i == 1, s])
+				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, tw_r if i == 0 else p.tire_w, i == 1, s])
 				if art.has("dually") and i == 0:
 					p.wheels.append([float(xs[i]), p.cy + s * (vc - p.tire_w - 1.0), r, p.tire_w, false, s])
 				if art.has("tractor") and i == 0:
@@ -2589,7 +2595,13 @@ class _Painter:
 			# the tread's edge: an off-road tyre's lugs stand out on it, their tops lit
 			if tire_kind in ["mud", "offroad"] and fposmod(a * 9.0 / TAU, 1.0) < 0.5 and lit > 0.2: return CarGen.TIRE_C[2]
 			return Color("0e1013")
-		if dist > rr: return CarGen.tire_px(tire_kind, wall, (dist - rr) / maxf(0.5, r - rr), false, a, a, lit, false)
+		if dist > rr:
+			var t := (dist - rr) / maxf(0.5, r - rr)
+			# a sidewall a pixel or two thick: the whitewall (or the letters) takes all of it
+			if r - rr < 3.0 and t > 0.08 and t < 0.8:
+				if wall == "white": return Color("e8e6dc") if lit > -0.3 else Color("bcb9ae")
+				if wall == "letters" and a < -0.5 and a > -2.6 and fposmod(a * 10.0 / TAU, 1.0) < 0.5: return Color("e0dccf")
+			return CarGen.tire_px(tire_kind, wall, t, false, a, a, lit, false)
 		var c := CarGen.rim_px(rim_style, dist / rr, a, a, lit, rim_c, rim_depth, rr, lugs, rr < 5.0)
 		if c.a < 0.5:
 			# a gap: the caliper on the top-back quarter, the rest dark

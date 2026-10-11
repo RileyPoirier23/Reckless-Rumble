@@ -119,6 +119,7 @@ func _init() -> void:
 	for rim in PixCars.RIMS: PixCars.wheel(wp, 20, 20, 16.0, String(rim), false, { "wall": "white", "caliper": Color("e0402e") })
 	PixCars.loose_wheel(wp, 20, 20, 12.0, "steel")
 	check("every rim paints", wp.img.get_used_rect().size.x >= 30)
+	_wheels()
 	# --- detail follows size: tiny counter cars and cutscene cars stay clean
 	var tiny := PixCars.image_of({ "id": "toyoda_camree_2015" }, 36, Color("4a6a8a"))
 	var small := PixCars.image_of({ "id": "toyoda_camree_2015" }, 90, Color("4a6a8a"))
@@ -279,3 +280,41 @@ func _signature(img: Image) -> String:
 				break
 		out.append(str(gy - top))
 	return ",".join(out)
+
+## Every rim, every lip depth and every tyre the body shop sells paints its own wheel, and shows
+## on the car side-on. The wheels are lit from the upper left: a rim's lip is brighter up there
+## than down at the bottom right.
+func _wheels() -> void:
+	var seen := {}
+	var blank: Array = []
+	for rim: String in PixCars.RIMS:
+		var p := Pix.new(48, 48, 1)
+		CarGen.wheel(p, 24, 24, 20.0, rim, false, { "caliper": Color("e0402e") })
+		if p.img.get_used_rect().size.x < 38: blank.append(rim)
+		seen[p.img.get_data()] = rim
+	check("every rim paints a wheel of its own (%d rims)" % PixCars.RIMS.size(), blank.is_empty() and seen.size() == PixCars.RIMS.size() and PixCars.RIMS.size() >= 19, str(blank))
+	for rim2: String in ["split", "crossspoke", "threepiece", "blade", "sixspoke", "steelie", "laced", "donk"]:
+		if not rim2 in PixCars.RIMS: check("the body shop sells %s rims" % rim2, false)
+	var tires := {}
+	for t: String in CarGen.TIRES:
+		var look := CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "tire": t }, 200)
+		var p2 := Pix.new(56, 56, 1)
+		CarGen.wheel(p2, 28, 28, 20.0, String(look[0]), false, look[1])
+		tires[p2.img.get_data()] = t
+	check("every tyre paints its own wheel", tires.size() == CarGen.TIRES.size(), str(tires.values()))
+	var depths := {}
+	for k in 5:
+		var p3 := Pix.new(48, 48, 1)
+		CarGen.wheel(p3, 24, 24, 20.0, "fivespoke", false, { "lip_depth": float(k) * 0.25 })
+		depths[p3.img.get_data()] = k
+	check("every lip depth paints its own wheel", depths.size() == 5)
+	var lit := Pix.new(48, 48, 1)
+	CarGen.wheel(lit, 24, 24, 20.0, "deepdish", false, {})
+	var ul := lit.img.get_pixel(24 - 9, 24 - 9).get_luminance()      # on the lip, upper left
+	var lr := lit.img.get_pixel(24 + 9, 24 + 9).get_luminance()      # and lower right
+	check("a rim's lip is lit from the upper left", ul > lr + 0.1, "%.2f / %.2f" % [ul, lr])
+	var same: Array = []
+	for m: Dictionary in [{ "rim": "donk" }, { "rim": "steelie" }, { "rim": "laced" }, { "lip_depth": 1.0 }, { "tire": "whitewall" },
+			{ "tire": "letters" }, { "tire": "offroad" }, { "tire": "slicks" }]:
+		if not _differs("silvio", {}, m, {}, {}): same.append(m)
+	check("rims, lip depths and tyres show on the car side-on", same.is_empty(), str(same))

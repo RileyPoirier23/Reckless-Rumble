@@ -1,7 +1,8 @@
 ## The garage at Covington Auto. Five tabs:
 ##   CARS      the cars you own; take one out, or have Gus straighten one out
 ##   UPGRADES  bolt on what's on the shelf (Gus charges labour), take parts back off
-##   LOOKS     the body shop: paint and finish, rims, calipers, ride height, tint, stripes, kits,
+##   LOOKS     the body shop: paint and finish, rims (and how deep their dish), tires, calipers,
+##             ride height, tint, stripes, kits,
 ##             hoods, fenders, wheel offset, the roof, bull bars, spares and the bed (all of it shows
 ##             on the car out on the road, too)
 ##   ROCKAUTTO.CA  the shop computer: order parts, standard or express shipping
@@ -38,17 +39,24 @@ const FENDERS := ["stock", "flared"]
 const OFFSETS := ["stock", "poke", "tucked"]
 const ROOFS := ["stock", "sunroof", "ttops", "vinyl", "rack", "lightbar"]
 const BEDS := ["stock", "tonneau", "rollbar", "rollbar_lights"]
-const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
+## How deep the dish (STOCK: the rim's own), and what the body shop calls each.
+const LIP_DEPTHS := [-1.0, 0.0, 0.25, 0.5, 0.75, 1.0]
+const LIP_NAMES := ["STOCK", "FLAT", "SHALLOW", "MEDIUM", "DEEP", "VERY DEEP"]
+const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "LIP DEPTH", "TIRES", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
 	"HOOD", "FENDERS", "WHEEL OFFSET", "ROOF", "BULL BAR", "SPARE", "BED"]
 const LOOK_SHOWN := 14               # rows on the panel at once (it scrolls)
 const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "ROLL BAR + LIGHTS", "lightbar": "LIGHT BAR", "rack": "ROOF RACK",
-	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "tonneau": "TONNEAU COVER" }
+	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "tonneau": "TONNEAU COVER",
+	"fivespoke": "5-SPOKE", "tenspoke": "10-SPOKE", "multispoke": "MULTI-SPOKE", "deepdish": "DEEP DISH", "wire": "WIRE + SPINNER",
+	"split": "SPLIT SPOKE", "crossspoke": "CROSS-SPOKE MESH", "threepiece": "3-PIECE DEEP DISH", "blade": "DIRECTIONAL BLADE",
+	"sixspoke": "6-SPOKE TRUCK", "steelie": "STEELIE + TRIM RING", "laced": "WIRE SPOKE", "donk": "DONK BIG LIP",
+	"lowpro": "LOW-PROFILE", "whitewall": "WHITEWALL", "letters": "RAISED WHITE LETTERS", "offroad": "ALL-TERRAIN", "slicks": "DRAG SLICKS" }
 ## What the body shop charges for each kind of change.
-const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "CALIPERS": 180, "RIDE HEIGHT": 150,
+const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "LIP DEPTH": 500, "TIRES": 650, "CALIPERS": 180, "RIDE HEIGHT": 150,
 	"TINT": 220, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160,
 	"HOOD": 700, "FENDERS": 850, "WHEEL OFFSET": 300, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
 ## Which key in a car's looks each row sets.
-const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
+const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "LIP DEPTH": "lip_depth", "TIRES": "tire", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
 	"TINT": "tint", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust",
 	"HOOD": "hood", "FENDERS": "fenders", "WHEEL OFFSET": "offset", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
 
@@ -244,6 +252,8 @@ func _look_value(r: String) -> Variant:
 		"RIMS": return trial.get("rim", "")
 		"RIM COLOUR": return trial.get("rim_color", "#c8ccd4")
 		"RIM SIZE": return float(trial.get("rim_size", 0.66))
+		"LIP DEPTH": return float(trial.get("lip_depth", -1.0))
+		"TIRES": return trial.get("tire", "stock")
 		"CALIPERS": return trial.get("caliper", "#5a5a60")
 		"RIDE HEIGHT": return float(trial.get("drop", 0.0))
 		"TINT": return float(trial.get("tint", 0.0))
@@ -289,6 +299,15 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"RIMS": trial.rim = _cycle(PixCars.RIMS, trial.get("rim", PixCars.RIMS[0]), dx)
 			"RIM COLOUR": trial.rim_color = _cycle(RIM_COLORS, trial.get("rim_color", RIM_COLORS[0]), dx)
 			"RIM SIZE": trial.rim_size = clampf(float(trial.get("rim_size", 0.66)) + dx * 0.04, 0.5, 0.8)
+			"LIP DEPTH":
+				# STOCK first: the rim as it comes
+				var lip := float(_cycle(LIP_DEPTHS, float(trial.get("lip_depth", -1.0)), dx))
+				if lip < 0.0: trial.erase("lip_depth")
+				else: trial.lip_depth = lip
+			"TIRES":
+				var tire := String(_cycle(CarGen.TIRES, trial.get("tire", "stock"), dx))
+				if tire == "stock": trial.erase("tire")
+				else: trial.tire = tire
 			"CALIPERS": trial.caliper = _cycle(CALIPERS, trial.get("caliper", CALIPERS[0]), dx)
 			"RIDE HEIGHT": trial.drop = clampf(float(trial.get("drop", 0.0)) + dx * 0.2, 0.0, 1.0)
 			"TINT": trial.tint = clampf(float(trial.get("tint", 0.0)) + dx * 0.25, 0.0, 1.0)
@@ -565,6 +584,7 @@ func _draw_looks() -> void:
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(String(v)))
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(1, 1, 1, 0.3), false, 1.0)
 			"RIM SIZE": PixelFont.draw(self, Vector2(vx, y), "%d IN" % int(14 + (float(v) - 0.5) * 30.0), BONE)
+			"LIP DEPTH": PixelFont.draw(self, Vector2(vx, y), String(LIP_NAMES[maxi(0, LIP_DEPTHS.find(float(v)))]), BONE)
 			"RIDE HEIGHT": PixelFont.draw(self, Vector2(vx, y), "STOCK" if float(v) < 0.05 else "-%d MM" % int(float(v) * 60.0), BONE)
 			"TINT": PixelFont.draw(self, Vector2(vx, y), "%d%%" % int(float(v) * 100.0), BONE)
 			_: PixelFont.draw(self, Vector2(vx, y), String(LABELS.get(String(v), String(v) if String(v) != "" else "STOCK")).to_upper(), BONE)

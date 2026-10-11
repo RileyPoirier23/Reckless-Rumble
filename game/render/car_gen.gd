@@ -1659,6 +1659,7 @@ static func _tire_px(len: int, d: Dictionary, mods: Dictionary) -> float:
 	var drop := float(mods.get("drop", 0.0))
 	var kind := _tire_kind(mods)
 	if kind == "mud": r *= 1.18
+	elif kind == "offroad": r *= 1.1
 	if _donk(mods): r *= 1.3 + clampf(-drop - 0.45, 0.0, 0.5) * 0.6
 	return r
 
@@ -1673,7 +1674,10 @@ static func wheel_look(d: Dictionary, mods: Dictionary, len: int) -> Array:
 	if not mods.has("rim_size"): wm.rim_size = float(d.rim) if kind != "lowpro" else maxf(float(d.rim), 0.74)
 	if not mods.has("rim_color") and d.has("rim_color") and String(mods.get("rim", "")) == "": wm.rim_color = Color(String(d.rim_color))
 	if not wm.has("wall"): wm.wall = d.wall if String(mods.get("rim", "")) == "" or kind == "stock" else "none"
-	if kind == "mud" and d.wall == "letters": wm.wall = "letters"
+	if kind in ["mud", "offroad"] and d.wall == "letters": wm.wall = "letters"
+	# the body shop's whitewalls and raised white letters
+	if kind == "whitewall": wm.wall = "white"
+	elif kind == "letters": wm.wall = "letters"
 	var year := int(mods.get("year", d.year))
 	wm.lugs = 6 if d.family in ["pickup", "suv", "offroad", "van"] else (4 if year < 1985 and d.cls in ["economy", "kei"] else 5)
 	if d.family == "boxtruck": wm.lugs = 8
@@ -4644,11 +4648,15 @@ const LIGHT := Vector2(-0.62, -0.78)
 const TIRE_C: Array[Color] = [Color("0f1114"), Color("191c21"), Color("23272d"), Color("2f343c"), Color("40464f")]
 ## How deep a rim's dish is when the body shop hasn't touched it (0 flat .. 1 as deep as they
 ## come): how wide the lip is, how much barrel shows round the face and how hard the face bowls.
-const RIM_DEPTH := { "deepdish": 0.85, "dish": 0.3, "steel": 0.15, "hubcap": 0.0, "wire": 0.45, "beadlock": 0.3, "mesh": 0.4 }
-## Rims whose lip is polished bright whatever colour the face is.
-const CHROME_LIPS := ["deepdish", "wire"]
+const RIM_DEPTH := { "deepdish": 0.85, "dish": 0.3, "steel": 0.15, "hubcap": 0.0, "wire": 0.45, "beadlock": 0.3, "mesh": 0.4,
+	"threepiece": 0.7, "donk": 1.0, "crossspoke": 0.55, "laced": 0.5, "steelie": 0.2, "sixspoke": 0.35, "split": 0.3, "blade": 0.2 }
+## Rims whose lip is polished bright whatever colour the face is (a steelie's is its trim ring).
+const CHROME_LIPS := ["deepdish", "wire", "threepiece", "donk", "crossspoke", "laced", "steelie"]
 ## Rims whose spokes step down toward the hub in rings (the flat-faced ones don't).
-const STEPPED := ["fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish", "beadlock"]
+const STEPPED := ["fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish", "beadlock", "split", "sixspoke", "blade", "threepiece", "donk"]
+## The tyres the body shop fits: stock, low-profile, whitewall, raised white letters, off-road
+## (chunky tread, a little taller) and drag slicks (tall soft sidewalls, smooth, wider at the back).
+const TIRES := ["stock", "lowpro", "whitewall", "letters", "offroad", "slicks"]
 
 ## How deep this wheel's dish is: the body shop's LIP DEPTH, or the rim's own.
 static func lip_depth(rim: String, mods: Dictionary) -> float:
@@ -4662,7 +4670,10 @@ static func rim_paint(rim: String, mods: Dictionary) -> Color:
 	match rim:
 		"beadlock": return Color("2a2e36")
 		"steel": return Color("d8dce2")
-		"deepdish", "wire", "hubcap", "dish": return Color("dfe3e8")
+		"steelie": return Color("1e2126")
+		"blade": return Color("5a606a")
+		"sixspoke": return Color("b8bec6")
+		"deepdish", "wire", "hubcap", "dish", "laced", "donk": return Color("dfe3e8")
 	return Color("c9ced6")
 
 ## How much of a tyre's radius is rim: the body shop's size, a low-profile's thin wall, an
@@ -4670,6 +4681,7 @@ static func rim_paint(rim: String, mods: Dictionary) -> Color:
 static func rim_frac(kind: String, mods: Dictionary) -> float:
 	var size := clampf(float(mods.get("rim_size", 0.78 if kind == "lowpro" else 0.66)), 0.42, 0.86)
 	if kind in ["mud", "offroad"]: size = minf(size, 0.6)
+	if kind == "slicks": size = minf(size, 0.54)
 	return size
 
 ## A rim's rings, as fractions of its radius: x the polished lip, y the barrel's inside wall
@@ -4677,7 +4689,9 @@ static func rim_frac(kind: String, mods: Dictionary) -> float:
 static func rim_rings(rim: String, depth: float) -> Vector2:
 	match rim:
 		"hubcap", "dish": return Vector2(0.07, 0.0)
-	return Vector2(0.06 + 0.2 * depth, 0.02 + 0.1 * depth)
+		"donk": return Vector2(0.26 + 0.14 * depth, 0.03 + 0.06 * depth)
+		"steelie": return Vector2(0.2, 0.02 + 0.06 * depth)
+	return Vector2(0.06 + 0.26 * depth, 0.02 + 0.12 * depth)
 
 ## Five values of a painted rim, shadow to glint, for a lip that isn't chrome.
 static func _metal(rc: Color) -> Array[Color]:
@@ -4771,7 +4785,7 @@ static func tire_px(kind: String, wall: String, t: float, edge: bool, ang: float
 	var knobby := kind in ["mud", "offroad"]
 	if edge:
 		# the tread's outline: its blocks show where the light rakes across the top
-		if not simple and lit > 0.35 and fposmod(ang * 26.0 / TAU, 1.0) < 0.45: return TIRE_C[1]
+		if not simple and lit > 0.35 and kind != "slicks" and fposmod(ang * 26.0 / TAU, 1.0) < 0.45: return TIRE_C[1]
 		return TIRE_C[0]
 	var c := TIRE_C[1]
 	if t < 0.14:
@@ -4784,6 +4798,8 @@ static func tire_px(kind: String, wall: String, t: float, edge: bool, ang: float
 	elif lit > 0.45:
 		c = TIRE_C[2]
 	if simple: return c
+	# a slick's soft wall wrinkles low down where the car's weight sits on it
+	if kind == "slicks" and t > 0.18 and t < 0.64 and sa > 0.5 and sa < 2.65 and fposmod(ang * 22.0 / TAU, 1.0) < 0.2: c = TIRE_C[0]
 	if wall == "white" and t > 0.22 and t < 0.6:
 		c = Color("f0eee6") if lit > 0.3 else (Color("dcd9ce") if lit > -0.4 else Color("b4b1a6"))
 	if wall == "letters" and t > 0.36 and t < 0.64 and sa < -0.55 and sa > -2.6:
@@ -4848,16 +4864,18 @@ static func rim_px(rim: String, rt: float, ang: float, sa: float, lit: float, rc
 ## Where a rim's hub (the mounting face, the lugs and the cap) ends, as a fraction of its face.
 static func _hub_f(rim: String) -> float:
 	match rim:
-		"steel": return 0.38
-		"wire", "mesh", "deepdish": return 0.3
+		"steel", "steelie", "sixspoke": return 0.4
+		"wire", "mesh", "deepdish", "laced": return 0.3
+		"donk": return 0.36
 	return 0.34
 
 ## The hub: a raised pad lit on its upper left, the lug nuts round it (bright on the light side,
 ## shadowed below), and the centre cap, a little dome with a glint and the badge in the middle.
 static func _hub_px(rim: String, f: float, ang: float, sa: float, lit: float, rc: Color, fpx: float, lugs: int, simple: bool) -> Color:
 	var hub := _hub_f(rim)
-	var cap := 0.17 if rim != "wire" else 0.22
+	var cap: float = { "wire": 0.22, "laced": 0.24, "sixspoke": 0.24, "donk": 0.26, "steelie": 0.2 }.get(rim, 0.17)
 	var cap_c := rc.lerp(Color.WHITE, 0.3) if rim != "beadlock" else Color("3a3e46")
+	if rim in ["steelie", "laced", "donk"]: cap_c = CHROME[3]           # a chrome dog dish, a knock-off, a big chrome cap
 	if f < cap:
 		var tc := f / cap
 		if not simple and fpx * cap >= 2.4 and tc > 0.78: return rc.darkened(0.5)        # the cap's rim
@@ -4865,7 +4883,8 @@ static func _hub_px(rim: String, f: float, ang: float, sa: float, lit: float, rc
 		if not simple and fpx * cap >= 3.0 and tc < 0.3: return rc.darkened(0.3)         # the badge
 		return cap_c if lit > -0.3 else cap_c.darkened(0.2)
 	# lug nuts in a ring round the cap
-	if not simple and fpx >= 6.0 and lugs > 0 and not rim in ["wire", "hubcap"]:
+	if rim == "sixspoke": lugs = 6
+	if not simple and fpx >= 6.0 and lugs > 0 and not rim in ["wire", "hubcap", "laced"]:
 		var fl := hub - (hub - cap) * 0.4
 		var seg := TAU / float(lugs)
 		var k := roundf((ang + PI / 2.0) / seg)
@@ -4951,6 +4970,73 @@ static func _face_px(rim: String, f: float, ang: float, sa: float, lit: float, r
 				var off3 := fposmod(ang, TAU / 6.0) - TAU / 12.0
 				if absf(off3) < 0.22: return gap
 			return rc if lit > -0.4 else lo
+		"split":
+			# five spokes that fork as they reach out: a gap opens down the middle of each
+			var sp := _spoke(5, fs, f, ang, sa, 0.36, 0.24, rc, fpx)
+			if sp.a > 0.5 and fs > 0.3:
+				var seg5 := TAU / 5.0
+				var off5 := absf(fposmod(ang + PI / 2.0, seg5) - seg5 * 0.5)
+				if off5 < seg5 * 0.24 * (fs - 0.3) / 0.7 + 0.35 / maxf(1.0, f * fpx): return gap
+			return sp
+		"crossspoke":
+			# a cross-spoke mesh: pairs of spokes crossing in X's, an outer ring and a ring by the hub
+			if f > 0.9 or fs < 0.08: return hi if lit > 0.3 else (rc if lit > -0.3 else lo)
+			var nx := 6 if simple else 10
+			var w := 0.14 if not simple else 0.22
+			var u1 := fposmod((ang + PI / 2.0) * nx / TAU + fs * 0.5, 1.0)
+			var u2 := fposmod((ang + PI / 2.0) * nx / TAU - fs * 0.5, 1.0)
+			if u1 < w or u2 < w: return hi if lit > 0.25 else (rc if lit > -0.45 else lo)
+			return gap
+		"threepiece":
+			# the centre's flange round its outside edge, bolted to the lip
+			if f > 0.84:
+				var bolt := fposmod((ang + PI / 2.0) * (12.0 if simple else 24.0) / TAU, 1.0) < 0.42 and absf(f - 0.92) * fpx < 0.9
+				if bolt: return CHROME[4] if lit > 0.0 else CHROME[1]
+				return rc.darkened(0.2) if lit > -0.2 else rc.darkened(0.35)
+			return _spoke(6, fs, f, ang, sa, 0.22, 0.14, rc, fpx)
+		"blade":
+			# directional: curved blades all sweeping the same way, a lit leading edge on each
+			var nb := 7
+			var sb := fposmod((ang + PI / 2.0 + fs * 1.7) * nb / TAU, 1.0)
+			var wb := lerpf(0.5, 0.32, fs)
+			if sb > wb: return gap
+			if sb * f * fpx * TAU / nb < 1.0 and f * fpx > 4.0: return hi
+			if (wb - sb) * f * fpx * TAU / nb < 1.0 and f * fpx > 4.0: return lo
+			return rc
+		"sixspoke":
+			# a truck's six fat spokes, each with a machined groove down it
+			var s6 := _spoke(6, fs, f, ang, sa, 0.38, 0.27, rc, fpx)
+			if s6.a > 0.5 and not simple and fs > 0.15 and f * fpx > 4.0:
+				var seg6 := TAU / 6.0
+				if absf(fposmod(ang + PI / 2.0, seg6) - seg6 * 0.5) * f * fpx < 0.5: return rc.darkened(0.32)
+			return s6
+		"steelie":
+			# pressed steel, painted: round holes in a ring, the bead flange round the outside
+			if f > 0.86: return rc.lightened(0.12) if lit > 0.2 else rc.darkened(0.25)
+			var segh := TAU / 8.0
+			var offh := fposmod(ang + PI / 2.0, segh) - segh * 0.5
+			var hx := f - 0.64
+			var hy := f * offh
+			var hd := sqrt(hx * hx + hy * hy)
+			if hd < 0.1: return gap
+			# each hole's pressed edge, lit along its lower right where it turns toward the light
+			if hd < 0.1 + 0.9 / maxf(1.0, fpx) and Vector2(hx, hy).normalized().rotated(sa - ang - PI / 2.0).dot(LIGHT) < -0.2: return rc.lightened(0.4)
+			if f < 0.48: return rc.lightened(0.14) if lit > 0.3 else (rc if lit > -0.3 else rc.darkened(0.2))
+			return rc if lit > -0.4 else rc.darkened(0.2)
+		"laced":
+			# wire spokes laced from the hub's flange out to the rim, crossing the way real ones do
+			var h := _hub_f(rim) * 0.8
+			if f <= h: return shade
+			var phi := acos(clampf(h / f, -1.0, 1.0))
+			var nl := 8 if simple else 16
+			var wl := clampf(0.7 / maxf(0.5, f * fpx * TAU / nl), 0.08, 0.4)
+			var l1 := fposmod((ang + PI / 2.0 - phi) * nl / TAU, 1.0)
+			var l2 := fposmod((ang + PI / 2.0 + phi) * nl / TAU + 0.5, 1.0)
+			if l1 < wl or l2 < wl: return Color("f2f5f8") if lit > -0.1 else Color("a8b0b8")
+			return Color("2e3238") if f < 0.94 else rc.darkened(0.4)
+		"donk":
+			# a thin star of five chrome spokes inside the big polished lip
+			return _spoke(5, fs, f, ang, sa, 0.24, 0.13, rc, fpx)
 		"hubcap":
 			if f > 0.88: return Color("c8ccd4")
 			if absf(f - 0.62) < 0.05: return Color("8a8e96")
