@@ -71,8 +71,10 @@ func _init() -> void:
 	for it in all:
 		if String(it.kind) in ["light", "chevron", "signal"]: continue
 		for o in fx.items_near(it.p, 3.0):
+			if String(it.kind) == "prop" and String(o.kind) == "prop" and (o.p as Vector2).distance_to(it.p) > 1.2: continue
 			if o != it and not String(o.kind) in ["light", "chevron"]: close += 1
 	check("no two signs on one spot", close == 0, "%d" % (close / 2))
+	check("the sidewalks have hydrants, meters, benches and bus stops", int(fx.counts.get("prop", 0)) > 200, str(fx.counts.get("prop", 0)))
 	# a speed limit says what the police go by
 	var wrong := 0
 	for it in all:

@@ -119,6 +119,7 @@ func build(the_map: MapData, the_traffic: Traffic) -> void:
 	_rail()
 	_exits()
 	_lights()
+	_street_props()
 	for sg in map.wild_signs: _add({ "kind": "wild", "p": sg.p, "dir": sg.get("dir", Vector2.RIGHT), "animal": String(sg.kind) })
 
 func _add(it: Dictionary) -> void:
@@ -132,6 +133,8 @@ func _add(it: Dictionary) -> void:
 		it.p = spot
 		if kind != "chevron":
 			for o in items_near(it.p, 3.0):
+				# (things on the sidewalk can stand close together: a bench and its bin)
+				if kind == "prop" and String(o.kind) == "prop" and (o.p as Vector2).distance_to(it.p) > 1.2: continue
 				if not String(o.kind) in ["light", "chevron"]:
 					counts["dropped"] = int(counts.get("dropped", 0)) + 1
 					return
@@ -245,6 +248,8 @@ func _junction_signs() -> void:
 			var hw := float(r.w) / 2.0
 			var major: bool = (j.majors as Array).has(int(r.idx))
 			var line := [c + rt * 0.3, c + rt * (hw - 0.2)]
+			# a crosswalk just past the stop line at the lights and the all-way stops in town
+			var cross := [c + din * 1.7, din, hw] if String(j.control) in ["signal", "allway"] and String(map.zone_at(c).get("id", "")) != "" else []
 			var kind := ""
 			match String(j.control):
 				"signal":
@@ -254,10 +259,10 @@ func _junction_signs() -> void:
 					var pole: Variant = _clear_spot(c + rt * (hw + 1.6), rt, din, true)
 					if pole == null: pole = _clear_spot(c - rt * (hw + 1.6), -rt, din, true)
 					if pole == null: pole = c + rt * (hw + 1.6)
-					_add({ "kind": "signal", "p": pole, "dir": din, "n": n, "group": 0 if major else 1, "heads": heads, "line": line })
+					_add({ "kind": "signal", "p": pole, "dir": din, "n": n, "group": 0 if major else 1, "heads": heads, "line": line, "cross": cross })
 					kind = "signal_ahead"
 				"allway":
-					_add({ "kind": "stop", "p": c + rt * (hw + 1.6), "dir": din, "allway": true, "line": line })
+					_add({ "kind": "stop", "p": c + rt * (hw + 1.6), "dir": din, "allway": true, "line": line, "cross": cross })
 					kind = "stop_ahead"
 				"priority":
 					if major: continue
@@ -446,6 +451,49 @@ func _rail() -> void:
 		for dirn: int in [1, -1]: _sign_at(r, sc - dirn * back, dirn, { "kind": "warn", "icon": "rail", "tab": "" })
 
 ## The streetlights the map put up: their poles and arms (the light itself is the light pool's).
+## What stands on the sidewalks in town: fire hydrants all over; downtown, parking meters along
+## the curb, benches with a bin beside them and newspaper boxes; community mailboxes out in the
+## neighbourhoods; and bus stops (a shelter and the sign) along the main roads.
+func _street_props() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2468
+	for r in map.roads:
+		if String(r.zone) == "" or not String(r.cls) in ["street", "arterial"]: continue
+		var L := _len(r)
+		var style := String(map.zone_at((_at(r, L * 0.5)[0] as Vector2)).get("style", ""))
+		var core := style in ["downtown", "oldtown", "commercial"]
+		for sgn: float in [-1.0, 1.0]:
+			var off := float(r.w) / 2.0 + (0.8 if core else 0.85)
+			var s := rng.randf_range(6.0, 20.0)
+			var next_hydrant := rng.randf_range(20.0, 60.0)
+			var next_bench := rng.randf_range(30.0, 70.0)
+			var next_bus := rng.randf_range(80.0, 200.0)
+			var next_box := rng.randf_range(100.0, 250.0)
+			while s < L - 6.0:
+				var pd := _at(r, s)
+				var d: Vector2 = pd[1] * sgn
+				var out := _right(d)
+				var p: Vector2 = (pd[0] as Vector2) + out * off
+				var what := ""
+				if s >= next_hydrant:
+					what = "hydrant"
+					next_hydrant = s + rng.randf_range(60.0, 110.0)
+				elif String(r.cls) == "arterial" and s >= next_bus:
+					what = "busstop"
+					next_bus = s + rng.randf_range(220.0, 380.0)
+				elif core and s >= next_bench:
+					what = ["bench", "bench", "news", "bin"][rng.randi() % 4]
+					next_bench = s + rng.randf_range(35.0, 80.0)
+				elif not core and s >= next_box and style in ["residential", "village"]:
+					what = "cmb"
+					next_box = s + rng.randf_range(200.0, 400.0)
+				elif core and String(r.cls) == "street" and rng.randf() < 0.55:
+					what = "meter"
+				if what != "":
+					_add({ "kind": "prop", "what": what, "p": p, "dir": d, "seed": rng.randi() })
+					if what == "bench": _add({ "kind": "prop", "what": "bin", "p": p + d * 1.4, "dir": d, "seed": rng.randi() })
+				s += 7.0 if core else 9.0
+
 func _lights() -> void:
 	for l in map.lights:
 		if not STREET_LIGHTS.has(String(l.type)): continue
@@ -557,6 +605,8 @@ func _draw() -> void:
 					else:
 						draw_rect(Rect2(-2.5, 0, 5, 12), Color("2a2a2e"))         # the back of the head
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			"prop":
+				_prop(it, base, up)
 			_:
 				var top := base + up * H_SIGN
 				draw_line(base, top, POST, 1.5)
@@ -564,6 +614,64 @@ func _draw() -> void:
 				if faces_you(it.dir): _face(it)
 				else: _back(it)
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## A thing on the sidewalk, standing up off it (`up` is how the camera stands things up).
+func _prop(it: Dictionary, base: Vector2, up: Vector2) -> void:
+	var d: Vector2 = it.dir
+	var along := d * PX
+	match String(it.what):
+		"hydrant":
+			draw_circle(base, 2.2, Color(0, 0, 0, 0.25))
+			draw_line(base, base + up * 6.0, Color("c8281e"), 4.0)
+			draw_circle(base + up * 6.0, 2.2, Color("e8c020"))                    # the bonnet
+			draw_line(base + up * 3.5 - along * 0.25, base + up * 3.5 + along * 0.25, Color("a8201a"), 2.0)   # the side nozzles
+		"meter":
+			draw_line(base, base + up * 9.0, Color("4a4e54"), 1.0)
+			draw_rect(Rect2(base + up * 9.0 - Vector2(1.5, 2.5), Vector2(3, 3)), Color("8a9098"))
+			draw_rect(Rect2(base + up * 9.0 - Vector2(1, 2), Vector2(2, 1)), Color("2a3a2a"))
+		"bench":
+			# slats along the road, a backrest on the far side
+			var a := base - along * 0.8
+			var b := base + along * 0.8
+			var back := _right(d) * 0.25 * PX
+			draw_line(a + up * 2.0, a, Color("3a3a3e"), 1.0)
+			draw_line(b + up * 2.0, b, Color("3a3a3e"), 1.0)
+			draw_colored_polygon(PackedVector2Array([a + up * 3.0, b + up * 3.0, b + up * 3.0 + back, a + up * 3.0 + back]), Color("8a5a32"))
+			draw_line(a + up * 3.0 + back, b + up * 3.0 + back, Color("6a4428"), 1.0)
+			draw_colored_polygon(PackedVector2Array([a + up * 3.0 + back, b + up * 3.0 + back, b + up * 7.0 + back, a + up * 7.0 + back]), Color("7a4e2c"))
+		"bin":
+			draw_circle(base, 2.0, Color(0, 0, 0, 0.2))
+			draw_line(base, base + up * 5.0, Color("2a5a3a"), 4.0)
+			draw_circle(base + up * 5.0, 2.0, Color("1e3e2a"))
+		"news":
+			var col: Color = [Color("2a4a9a"), Color("c8281e"), Color("e8c020")][int(it.seed) % 3]
+			draw_colored_polygon(PackedVector2Array([base - along * 0.25, base + along * 0.25, base + along * 0.25 + up * 6.0, base - along * 0.25 + up * 6.0]), col)
+			draw_rect(Rect2(base + up * 5.0 - Vector2(1.5, 1), Vector2(3, 1)), Color("dcdcd4"))
+		"cmb":
+			# the community mailbox: a grey bank of little doors
+			var a2 := base - along * 0.6
+			var b2 := base + along * 0.6
+			draw_colored_polygon(PackedVector2Array([a2, b2, b2 + up * 8.0, a2 + up * 8.0]), Color("9aa0a6"))
+			for k in 4:
+				var y := 2.0 + k * 1.6
+				draw_line(a2 + up * y, b2 + up * y, Color("6a7076"), 1.0)
+			draw_colored_polygon(PackedVector2Array([a2 + up * 8.0, b2 + up * 8.0, b2 + up * 9.0 + along * 0.05, a2 + up * 9.0 - along * 0.05]), Color("c8281e"))
+		"busstop":
+			# a glass shelter along the curb's back edge, its roof, and the sign on its pole
+			var out := _right(d) * 1.2 * PX
+			var a3 := base - along * 1.6 + out
+			var b3 := base + along * 1.6 + out
+			draw_colored_polygon(PackedVector2Array([a3, b3, b3 + up * 14.0, a3 + up * 14.0]), Color(0.7, 0.85, 0.95, 0.35))
+			draw_line(a3, a3 + up * 14.0, Color("4a4e54"), 1.0)
+			draw_line(b3, b3 + up * 14.0, Color("4a4e54"), 1.0)
+			draw_colored_polygon(PackedVector2Array([a3 + up * 14.0, b3 + up * 14.0, b3 + up * 14.0 - out * 0.8, a3 + up * 14.0 - out * 0.8]), Color("3a3e44"))
+			draw_line(a3 + up * 3.0, b3 + up * 3.0, Color("8a5a32"), 2.0)                # the bench inside
+			var sp := base - along * 2.4
+			draw_line(sp, sp + up * 16.0, POST, 1.0)
+			draw_set_transform(sp + up * 16.0, _face_angle(), Vector2.ONE)
+			draw_rect(Rect2(-3, -5, 6, 5), Color("1e5aa8"))
+			PixelFont.draw_centered(self, 0, -4, "B", SIGN_WHITE)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 ## A sign's face, drawn upright with its bottom middle at (0, 0).
 func _face(it: Dictionary) -> void:
@@ -686,6 +794,20 @@ class Paint extends Node2D:
 		for it in fx.vis:
 			if not it.has("line"): continue
 			draw_line((it.line[0] as Vector2) * PX, (it.line[1] as Vector2) * PX, col, 0.45 * PX)
+			# the crosswalk: wide stripes across the whole road, the ladder kind
+			var cw: Array = it.get("cross", [])
+			if cw.is_empty(): continue
+			var cc: Vector2 = cw[0]
+			var din: Vector2 = cw[1]
+			var hw: float = cw[2]
+			var rt := Vector2(-din.y, din.x)
+			var k := -hw + 0.4
+			while k < hw - 0.3:
+				var q := cc + rt * k
+				var p0 := (q - din * 1.2) * PX
+				var p1 := (q + din * 1.2) * PX
+				draw_line(p0, p1, col, 0.5 * PX)
+				k += 1.0
 
 # ------------------------------------------------------------------ the poles you can hit
 

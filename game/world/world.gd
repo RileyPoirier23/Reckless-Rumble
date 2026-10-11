@@ -638,6 +638,37 @@ class Layer extends Node2D:
 			var nrm: Vector2 = (b - a).normalized().orthogonal() * side
 			var col := Color("9a968e").lerp(Color("e8ecf2"), clampf(w.sky.snow_cover * 1.4, 0, 1))
 			_quad(PackedVector2Array([(a + nrm) * PX, (b + nrm) * PX, (b - nrm) * PX, (a - nrm) * PX]), col)
+			_sidewalk_detail(w, rd, a, b, side)
+
+	## What's on a sidewalk: a grass strip between the curb and the walk on the residential streets
+	## (a boulevard), the concrete slabs' joints across it, the curb's lit top and the gutter's
+	## shadow along the road. (The road's drawn over the middle, so only the strips either side show.)
+	func _sidewalk_detail(w: World, rd: Dictionary, a: Vector2, b: Vector2, side: float) -> void:
+		var snowy := clampf(w.sky.snow_cover * 1.4, 0.0, 1.0)
+		var L := a.distance_to(b)
+		if L < 0.5: return
+		var d := (b - a) / L
+		var n := d.orthogonal()
+		var edge := float(rd.w) / 2.0
+		var boulevard := String(w.map.zone_at(a).get("style", "")) in ["residential", "village"]
+		var walk0 := edge + (1.4 if boulevard else 0.3)
+		for sg: float in [-1.0, 1.0]:
+			var nn := n * sg
+			if boulevard and snowy < 0.5:
+				var gc := w.ground_color(a + nn * (edge + 0.8), { "style": "residential" })
+				_quad(PackedVector2Array([(a + nn * (edge + 0.3)) * PX, (b + nn * (edge + 0.3)) * PX, (b + nn * walk0) * PX, (a + nn * walk0) * PX]), gc)
+			# the curb: a lit top edge and the gutter's dark line on the road side of it
+			draw_line((a + nn * (edge + 0.12)) * PX, (b + nn * (edge + 0.12)) * PX, Color(1, 1, 1, 0.22 * (1.0 - snowy)), 2.0)
+			draw_line((a + nn * (edge - 0.05)) * PX, (b + nn * (edge - 0.05)) * PX, Color(0, 0, 0, 0.3), 1.0)
+			# the slabs' joints, every metre and a half (the same spacing whichever end you start)
+			if snowy < 0.6:
+				var x := fposmod(-(a.dot(d)), 1.5)
+				while x < L:
+					var p := a + d * x
+					draw_line((p + nn * walk0) * PX, (p + nn * side) * PX, Color(0, 0, 0, 0.14), 1.0)
+					x += 1.5
+				# the walk's outer edge
+				draw_line((a + nn * walk0) * PX, (b + nn * walk0) * PX, Color(0, 0, 0, 0.1), 1.0)
 
 	func _water(w: World) -> void:
 		var winter := w.sky.season == "winter"
@@ -767,6 +798,16 @@ class Layer extends Node2D:
 						pts.append(cp * PX)
 					draw_polyline(pts, Color(0.0, 0.0, 0.0, 0.32), 1.0)
 				x += rng.randf_range(10.0, 30.0) if rd.cls in ["rural", "gravel"] else rng.randf_range(14.0, 40.0)
+			# oil drips down the middle of each lane, where the engines sit
+			if rd.cls in ["street", "arterial", "rural"]:
+				var lane_off := float(rd.w) / 4.0
+				var y := rng.randf_range(2.0, 9.0)
+				while y < L:
+					for lsg: float in [-1.0, 1.0]:
+						if rng.randf() < 0.5: continue
+						var op := a + d * (y + rng.randf_range(-1.0, 1.0)) + n * lsg * (lane_off + rng.randf_range(-0.3, 0.3))
+						draw_circle(op * PX, rng.randf_range(0.25, 0.6) * PX, Color(0, 0, 0, 0.1))
+					y += rng.randf_range(6.0, 14.0)
 
 	func _marks(w: World) -> void:
 		var snowy := clampf(w.sky.snow_cover * 1.5, 0.0, 0.85)
