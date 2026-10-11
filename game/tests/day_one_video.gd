@@ -477,7 +477,12 @@ class Autopilot extends Node:
 		for step_m in range(4, 36, 3):
 			var q := _along(route, k, p, float(step_m))
 			var n := furn._junction_at(q)
-			if n < 0 or _cleared.has(n): continue
+			if n < 0: continue
+			if _cleared.has(n):
+				# done our stop there, but not in it yet: still don't pull out in front of anybody
+				var dn: float = p.distance_to(tr.map.g_pos[n]) - float(tr.junctions[n].get("radius", 6.0))
+				if dn > -1.0 and dn < 6.0 and _junction_busy(n): return maxf(dn, 0.5)
+				continue
 			var j: Dictionary = tr.junctions[n]
 			# the arm we're coming in on
 			var from := -1
@@ -510,7 +515,7 @@ class Autopilot extends Node:
 			if dist < -1.0:
 				_cleared[n] = true             # already in it
 				return -1.0
-			if wait_s > 0.0 and v < 0.4 and dist < 3.0:
+			if wait_s > 0.0 and v < 0.4 and dist < 3.0 and _gap_ahead(p, fwd) > 10.0:
 				_stopped_t += dt
 				if _stopped_t >= wait_s and not _junction_busy(n):
 					_cleared[n] = true

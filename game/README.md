@@ -27,6 +27,14 @@ Port Rumble (our Moncton) to Salisbury and Havelock, laid out from the real geog
   - The Large Stop, the Lutes Mountain towers, the Havelock airfield and the lime quarry.
   - A Tim Burtons on every corner.
 - **Country:** farms with barns and yard lights, spruce and maple woods, and fields that change colour with the seasons.
+- **Buildings** (`world/building_node.gd`) stand up off the map in 3/4 view, the walls facing the camera showing whichever way it's turned:
+  - **Houses:** a pitched roof (two slopes of shingles or ribbed steel, a raised ridge, gable ends, eaves and a chimney), lap siding, white-trimmed windows with shutters, a front door with its step, a second storey on the tall ones.
+  - **Shops and apartments:** brick, a storefront with an awning at street level, floors of windows above, a flat roof with a parapet, membrane seams and air handlers.
+  - **The big stores and warehouses** get skylights; gas canopies get a fascia in the station's colours.
+  - **At night** the lit windows (the same windows you see by day) throw light on the ground out front, porch lights come on, and a faint moonlit line along the ridges and eaves keeps the roofs from vanishing into the dark.
+- **Yards** (`world/yards.gd`): a mowed lawn and a walk down to the street, flower beds, shrubs, a cedar hedge down the lot line, a mailbox, and out back a fence (wood, chain-link or picket) round a pool, a trampoline, a shed, a woodpile, a boat on its trailer, a clothesline or a fire pit.
+- **Growing things:** ten kinds of tree in stands, tree lines along the back roads, and a fine layer of grass tufts, lupines, ferns and wildflowers between them, thick in the country and sparse on town lawns.
+- **The road itself** wears: manhole covers and storm drains on the city streets, tar patches and cracks everywhere, worse on the back roads.
 
 **The big map** (TAB / M / BACK) lists every place you can drive to, coloured by what's there: the shop, gas, night spots, parts, sights. Pick one (the keys, or click it in the list or on the map) and the map shows the road there in blue, how far it is by road, about how long, and what the place is for; accept, or click it again, and the GPS takes you. Click anywhere else on the map to drop a pin and drive to that. Zoom from the whole region to the town to the streets round you with Q/E, the shoulder buttons or the mouse wheel. Wherever you're already headed is at the top of the list. The GPS reroutes when you take another road, says when you've arrived, and distances are in the same metres as the GPS. With nothing on, the objective line says what you can do: gigs, the map, the garage.
 
