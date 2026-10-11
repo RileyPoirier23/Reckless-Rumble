@@ -110,7 +110,7 @@ func _race_ai() -> void:
 						for bx in main.parked.boxes[k]:
 							if (bx[0] as Vector2).distance_to(a.sim.pos) < 9.0: print("      parked car at ", bx[0], " heading ", bx[1], " half ", bx[2])
 					for tc in main.traffic.cars:
-						if tc.sim.pos.distance_to(a.sim.pos) < 9.0: print("      traffic ", tc.spec.get("model", "?"), " at ", tc.sim.pos.round(), " v ", tc.sim.speed())
+						if tc.pos.distance_to(a.sim.pos) < 9.0: print("      traffic %s at %s v %.1f" % [tc.state, str(tc.pos.round()), tc.v])
 					for it in main.furniture.items_near(a.sim.pos, 7.0): print("      furniture ", it.kind, " at ", it.p)
 					print("      player at ", main.car.sim.pos.round(), " heading ", a.sim.heading)
 				for tc in main.traffic.cars:

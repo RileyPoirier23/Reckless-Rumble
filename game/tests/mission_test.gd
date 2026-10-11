@@ -100,6 +100,7 @@ func _drag() -> void:
 	# the tree again: the red light's reset is a frame behind the check, so wait for green itself
 	var tw := 0.0
 	while r._go_t < 2.4 and tw < 10.0:
+		main.car.sim.vx = 0.0                     # foot on the brake: an automatic creeps, and creeping is a red light
 		await _wait(0.05)
 		tw += 0.05
 	var t0 := 0.0
