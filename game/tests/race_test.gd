@@ -19,7 +19,8 @@ func _ready() -> void:
 	main.sky.time_h = 23.0
 	main.sky.pick_weather("clear")
 	main.sky.forced = true
-	main.sky.snap()                 # (and the road's dry now, not drying from whatever it was)
+	main.sky.snap()
+	main.sky.wet = 0.0              # a dry fall night (the season starts the roads damp; this test is about the racing)
 	main.save.cash = 2000
 	main.save.heat = 0.0
 	_fresh_car()

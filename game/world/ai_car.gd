@@ -211,7 +211,7 @@ func _inputs(dt: float) -> Array:
 	# bite (wheelspin off the line on a wet street goes nowhere, and sideways)
 	var spin := sim.drive_slip()
 	# (standing still, lift right off: a crack of throttle keeps a spinning wheel spinning for seconds)
-	_tc = maxf(0.0 if v < 1.5 else 0.06, _tc - 3.0 * dt) if spin > 2.5 else minf(1.0, _tc + (1.2 if spin < 1.5 else 0.3) * dt)
+	_tc = maxf(0.0 if v < 1.5 else 0.06, _tc - 3.0 * dt) if spin > 2.5 else minf(1.0, _tc + ((2.4 if v < 3.0 else 1.2) if spin < 1.5 else 0.3) * dt)
 	th = minf(th, _tc)
 	if sim.gear < 0 and th > 0.0: th = maxf(th, 0.4)    # out of reverse
 	# stuck: wants to go, isn't, and it isn't just wheelspin it's working through
