@@ -113,6 +113,22 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	CarArt.reach_road(tail_light)
 	add_child(tail_light)
 
+## Every tire spinning hard adds to the smoke hanging round the car (SmokeField): the harder and
+## longer it spins, the thicker the cloud gets. A burnout's tires are going nowhere, so their smoke
+## all lands in one place and piles up; a drift's is spread down the road behind it.
+func _feed_smoke(dt: float, half_wb: float, half_tr: float, thrown: float, snow: bool) -> void:
+	var field := SmokeField.current
+	if field == null or not smoke_on or sim.surface == "ice" or dead: return
+	var col := Color(0.9, 0.92, 0.96) if snow else Color(0.86, 0.86, 0.89)
+	if sim.surface in ["grass", "mud", "gravel", "dirt"]: col = Color(0.7, 0.62, 0.5)   # dust, not smoke
+	var out := Vector2.from_angle(thrown) * 30.0
+	for i in 4:
+		if i < 2 and sim.front_locked: continue
+		var slip: float = sim.wheel_slip[i]
+		if slip < 4.5: continue
+		var at := _wheel_world(half_wb if i < 2 else -half_wb, (-half_tr if i % 2 == 0 else half_tr))
+		field.add(at, clampf((slip - 4.5) / 6.0, 0.2, 1.0) * dt * 3.0, out + sim.world_velocity() * PX * 0.3, col)
+
 ## The smoke lives on the parent (so it stays where it was puffed out): it goes with the car.
 func _exit_tree() -> void:
 	for p in smoke + [steam, engine_smoke, burn_cloud]:
@@ -547,6 +563,7 @@ func _update_look(dt: float, br: float) -> void:
 		burn_t = 0.0
 	burn_cloud.global_position = _wheel_world(-half_wb if rear_slip >= front_slip else half_wb, 0.0)
 	burn_cloud.emitting = smoke_on and burning and burn_t > 0.5
+	_feed_smoke(dt, half_wb, half_tr, thrown, snow)
 	var nose := _wheel_world(float(spec.length) * CarArt.CAR_SCALE * 0.45, 0.0)
 	steam.global_position = nose
 	steam.emitting = sim.coolant_c > 112.0 or sim.head_gasket

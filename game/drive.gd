@@ -29,6 +29,7 @@ var flash_rect: ColorRect
 var white_out := 0.0             # a white flash that fades on its own (a black-out in the prologue)
 var clouds: Node2D
 var sight: Sight                # what Leo can see past the buildings
+var smoke_field: SmokeField     # tire smoke that piles up and hangs about
 var car_i := 0
 var _light_t := 0.0
 var _water_t := 0.0
@@ -83,6 +84,8 @@ func _ready() -> void:
 	add_child(sight)
 	ysort = Node2D.new()          # cars and buildings: sorted by depth toward the camera each frame
 	add_child(ysort)
+	smoke_field = SmokeField.new()
+	add_child(smoke_field)
 	world.setup(sky, ysort)
 	lights = LightPool.new()
 	add_child(lights)
@@ -268,6 +271,10 @@ void fragment() {
 		var idm: Node = load("res://tests/incident_demo.gd").new()
 		idm.main = self
 		add_child(idm)
+	elif OS.get_cmdline_user_args().has("--smoke-demo"):
+		var smd: Node = load("res://tests/smoke_demo.gd").new()
+		smd.main = self
+		add_child(smd)
 	elif OS.get_cmdline_user_args().has("--sight-demo"):
 		var sd: Node = load("res://tests/sight_demo.gd").new()
 		sd.main = self
@@ -694,6 +701,7 @@ func _apply_car_settings() -> void:
 	car.sim.assist = GameSettings.assist()
 	car.sim.auto_gearbox = not GameSettings.manual()
 	car.smoke_on = bool(GameSettings.get_v("graphics", "smoke"))
+	smoke_field.on = car.smoke_on
 
 ## Employee of the Month: check now and then; a new one goes up on the HUD right away, and its
 ## card comes up the next time you're stopped with nothing else going on.
@@ -977,6 +985,9 @@ func _process(dt: float) -> void:
 	dash.beacons = car.beacons
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
+	# the smoke drifts off downwind and rises up the screen
+	smoke_field.wind = wind * CarArt.PX * 0.5
+	smoke_field.step(dt, CarView.screen_up * 9.0)
 	var wx := GameSettings.weather_amount()
 	rain_fx.emitting = sky.rain > 0.08 and wx > 0.0
 	snow_fx.emitting = sky.snow > 0.08 and wx > 0.0

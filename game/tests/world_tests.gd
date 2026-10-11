@@ -162,6 +162,18 @@ func _init() -> void:
 			c.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
 			tt += 1.0 / 120.0
 		check("%s: 0-50 km/h in under 12 s" % id, tt < 12.0, "%.1f s" % tt)
+	# ---- tire smoke piles up: a long burnout's cloud gets thick and spreads, then it clears
+	var sf := SmokeField.new()
+	for i in 600:                                  # ten seconds of two tires spinning flat out
+		sf.add(Vector2(100, 100), 3.0 / 60.0)
+		sf.add(Vector2(100, 120), 3.0 / 60.0)
+		sf.step(1.0 / 60.0, Vector2.ZERO)
+	var thick := sf.thickness_at(Vector2(100, 110))
+	var spread := sf.puffs.size()
+	check("tire smoke piles up: thick where the tires spun, and spreading", thick > 0.6 and spread >= 4 and spread < SmokeField.MAX_PUFFS, "thickness %.2f, %d puffs" % [thick, spread])
+	for i in 1800: sf.step(1.0 / 60.0, Vector2(0, -9))
+	check("...and it hangs about, then clears", sf.thickness_at(Vector2(100, 110)) < 0.25, "%.2f after 30 s" % sf.thickness_at(Vector2(100, 110)))
+	sf.free()
 	# ---- a crash scene shuts its lane: traffic won't turn into it
 	var tr := Traffic.new()
 	tr.map = m
