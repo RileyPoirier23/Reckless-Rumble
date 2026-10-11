@@ -381,10 +381,10 @@ class MeetHud extends Control:
 
 	func _process(_dt: float) -> void:
 		queue_redraw()
-		if panel_on and Input.is_action_just_pressed("ui_accept"): meet.leave()
+		if panel_on and is_instance_valid(meet) and Input.is_action_just_pressed("ui_accept"): meet.leave()
 
 	func _draw() -> void:
-		if meet == null: return
+		if meet == null or not is_instance_valid(meet): return
 		if meet.state == "turned_away":
 			var r := Rect2(4, 38, 168, 30)
 			draw_rect(r, Color(0, 0, 0, 0.6))

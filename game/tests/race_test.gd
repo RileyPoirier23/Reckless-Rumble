@@ -227,15 +227,21 @@ func _police_walk_off() -> void:
 func _police_warning() -> void:
 	var p: Police = main.police
 	var warnings0 := int(main.save.get("warnings", 0))
+	p.enabled = true
+	main.hold_car = false
 	var tries := 0
 	while tries < 4 and int(main.save.get("warnings", 0)) == warnings0:
 		tries += 1
 		main.save.heat = 0.0
 		var k := _cruiser_behind(30.0)
-		main.car.sim.vx = 26.0
-		await _wait(1.0)
-		main.hold_car = true
+		main.car.sim.vx = 22.0           # not that far over: the kind of speed that gets a talking-to
 		var t := 0.0
+		while t < 6.0 and not p.chasing():
+			await _wait(0.25)
+			t += 0.25
+		if not p.chasing(): print("   never lit up: state %s, cruisers %d, you %.1f m/s at %s, cruiser %s %.0f m back, heat %.0f" % [p.state, p.cruisers.size(), main.car.sim.speed(), str(main.car.sim.pos.round()), str(k.sim.pos.round()) if is_instance_valid(k) else "-", k.sim.pos.distance_to(main.car.sim.pos) if is_instance_valid(k) else 0.0, p.heat()])
+		main.hold_car = true
+		t = 0.0
 		var tickets0 := int(main.save.get("tickets", 0))
 		while t < 30.0 and p.chasing():
 			await _wait(0.25)
@@ -243,8 +249,13 @@ func _police_warning() -> void:
 			if p.stop_panel.visible: p.stop_panel.choose("sorry")
 		if int(main.save.get("warnings", 0)) == warnings0 and int(main.save.get("tickets", 0)) == tickets0:
 			print("   no warning and no ticket: state %s walk %s" % [p.state, p.walk])
-		await _wait(2.0)
+		# the officer walks back to the cruiser before you're free to go
+		t = 0.0
+		while t < 16.0 and p.writing():
+			await _wait(0.25)
+			t += 0.25
 		main.hold_car = false
+		if int(main.save.get("warnings", 0)) == warnings0 + 1: break
 		p.clear()
 	check("police: sorry officer, and sooner or later it's a warning instead of a ticket", int(main.save.get("warnings", 0)) == warnings0 + 1, "%d stops" % tries)
 	check("police: after a warning they've stood down and you can drive on", not p.chasing() and not p.writing())

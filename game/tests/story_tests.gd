@@ -200,7 +200,8 @@ func _init() -> void:
 	Hints.playstation = false
 	check("controller prompts say pad buttons", Hints.key("ui_accept") == "A" and Hints.key("throttle") == "RT" and Hints.key("handbrake") == "B", Hints.key("ui_accept") + "/" + Hints.key("throttle"))
 	check("keyboard-only bits drop out on a pad", not Hints.fmt("SHIFT {shift}  TOW {reset}").contains("TOW"), Hints.fmt("SHIFT {shift}  TOW {reset}"))
-	check("auto/manual is on L3", Hints.fmt("AUTO {gearbox}") == "AUTO L3", Hints.fmt("AUTO {gearbox}"))
+	check("the gearbox is a setting on a pad: the prompt drops out", not Hints.fmt("AUTO {gearbox}").contains("AUTO"), Hints.fmt("AUTO {gearbox}"))
+	check("Y flips the camera, A uses things, L3 is the hydraulics", Hints.key("camera") == "Y" and Hints.key("use") == "A" and Hints.key("hydraulics") == "L3", "%s/%s/%s" % [Hints.key("camera"), Hints.key("use"), Hints.key("hydraulics")])
 	Hints.playstation = true
 	check("PlayStation names", Hints.key("ui_accept") == "CROSS", Hints.key("ui_accept"))
 	Hints.pad = false

@@ -415,7 +415,7 @@ func key_offence() -> String:
 ## who's polite (or a good excuse, now and then); lies cost extra; "floor it" is a chase.
 func _resolve(c: PlayerCar, choice: String) -> void:
 	var who := officer.name_on if officer != null else "CONSTABLE TREMBLAY"
-	var plain := key_offence() == "speeding" and top_over < 25.0 * strictness and heat() < 40.0
+	var plain := key_offence() == "speeding" and top_over < 34.0 * strictness and heat() < 40.0
 	match choice:
 		"floor":
 			# they get a hand on the door and you're gone
