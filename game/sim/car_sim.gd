@@ -209,6 +209,8 @@ func tire_mu(i: int) -> float:
 		mu *= 0.3 + 0.7 * tread                 # but tread is what clears water and snow
 	if t.tread <= 0.6: mu *= 0.75
 	if t.flat: mu *= 0.3
+	# a rally or overland kit: skid plates, the right springs and a driver who's stopped flinching
+	if surface in ["gravel", "grass", "mud", "snow", "leaves", "dirt"]: mu *= float(spec.get("loose_grip", 1.0))
 	return mu * float(spec.get("grip", 1.0))
 
 static func pacejka(slip: float, b: float, c: float) -> float:
@@ -527,6 +529,8 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# rear-drive car on summer tires, spinning, creeps out instead of sitting there for good
 	if surface == "mud": roll_k *= clampf(absf(vx) / 6.0, 0.25, 1.0)
 	elif surface == "grass": roll_k *= clampf(absf(vx) / 6.0, 0.4, 1.0)     # (wet grass the same, a bit less)
+	# a lift, a rally kit: tall tires and clearance roll over the soft stuff instead of ploughing it
+	if surface != "dry" and surface != "wet": roll_k *= float(spec.get("rough", 1.0))
 	var roll := roll_k * m * G * clampf(vx * 4.0, -1.0, 1.0)
 	# --- integrate the body
 	var fx := fx_r + fx_f * cos(steer) - fy_f * sin(steer) - drag - roll
@@ -606,6 +610,7 @@ func _tire_work(i: int, force: float, slide: float, h: float) -> void:
 	var p := force * slide                                 # sliding power (W)
 	var wear := p * 9.0e-6 * h * (1.6 if compound == "winter" and ambient_c > 15.0 else 1.0)
 	if arcade(): wear *= 0.2
+	wear *= float(spec.get("tire_wear", 1.0))           # camber eats the insides, cheap spacers the bearings' patience
 	t.tread = maxf(0.0, t.tread - wear)
 	t.temp += (p * 0.0022 - (t.temp - ambient_c) * (0.08 + absf(vx) * 0.006) - maxf(0.0, t.temp - 160.0) * 0.6) * h
 	if t.tread <= 0.0 and not t.flat and not arcade():

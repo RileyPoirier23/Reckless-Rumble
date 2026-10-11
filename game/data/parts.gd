@@ -14,18 +14,21 @@ class_name Parts
 extends RefCounted
 
 const SLOTS := ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals", "clutch", "flywheel",
-	"final", "lsd", "centre", "suspension", "swaybar", "weight", "steering", "pads", "brakes", "tires", "aero"]
+	"final", "lsd", "centre", "suspension", "swaybar", "weight", "steering", "pads", "brakes", "tires", "aero",
+	"lift", "camber", "spacers", "bodykit", "special"]
 
 const SLOT_NAMES := { "intake": "INTAKE", "exhaust": "EXHAUST", "headers": "HEADERS", "cams": "CAMSHAFTS", "ecu": "ECU / TUNE",
 	"induction": "TURBO / BLOWER", "intercooler": "INTERCOOLER", "fuel": "FUEL SYSTEM", "internals": "BOTTOM END", "clutch": "CLUTCH", "flywheel": "FLYWHEEL", "final": "FINAL DRIVE",
 	"lsd": "DIFFERENTIAL", "centre": "CENTRE DIFF (AWD)", "suspension": "SUSPENSION", "swaybar": "SWAY BARS", "weight": "WEIGHT", "steering": "STEERING",
-	"pads": "BRAKE PADS", "brakes": "BRAKE KIT", "tires": "TIRES", "aero": "AERO" }
+	"pads": "BRAKE PADS", "brakes": "BRAKE KIT", "tires": "TIRES", "aero": "AERO",
+	"lift": "LIFT KIT", "camber": "CAMBER KIT", "spacers": "WHEEL SPACERS", "bodykit": "BODY KIT", "special": "SPECIALTY KIT" }
 
 const GROUPS := [["ENGINE", ["intake", "exhaust", "headers", "cams", "ecu", "induction", "intercooler", "fuel", "internals"]],
 	["DRIVETRAIN", ["clutch", "flywheel", "final", "lsd", "centre"]],
 	["CHASSIS", ["suspension", "swaybar", "weight", "steering"]],
 	["BRAKES & TIRES", ["pads", "brakes", "tires"]],
-	["AERO", ["aero"]]]
+	["AERO", ["aero"]],
+	["FITMENT & KITS", ["lift", "camber", "spacers", "bodykit", "special"]]]
 
 ## id: [slot, name, price, days to ship, effects, blurb]
 const CATALOG := {
@@ -102,6 +105,29 @@ const CATALOG := {
 	"aero_lip": ["aero", "FRONT SPLITTER", 390, 3, { "cl": 0.08, "cda": 0.01, "kit_lip": true }, "SCRAPES ON EVERY DRIVEWAY. WORTH IT. PROBABLY."],
 	"aero_ducktail": ["aero", "DUCKTAIL SPOILER", 450, 3, { "cl": 0.1, "cda": 0.01, "spoiler": "ducktail" }, "SUBTLE. SAYS 'I KNOW A GUY.'"],
 	"aero_wing": ["aero", "STREET WING", 690, 4, { "cl": 0.2, "cda": 0.03, "spoiler": "wing" }, "SAYS 'I HAVE A GUY.'"],
+	# ---------------------------------------------------------------- lift kits (trucks, SUVs, wagons, vans)
+	"lift_level": ["lift", "2-INCH LEVELING KIT", 490, 2, { "lift": 2, "cg": 0.03, "grip": 0.99, "rough": 0.85 }, "THE FRONT USED TO SIT LOWER THAN THE BACK. NOW IT DOESN'T. THAT'S THE WHOLE KIT."],
+	"lift_4": ["lift", "4-INCH LIFT (ROUGH COUNTRYY)", 1590, 4, { "lift": 4, "cg": 0.07, "grip": 0.96, "rough": 0.7 }, "CLEARS A SNOWBANK. CLEARS A CURB. CLEARS YOUR BANK ACCOUNT."],
+	"lift_6": ["lift", "6-INCH LONG-ARM LIFT", 3290, 6, { "lift": 6, "cg": 0.12, "grip": 0.93, "rough": 0.55, "cda": 0.04 }, "YOU NEED A STEP TO GET IN. YOUR PASSENGERS NEED A LADDER AND A REASON."],
+	# ---------------------------------------------------------------- camber
+	"camber_arms": ["camber", "ADJUSTABLE CAMBER ARMS (-2°)", 420, 2, { "camber": -2.0, "grip": 1.025 }, "A LITTLE LEAN FOR THE CORNERS. THE INSIDES OF YOUR TIRES WILL HEAR ABOUT IT."],
+	"camber_plates": ["camber", "CAMBER PLATES (-3.5°, TRACK)", 690, 3, { "camber": -3.5, "grip": 1.04, "tire_wear": 1.3 }, "THE TRACK-DAY GUYS SWEAR BY THEM. THE TIRE GUYS SWEAR AT THEM."],
+	"camber_demon": ["camber", "DEMON CAMBER (-8°, STANCE)", 380, 2, { "camber": -8.0, "grip": 0.84, "tire_wear": 2.2, "offset": "stance" }, "THE TOPS OF THE WHEELS ARE TOUCHING. SPIRITUALLY. CORNERS LIKE A SHOPPING CART ON ICE."],
+	# ---------------------------------------------------------------- wheel spacers
+	"spacer_15": ["spacers", "15 MM HUBCENTRIC SPACERS", 180, 1, { "spacers": 1, "track": 0.03, "grip": 1.01 }, "FILLS THE ARCH. DOESN'T FILL THE VOID."],
+	"spacer_25": ["spacers", "25 MM BOLT-ON SPACERS", 260, 1, { "spacers": 2, "track": 0.05, "grip": 1.015 }, "FLUSH. THE WORD IS FLUSH. SAY IT AT THE MEET."],
+	"spacer_38": ["spacers", "38 MM 'TRUST ME' SPACERS", 140, 1, { "spacers": 3, "track": 0.08, "grip": 1.0, "tire_wear": 1.2 }, "FROM A GUY ON MARKETTHING. THE WHEEL BEARINGS HAVE STARTED A GROUP CHAT."],
+	# ---------------------------------------------------------------- body kits
+	"kit_skirts": ["bodykit", "LIP + SIDE SKIRTS", 690, 3, { "kit_lip": true, "kit_skirts": true, "cda": -0.01 }, "TWO INCHES LOWER, VISUALLY. ZERO INCHES FASTER, ACTUALLY."],
+	"kit_aero": ["bodykit", "FULL AERO KIT (VARIUSS-ISH)", 1890, 5, { "kit_lip": true, "kit_skirts": true, "kit_diffuser": true, "cl": 0.06, "cda": -0.01 }, "BUMPERS, SKIRTS AND A DIFFUSER. IT FINALLY LOOKS LIKE THE POSTER ON YOUR WALL."],
+	"kit_overfenders": ["bodykit", "RIVETED OVERFENDERS (ROCKIT BUNNI-ISH)", 2490, 6, { "widebody": "overfenders", "track": 0.08, "grip": 1.04, "cda": 0.02, "kit_lip": true }, "YOU CUT THE FENDERS. WITH A SAW. ON PURPOSE. THERE'S NO GOING BACK, AND IT LOOKS INCREDIBLE."],
+	"kit_widebody": ["bodykit", "FULL WIDEBODY (LIBERTEE WALK-ISH)", 4890, 8, { "widebody": "widebody", "track": 0.12, "grip": 1.06, "cda": 0.03, "mass": 18.0, "kit_lip": true, "kit_skirts": true }, "TWELVE CENTIMETRES WIDER. DOESN'T FIT IN THE TIM BURTONS DRIVE-THRU ANYMORE."],
+	# ---------------------------------------------------------------- specialty kits
+	"spec_rally": ["special", "RALLY KIT", 2890, 6, { "special": "rally", "rough": 0.75, "loose_grip": 1.12, "cg": 0.02, "lift": 1 }, "MUDFLAPS, A LIGHT POD AND SKID PLATES. THE BACK ROADS ARE ROADS NOW."],
+	"spec_drift": ["special", "DRIFT KIT", 2190, 5, { "special": "drift", "steer": 0.14, "rear_grip": -0.04, "lsd": 1.0 }, "LOCK, A HYDRO HANDBRAKE AND A WELDED DIFF. YOUR TIRES ARE NOW A CONSUMABLE."],
+	"spec_overland": ["special", "OVERLAND KIT", 3490, 6, { "special": "overland", "rough": 0.6, "loose_grip": 1.08, "mass": 60.0, "cda": 0.05, "lift": 2 }, "A ROOF RACK, A LIGHT BAR, A SNORKEL AND A JERRY CAN. YOU WILL USE NONE OF IT. YOU COULD, THOUGH."],
+	"spec_drag": ["special", "DRAG PACK", 1990, 5, { "special": "drag", "compound": "drag", "mass": -20.0, "grip": 0.97 }, "SKINNIES UP FRONT, A WHEELIE BAR OUT BACK. IT GOES STRAIGHT. ONLY STRAIGHT."],
+	"spec_time_attack": ["special", "TIME ATTACK PACKAGE", 5490, 9, { "special": "time_attack", "cl": 0.5, "cda": 0.08, "grip": 1.03, "kit_lip": true }, "A SPLITTER YOU COULD SERVE DINNER ON, CANARDS AND A WING. DOWNFORCE YOU CAN FEEL ABOVE 80."],
 	"aero_gt": ["aero", "GT WING + SPLITTER", 1890, 6, { "cl": 0.42, "cda": 0.07, "spoiler": "gt", "kit_lip": true }, "SAYS 'I AM THE GUY.' MORE GRIP ABOVE 100 KM/H. MORE LOOKS AT THE TIM BURTONS."],
 }
 
@@ -118,13 +144,17 @@ const STAGE := {
 	"wt_gut": 1, "wt_carbon": 3, "wt_full": 4, "steer_quick": 2, "steer_angle": 3,
 	"pads_hawke": 1, "pads_race": 3, "brk_brenbo": 3, "brk_wilwood": 4,
 	"tire_allseason": 1, "tire_winter": 1, "tire_at": 1, "tire_sport": 2, "tire_semi": 3, "tire_drag": 3,
+	"lift_level": 1, "lift_4": 2, "lift_6": 3, "camber_arms": 1, "camber_plates": 2, "camber_demon": 1,
+	"spacer_15": 1, "spacer_25": 1, "spacer_38": 1, "kit_skirts": 1, "kit_aero": 2, "kit_overfenders": 3, "kit_widebody": 4,
+	"spec_rally": 3, "spec_drift": 3, "spec_overland": 2, "spec_drag": 3, "spec_time_attack": 4,
 	"aero_lip": 1, "aero_ducktail": 1, "aero_wing": 2, "aero_gt": 4,
 }
 
 ## Game hours for Gus to put a part in (the slots that share access share his time).
 const INSTALL_H := { "intake": 0.5, "exhaust": 1.5, "headers": 3.0, "cams": 6.0, "ecu": 1.0, "induction": 8.0,
 	"intercooler": 3.0, "fuel": 4.0, "internals": 14.0, "clutch": 5.0, "flywheel": 5.0, "final": 4.0, "lsd": 4.0, "centre": 5.0,
-	"suspension": 3.0, "swaybar": 1.5, "weight": 2.0, "steering": 3.0, "pads": 1.0, "brakes": 3.0, "tires": 1.0, "aero": 1.5 }
+	"suspension": 3.0, "swaybar": 1.5, "weight": 2.0, "steering": 3.0, "pads": 1.0, "brakes": 3.0, "tires": 1.0, "aero": 1.5,
+	"lift": 6.0, "camber": 2.5, "spacers": 1.0, "bodykit": 10.0, "special": 8.0 }
 
 static func stage(id: String) -> int:
 	return int(STAGE.get(id, 1))
@@ -180,6 +210,15 @@ static func fits(id: String, spec: Dictionary, installed := {}) -> bool:
 			if id == "tire_at": return true
 	if String(p[0]) == "centre": return String(spec.get("drivetrain", "RWD")) in ["AWD", "4WD"]
 	if id == "susp_lift": return body in ["pickup", "tow", "suv", "wagon"]
+	var trucky: bool = body in ["pickup", "tow", "suv", "wagon", "van", "offroad", "boxtruck"]
+	match String(p[0]):
+		"lift": return trucky and body != "boxtruck"
+		"bodykit": return not body in ["tow", "boxtruck", "bus", "semi", "van"] and (not id in ["kit_overfenders", "kit_widebody"] or not body in ["pickup", "suv", "offroad"])
+		"special":
+			match id:
+				"spec_overland": return body in ["pickup", "suv", "wagon", "offroad", "van"]
+				"spec_rally": return not body in ["tow", "boxtruck", "bus", "semi"]
+				_: return not trucky
 	if id == "susp_air": return not body in ["tow"]
 	return true
 
@@ -247,6 +286,10 @@ static func apply(base: Dictionary, installed: Dictionary, tune := {}) -> Dictio
 		if fx.has("compound"): s.tires.compound = String(fx.compound)
 		if fx.has("lsd"): s.lsd = float(fx.lsd)
 		if fx.has("awd_split"): s.awd_split = float(fx.awd_split)
+		if fx.has("track"): s.track = float(s.track) + float(fx.track)
+		if fx.has("rough"): s.rough = float(s.get("rough", 1.0)) * float(fx.rough)
+		if fx.has("loose_grip"): s.loose_grip = float(s.get("loose_grip", 1.0)) * float(fx.loose_grip)
+		if fx.has("tire_wear"): s.tire_wear = float(s.get("tire_wear", 1.0)) * float(fx.tire_wear)
 	if not (e.get("turbo", {}) as Dictionary).is_empty(): tq *= boost_only
 	# the dyno tune: timing adds a little everywhere, boost adds a lot (and spools a touch later)
 	if not tune.is_empty():

@@ -21,6 +21,7 @@ var burn_cloud: CPUParticles2D    # a burnout's (or a donut's) cloud: big, slow,
 var burn_t := 0.0                 # seconds into the burnout going on now
 var burn_last := 0.0              # how long the last one went, once it's over (the HUD reads it, then clears it)
 var smoke_on := true           # Settings > Graphics: tire smoke
+var smoke_build := 0.0         # 0..1: how long the tires have been going up in smoke (a wisp at first, a fog bank after a few seconds)
 var hyd := 0                    # 1ton's hydraulics kit (0 none .. 3 four pumps)
 var looks := {}                 # what the body shop, the parts and 1ton did to it (SaveGame.car_looks): the art wears them
 var hop := 0.0                  # metres off the ground mid-hop
@@ -127,7 +128,7 @@ func _feed_smoke(dt: float, half_wb: float, half_tr: float, thrown: float, snow:
 		var slip: float = sim.wheel_slip[i]
 		if slip < 4.5: continue
 		var at := _wheel_world(half_wb if i < 2 else -half_wb, (-half_tr if i % 2 == 0 else half_tr))
-		field.add(at, clampf((slip - 4.5) / 6.0, 0.2, 1.0) * dt * 3.0, out + sim.world_velocity() * PX * 0.3, col)
+		field.add(at, clampf((slip - 4.5) / 6.0, 0.2, 1.0) * dt * 3.0 * lerpf(0.15, 1.0, smoke_build), out + sim.world_velocity() * PX * 0.3, col)
 
 ## The smoke lives on the parent (so it stays where it was puffed out): it goes with the car.
 func _exit_tree() -> void:
@@ -154,6 +155,9 @@ func _particles(col: Color, life: float, amount: int) -> CPUParticles2D:
 	p.z_as_relative = false
 	get_parent().add_child.call_deferred(p)
 	return p
+
+## How many seconds of wheelspin it takes for the smoke to build all the way up.
+const SMOKE_BUILD_S := 5.0
 
 static var _puff: ImageTexture
 
@@ -545,6 +549,12 @@ func _update_look(dt: float, br: float) -> void:
 	var tire_w := 0.12 * CarArt.CAR_SCALE
 	var smoke_z := z_index - 1
 	var thrown := sim.heading + (0.0 if sim.gear < 0 else PI)
+	# the smoke builds: the first second of wheelspin is a wisp off the tires, and it takes a good
+	# few seconds of it before the jets are billowing; it dies back quicker than it builds
+	var spinning := sim.surface != "ice" and (float(sim.wheel_slip[2]) > 4.5 or float(sim.wheel_slip[3]) > 4.5 \
+		or not sim.front_locked and (float(sim.wheel_slip[0]) > 4.5 or float(sim.wheel_slip[1]) > 4.5))
+	smoke_build = clampf(smoke_build + (dt / SMOKE_BUILD_S if spinning else -dt / 1.5), 0.0, 1.0)
+	var thick := lerpf(0.1, 1.0, smoke_build * smoke_build)
 	for side in 2:
 		var v := -half_tr if side == 0 else half_tr
 		var out_v := v + (-tire_w if side == 0 else tire_w)
@@ -557,7 +567,8 @@ func _update_look(dt: float, br: float) -> void:
 		smoke[side].global_position = _wheel_world(-half_wb + back, out_v)
 		smoke[side].global_rotation = thrown + outward
 		smoke[side].emitting = smoke_on and slip > 4.5 and sim.surface != "ice"
-		smoke[side].color_ramp.colors[0] = Color(0.88, 0.9, 0.95, 0.6) if snow else Color(0.85, 0.85, 0.88, 0.55)
+		smoke[side].color_ramp.colors[0] = Color(0.88, 0.9, 0.95, 0.6 * thick) if snow else Color(0.85, 0.85, 0.88, 0.55 * thick)
+		smoke[side].initial_velocity_max = lerpf(18.0, 34.0, smoke_build)
 		var front := _wheel_world(half_wb, v)
 		var fs := 0.8 if sim.front_locked else clampf((float(sim.wheel_slip[side]) - 2.5) / 6.0, 0.0, 1.0)
 		skids.mark(skid_base + 10 + side, front, fs, mark_col)
@@ -573,6 +584,7 @@ func _update_look(dt: float, br: float) -> void:
 		smoke[2 + side].global_rotation = thrown + outward
 		smoke[2 + side].emitting = smoke_on and float(sim.wheel_slip[side]) > 4.5 and not sim.front_locked and sim.surface != "ice"
 		smoke[2 + side].color_ramp.colors[0] = smoke[side].color_ramp.colors[0]
+		smoke[2 + side].initial_velocity_max = smoke[side].initial_velocity_max
 	for p in smoke + [burn_cloud]:
 		p.set_meta("no_sort", true)
 		p.z_index = smoke_z
@@ -587,7 +599,8 @@ func _update_look(dt: float, br: float) -> void:
 		burn_last = burn_t
 		burn_t = 0.0
 	burn_cloud.global_position = _wheel_world(-half_wb if rear_slip >= front_slip else half_wb, 0.0)
-	burn_cloud.emitting = smoke_on and burning and burn_t > 0.5
+	burn_cloud.emitting = smoke_on and burning and burn_t > 1.5
+	burn_cloud.color_ramp.colors[0] = Color(0.84, 0.84, 0.87, 0.32 * clampf((burn_t - 1.5) / 4.0, 0.15, 1.0))
 	_feed_smoke(dt, half_wb, half_tr, thrown, snow)
 	var nose := _wheel_world(float(spec.length) * CarArt.CAR_SCALE * 0.45, 0.0)
 	steam.global_position = nose

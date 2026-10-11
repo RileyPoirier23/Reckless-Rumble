@@ -95,6 +95,14 @@ static func car_looks(entry: Dictionary) -> Dictionary:
 		if fx.get("kit_lip", false): kit.lip = true
 		if fx.has("caliper") and not m.has("caliper"): m.caliper = Color(String(fx.caliper))
 		if fx.has("drop") and not m.has("drop"): m.drop = maxf(0.0, float(fx.drop))
+		if fx.get("kit_skirts", false): kit.skirts = true
+		if fx.get("kit_diffuser", false): kit.diffuser = true
+		if fx.has("lift"): m.lift = int(m.get("lift", 0)) + int(fx.lift)
+		if fx.has("camber"): m.camber = float(fx.camber)
+		if fx.has("offset") and not m.has("offset"): m.offset = String(fx.offset)
+		if fx.has("spacers") and not m.has("spacers"): m.spacers = int(fx.spacers)
+		for key in ["widebody", "special"]:
+			if fx.has(key): m[key] = String(fx[key])
 	if not kit.is_empty(): m.kit = kit
 	if m.has("caliper") and m.caliper is String: m.caliper = Color(String(m.caliper))
 	if m.has("rim_color") and m.rim_color is String: m.rim_color = Color(String(m.rim_color))

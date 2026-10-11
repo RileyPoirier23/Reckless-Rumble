@@ -43,6 +43,31 @@ func _init() -> void:
 	save.garage[0].parts = { "aero": "aero_gt", "brakes": "brk_brenbo", "suspension": "susp_coilover" }
 	var lk := SaveGame.car_looks(save.garage[0])
 	check("parts show on the car (wing, calipers, drop)", lk.get("spoiler", "") == "gt" and lk.has("caliper") and float(lk.get("drop", 0.0)) > 0.5, str(lk))
+	# fitment and kits: a lift on a truck, camber, spacers, a widebody, a specialty kit, all show on the car
+	var truck := SaveGame.load_spec("tow")
+	check("lift kits fit trucks, not coupes", Parts.fits("lift_4", truck) and not Parts.fits("lift_4", base))
+	check("a widebody doesn't go on a tow truck", not Parts.fits("kit_widebody", truck) and Parts.fits("kit_widebody", base))
+	var pickup := SaveGame.load_spec("fjord_f_one_fiddy_1996")
+	check("the overland kit is for trucks; the time attack package isn't", Parts.fits("spec_overland", pickup) and not Parts.fits("spec_time_attack", pickup) and Parts.fits("spec_time_attack", base), String(pickup.get("body", "")))
+	save.garage[0].parts = { "camber": "camber_plates", "spacers": "spacer_25", "bodykit": "kit_widebody", "special": "spec_time_attack" }
+	var kl := SaveGame.car_looks(save.garage[0])
+	check("kits show on the car (camber, spacers, widebody, the specialty kit)", float(kl.get("camber", 0.0)) < -3.0 and int(kl.get("spacers", 0)) == 2 and String(kl.get("widebody", "")) == "widebody"
+		and String(kl.get("special", "")) == "time_attack" and bool((kl.get("kit", {}) as Dictionary).get("skirts", false)), str(kl))
+	var wide := Parts.apply(base, save.garage[0].parts)
+	check("a widebody and spacers widen the track", float(wide.track) > float(base.track) + 0.15, "%.2f -> %.2f m" % [float(base.track), float(wide.track)])
+	# a rally kit gets through mud and gravel better than stock
+	var stock_mud := CarSim.new(base)
+	var rally_mud := CarSim.new(Parts.apply(base, { "special": "spec_rally" }))
+	for c in [stock_mud, rally_mud]:
+		c.set_ambient(20.0)
+		c.cold_start()
+		c.surface = "gravel"
+	check("the rally kit grips better on gravel", rally_mud.tire_mu(2) > stock_mud.tire_mu(2) * 1.08)
+	var demon := CarSim.new(Parts.apply(base, { "camber": "camber_demon" }))
+	demon.set_ambient(20.0)
+	demon.cold_start()
+	stock_mud.surface = "dry"
+	check("demon camber looks great and grips worse", demon.tire_mu(2) < stock_mud.tire_mu(2) * 0.9)
 	# stages and install time
 	var unstaged: Array = []
 	for id in Parts.CATALOG:

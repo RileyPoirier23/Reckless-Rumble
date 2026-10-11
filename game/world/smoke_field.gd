@@ -55,9 +55,9 @@ func add(at: Vector2, amount: float, vel := Vector2.ZERO, col := Color(0.86, 0.8
 	if best != null and not (best.r >= R_MAX and best.thick >= THICK_MAX - 0.01):
 		# feeding a cloud: thicker first, then bigger once it's as thick as smoke gets
 		var room := THICK_MAX - best.thick
-		best.thick = minf(THICK_MAX, best.thick + amount * 0.55)
-		var spill := maxf(0.0, amount * 0.55 - room)
-		best.r = minf(R_MAX, best.r + amount * 14.0 + spill * 30.0)
+		best.thick = minf(THICK_MAX, best.thick + amount * 0.3)
+		var spill := maxf(0.0, amount * 0.3 - room)
+		best.r = minf(R_MAX, best.r + amount * 7.0 + spill * 18.0)
 		best.idle = 0.0
 		best.vel = best.vel.lerp(vel, 0.05)
 		best.col = best.col.lerp(col, 0.1)
@@ -80,7 +80,7 @@ func add(at: Vector2, amount: float, vel := Vector2.ZERO, col := Color(0.86, 0.8
 	var np := Puff.new()
 	np.pos = at
 	np.vel = vel
-	np.thick = minf(THICK_MAX, 0.12 + amount * 0.55)
+	np.thick = minf(THICK_MAX, 0.04 + amount * 0.3)      # a new puff starts as a wisp
 	np.col = col
 	puffs.append(np)
 

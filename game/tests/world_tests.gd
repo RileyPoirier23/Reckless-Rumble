@@ -164,10 +164,13 @@ func _init() -> void:
 		check("%s: 0-50 km/h in under 12 s" % id, tt < 12.0, "%.1f s" % tt)
 	# ---- tire smoke piles up: a long burnout's cloud gets thick and spreads, then it clears
 	var sf := SmokeField.new()
+	var early := 0.0
 	for i in 600:                                  # ten seconds of two tires spinning flat out
 		sf.add(Vector2(100, 100), 3.0 / 60.0)
 		sf.add(Vector2(100, 120), 3.0 / 60.0)
 		sf.step(1.0 / 60.0, Vector2.ZERO)
+		if i == 30: early = sf.thickness_at(Vector2(100, 110))
+	check("tire smoke builds: half a second in it's still a wisp", early < 0.3, "thickness %.2f after 0.5 s" % early)
 	var thick := sf.thickness_at(Vector2(100, 110))
 	var spread := sf.puffs.size()
 	check("tire smoke piles up: thick where the tires spun, and spreading", thick > 0.6 and spread >= 4 and spread < SmokeField.MAX_PUFFS, "thickness %.2f, %d puffs" % [thick, spread])
