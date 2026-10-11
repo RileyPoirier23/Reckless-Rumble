@@ -300,7 +300,7 @@ const SCENES := {
 		["*", "SHE OPENS A LEDGER. LEO'S NAME AT THE TOP OF THE PAGE, IN PENCIL. UNDER IT, ONE NUMBER: ${DEBT}."],
 		["MIA", "Pencil, because it goes down. That's the deal. Every Charjer you bring in clean, it goes down."],
 		["MIA", "Dom wants you at the airstrip Friday. Runway 7, ten o'clock."],
-		["LEO", "Am I in trouble?"],
+		["LEO", "Is this the part where I find out what a turbo costs?"],
 		["MIA", "Dom watched you leave the Tim Burtons lot. He says you launch like a shopping cart. He's going to teach you to leave a line."],
 		["MIA", "It's a compliment. He doesn't teach people he wants dead."],
 		["LEO", "Good to know."],
