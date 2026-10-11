@@ -36,6 +36,7 @@ func _init() -> void:
 	_knots()
 	_supercars_and_lamps()
 	_fenders_and_mirrors()
+	_no_clipping()
 	_ambulance_and_trucks()
 	_async()
 	print("\n%d failed" % fails)
@@ -635,3 +636,89 @@ func _ambulance_and_trucks() -> void:
 		var behind := 0.0
 		for w: Array in tp.wheels: behind = maxf(behind, x_tail - (float(w[0]) - float(w[2])))
 		check("%s's tandem stays under its frame" % id2, behind <= 1.0 and tp.wheels.size() >= 10, "%.1f px out, %d wheels" % [behind, tp.wheels.size()])
+
+## The sweep from above: in every combination of rim size, tyre, fitment, spacers, stagger, drop,
+## camber, lift and wide arches, no tyre (back ones in the plan, the steering front ones by their
+## stack) shares a slice with the body over it: the body over a tyre always starts above it, and a
+## poked tyre stands outside the body. And the new looks each change the car from above.
+func _no_clipping() -> void:
+	var bad: Array = []
+	var n := 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var cars := ["silvio", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "fjord_escorted_1987", "acurra_en_ess_eks_1991"]
+	for k in 220:
+		var m := {
+			"rim_size": [0.6, 0.7, 0.78, 0.86][rng.randi() % 4], "tire": ["stock", "lowpro", "offroad", "slicks", "mud"][rng.randi() % 5],
+			"offset": CarGen.FITMENTS[rng.randi() % CarGen.FITMENTS.size()], "spacers": rng.randi() % 4,
+			"drop": [-1.0, -0.5, 0.0, 0.5, 1.0][rng.randi() % 5], "camber": [0, -3, -8][rng.randi() % 3],
+			"lift": [0, 2, 4, 6][rng.randi() % 4], "widebody": ["", "overfenders", "widebody"][rng.randi() % 3],
+		}
+		if rng.randf() < 0.3: m.stagger = "staggered"
+		var id: String = cars[k % cars.size()]
+		var p := _plan(id, m)
+		n += 1
+		for w: Array in p.wheels:
+			var xc: float = w[0]
+			var yc: float = w[1]
+			var r: float = w[2]
+			var ww: int = w[3]
+			var s := float(w[5])
+			var zmax := 2.0 * r * CarArt.RISE
+			for x in range(int(floor(xc - r)), int(ceil(xc + r)) + 1):
+				var dx := float(x) + 0.5 - xc
+				if absf(dx) > r or x < 0 or x >= p.sx: continue
+				var dz := CarArt.RISE * sqrt(maxf(0.0, r * r - dx * dx))
+				var zb := maxi(0, int(round(r * CarArt.RISE - dz)))
+				var zt := maxi(zb, int(round(r * CarArt.RISE + dz)) - 1)
+				var y_out := int(round(yc - ww / 2.0)) + (ww - 1 if s > 0.0 else 0)
+				for ring in ww + p.camber:
+					var y := y_out - int(s) * ring
+					if y < 0 or y >= p.sy: continue
+					# this row's slices of the tyre (a leaning one's rows move in up top)
+					for z in range(zb, zt + 1):
+						var sh := CarArt.wheel_lean(float(z), p.camber, zmax)
+						if ring < sh or ring >= sh + ww: continue
+						var i := p.idx(x, y)
+						if p.h0[i] >= 0 and z >= p.b0[i] and z <= p.h0[i] and (p.m0[i] & 255) != CarArt.M_TIRE and bad.size() < 12:
+							bad.append("%s %s (%d,%d,z%d) body %d..%d" % [id, str(m), x, y, z, p.b0[i], p.h0[i]])
+	check("no tyre shares a slice with the body over it, from above, in %d combinations" % n, bad.is_empty(), str(bad.slice(0, 3)))
+	# the front wheels steered to full lock: their ends swing in, never into the body
+	var steer_bad: Array = []
+	for id2: String in cars:
+		for m3: Dictionary in [{}, { "drop": 1.0, "offset": "stance" }, { "drop": 1.0, "camber": -8, "widebody": "widebody" }, { "drop": -1.0, "tire": "mud", "lift": 4 }]:
+			var p2 := _plan(id2, m3)
+			for w2: Array in p2.wheels:
+				if not w2[4]: continue
+				var r2: float = w2[2]
+				var ww2: int = w2[3]
+				var zmax2 := 2.0 * r2 * CarArt.RISE
+				for st: float in [-0.7, 0.7]:
+					var rot := Vector2.from_angle(st)
+					for z in range(0, int(zmax2)):
+						var hz2 := absf(float(z) + 0.5 - r2 * CarArt.RISE) / CarArt.RISE
+						if hz2 > r2: continue
+						var half := sqrt(r2 * r2 - hz2 * hz2)
+						for k2 in 9:
+							var along := lerpf(-half, half, float(k2) / 8.0)
+							for ring2 in ww2 + p2.camber:
+								var off := Vector2(along, (float(ring2) - float(ww2 - 1) / 2.0) * -float(w2[5]))
+								var at := Vector2(float(w2[0]), float(w2[1])) + Vector2(off.x * rot.x - off.y * rot.y, off.x * rot.y + off.y * rot.x)
+								var xi := int(floor(at.x))
+								var yi := int(floor(at.y))
+								if xi < 0 or yi < 0 or xi >= p2.sx or yi >= p2.sy: continue
+								var i2 := p2.idx(xi, yi)
+								if p2.h0[i2] >= 0 and z >= p2.b0[i2] + 1 and z < p2.h0[i2] and steer_bad.size() < 8:
+									steer_bad.append("%s %s steer %.1f (%d,%d,z%d) body %d..%d" % [id2, str(m3), st, xi, yi, z, p2.b0[i2], p2.h0[i2]])
+	check("a front wheel at full lock swings its ends in under the arch, never into the body", steer_bad.is_empty(), str(steer_bad.slice(0, 3)))
+	var same: Array = []
+	var base := _art("silvio")
+	for m2: Dictionary in [{ "lift": 4 }, { "camber": -8 }, { "widebody": "overfenders" }, { "widebody": "widebody" },
+			{ "special": "rally" }, { "special": "drift" }, { "special": "overland" }, { "special": "drag" }, { "special": "time_attack" }]:
+		if not _differs(base, _art("silvio", m2)): same.append(m2)
+	check("lift, camber, wide arches and the special kits all show from above", same.is_empty(), str(same))
+	var wide := _plan("silvio", { "widebody": "widebody" })
+	var narrow := _plan("silvio", {})
+	check("wide arches take a wider fitment", absf(float(wide.wheels[0][1]) - wide.cy) > absf(float(narrow.wheels[0][1]) - narrow.cy))
+	var skinny := _plan("silvio", { "special": "drag" })
+	check("a drag car's front tyres are skinny", skinny.tire_wf < skinny.tire_w)

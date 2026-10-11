@@ -121,6 +121,8 @@ func _init() -> void:
 	check("every rim paints", wp.img.get_used_rect().size.x >= 30)
 	_wheels()
 	_stance()
+	_no_clipping()
+	_new_looks()
 	_ambulance()
 	_semis()
 	# --- detail follows size: tiny counter cars and cutscene cars stay clean
@@ -430,3 +432,55 @@ func _semis() -> void:
 		var t := CarGen.tandem(d)
 		check("%s rides on a tandem, side on, inside its frame" % id, c.wheels.size() == 3 and t.x - t.y > 1.1 / float(d.L) and t.y * float(d.L) - float(d.tire_r) * float(d.L) >= 0.2,
 			"%d wheels, axles at %.2f / %.2f" % [c.wheels.size(), t.x, t.y])
+
+## The sweep: every rim size, tyre, fitment, spacer, stagger, drop, camber, lift, wide arch and
+## donk together, on a sports coupe, a sedan, a pickup and a hatch. Side on no tyre pixel ever sits
+## inside the body except in the band at its very top that the fitment lets tuck under the lip.
+func _no_clipping() -> void:
+	var bad: Array = []
+	var n := 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var cars := ["silvio", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "fjord_escorted_1987"]
+	for k in 260:
+		var m := {
+			"rim_size": [0.6, 0.7, 0.78, 0.86][rng.randi() % 4], "tire": ["stock", "lowpro", "offroad", "slicks", "mud", "whitewall"][rng.randi() % 6],
+			"offset": CarGen.FITMENTS[rng.randi() % CarGen.FITMENTS.size()], "spacers": rng.randi() % 4,
+			"drop": [-1.0, -0.5, 0.0, 0.5, 1.0][rng.randi() % 5], "camber": [0, -3, -8][rng.randi() % 3],
+			"lift": [0, 2, 4, 6][rng.randi() % 4], "widebody": ["", "overfenders", "widebody"][rng.randi() % 3],
+		}
+		if rng.randf() < 0.3: m.stagger = "staggered"
+		if rng.randf() < 0.2: m.erase("tire")
+		var id: String = cars[k % cars.size()]
+		var d := CarGen.design({ "id": id })
+		var c := CarGen._Car.new(160, d, Color("c8342c"), CarGen.looks(m), {}, 0)
+		c.run()
+		n += 1
+		for wv: Array in c.wheels:
+			if c.cycled(wv) or c.skirted(wv): continue
+			var tc := Vector2(float(wv[1]), float(wv[2]))
+			var band := tc.y - c.r_tire + c.tuck * c.r_tire + 1.0
+			for yy in range(int(band) + 1, int(tc.y + c.r_tire)):
+				for xx in range(int(tc.x - c.r_tire), int(tc.x + c.r_tire) + 1):
+					if Vector2(float(xx) + 0.5, float(yy) + 0.5).distance_to(tc) > c.r_tire - 0.8: continue
+					if c.body_at(xx, yy) and bad.size() < 12: bad.append("%s %s (%d,%d)" % [id, str(m), xx, yy])
+	check("no wheel draws through the body side on, in %d combinations of rim, tyre, fitment, spacers, drop, camber, lift and arches" % n, bad.is_empty(), str(bad.slice(0, 3)))
+
+## The newer looks each show side on: a lift kit, camber, both wide arches and every special kit.
+func _new_looks() -> void:
+	var same: Array = []
+	for m: Dictionary in [{ "lift": 2 }, { "lift": 6 }, { "camber": -3 }, { "camber": -8 }, { "widebody": "overfenders" }, { "widebody": "widebody" },
+			{ "special": "rally" }, { "special": "drift" }, { "special": "overland" }, { "special": "drag" }, { "special": "time_attack" }]:
+		if not _differs("silvio", {}, m, {}, {}): same.append(m)
+	if _differs("silvio", { "camber": -3 }, { "camber": -8 }, {}, {}) == false: same.append("camber -3 vs -8")
+	if _differs("silvio", { "lift": 2 }, { "lift": 6 }, {}, {}) == false: same.append("lift 2 vs 6")
+	check("lift, camber, wide arches and the special kits all show side on", same.is_empty(), str(same))
+	var lo := CarGen._Car.new(160, CarGen.design({ "id": "fjord_f_one_fiddy_2015" }), Color.RED, {}, {}, 0)
+	lo.run()
+	var hi := CarGen._Car.new(160, CarGen.design({ "id": "fjord_f_one_fiddy_2015" }), Color.RED, { "lift": 6 }, {}, 0)
+	hi.run()
+	check("a lift kit stands the body up off its tyres", hi.lift > lo.lift + 2.0 and is_equal_approx(hi.r_tire, lo.r_tire), "%.1f / %.1f px" % [hi.lift, lo.lift])
+	var wm: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "camber": -3 }, 160)[1]
+	var wm8: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "camber": -8 }, 160)[1]
+	var wm0: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "offset": "stance", "camber": 0 }, 160)[1]
+	check("camber leans the wheels by its degrees (and 0 stands them up, stanced or not)", float(wm.camber) < float(wm8.camber) and not wm0.has("camber"))

@@ -301,6 +301,22 @@ func _lit() -> void:
 ## side on in a grid, and from above at the angled camera, 24 to a page.
 func _options() -> void:
 	var opts: Array = []
+	if only == "new":
+		for li: int in [2, 4, 6]: opts.append(["lift %d" % li, { "lift": li }])
+		for li2: int in [2, 6]: opts.append(["truck lift %d" % li2, { "lift": li2, "truck": true }])
+		for cm: int in [-3, -8]: opts.append(["camber %d" % cm, { "camber": cm, "drop": 0.6 }])
+		opts.append(["camber -8 poke", { "camber": -8, "drop": 1.0, "offset": "poke", "rim": "deepdish" }])
+		for wb: String in ["overfenders", "widebody"]:
+			opts.append(["widebody " + wb, { "widebody": wb, "drop": 0.8 }])
+			opts.append(["wb %s poke" % wb, { "widebody": wb, "drop": 1.0, "offset": "poke", "spacers": 3, "rim": "deepdish" }])
+		for sk: String in ["rally", "drift", "overland", "drag", "time_attack"]: opts.append(["special " + sk, { "special": sk }])
+		opts.append(["truck overland", { "special": "overland", "lift": 4, "truck": true }])
+		opts.append(["donk lift", { "drop": -1.0, "rim_size": 0.86, "lift": 6 }])
+		opts.append(["mud lift", { "drop": -1.0, "tire": "mud", "lift": 4, "truck": true }])
+	else: _all_options(opts)
+	await _paint_options(opts)
+
+func _all_options(opts: Array) -> void:
 	for r: String in PixCars.RIMS: opts.append(["rim " + r, { "rim": r }])
 	for t: String in CarGen.TIRES: opts.append(["tire " + t, { "tire": t }])
 	for f: String in GarageScreen.FINISHES: opts.append(["finish " + f, { "finish": f }])
@@ -326,6 +342,8 @@ func _options() -> void:
 	opts.append(["truck spare", { "spare": true, "truck": true }])
 	for bd: String in GarageScreen.BEDS: opts.append(["truck bed " + bd, { "bed": bd, "truck": true }])
 	opts.append(["truck lifted mud", { "drop": -1.0, "tire": "mud", "truck": true }])
+
+func _paint_options(opts: Array) -> void:
 	var sil := spec_of("silvio")
 	var trk := spec_of("fjord_f_one_fiddy_2015")
 	# side on
@@ -346,7 +364,7 @@ func _options() -> void:
 		img.blend_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), at)
 		pix.text((i % cols) * cw + 6, (i / cols) * ch + ch - 9, String(o[0]).to_upper(), Color("10141a"))
 	img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
-	img.save_png(out + "/options_side.png")
+	img.save_png(out + "/options_side%s.png" % ("_new" if only == "new" else ""))
 	# from above
 	CarView.set_angle("angled")
 	var page := 0
@@ -359,5 +377,5 @@ func _options() -> void:
 			var s3 := trk if m2.get("truck", false) else sil
 			m2.erase("truck")
 			_view(s3, Color("c8342c"), m2, deg_to_rad(25.0), Vector2((k % 6 - 2.5) * 66.0, (k / 6 - 1.5) * 52.0 / CarView.squash))
-		await _shoot("options_top_%d" % page)
+		await _shoot("options_top%s_%d" % ["_new" if only == "new" else "", page])
 		page += 1

@@ -1677,14 +1677,14 @@ static func glass_shape(d: Dictionary, top: PackedFloat32Array) -> Array:
 ## A car as its own image: rear bumper at x=22, tyres on the ground 8px above the bottom (and
 ## `below` px more under that for callers that tilt it). Width len + 44.
 static func render(len: int, d: Dictionary, paint: Color, mods := {}, dmg := {}, below := 0) -> Image:
-	var c := _Car.new(len, d, paint, mods, dmg, below)
+	var c := _Car.new(len, d, paint, looks(mods), dmg, below)
 	c.run()
 	return c.p.img
 
 ## Where a design's wheels sit on an image from render(): [[x, r], ...] rear then front, x from
 ## the image's left edge, r the tyre radius (the wheel's centre is r above the ground).
 static func wheel_spots(len: int, d: Dictionary, mods := {}) -> Array:
-	var r := _tire_px(len, d, mods)
+	var r := _tire_px(len, d, looks(mods))
 	return [[22.0 + float(d.wr) * len, r], [22.0 + float(d.wf) * len, r]]
 
 static func _tire_px(len: int, d: Dictionary, mods: Dictionary) -> float:
@@ -1698,7 +1698,8 @@ static func _tire_px(len: int, d: Dictionary, mods: Dictionary) -> float:
 
 ## The rim and the wheel() mods a design's wheels are painted with, so a caller can paint the
 ## same wheel again (the loading screen spins them).
-static func wheel_look(d: Dictionary, mods: Dictionary, len: int) -> Array:
+static func wheel_look(d: Dictionary, the_mods: Dictionary, len: int) -> Array:
+	var mods := looks(the_mods)
 	var rim := String(mods.get("rim", ""))
 	if rim == "": rim = String(d.rim_style)
 	var kind := _tire_kind(mods)
@@ -1718,9 +1719,11 @@ static func wheel_look(d: Dictionary, mods: Dictionary, len: int) -> Array:
 			wm.rim_size = maxf(float(wm.rim_size), 0.78)
 		"stance":
 			# stanced: big deep rims on stretched tyres, leaning in
-			wm.camber = 1.0
 			wm.stretch = true
 			wm.rim_size = maxf(float(wm.rim_size), 0.8)
+	var cam := camber_k(mods)
+	if cam > 0.0: wm.camber = cam
+	else: wm.erase("camber")
 	var year := int(mods.get("year", d.year))
 	wm.lugs = 6 if d.family in ["pickup", "suv", "offroad", "van"] else (4 if year < 1985 and d.cls in ["economy", "kei"] else 5)
 	if d.family == "boxtruck": wm.lugs = 8
@@ -1809,6 +1812,7 @@ class _Car:
 	var r_stock := 0.0
 	var r_tire := 0.0
 	var arch_r := 0.0
+	var tuck := 0.04                     # how far the fender's lip may lap over the tyre's top (of its radius)
 	var wheels: Array = []               # [side, centre x, centre y, arch centre]
 	var shape := PackedVector2Array()
 	var glass := PackedVector2Array()
@@ -1963,7 +1967,7 @@ class _Car:
 		_panels()
 		_trim()
 		_side_bits()
-		if String(mods.get("stripes", d.stripe_kind if d.art.has("stripes") else "none")) == "rally": _rally_plate()
+		if String(mods.get("stripes", d.stripe_kind if d.art.has("stripes") else "none")) == "rally" or mods.get("dots", false): _rally_plate()
 		_lamps()
 		_windshield()
 		_glass_frame()
@@ -1981,10 +1985,12 @@ class _Car:
 		_lightbar()
 		_kit()
 		_wells()
+		_lift_kit()
 		_underbody()
 		_flares()
 		_underglow()
 		_wheels()
+		_specials()
 		_cycle_fender()
 		_damage_fx()
 		if art.has("beacon") or art.has("topper") or art.has("spotlight"): _roof_lights()
@@ -1997,12 +2003,14 @@ class _Car:
 		var drop := float(mods.get("drop", 0.0))
 		r_stock = float(d.tire_r) * lf
 		r_tire = CarGen._tire_px(len, d, mods)
-		lift = -drop * lf * 0.036 + (r_tire - r_stock) * 0.9
+		lift = -drop * lf * 0.036 + (r_tire - r_stock) * 0.9 + CarGen.lift_m(mods) / float(d.L) * lf
 		arch_r = r_stock * 1.1 + float(d.arch_gap) * lf + 0.5
+		# wide arches are cut bigger
+		if CarGen.widebody(mods): arch_r *= 1.08
 		# however slammed, the body comes down onto its tyres, never through them: the arch's top
 		# can close on the tread but only lap over it by the fitment's tuck (tucked wheels ride
 		# up inside the fender, a stanced one's lip sits just over its leaning tyre)
-		var tuck := float({ "tucked": 0.3, "stance": 0.12, "poke": 0.1, "flush": 0.06 }.get(CarGen.fitment(mods), 0.04))
+		tuck = float({ "tucked": 0.3, "stance": 0.12, "poke": 0.1, "flush": 0.06 }.get(CarGen.fitment(mods), 0.04))
 		var top_k := float({ "flat": 0.8, "trap": 0.88, "square": 0.9 }.get(String(d.arch), 1.0))
 		lift = maxf(lift, 2.0 * r_tire - r_stock - arch_r * top_k - tuck * r_tire)
 		wheels.clear()
@@ -2070,6 +2078,18 @@ class _Car:
 					if bm[row + xx] != 0 and in_arch(float(xx) + 0.5 - ac.x, float(yy) + 0.5 - ac.y, ra):
 						bm[row + xx] = 0
 						gm[row + xx] = 0
+			# a tyre too big for its arch (a donk, mud tyres, a lift's) gets the fender trimmed
+			# round it, so it never draws through the body fore and aft; only its top may tuck
+			# in under the lip
+			if skirted(wv): continue
+			var tc := Vector2(float(wv[1]), float(wv[2]))
+			var tr := r_tire + 0.6
+			for yy2 in range(maxi(0, int(tc.y - r_tire + tuck * r_tire) + 1), mini(hgt, int(tc.y + tr) + 1)):
+				for xx2 in range(maxi(0, int(tc.x - tr) - 1), mini(w, int(tc.x + tr) + 2)):
+					var i2 := yy2 * w + xx2
+					if bm[i2] != 0 and Vector2(float(xx2) + 0.5, float(yy2) + 0.5).distance_to(tc) < tr:
+						bm[i2] = 0
+						gm[i2] = 0
 
 	## A front wheel out in the open, ahead of the body, under a cycle fender.
 	func cycled(wv: Array) -> bool:
@@ -4016,7 +4036,7 @@ class _Car:
 			var sx2 := int(X(rear * 0.16)) - int(sr2 * 0.3)
 			var sy2 := int(Y(float(d.belt_r) - 0.02))
 			_spare(sx2, sy2, sr2)
-		if art.has("snorkel"):
+		if art.has("snorkel") or mods.get("snorkel", false):
 			var snx := int(X(float(d.a_bot))) + int(lf * 0.02)
 			var sny := int(Y(float(d.belt_f))) + int(lf * 0.03)
 			var tpy := _first_body(int(X(float(d.roof_f)))) - u
@@ -4047,7 +4067,7 @@ class _Car:
 			p.rect(st0, sty, st1 - st0, 2 * u, CarGen.TRIM)
 			p.hline(st0, sty, st1 - st0, Color("5a5e66"))
 			p.frame(st0 - 1, sty - 1, st1 - st0 + 2, 2 * u + 2, CarGen.INK)
-		if d.mudflaps and lod >= 1:
+		if (d.mudflaps or mods.get("mudflaps", false)) and lod >= 1:
 			# a flap behind each wheel, hung from the body and stopping short of the road
 			for wv: Array in wheels:
 				var mx := int(float(wv[1]) - arch_r * 0.95) - u
@@ -4621,6 +4641,10 @@ class _Car:
 		var style := "none"
 		if String(mods.get("fenders", "stock")) == "flared": style = "bolt"
 		elif d.flare != "none": style = String(d.flare)
+		# a widebody: riveted overfenders, or smooth wide arches blended into the body
+		match String(mods.get("widebody", "")):
+			"overfenders": style = "over"
+			"widebody": style = "wide"
 		if d.art.has("dually") and d.family != "boxtruck": _dually_hips()
 		if style == "trap":
 			_trap_flares()
@@ -4637,6 +4661,7 @@ class _Car:
 			if style == "bulge" and d.art.has("dually"): continue
 			var ac: Vector2 = wv[3]
 			var th0 := (2.5 if style == "bulge" else 3.5) * float(u) + lf * (0.006 if style == "bulge" else 0.01)
+			if style in ["over", "wide"]: th0 = 4.0 * float(u) + lf * 0.014
 			var fr0 := arch_r + th0
 			for yy in range(int(ac.y - fr0) - 2, bottom + 1):
 				# thickest over the top, thinning down the sides to the rocker
@@ -4666,9 +4691,9 @@ class _Car:
 			# the ends stop square at the rocker
 			for xx in range(int(ac.x - fr0) - 1, int(ac.x + fr0) + 2):
 				if absf(float(xx) + 0.5 - ac.x) >= arch_r - 0.2 and absf(float(xx) + 0.5 - ac.x) <= arch_r + th0 * 0.5 + 1.0: p.px(xx, bottom + 1, CarGen.INK)
-			if style == "bolt" and lod >= 1:
-				for k in 5:
-					var a3 := PI + PI * (0.1 + 0.8 * float(k) / 4.0)
+			if style in ["bolt", "over"] and lod >= 1:
+				for k in (5 if style == "bolt" else 7):
+					var a3 := PI + PI * (0.1 + 0.8 * float(k) / (4.0 if style == "bolt" else 6.0))
 					p.px(int(ac.x + cos(a3) * (fr0 - 1.5 * u)), int(ac.y + sin(a3) * (fr0 - 1.5 * u)), CarGen.CHROME[2])
 
 	## A Jepp's flares: flat-topped trapezoids standing proud of the tub, black plastic from the
@@ -4776,9 +4801,140 @@ class _Car:
 				continue
 			if wv[0] == "rear" and d.art.has("dually"): wm.dually = true
 			else: wm.erase("dually")
-			CarGen.wheel(p, cx, cy, r_tire, rim, flat, wm)
+			var wmw := wm
+			if wv[0] == "front" and mods.get("skinny_front", false):
+				# drag runners: a small rim in a tall narrow tyre
+				wmw = wm.duplicate()
+				wmw.rim_size = 0.56
+				wmw.tire_kind = "stock"
+				wmw.erase("stretch")
+				wmw.erase("camber")
+			CarGen.wheel(p, cx, cy, r_tire, rim, flat, wmw)
 			# (a stanced wheel pokes at the bottom, but its camber tucks the top in under the lip)
 			if not (CarGen.pokes(mods) and CarGen.fitment(mods) != "stance") and not cycled(wv): _fender_over(wv, before)
+
+	## A lift kit seen side on: in the gap it opens over each tyre the shock and its coil stand up
+	## from the hub into the arch, and under the raised body the control arms run in from the
+	## hubs and the axle shows between the wheels.
+	func _lift_kit() -> void:
+		if CarGen.lift_m(mods) <= 0.0 or lod == 0: return
+		var dark := Color("23262c")
+		var coil := Color("d8b020")
+		var t := maxi(2, u + 1)
+		for wv: Array in wheels:
+			if cycled(wv): continue
+			var cx := float(wv[1])
+			var cy := float(wv[2])
+			var ac: Vector2 = wv[3]
+			var top := int(ac.y - arch_r * 0.85)
+			# the shock, a little behind the hub, its coil wound round it
+			var sx := int(cx + r_tire * 0.15)
+			for yy in range(top, int(cy)):
+				for k in t + 2:
+					var xx := sx - 1 + k
+					var c := p.get_px(xx, yy)
+					if c.a > 0.6 and c != CarGen.WELL and c != Color("1c2026"): continue
+					var edge := k == 0 or k == t + 1
+					if edge and ((yy - top) / maxi(1, u)) % 3 != 0: continue
+					p.px(xx, yy, coil if edge else dark)
+			# the control arm, in from the hub to the body
+			var dir := 1.0 if wv[0] == "rear" else -1.0
+			var ex := cx + dir * arch_r * 1.5
+			var n := int(absf(ex - cx))
+			for k2 in n:
+				var xx2 := int(cx + dir * float(k2))
+				var yy2 := int(lerpf(cy, sill - 1.0, float(k2) / float(maxi(1, n))))
+				for w2 in t:
+					if p.get_px(xx2, yy2 + w2).a < 0.6: p.px(xx2, yy2 + w2, dark)
+		# the axle between the back wheels' hubs, seen under the body
+		var ra: Array = wheels[0]
+		var fa: Array = wheels[1]
+		var ay := int(float(ra[2]))
+		for xx3 in range(int(float(ra[1])), int(float(fa[1]))):
+			if p.get_px(xx3, ay).a < 0.6 and absf(float(xx3) - float(ra[1])) < arch_r * 2.4: p.px(xx3, ay, Color("2e3238"))
+
+	## The special kits' bolt-ons side on (CarGen.looks spells them out): a rally car's light pod
+	## and roof vent, a drift car's tow straps, an overlander's jerry can up on the rack, a drag
+	## car's wheelie bar, a time attack car's splitter and canards.
+	func _specials() -> void:
+		if lod == 0: return
+		var x_rf := X(float(d.roof_f))
+		var x_rr := X(float(d.roof_r))
+		if mods.get("roof_pod", false) and d.rear != "open":
+			# four round lamps in a black pod across the front of the roof
+			var x1 := int(x_rf) - int(lf * 0.012)
+			var x0 := x1 - maxi(7, int(lf * 0.09))
+			var top := gy
+			for xx in range(x0, x1): top = mini(top, _first_body(xx))
+			var ph := maxi(3, 2 * u + 1)
+			var py := top - ph - u
+			# (side on the pod's a black bar on its feet, the lamps' glass a bright edge at its
+			# front and their round backs humped along its top)
+			p.rect(x0, py, x1 - x0, ph, CarGen.TRIM)
+			for fx2: int in [x0 + u, x1 - 2 * u]: p.vline(fx2, py + ph, top - py - ph + 1, CarGen.TRIM)
+			for k in 4:
+				var lx := x0 + int(float(x1 - x0) * (float(k) + 0.5) / 4.0)
+				p.hline(lx - u, py - 1, 2 * u, CarGen.TRIM)
+				p.px(lx - u, py, Color("4a4e56"))
+			p.vline(x1 - 1, py, ph, Color("f4f2e4"))
+			p.px(x1 - 1, py, Color.WHITE)
+			p.frame(x0 - 1, py - 2, x1 - x0 + 2, ph + 3, CarGen.INK)
+		if mods.get("roof_vent", false) and d.rear != "open":
+			# a little scoop on the roof, open to the front
+			var vx := int(lerpf(x_rr, x_rf, 0.42))
+			var vt := _first_body(vx)
+			var vw := maxi(4, int(lf * 0.04))
+			p.rect(vx, vt - 2 * u, vw, 2 * u, (pal.mid as Color))
+			p.hline(vx, vt - 2 * u, vw, (pal.lt as Color))
+			p.vline(vx + vw - 1, vt - 2 * u, 2 * u, CarGen.WELL)
+			p.frame(vx - 1, vt - 2 * u - 1, vw + 2, 2 * u + 1, CarGen.INK)
+		if mods.get("tow_hook", false):
+			# red tow straps hanging under the bumpers, front and back
+			for end: int in [0, 1]:
+				if end == 1 and front > 0.6 or end == 0 and rear > 0.6: continue
+				var hx := int(X(1.0 - 0.02 - front * 0.2)) if end == 1 else int(X(0.02 + rear * 0.16))
+				var hy := int(Y(float(d.nose_bot if end == 1 else d.tail_bot))) - u
+				var hw2 := maxi(2, 2 * u)
+				var hh := maxi(3, 3 * u)
+				p.rect(hx - hw2 / 2, hy, hw2, hh, Color("c8201c"))
+				p.hline(hx - hw2 / 2, hy, hw2, Color("f06a50"))
+				p.frame(hx - hw2 / 2 - 1, hy - 1, hw2 + 2, hh + 2, CarGen.INK)
+		if mods.get("jerrycan", false) and d.rear != "open":
+			# an olive jerry can strapped up on the back of the rack
+			var cx := int(x_rr) + int(lf * 0.03)
+			var ct := _first_body(cx) - 2 * u
+			var cw := maxi(4, int(lf * 0.03))
+			var chh := maxi(4, int(lf * 0.035))
+			p.rect(cx, ct - chh, cw, chh, Color("4e5a2c"))
+			p.hline(cx, ct - chh, cw, Color("7a8a48"))
+			p.vline(cx + cw / 2, ct - chh + 1, chh - 2, Color("3a4420"))
+			p.frame(cx - 1, ct - chh - 1, cw + 2, chh + 1, CarGen.INK)
+		if mods.get("wheelie_bar", false) and rear < 0.5:
+			# two bars back from under the tail to a pair of little wheels
+			var bx0 := int(X(0.03 + rear * 0.16))
+			var reach := mini(int(lf * 0.09), ox - 4)
+			var bx1 := int(X(0.0)) - reach
+			var by0 := int(Y(float(d.tail_bot))) + u
+			var wr := maxf(1.5, lf * 0.012)
+			var by1 := gy - int(wr)
+			p.line(bx0, by0, bx1, by1, CarGen.CHROME[1])
+			p.line(bx0, by0 + u, bx1, by1, CarGen.CHROME[0])
+			p.disc(bx1, by1, wr, CarGen.TIRE)
+			p.px(bx1, by1, CarGen.CHROME[2])
+		if mods.get("splitter", false) and front < 0.4:
+			# a black splitter plate standing out under the nose
+			var nx := int(X(1.0))
+			var ny := int(Y(float(d.nose_bot)))
+			var sw := maxi(4, int(lf * 0.045))
+			p.rect(nx - sw, ny, sw + maxi(2, int(lf * 0.018)), maxi(1, u), CarGen.TRIM)
+			p.hline(nx - sw, ny + maxi(1, u), sw + maxi(2, int(lf * 0.018)) + 1, CarGen.INK)
+		if mods.get("canards", false) and front < 0.4:
+			# two little dive planes on the bumper's corner
+			var kx := int(X(0.985 - front * 0.2))
+			var ky := int(lerpf(Y(float(d.nose_mid)), Y(float(d.nose_bot)), 0.35))
+			for k3 in 2:
+				var yk := ky + k3 * maxi(2, 2 * u)
+				p.line(kx - maxi(2, int(lf * 0.022)), yk + u, kx + u, yk - u, CarGen.TRIM)
 
 	## A wheel that sits in its arch (not poking out past it): where the tyre rides up behind the
 	## fender, the fender's lip is back over it, rolled and catching the light. Flush, the lip
@@ -5097,6 +5253,58 @@ const TIRES := ["stock", "lowpro", "whitewall", "letters", "offroad", "slicks"]
 ## body, poke standing out past the arches, tucked inside them, stance poking and leaning its tops
 ## in (negative camber), stretch a narrow tyre pulled over a wide rim so the sidewall angles in.
 const FITMENTS := ["stock", "flush", "poke", "tucked", "stance", "stretch"]
+
+## The body shop's special kits spelled out in the keys the painters already draw, both views
+## and the plan cache going through here: each kit bolts on its set without undoing anything
+## chosen on its own. rally: mud flaps, a light pod on the roof, a roof vent, number roundels;
+## drift: a bash bar, a little neon, tow straps; overland: a roof rack with a light bar and a
+## jerry can, a snorkel; drag: a wheelie bar, skinny front tyres on slicks; time_attack: a big
+## splitter, canards, a GT wing. (lift, camber and widebody are drawn as they are.)
+static func looks(mods: Dictionary) -> Dictionary:
+	var sp := String(mods.get("special", ""))
+	if sp == "" or sp == "none": return mods
+	var m := mods.duplicate()
+	match sp:
+		"rally":
+			m.mudflaps = true
+			m.roof_pod = true
+			m.roof_vent = true
+			m.dots = true
+		"drift":
+			m.bash = true
+			m.tow_hook = true
+			if String(m.get("underglow", "")) == "": m.underglow = "#3a8ad8"
+		"overland":
+			if String(m.get("roof", "stock")) == "stock": m.roof = "rack"
+			m.lightbar = true
+			m.jerrycan = true
+			m.snorkel = true
+		"drag":
+			m.wheelie_bar = true
+			m.skinny_front = true
+			if not m.has("tire"): m.tire = "slicks"
+		"time_attack":
+			if String(m.get("spoiler", "none")) == "none": m.spoiler = "gt"
+			var kit: Dictionary = (m.get("kit", {}) as Dictionary).duplicate()
+			kit.lip = true
+			m.kit = kit
+			m.splitter = true
+			m.canards = true
+	return m
+
+## How far a lift kit stands the body up off its wheels (m): the looks' "lift", in inches.
+static func lift_m(mods: Dictionary) -> float:
+	return clampf(float(mods.get("lift", 0.0)), 0.0, 12.0) * 0.0254
+
+## How hard the wheels lean in (0 upright .. 1 a stanced car's camber): the looks' "camber" in
+## degrees (-8 is stance), or the stance fitment's own lean.
+static func camber_k(mods: Dictionary) -> float:
+	if mods.has("camber"): return clampf(absf(float(mods.camber)) / 8.0, 0.0, 1.25)
+	return 1.0 if fitment(mods) == "stance" else 0.0
+
+## True with wide arches: bolt-on riveted overfenders or a smooth widebody.
+static func widebody(mods: Dictionary) -> bool:
+	return String(mods.get("widebody", "")) in ["overfenders", "widebody"]
 
 static func fitment(mods: Dictionary) -> String:
 	var f := String(mods.get("offset", "stock"))
