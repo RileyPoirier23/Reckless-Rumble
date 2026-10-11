@@ -11,7 +11,7 @@ const RED := Color("e0402e")
 
 const CPS := 55.0                 # typewriter: characters a second
 ## Lines that are instructions, not something said: they run as soon as they come up.
-const INSTRUCTIONS := ["set", "cast", "cash", "flag", "pose"]
+const INSTRUCTIONS := ["set", "cast", "cash", "debt", "flag", "pose"]
 
 var step: Dictionary
 var lines: Array = []
@@ -85,6 +85,11 @@ func _process(dt: float) -> void:
 				if not _paid.has(i):
 					_paid[i] = true
 					StoryState.cash += int(ln[1])
+				_next()
+			"debt":
+				if not _paid.has(i):
+					_paid[i] = true
+					StoryState.debt = maxi(0, StoryState.debt + int(ln[1]))
 				_next()
 			"flag":
 				StoryState.set_flag(ln[1])

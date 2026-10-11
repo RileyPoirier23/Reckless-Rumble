@@ -30,6 +30,9 @@ static func texture(name: String) -> ImageTexture:
 		"tims": _tims(p)
 		"apartment": _apartment(p)
 		"bay": _bay(p)
+		"bay_fox": _bay(p, true)
+		"hairpin": _hairpin(p)
+		"meet": _meet(p)
 		_: p.rect(0, 0, AW, AH, Color("0b090d"))
 	var t := p.texture()
 	_cache[name] = t
@@ -131,7 +134,22 @@ static func animate(ci: CanvasItem, name: String, t: float) -> void:
 		"apartment":
 			var tv := Color(0.55 + 0.25 * sin(t * 7.0), 0.65 + 0.2 * sin(t * 5.3), 1.0, 0.16 + 0.08 * sin(t * 11.0))
 			ci.draw_rect(Rect2(60, 140, 150, 120), tv)
-		"bay":
+		"hairpin":
+			# the towers' red lights, blinking out of step, and the snow coming down
+			if fmod(t, 1.8) < 0.9: ci.draw_rect(Rect2(498, 30, 6, 6), Color(1, 0.15, 0.1))
+			if fmod(t + 0.7, 2.1) < 1.0: ci.draw_rect(Rect2(574, 48, 6, 6), Color(1, 0.15, 0.1))
+			for k in 60:
+				var x := fmod(k * 53.0 + sin(t * 0.7 + k) * 14.0 + t * 6.0, 640.0)
+				var y := fmod(k * 37.0 + t * (22.0 + (k % 5) * 6.0), 360.0)
+				ci.draw_rect(Rect2(x, y, 2 + k % 2, 2 + k % 2), Color(1, 1, 1, 0.55))
+		"meet":
+			# underglow breathing, a phone flash in the crowd, the lot lamps humming
+			var glow := 0.18 + 0.08 * sin(t * 2.4)
+			ci.draw_rect(Rect2(456, 262, 184, 8), Color(0.3, 0.9, 1.0, glow))
+			ci.draw_rect(Rect2(0, 258, 130, 8), Color(0.9, 0.2, 0.9, glow * 0.8))
+			if fmod(t, 3.7) < 0.08: ci.draw_rect(Rect2(250 + fmod(t * 97.0, 160.0), 150, 8, 8), Color(1, 1, 1, 0.9))
+			ci.draw_rect(Rect2(160, 60, 320, 200), Color(1, 0.9, 0.7, 0.02 + 0.015 * sin(t * 40.0)))
+		"bay", "bay_fox":
 			if fmod(t, 4.0) < 0.3 and int(t * 25.0) % 2 == 0:
 				ci.draw_rect(Rect2(380, 0, 260, 200), Color(0, 0, 0, 0.3))
 			for k in 8:
@@ -554,7 +572,7 @@ static func _apartment(p: Pix) -> void:
 
 # ====================================================================== Bay 3
 
-static func _bay(p: Pix) -> void:
+static func _bay(p: Pix, fox := false) -> void:
 	# two-tone block wall, pegboard with tool outlines, the old sign
 	p.rect(0, 0, AW, 50, Color("8a8a84"))
 	p.rect(0, 50, AW, 70, Color("6a7a6a"))
@@ -587,7 +605,17 @@ static func _bay(p: Pix) -> void:
 	_floor_concrete(p, 120, Color("5a5a56"))
 	p.ellipse(160, 160, 10.0, 3.0, Color("2a2a2a"))
 	for x in range(152, 170, 3): p.vline(x, 158, 4, Color("1a1a1a"))
-	# the Charjer under a tarp: a car-shaped hill of blue with folds
+	if fox:
+		_fox_on_lift(p)
+	else:
+		_tarp(p)
+	# fluorescent tubes, one of them on its way out
+	for x in [40, 180]:
+		p.rect(x, 2, 70, 3, Color("f0f4f0"))
+		p.cone_down(x + 35, 5, 120, 70.0, Color(1, 1, 0.95), 0.1)
+
+## The Familia's Charjer under a tarp: a car-shaped hill of blue with folds.
+static func _tarp(p: Pix) -> void:
 	var tarp := Color("2a4a7a")
 	var pts := PackedVector2Array([Vector2(196, 150), Vector2(198, 128), Vector2(214, 124), Vector2(240, 106), Vector2(272, 104), Vector2(292, 118), Vector2(318, 124), Vector2(320, 150)])
 	p.poly(pts, tarp)
@@ -600,7 +628,129 @@ static func _bay(p: Pix) -> void:
 	p.disc(300, 146, 8.0, Color("17151a"))
 	p.rect(196, 150, 124, 2, Color(0, 0, 0, 0.4))
 	_vehicle(Rect2(196, 104, 124, 48))                                        # (the Charjer)
-	# fluorescent tubes, one of them on its way out
-	for x in [40, 180]:
-		p.rect(x, 2, 70, 3, Color("f0f4f0"))
-		p.cone_down(x + 35, 5, 120, 70.0, Color(1, 1, 0.95), 0.1)
+
+## The Fox up on the lift: Frank's '88 Mustank, faded, one fender primer grey, the wheels hanging,
+## a drop light hooked under it on the rear axle.
+static func _fox_on_lift(p: Pix) -> void:
+	var paint := Color("7a2a26")
+	var lift := 18
+	_car(p, 200, 128 - lift, "fjord_mustank_1988", 0.86, paint, { "glass": true, "front": 0.3 }, true, { "rust": 0.6 })
+	var r := _reach(200, 128 - lift, "fjord_mustank_1988", 0.86, paint, { "glass": true, "front": 0.3 }, true, { "rust": 0.6 })
+	# the lift's arms out to the pinch welds, and the posts' carriages up at the same height
+	for x in [r.position.x + 10, r.end.x - 14]:
+		p.rect(x - 3, r.end.y - 1, 8, 3, Color("8a1a1a"))
+		p.rect(x, r.end.y + 2, 2, 4, Color("3a3a40"))
+	p.rect(240, r.end.y - 2, 6, 6, Color("8a1a1a"))
+	p.rect(306, r.end.y - 2, 6, 6, Color("8a1a1a"))
+	# the drop light, hooked under the back axle, and its cord down to the floor
+	var lx := r.end.x - 26
+	p.line(lx, r.end.y, lx - 6, AH - 40, Color("2a2a2e"))
+	p.rect(lx - 2, r.end.y + 1, 4, 6, Color("e8c040"))
+	p.cone_down(lx, r.end.y + 6, r.end.y + 30, 18.0, Color(1, 0.95, 0.75), 0.5)
+	p.glow(lx, r.end.y + 4, 10.0, Color("fff0c0"), 0.6)
+	# the drain pan under it, and the old brake line laid out on a rag on the tool chest
+	p.ellipse(r.get_center().x, 150, 18.0, 3.0, Color("2a2a2a"))
+	p.ellipse(r.get_center().x, 150, 12.0, 1.5, Color("3a3226"))
+	p.rect(124, 74, 34, 3, Color("d8d4c8"))
+	p.line(126, 74, 156, 73, Color("b8783a"))
+	p.px(141, 73, Color("e8e4dc"))
+
+
+# ====================================================================== the hairpin, Mountain Road
+
+## The top of Mountain Rd at night in the snow: the hairpin above the towers, the guardrail with a
+## new section in it (where the Fox went through), somebody's flowers zip-tied to the post, and
+## Gus's truck already there with its lights on.
+static func _hairpin(p: Pix) -> void:
+	p.grad_v(0, 0, AW, 92, Color("04060e"), Color("1a2236"), 6)
+	p.speckle(0, 0, AW, 40, Color("c8d0e8"), 0.01)
+	# the far side of the valley: the city's glow, then the ridge, then the towers on it
+	p.grad_v(0, 60, AW, 30, Color(0, 0, 0, 0), Color(1.0, 0.6, 0.3, 0.16), 4)
+	for x in AW:
+		var h := 10 + int(absf(sin(x * 0.021)) * 12.0 + absf(sin(x * 0.087)) * 4.0)
+		p.vline(x, 80 - h, h + 12, Color("0a0e18"))
+	for k in 40:
+		p.px((k * 37 + 11) % AW, 84 + (k * 7) % 6, [Color("ffd890"), Color("f0f0ff"), Color("ffb060")][k % 3])
+	for tx in [250, 288]:
+		var ty := 18 if tx == 250 else 26
+		p.line(tx, ty, tx - 6, 70, Color("1e2230"))
+		p.line(tx, ty, tx + 6, 70, Color("1e2230"))
+		for yy in range(ty + 6, 70, 8): p.line(tx - 1 - (yy - ty) / 9, yy, tx + 1 + (yy - ty) / 9, yy + 4, Color("1e2230"))
+	# the slope down to the road, snowed over, a few spruce black against it
+	p.grad_v(0, 88, AW, 26, Color("8a92a8"), Color("b8c0d0"), 4)
+	p.speckle(0, 88, AW, 26, Color("e8ecf4"), 0.12)
+	for k in 7:
+		var sx := 12 + k * 46 + (k * 13) % 11
+		var sh := 18 + (k * 7) % 10
+		for row in sh:
+			var w := int(row * 0.38)
+			p.hline(sx - w, 88 - sh + row, w * 2 + 1, Color("0c1410"))
+		p.speckle(sx - 6, 88 - sh, 12, sh, Color("dce4f0"), 0.12)
+	# the guardrail along the edge: galvanized, posts every 22 px; the new section is shinier, and
+	# the post at its end has flowers on it
+	for x in range(0, AW, 22):
+		p.rect(x, 100, 3, 14, Color("4a4e58"))
+	p.rect(0, 100, AW, 4, Color("8a8e98"))
+	p.hline(0, 101, AW, Color("b8bcc4"))
+	p.rect(132, 100, 66, 4, Color("c8ccd4"))
+	p.hline(132, 101, 66, Color("eef0f4"))
+	p.speckle(0, 99, AW, 2, Color("f0f4fa"), 0.5)                               # snow on the rail
+	p.rect(198, 104, 3, 8, Color("4a4e58"))
+	for k in 5:
+		p.rect(193 + k * 2, 95 - (k % 2) * 2, 2, 5, Color("2a6a2a"))
+		p.disc(194 + k * 2, 94 - (k % 2) * 2, 1.5, [Color("e04060"), Color("f0e8a0"), Color("e04060"), Color("f0f0f0"), Color("e09040")][k])
+	p.rect(196, 99, 6, 2, Color("e8e4dc"))                                    # the zip tie, and the card
+	# the road: packed snow, two ruts, the yellow line under it
+	p.grad_v(0, 112, AW, AH - 112, Color("9aa2b4"), Color("c8d0dc"), 5)
+	p.speckle(0, 112, AW, AH - 112, Color("eef2f8"), 0.1)
+	for k in 2:
+		var y := 136 + k * 24
+		p.rect(0, y, AW, 5, Color("6a7488"))
+		p.speckle(0, y, AW, 5, Color("4a5468"), 0.3)
+	p.rect_dither(0, 148, AW, 2, Color("c8a040"), 0.3)
+	# Gus's truck, nose to the rail, lights on in the snow
+	_car(p, -36, 128, "fjord_f_one_fiddy_1996", 0.72, Color("2a5a3a"), { "lights": true })
+	p.beam(48, 110, 160, 96, 126, Color("fff4c8"), 0.22)
+	p.rect(0, 0, AW, AH, Color(0.7, 0.75, 0.9, 0.04))
+
+# ====================================================================== the meet, Champagne Place
+
+## The back row of the Champagne Place lot after the mall closes: the dead mall sign, the light
+## poles, the crowd, underglow, Johnny Tram's car on the right and the Silvio on the left.
+static func _meet(p: Pix) -> void:
+	p.grad_v(0, 0, AW, 70, Color("05060e"), Color("16182a"), 5)
+	p.speckle(0, 0, AW, 40, Color("c8d0e8"), 0.008)
+	# the mall: a long beige wall, the sign half lit, the doors dark
+	p.rect(0, 36, AW, 40, Color("6a6458"))
+	for x in range(0, AW, 18): p.vline(x, 36, 40, Color("5a5448"))
+	p.rect(0, 34, AW, 3, Color("8a8478"))
+	p.box(96, 40, 128, 12, Color("1a1614"))
+	p.text(100, 43, "CHAMPAGNE PLA", Color("f0d8a0"))
+	p.text(178, 43, "  E", Color("4a4438"))                                      # the C's been out since 2014
+	p.glow(150, 46, 50.0, Color("f0d8a0"), 0.1)
+	for k in 4: p.rect(30 + k * 80, 58, 26, 18, Color("12141a"))
+	# the light poles and their cones on the asphalt
+	for lx in [40, 160, 280]:
+		p.rect(lx, 22, 3, 80, Color("2a2a30"))
+		p.rect(lx - 8, 20, 18, 3, Color("2a2a30"))
+		p.rect(lx - 6, 22, 14, 2, Color("fff0c8"))
+		p.cone_down(lx + 1, 24, 120, 40.0, Color(1.0, 0.92, 0.75), 0.22)
+	# the crowd along the back: silhouettes, hoods up, phones
+	for k in 26:
+		var x := 4 + k * 12 + (k * 7) % 5
+		var hgt := 28 + (k * 13) % 8
+		var y := 100 - hgt
+		var c := Color("0e0c14")
+		p.rect(x, y + 7, 9, hgt - 7, c)
+		p.disc(x + 4, y + 4, 4.0, c)
+		if k % 4 == 1: p.rect(x + 8, y + 1, 3, 4, Color("cfe8ff"))
+	# the lot
+	p.grad_v(0, 100, AW, AH - 100, Color("1e1c24"), Color("34323a"), 4)
+	p.speckle(0, 100, AW, AH - 100, Color("44424c"), 0.05)
+	for k in 6: p.line(20 + k * 60, 102, 6 + k * 60, AH, Color("c8c4b0"))
+	# the Silvio (Leo's, left) and Johnny's Civil (right), nose to nose across the lane, underglow on
+	p.ellipse(30, 131, 50.0, 3.0, Color(0.9, 0.2, 0.9, 0.35))
+	_car(p, -40, 130, "silvio", 0.8, Color("c8342c"))
+	p.ellipse(276, 133, 48.0, 3.0, Color(0.3, 0.9, 1.0, 0.35))
+	_car(p, 232, 132, "hondo_civil_ess_eye_1999", 0.8, Color("e8e8ec"), {}, true, { "rim": "fivespoke", "drop": 1.0, "spoiler": "wing" })
+	p.rect(0, 40, AW, 60, Color(0.6, 0.6, 0.8, 0.04))

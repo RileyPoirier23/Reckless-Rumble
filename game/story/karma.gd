@@ -30,6 +30,23 @@ const CHOICES := {
 	"kid_light": 2.0, "kid_home": 2.0, "kid_closed": -2.0,
 	# what Leo tells Frankie, eight months in
 	"mentor_dad": 1.5, "mentor_job": 2.0, "mentor_pizza": 0.5,
+	# the first winter: Dom's lesson, Johnny Tram, the last payment
+	"dom_thanks": 1.0, "dom_ask": 0.5, "dom_brush": -1.0,
+	"johnny_fair": 1.0, "johnny_pinks": -1.0, "pinks_return": 1.5, "pinks_keep": -1.0,
+	"bay3_closed": 2.0, "bay3_open": -2.0,
+	# year two: the tapes, Aries suspended, Hatch's fleet deal
+	"d_confront": -1.0, "d_quiet": 1.0,
+	"aries_promise": 1.5, "aries_rules": 0.5, "aries_win": -1.0,
+	"fleet_yes": -1.5, "fleet_no": 1.5,
+	# year three: Tremblay at the Tim Burtons
+	"tremblay_trust": 1.5, "tremblay_keep": 0.0,
+	# year four: the keys in Mikey's hat
+	"keys_hat": 2.5, "keys_take": -3.0,
+	# year six: Sal
+	"sal_dom": -0.5, "sal_cover": 0.5, "sal_tremblay": 1.0,
+	# year seven: Frankie's eighteenth, and Mia's columns
+	"gift_brakes": 2.0, "gift_speed": -2.5, "gift_dont": 0.5,
+	"money_tremblay": 2.0, "money_familia": -2.5, "money_sign": -1.0,
 	# the finale: Hatch at the counter
 	"hatch_calm": 1.5, "hatch_threat": -2.0,
 }

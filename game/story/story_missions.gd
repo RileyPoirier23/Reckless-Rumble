@@ -12,6 +12,16 @@ const MOUNTAIN_FOOT := Vector2(5950, 1545)
 const HAIRPIN := Vector2(5180, 860)
 const HILL_TOP := Vector2(5000, 720)
 const GENERAL := Vector2(6005, 1500)          # the Port Rumble General's emergency doors, on John St by the Rumble Centre
+# runway 7: Dom's line, and his cones an eighth of a mile on
+const RUNWAY_LINE := Vector2(6612, 1028)
+const RUNWAY_END := Vector2(6813, 1028)
+const COVERDALE := Vector2(5200, 1882)        # a car in the ditch on Coverdale Rd
+const CHAMPAGNE := Vector2(6660, 1270)        # the back row at Champagne Place
+const BRIDGE := Vector2(6110, 1600)           # the Gunningsville Bridge
+const SCHOOL := Vector2(5840, 1850)           # Port Rumble High, in Riverside
+const MINISTRY := Vector2(6250, 1505)         # the Ministry office on Main
+const WAREHOUSE := Vector2(6280, 1000)        # Industrial Dr, outside the warehouse
+const S_BEND := Vector2(5600, 1180)           # Mountain Rd, the S-bend below the Tim Burtons
 
 const MISSIONS := {
 	"last_call": {
@@ -36,6 +46,89 @@ const MISSIONS := {
 		"time": 22.4, "season": "fall", "weather": "cloudy", "gasket": true,
 		"intro": ["YOUR CAR. $840. IT'S LEAKING SOMETHING.", "GET IT HOME BEFORE IT GETS HOT."],
 		"objectives": [{ "text": "DRIVE IT HOME TO COVINGTON AUTO. STOP AT THE BAY DOORS.", "to": COVINGTON, "radius": 14.0, "stop": true }],
+	},
+	# ------------------------------------------------------------------ the first winter
+	"launch_control": {
+		"title": "LAUNCH CONTROL",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 21.9, "season": "fall", "weather": "clear",
+		"intro": ["DOM'S LESSON. RUNWAY 7, TEN O'CLOCK.", "MIA: \"DON'T BE LATE. HE SAYS GRACE WHETHER YOU'RE THERE OR NOT.\""],
+		"objectives": [
+			{ "text": "GO TO AIRSTRIP 7. DOM'S WAITING ON RUNWAY 7.", "to": AIRSTRIP, "radius": 22.0, "stop": true },
+			# Dom's eighth-mile: stage, wait for the tree, go. Under his times for a medal.
+			{ "text": "DOM'S EIGHTH-MILE: WAIT FOR GREEN, THEN FLAT OUT TO THE CONES.", "to": RUNWAY_END, "radius": 20.0, "drag": true,
+				"from": RUNWAY_LINE, "medals": [10.9, 11.6, 13.0] },
+		],
+	},
+	"night_shift": {
+		"title": "TOBY'S NIGHT SHIFT",
+		"car": "tow", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 1.9, "season": "fall", "weather": "freezing",
+		"intro": ["TOBY: \"YOU DRIVE. I'M EATING.\"", "A CAR IN THE DITCH ON COVERDALE RD. FREEZING RAIN. TAKE IT EASY ON THE BRIDGE."],
+		"objectives": [
+			{ "text": "THE CAR IN THE DITCH ON COVERDALE RD. STOP BESIDE IT.", "to": COVERDALE, "radius": 20.0, "stop": true },
+			{ "text": "TOBY: \"COFFEE. THE TIM BURTONS ON MOUNTAIN RD. I'M BUYING.\"", "to": TIMS_MOUNTAIN, "radius": 18.0, "stop": true },
+		],
+	},
+	"johnny_tram": {
+		"title": "JOHNNY TRAM",
+		"car": "silvio", "start": CHAMPAGNE, "heading": PI,
+		"time": 23.2, "season": "fall", "weather": "cloudy",
+		"intro": ["THE BACK STREETS TO THE GUNNINGSVILLE BRIDGE. FIRST ONE THERE.", "MIKEY: \"I BELIEVE IN YOU. I'M ALSO FILMING.\""],
+		"objectives": [{ "text": "BEAT JOHNNY TRAM TO THE GUNNINGSVILLE BRIDGE.", "to": BRIDGE, "radius": 25.0,
+			"race": { "car": "hondo_civil_ess_eye_1999", "paint": "#e8e8ec", "name": "JOHNNY TRAM", "start": Vector2(6660, 1262), "heading": PI, "skill": 0.74, "cap": 33.0 } }],
+	},
+	"anniversary": {
+		"title": "ONE YEAR",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 23.4, "season": "winter", "weather": "snow",
+		"intro": ["DECEMBER 6. THE FIRST SNOW.", "UP MOUNTAIN RD, TO THE HAIRPIN."],
+		"objectives": [{ "text": "DRIVE UP MOUNTAIN RD TO THE HAIRPIN. STOP AT THE GUARDRAIL.", "to": HAIRPIN, "radius": 22.0, "stop": true }],
+	},
+	# ------------------------------------------------------------------ the years in between
+	"principals_office": {
+		"title": "THE PRINCIPAL'S OFFICE",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 14.5, "season": "fall", "weather": "drizzle",
+		"intro": ["THE SCHOOL CALLED. ARIES HIT A KID.", "YOU LEFT THE COUNTER IN THE MIDDLE OF A SHIFT. GUS IS NOT HAPPY."],
+		"objectives": [
+			{ "text": "GET ARIES: PORT RUMBLE HIGH, IN RIVERSIDE. STOP OUT FRONT.", "to": SCHOOL, "radius": 22.0, "stop": true },
+			{ "text": "TAKE HER HOME. SHE'S IN THE CAR NOW: DRIVE LIKE IT. ONE HIT AND YOU START AGAIN.", "to": COVINGTON, "radius": 14.0, "stop": true, "gentle": true,
+				"gentle_fail": "ARIES: \"LEO.\" YOU HIT SOMETHING. START THAT AGAIN." },
+		],
+	},
+	"road_test": {
+		"title": "THE ROAD TEST",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 9.6, "season": "spring", "weather": "clear",
+		"intro": ["ARIES'S ROAD TEST IS AT TEN. SHE'S QUIZZING YOU ON STOP SIGNS.", "ARIES: \"FULL STOP. FULL. NOT A LEO STOP.\""],
+		"objectives": [{ "text": "THE MINISTRY OFFICE ON MAIN. NOT A SCRATCH: SHE'LL NEVER LET YOU HEAR THE END OF IT.", "to": MINISTRY, "radius": 20.0, "stop": true,
+			"gentle": true, "gentle_fail": "ARIES: \"OH MY GOD.\" YOU HIT SOMETHING. START AGAIN." }],
+	},
+	"seatbelt": {
+		"title": "SEATBELT",
+		"car": "silvio", "start": WAREHOUSE, "heading": -PI / 2.0,
+		"time": 1.3, "season": "summer", "weather": "rain", "impaired": 0.6,
+		"intro": ["ARIES: \"SEATBELT.\"", "YOU'RE DRUNK. SHE KNOWS IT. SHE GOT IN ANYWAY.", "HOME. THE LONG WAY, UP MOUNTAIN RD, BECAUSE YOU'RE NOT THINKING."],
+		"objectives": [{ "text": "HOME. ARIES IS IN THE PASSENGER SEAT.", "to": S_BEND, "radius": 24.0, "crash_at": true }],
+	},
+	"the_fox": {
+		"title": "RAN WHEN PARKED",
+		"car": "tow", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 17.6, "season": "spring", "weather": "cloudy",
+		"intro": ["DARRELL'S AT THE TIM BURTONS ON MOUNTAIN RD. WITH THE FOX ON A TRAILER. OF COURSE.", "BRING CASH. HE DOESN'T DO E-TRANSFERS. HE SAYS THEY'RE A GOVERNMENT THING."],
+		"objectives": [
+			{ "text": "PICK UP THE FOX FROM DARRELL AT THE TIM BURTONS ON MOUNTAIN RD.", "to": TIMS_MOUNTAIN, "radius": 18.0, "stop": true },
+			{ "text": "BRING THE FOX HOME TO COVINGTON AUTO. GENTLY: WHATEVER HAPPENED TO IT, IT'S STILL ON IT.", "to": COVINGTON, "radius": 14.0, "stop": true,
+				"gentle": true, "gentle_fail": "THE FOX BANGS ON THE HOOK. GUS WOULD KILL YOU. GO BACK AND DO THAT AGAIN." },
+		],
+	},
+	"gus_heart": {
+		"title": "THE GENERAL",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 0.2, "season": "fall", "weather": "clear",
+		"intro": ["GUS IS IN THE PASSENGER SEAT. HE'S GREY.", "GUS: \"DON'T YOU DARE SPEED.\"", "GUS: \"...OKAY. SPEED A LITTLE.\""],
+		"objectives": [{ "text": "THE PORT RUMBLE GENERAL, ON JOHN ST BY THE RUMBLE CENTRE. QUICK. NOT STUPID.", "to": GENERAL, "radius": 22.0, "stop": true }],
 	},
 	# ------------------------------------------------------------------ the finale
 	"long_way_down": {
@@ -91,8 +184,15 @@ class MissionRunner extends Node2D:
 	var _end_t := -1.0
 	var _end_text := ""
 	var _hit_seen := 0.0              # damage already blacked out for
-	var target: AiCar                 # the car being chased (a "chase" objective)
+	var target: AiCar                 # the car being chased (a "chase" objective), or raced (a "race")
 	var _close_t := 0.0               # seconds spent right on its bumper
+	# where this objective started (a "gentle" one goes back here after a hit, a race restarts here)
+	var _o_set := false
+	var _o_at := Vector2.ZERO
+	var _o_head := 0.0
+	var _o_dmg := 0.0
+	var _go_t := -1.0                 # a drag run or a race: seconds since the countdown started (-1: not yet)
+	var _run_t := 0.0                 # a drag run: the clock since green
 
 	func setup(the_drive: Node, mission: Dictionary) -> void:
 		drive = the_drive
@@ -105,10 +205,16 @@ class MissionRunner extends Node2D:
 		return m.objectives[k] if k < (m.objectives as Array).size() else {}
 
 	func _route() -> void:
+		_o_set = false
+		_go_t = -1.0
 		var o := objective()
 		if o.is_empty(): return
-		drive._on_dest(String(o.text).split(".")[0], o.to)
+		# a drag run's cones are straight down the runway: no GPS line wandering off round town
+		if not o.get("drag", false): drive._on_dest(String(o.text).split(".")[0], o.to)
 		drive.hud.objective = String(o.text)
+
+	static func damage_of(car: PlayerCar) -> float:
+		return car.damage.front + car.damage.left + car.damage.right + car.damage.rear
 
 	func _process(dt: float) -> void:
 		t += dt
@@ -126,8 +232,25 @@ class MissionRunner extends Node2D:
 		var o := objective()
 		if o.is_empty() or done: return
 		var car: PlayerCar = drive.car
+		if not _o_set:
+			_o_set = true
+			_o_at = car.sim.pos
+			_o_head = car.sim.heading
+			_o_dmg = damage_of(car)
 		if o.has("chase"):
 			_chase(dt, o, car)
+			return
+		if o.get("drag", false):
+			_drag(dt, o, car)
+			return
+		if o.has("race") and not _race(dt, o, car): return
+		if o.get("gentle", false) and damage_of(car) - _o_dmg > 0.04:
+			# a hit with somebody in the car who matters: back to where this leg started
+			drive._teleport(_o_at, _o_head)
+			drive.white_out = 1.0
+			drive.hud.post(String(o.get("gentle_fail", "YOU HIT SOMETHING. START AGAIN.")), 5.0)
+			_o_dmg = damage_of(car)
+			Controls.rumble(0.6, 0.6, 0.3)
 			return
 		if o.get("crash_at", false):
 			# the end of the road: through the fence, into the meet
@@ -157,18 +280,98 @@ class MissionRunner extends Node2D:
 				StoryState.last_result = { "careful_damage": dmg }
 			if o.has("swap"):
 				drive._swap_story_car(String(o.swap))
-			k += 1
-			obj_t = 0.0
-			if k >= (m.objectives as Array).size():
-				done = true
-				_end_t = 1.0
-			else:
-				_route()
+			_next_objective()
+
+	func _next_objective() -> void:
+		k += 1
+		obj_t = 0.0
+		if k >= (m.objectives as Array).size():
+			done = true
+			_end_t = 1.0
+		else:
+			_route()
+
+	## Dom's eighth-mile: the car's put on the line, the tree counts down (amber, amber, amber,
+	## green), and the clock runs from green to the cones. Rolling before green is a red light;
+	## slower than the last medal time, or stopping short, and it's back to the line.
+	func _drag(dt: float, o: Dictionary, car: PlayerCar) -> void:
+		var medals: Array = o.get("medals", [11.0, 12.0, 13.0])
+		if _go_t < 0.0:
+			drive._teleport(o.get("from", car.sim.pos), (o.to - o.get("from", car.sim.pos)).angle())
+			_go_t = 0.0
+			_run_t = 0.0
+		_go_t += dt
+		var tree := 2.4
+		if _go_t < tree:
+			var lit := int(_go_t / 0.8) + 1
+			drive.hud.objective = "%s   %s" % [String(o.text), "AMBER  ".repeat(lit).strip_edges()]
+			if car.sim.speed() > 1.0:
+				drive.hud.post("RED LIGHT. YOU WENT BEFORE GREEN. DOM: \"AGAIN.\"", 4.0)
+				_go_t = -1.0
+			return
+		_run_t += dt
+		drive.hud.objective = "GREEN.   %.2f S" % _run_t
+		var past: bool = (car.sim.pos - o.from).dot((o.to - o.from).normalized()) >= (o.to - o.from).length()
+		if past:
+			var tier := ""
+			for i in medals.size():
+				if _run_t <= float(medals[i]):
+					tier = ["gold", "silver", "bronze"][i]
+					break
+			if tier == "":
+				drive.hud.post("%.2f S. TOO SLOW FOR A MEDAL. DOM: \"AGAIN.\"" % _run_t, 5.0)
+				_go_t = -1.0
+				return
+			for t2 in ["gold", "silver", "bronze"]: StoryState.flags.erase("launch_" + t2)
+			StoryState.set_flag("launch_" + tier)
+			StoryState.last_result = { "eighth": _run_t, "medal": tier }
+			drive.hud.post("%.2f S. %s." % [_run_t, tier.to_upper()], 5.0)
+			_next_objective()
+		elif _run_t > float(medals[medals.size() - 1]) + 4.0:
+			drive.hud.post("THAT'S NOT A RUN, KID. BACK TO THE LINE.", 4.0)
+			_go_t = -1.0
+
+	## A race: the rival waits for the count, then drives his road to the objective. Get there
+	## first and it's yours (true: carry on to the usual arrival check); let him and it's back to
+	## the start, both of you.
+	func _race(dt: float, o: Dictionary, car: PlayerCar) -> bool:
+		var r: Dictionary = o.race
+		if target == null:
+			_spawn_target(r, o.to)
+			target.hold = true
+			_go_t = 0.0
+		if _go_t >= 0.0:
+			_go_t += dt
+			var left := 3 - int(_go_t)
+			drive.hud.objective = "%s   %s" % [String(o.text), str(left) if left > 0 else "GO"]
+			if _go_t >= 3.0:
+				target.hold = false
+				_go_t = -1.0
+			return car.sim.pos.distance_to(o.to) < float(o.radius)
+		var mine := car.sim.pos.distance_to(o.to)
+		var his := target.sim.pos.distance_to(o.to)
+		drive.hud.objective = "%s   %s" % [String(o.text), "YOU'RE AHEAD" if mine < his else "%s IS AHEAD" % String(r.get("name", "HE"))]
+		if his < float(o.radius) and mine >= float(o.radius):
+			drive.hud.post("%s GOT THERE FIRST. BACK TO THE START." % String(r.get("name", "HE")), 5.0)
+			_drop_target()
+			drive._teleport(_o_at, _o_head)
+			drive.white_out = 1.0
+			return false
+		if mine < float(o.radius):
+			_drop_target()
+			return true
+		return false
+
+	func _drop_target() -> void:
+		if target == null: return
+		target.queue_free()
+		drive.traffic.extra.erase(target)
+		target = null
 
 	## A chase: the target drives its road to the objective's end. Ram it, or stay right on it for
 	## two and a half seconds and it's over. Let it get over the hill (or lose it), and it's back to the start.
 	func _chase(dt: float, o: Dictionary, car: PlayerCar) -> void:
-		if target == null: _spawn_target(o)
+		if target == null: _spawn_target(o.chase, o.to)
 		var d := car.sim.pos.distance_to(target.sim.pos)
 		var rammed := car.last_hit == target and Engine.get_physics_frames() - car.hit_frame < 4 and car.sim.speed() > 5.0
 		_close_t = _close_t + dt if d < 10.0 else maxf(0.0, _close_t - dt * 0.5)
@@ -181,20 +384,17 @@ class MissionRunner extends Node2D:
 			return
 		if target.sim.pos.distance_to(o.to) < float(o.radius) or d > 650.0:
 			drive.hud.post("HE'S OVER THE HILL. HE COMES BACK DOWN EVERY NIGHT, LEO. AGAIN." if d <= 650.0 else "YOU LOST HIM. AGAIN.", 5.0)
-			target.queue_free()
-			drive.traffic.extra.erase(target)
-			target = null
+			_drop_target()
 			_close_t = 0.0
 			drive._teleport(m.start, float(m.heading))
 			drive.white_out = 1.0
 
-	func _spawn_target(o: Dictionary) -> void:
-		var c: Dictionary = o.chase
+	func _spawn_target(c: Dictionary, to: Vector2) -> void:
 		target = AiCar.new()
 		drive.ysort.add_child(target)
 		var spec := SaveGame.load_spec(String(c.car))
 		spec.paint = String(c.get("paint", spec.get("paint", "#16161c")))
-		spec.name = "DALE HATCH"
+		spec.name = String(c.get("name", "DALE HATCH"))
 		target.setup_ai(spec, drive.world, drive.skids, drive.hud, c.start, float(c.get("heading", 0.0)), 70)
 		target.traffic = drive.traffic
 		target.skill = float(c.get("skill", 0.8))
@@ -204,7 +404,7 @@ class MissionRunner extends Node2D:
 		# his road starts where he is: the router starts at the nearest junction, which can be
 		# behind him (and he'd turn round for it)
 		var fwd := Vector2.from_angle(float(c.get("heading", 0.0)))
-		var r: PackedVector2Array = drive.world.map.route_to(c.start, o.to)
+		var r: PackedVector2Array = drive.world.map.route_to(c.start, to)
 		var path := PackedVector2Array([c.start])
 		var ahead := false
 		for p in r:

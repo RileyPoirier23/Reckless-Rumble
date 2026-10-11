@@ -18,7 +18,7 @@ func _init() -> void:
 			"card", "avatar", "counter", "credits": pass
 			_: bad.append(st.type)
 	check("every step points at a real scene or mission", bad.is_empty(), str(bad))
-	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay", "black"]
+	var sets := ["party", "airstrip", "office", "lot_dusk", "lot_dusk_charjer", "tims", "apartment", "bay", "bay_fox", "hairpin", "meet", "black"]
 	var who_bad := []
 	var set_bad := []
 	var lines := 0
@@ -31,7 +31,7 @@ func _init() -> void:
 			if w == "pose":
 				if not StoryScript.CAST.has(String(ln[1])): who_bad.append("pose for " + String(ln[1]))
 				continue
-			if w in ["*", "choice", "set", "cast", "cash", "flag", "MANAGER"]: continue
+			if w in ["*", "choice", "set", "cast", "cash", "debt", "flag", "MANAGER"]: continue
 			if not StoryScript.CAST.has(w): who_bad.append(w)
 			if (String(ln[1]).length() > 230): who_bad.append("too long: " + String(ln[1]).substr(0, 30))
 	for id in StoryScript.SCENES:
@@ -62,6 +62,10 @@ func _init() -> void:
 			# the GPS routes node to node; the last stretch is the street the place is on
 			check("%s: you can drive to '%s'" % [id, String(o.text).substr(0, 24)], r.size() >= 1 and r[r.size() - 1].distance_to(o.to) < 250.0 and map.ground_at(o.to) == "asphalt")
 			from = o.to
+			# whoever he's chasing or racing starts on the road too, and a drag run starts on the runway
+			for key in ["chase", "race"]:
+				if o.has(key): check("%s: the %s car starts on pavement" % [id, key], map.ground_at(o[key].start) == "asphalt" and not SaveGame.load_spec(String(o[key].car)).is_empty(), String(o[key].car))
+			if o.get("drag", false): check("%s: the drag run starts on the runway" % id, map.ground_at(o.from) == "asphalt" and (o.to as Vector2).distance_to(o.from) > 150.0)
 	# Frankie: the kid from down the street Leo teaches. Leo has nobody; Frankie isn't his.
 	var at := {}
 	for k in StoryScript.STEPS.size(): at[String(StoryScript.STEPS[k].get("id", ""))] = k
@@ -324,9 +328,34 @@ func _karma() -> void:
 		if String(ln[0]) == "flag" and ln.size() > 2: settle[String(ln[2].karma)] = String(ln[1])
 	check("endings: each tier settles one ending", settle == { "high": "frankie_safe", "middle": "frankie_hurt", "low": "frankie_dead" }, str(settle))
 	check("endings: the revenge mission is a chase up the Mountain", StoryMissions.MISSIONS.the_mountain.objectives[0].has("chase"))
+	check("credits: on the Mountain ending, Frankie's line has his years", EndCredits.line_text("FRANKIE, FROM DOWN THE STREET").contains("2026"))
+	# the years in between are written: a card for every chapter, in order, and nothing left saying otherwise
+	var cards := []
+	var unwritten := false
+	for st in StoryScript.STEPS:
+		if st.type == "card" and String(st.title).begins_with("CHAPTER"): cards.append(String(st.title))
+		if str(st).contains("STILL BEING WRITTEN") or str(st).contains("go here"): unwritten = true
+	check("story: chapters 1 to 8, in order, all written", cards == ["CHAPTER 1", "CHAPTER 2", "CHAPTER 3", "CHAPTER 4", "CHAPTER 5", "CHAPTER 6", "CHAPTER 7", "CHAPTER 8"] and not unwritten, str(cards))
+	# the keys in Mikey's hat: take them and it's the S-bend and Tremblay; leave them and Aries drives
+	var took := _path({ "keys_take": true })
+	var left := _path({ "keys_hat": true })
+	check("chapter 4: take the keys, drive drunk with Aries, get pulled over at the S-bend", took.has("seatbelt") and took.has("pulled_over") and not took.has("aries_drives"), str(took))
+	check("chapter 4: leave them in the hat and Aries drives you home", left.has("aries_drives") and not left.has("seatbelt") and left.has("day_one"))
+	# asking Dom about D.: now (and he's hurt), or four years later (and he points at the initials)
+	check("D.: ask Dom in year two, or in year six, never both", _path({ "d_confront": true }).has("d_for_dom") and not _path({ "d_confront": true }).has("not_d")
+		and _path({ "d_quiet": true }).has("not_d") and not _path({ "d_quiet": true }).has("d_for_dom"))
+	# the clue trail runs in order before the finale: the book, the skid marks, the tapes, the carbon
+	# copy, the cut line, the money; and Hatch's slip at the counter still comes after all of it
+	var at := {}
+	for k in StoryScript.STEPS.size(): at[String(StoryScript.STEPS[k].get("id", ""))] = k
+	var order := []
+	for id in ["bay_three", "night_shift", "the_tapes", "carbon_copy", "the_fox", "confession", "follow_money", "hatch_counter"]: order.append(int(at.get(id, -1)))
+	var sorted := order.duplicate()
+	sorted.sort()
+	check("the clues come in order, and all of them before Hatch slips", order == sorted and not order.has(-1), str(order))
+	check("the Silvio is Frankie's before the first snow (Leo gives it to him at eighteen)", int(at.get("eighteen", 99)) < int(at.get("first_snow", -1)))
 	check("endings: Hatch trips over the green book Gus told Leo about",
 		str(StoryScript.SCENES.bay_three.lines).contains("green book") and str(StoryScript.SCENES.hatch_counter.lines).contains("green book"))
-	check("credits: on the Mountain ending, Frankie's line has his years", EndCredits.line_text("FRANKIE, FROM DOWN THE STREET").contains("2026"))
 	StoryState.flags = was
 	StoryState.active = was_active
 

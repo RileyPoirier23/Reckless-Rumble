@@ -27,6 +27,9 @@ const OUTFITS := {
 	"HATCH": { "kind": "suit", "top": 0x8a6a40, "bottom": 0x3a3428, "shirt": 0xe8e4dc, "shoes": 0x3a2a1c },
 	"TOBY": { "kind": "hivis", "top": 0x2a2a30, "bottom": 0x3a3a34, "hat": "cap", "hat_c": 0x1e1e22, "shoes": 0x5a3a1c },
 	"TREMBLAY": { "kind": "police", "top": 0x1c2232, "bottom": 0x1c2232, "hat": "police", "shoes": 0x0e0e10 },
+	"JOHNNY": { "kind": "leather", "top": 0x1a1a22, "inner": 0x2a8ac8, "bottom": 0x2a2a30, "shoes": 0xf0f0f0 },
+	"FRANKIE16": { "kind": "hoodie", "top": 0x2c3a5a, "bottom": 0x34343c, "hat": "cap", "hat_c": 0x8a2e26, "shoes": 0xe8e4dc },
+	"ARIES17": { "kind": "hoodie", "top": 0x4a6a8a, "bottom": 0x2a2a3a, "shoes": 0xe8e0d0 },
 	"DARRELL": { "kind": "plaid", "top": 0x9a2a24, "bottom": 0x3a4a62, "hat": "trucker", "hat_c": 0x3a5a3a, "shoes": 0x5a3a1c },
 }
 
