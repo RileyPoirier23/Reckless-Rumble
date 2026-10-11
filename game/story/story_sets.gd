@@ -28,10 +28,12 @@ static func texture(name: String) -> ImageTexture:
 		"lot_dusk": _lot(p, false)
 		"lot_dusk_charjer": _lot(p, true)
 		"tims": _tims(p)
+		"tims_snow": _tims(p, true)
 		"apartment": _apartment(p)
 		"bay": _bay(p)
 		"bay_fox": _bay(p, true)
 		"hairpin": _hairpin(p)
+		"hairpin_gap": _hairpin(p, true)
 		"meet": _meet(p)
 		_: p.rect(0, 0, AW, AH, Color("0b090d"))
 	var t := p.texture()
@@ -127,10 +129,18 @@ static func animate(ci: CanvasItem, name: String, t: float) -> void:
 			ci.draw_rect(Rect2(150, 74, 170, 22), Color(1.0, 0.82, 0.35, 0.10 if on else 0.0))
 			if name == "lot_dusk_charjer":
 				ci.draw_rect(Rect2(574, 214, 6, 4), Color(1, 0.95, 0.8, 0.6 + 0.2 * sin(t * 30.0)))
-		"tims":
+		"tims", "tims_snow":
 			var flick := fmod(t, 6.0) > 5.6 and int(t * 20.0) % 2 == 0
 			if flick: ci.draw_rect(Rect2(150, 96, 180, 22), Color(0, 0, 0, 0.55))
 			ci.draw_rect(Rect2(476, 70, 200, 200), Color(1, 0.85, 0.5, 0.03 + 0.02 * sin(t * 50.0)))
+			if name == "tims_snow":
+				_snowfall(ci, t)
+				_cruiser_lights(ci, t, name)
+		"hairpin_gap":
+			if fmod(t, 1.8) < 0.9: ci.draw_rect(Rect2(498, 30, 6, 6), Color(1, 0.15, 0.1))
+			if fmod(t + 0.7, 2.1) < 1.0: ci.draw_rect(Rect2(574, 48, 6, 6), Color(1, 0.15, 0.1))
+			_snowfall(ci, t)
+			_cruiser_lights(ci, t, name)
 		"apartment":
 			var tv := Color(0.55 + 0.25 * sin(t * 7.0), 0.65 + 0.2 * sin(t * 5.3), 1.0, 0.16 + 0.08 * sin(t * 11.0))
 			ci.draw_rect(Rect2(60, 140, 150, 120), tv)
@@ -156,6 +166,40 @@ static func animate(ci: CanvasItem, name: String, t: float) -> void:
 				var x := fmod(k * 83.0 + t * (4.0 + k), 640.0)
 				var y := 60.0 + fmod(k * 47.0 + t * 3.0, 160.0)
 				ci.draw_rect(Rect2(x, y, 2, 2), Color(1, 0.95, 0.8, 0.25))
+
+## Snow coming down over the whole screen (screen px).
+static func _snowfall(ci: CanvasItem, t: float) -> void:
+	for k in 60:
+		var x := fmod(k * 53.0 + sin(t * 0.7 + k) * 14.0 + t * 6.0, 640.0)
+		var y := fmod(k * 37.0 + t * (22.0 + (k % 5) * 6.0), 360.0)
+		ci.draw_rect(Rect2(x, y, 2 + k % 2, 2 + k % 2), Color(1, 1, 1, 0.55))
+
+## The cruiser's bar going red, blue, red, blue, and the wash it throws on the snow (screen px).
+## Where the bar is comes from the set (set px, remembered when it was painted).
+static var _bar := {}
+static func _cruiser_lights(ci: CanvasItem, t: float, name: String) -> void:
+	var b: Rect2 = _bar.get(name, Rect2())
+	if b.size == Vector2.ZERO: return
+	var red := int(t * 4.0) % 2 == 0
+	var half := b.size.x
+	ci.draw_rect(Rect2(b.position.x * 2.0, b.position.y * 2.0 - 2.0, half, 6.0), Color(1, 0.15, 0.1) if red else Color(0.6, 0.1, 0.1))
+	ci.draw_rect(Rect2(b.position.x * 2.0 + half, b.position.y * 2.0 - 2.0, half, 6.0), Color(0.2, 0.45, 1.0) if not red else Color(0.1, 0.15, 0.5))
+	ci.draw_rect(Rect2(0, 0, 640, 360), Color(1, 0.2, 0.15, 0.05) if red else Color(0.25, 0.4, 1.0, 0.05))
+
+## A police cruiser (a white Charjer with a bar on the roof), where it stands remembered.
+static func _cruiser(p: Pix, x: int, y: int, depth: float, flip := false) -> void:
+	var paint := Color("e9e9ec")
+	var r := _reach(x, y, "charjer", depth, paint, { "lights": true }, flip)
+	_car(p, x, y, "charjer", depth, paint, { "lights": true }, flip)
+	# the bar: a third of the roof, red and blue, with a dark base
+	var bw := int(r.size.x * 0.34)
+	var bx := r.position.x + (r.size.x - bw) / 2
+	var by := r.position.y - 3
+	p.rect(bx, by + 2, bw, 1, Color("2a2a30"))
+	p.rect(bx, by, bw / 2, 2, Color("e0402e"))
+	p.rect(bx + bw / 2, by, bw - bw / 2, 2, Color("3a6ae0"))
+	p.text(r.position.x + r.size.x / 2 - 12, r.end.y - 12, "POLICE", Color("1c2232"))
+	_bar[_painting] = Rect2(bx, by, bw, 2)
 
 # ====================================================================== shared bits
 
@@ -475,7 +519,9 @@ static func _lot(p: Pix, charjer: bool) -> void:
 
 # ====================================================================== Tim Burtons, Mountain Road
 
-static func _tims(p: Pix) -> void:
+## The Tim Burtons on Mountain Rd at night. With snow: the first snow of the finale, Tremblay's
+## cruiser across the lanes where Darrell's truck used to park, and the Silvio (Frankie's now).
+static func _tims(p: Pix, snow := false) -> void:
 	p.grad_v(0, 0, AW, 80, Color("05070f"), Color("161c30"), 5)
 	p.speckle(0, 0, AW, 50, Color("c8d0e8"), 0.01)
 	# the building: brick base, big warm windows, the sign
@@ -513,6 +559,16 @@ static func _tims(p: Pix) -> void:
 	p.rect(268, 30, 8, 2, Color("fff0c0"))
 	p.cone_down(272, 32, 140, 46.0, Color(1.0, 0.92, 0.7), 0.3)
 	p.box(10, 112, 10, 14, Color("3a5a3a"))                                    # bin
+	if snow:
+		# snow on the roof, the sign and the lot; the cruiser nose-out across the lanes
+		p.rect(36, 32, 208, 3, Color("f0f4fa"))
+		p.rect(70, 42, 150, 2, Color("f0f4fa"))
+		p.speckle(0, 102, AW, AH - 102, Color("e8ecf4"), 0.22)
+		p.rect(0, 102, AW, 2, Color("dce4f0"))
+		_cruiser(p, -22, 124, 0.5)
+		_car(p, 196, 130, "silvio", 0.86, Color("c8342c"), {}, true)
+		p.speckle(196, 100, 124, 14, Color("f0f4fa"), 0.3)                     # snow on the Silvio's roof
+		return
 	# Darrell's truck, and the '91 Silvio with its puddle
 	_car(p, -30, 126, "gmz_sierruh_1988", 0.72, Color("6a5a48"), { "glass": true }, false, { "rust": 0.5 })
 	p.speckle(0, 104, 90, 16, Color("8a6a44"), 0.18)                           # rust patches
@@ -661,7 +717,9 @@ static func _fox_on_lift(p: Pix) -> void:
 ## The top of Mountain Rd at night in the snow: the hairpin above the towers, the guardrail with a
 ## new section in it (where the Fox went through), somebody's flowers zip-tied to the post, and
 ## Gus's truck already there with its lights on.
-static func _hairpin(p: Pix) -> void:
+## With `gap`: the Street ending. The new section of rail is gone again, Charjer-shaped, with
+## two tracks through the snow to it, and Toby's wrecker and Tremblay's cruiser where Gus's truck was.
+static func _hairpin(p: Pix, gap := false) -> void:
 	p.grad_v(0, 0, AW, 92, Color("04060e"), Color("1a2236"), 6)
 	p.speckle(0, 0, AW, 40, Color("c8d0e8"), 0.01)
 	# the far side of the valley: the city's glow, then the ridge, then the towers on it
@@ -700,6 +758,29 @@ static func _hairpin(p: Pix) -> void:
 		p.rect(193 + k * 2, 95 - (k % 2) * 2, 2, 5, Color("2a6a2a"))
 		p.disc(194 + k * 2, 94 - (k % 2) * 2, 1.5, [Color("e04060"), Color("f0e8a0"), Color("e04060"), Color("f0f0f0"), Color("e09040")][k])
 	p.rect(196, 99, 6, 2, Color("e8e4dc"))                                    # the zip tie, and the card
+	if gap:
+		# the same section, gone again: the rail torn off its posts, the ends bent out over the drop,
+		# two posts flattened, and tracks through the snow that don't stop at the edge
+		p.grad_v(132, 88, 66, 26, Color("8a92a8"), Color("b8c0d0"), 4)
+		p.speckle(132, 88, 66, 26, Color("e8ecf4"), 0.12)
+		p.rect(132, 96, 66, 18, Color("5a6478"))                                # the snow churned down to mud
+		p.speckle(132, 96, 66, 18, Color("3a4254"), 0.3)
+		p.line(128, 101, 136, 94, Color("c8ccd4"))                             # the ends of the rail, bent out
+		p.line(129, 102, 137, 95, Color("8a8e98"))
+		p.line(202, 101, 194, 94, Color("c8ccd4"))
+		p.line(201, 102, 193, 95, Color("8a8e98"))
+		for x in [154, 176]: p.rect(x - 4, 110, 10, 3, Color("4a4e58"))        # posts, flat
+		for k in 2:
+			var y := 136 + k * 24
+			p.line(60, y + 2, 165, 108, Color("4a5468"))                        # the tracks, across the ruts and over
+			p.line(60, y + 3, 166, 109, Color("3a4254"))
+		p.speckle(140, 90, 50, 8, Color("16161a"), 0.2)                        # bits of a Charjer in the snow
+		p.speckle(150, 92, 30, 6, Color("e0402e"), 0.08)
+		_car(p, -60, 128, "tow", 0.6, Color("ffa020"), { "lights": true })
+		_cruiser(p, 238, 110, 0.44, true)
+		p.beam(48, 110, 160, 96, 126, Color("fff4c8"), 0.22)
+		p.rect(0, 0, AW, AH, Color(0.7, 0.75, 0.9, 0.04))
+		return
 	# the road: packed snow, two ruts, the yellow line under it
 	p.grad_v(0, 112, AW, AH - 112, Color("9aa2b4"), Color("c8d0dc"), 5)
 	p.speckle(0, 112, AW, AH - 112, Color("eef2f8"), 0.1)
