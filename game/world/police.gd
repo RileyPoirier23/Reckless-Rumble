@@ -595,6 +595,8 @@ class Officer extends Node2D:
 	var shout_t := 0.0
 	var step := 0.0
 	var moving := false
+	var civilian := false            # somebody handing over a car: a coat, no stripe, no badge, no flashlight
+	var coat := Color("3a3440")
 
 	func _ready() -> void:
 		z_index = 3100
@@ -620,8 +622,8 @@ class Officer extends Node2D:
 	func _draw() -> void:
 		var u := CarArt.PX                                  # a metre
 		var swing := sin(step) * 0.18 * u if moving else 0.0
-		var navy := Color("1c2232")
-		if flash or night:
+		var navy := coat if civilian else Color("1c2232")
+		if (flash or night) and not civilian:
 			# the flashlight: a cone ahead of them, brighter when it's on you
 			var reach := 9.0 * u
 			draw_colored_polygon(PackedVector2Array([Vector2(0.2 * u, 0.2 * u), Vector2(reach, -2.2 * u), Vector2(reach, 2.2 * u)]), Color(1, 0.97, 0.85, 0.22 if flash else 0.1))
@@ -631,9 +633,9 @@ class Officer extends Node2D:
 		draw_rect(Rect2(Vector2(-swing - 0.12 * u, 0.24 * u), Vector2(0.24 * u, 0.1 * u)), navy)
 		# shoulders, the hi-vis stripe across them, and the hat
 		draw_rect(Rect2(Vector2(-0.14 * u, -0.26 * u), Vector2(0.28 * u, 0.52 * u)), navy)
-		draw_rect(Rect2(Vector2(-0.04 * u, -0.26 * u), Vector2(0.06 * u, 0.52 * u)), Color("d8e040"))
-		draw_circle(Vector2.ZERO, 0.15 * u, Color("12141c"))
-		draw_rect(Rect2(Vector2(0.02 * u, -0.05 * u), Vector2(0.08 * u, 0.1 * u)), Color("e8c040"))   # the cap badge
+		if not civilian: draw_rect(Rect2(Vector2(-0.04 * u, -0.26 * u), Vector2(0.06 * u, 0.52 * u)), Color("d8e040"))
+		draw_circle(Vector2.ZERO, 0.15 * u, Color("12141c") if not civilian else Color("2a1e18"))
+		if not civilian: draw_rect(Rect2(Vector2(0.02 * u, -0.05 * u), Vector2(0.08 * u, 0.1 * u)), Color("e8c040"))   # the cap badge
 		if shout_t > 0.0: draw_circle(Vector2(0.35 * u, 0), 0.08 * u, Color(1, 1, 1, 0.8))
 
 ## The corner of the HUD where the heat shows, and the light bar when they're on you.

@@ -175,7 +175,8 @@ const MISSIONS := {
 		"time": 20.8, "season": "fall", "weather": "fog",
 		"intro": ["MIA: \"AIRSTRIP 7. BLACK CHARJER. BAY 3. NOT A SCRATCH.\""],
 		"objectives": [
-			{ "text": "GO TO AIRSTRIP 7 AND PICK UP THE FAMILIA'S CHARJER.", "to": AIRSTRIP, "radius": 22.0, "stop": true, "swap": "charjer" },
+			{ "text": "GO TO AIRSTRIP 7 AND PICK UP THE FAMILIA'S CHARJER.", "to": AIRSTRIP, "radius": 22.0, "stop": true, "swap": "charjer",
+				"handler": "DOM", "coat": "#16161c", "handover": ["\"THE CHARJER. BAY THREE. NOT A SCRATCH.\"", "\"YOUR HONDO STAYS WITH ME. YOU'LL GET IT BACK. PROBABLY.\""] },
 			{ "text": "BRING IT TO COVINGTON AUTO. NOT A SCRATCH: EVERY DENT COMES OFF YOUR DEBT, THE WRONG WAY.", "to": COVINGTON, "radius": 14.0, "stop": true, "careful": true },
 		],
 	},
@@ -203,6 +204,11 @@ class MissionRunner extends Node2D:
 	var _o_head := 0.0
 	var _o_dmg := 0.0
 	var _go_t := -1.0                 # a drag run or a race: seconds since the countdown started (-1: not yet)
+	var _hand := ""                   # a handover: "" none, "walk" (they're coming over), "talk", "swap", "away"
+	var _hand_t := 0.0
+	var _hand_car: AiCar              # the car being handed over (then the one you left)
+	var _hand_who: Police.Officer
+	var _hand_lines: Array = []
 	var _run_t := 0.0                 # a drag run: the clock since green
 
 	func setup(the_drive: Node, mission: Dictionary) -> void:
@@ -242,6 +248,9 @@ class MissionRunner extends Node2D:
 			_intro_i += 1
 		var o := objective()
 		if o.is_empty() or done: return
+		if _hand != "":
+			_handover_step(dt)
+			return
 		var car: PlayerCar = drive.car
 		if not _o_set:
 			_o_set = true
@@ -290,8 +299,84 @@ class MissionRunner extends Node2D:
 					drive.hud.post("NOT A SCRATCH. MIA TAKES $300 OFF. SHE ALMOST SMILES.", 5.0)
 				StoryState.last_result = { "careful_damage": dmg }
 			if o.has("swap"):
-				drive._swap_story_car(String(o.swap))
+				_handover(o)
+				return
 			_next_objective()
+
+	## Picking a car up: it's parked ahead, somebody walks the keys over to your window, says their
+	## piece, you get out and into it, and they drive yours away. No teleporting into a car.
+	func _handover(o: Dictionary) -> void:
+		var car: PlayerCar = drive.car
+		_hand = "walk"
+		_hand_t = 0.0
+		_hand_lines = o.get("handover", ["\"KEYS. NOT A SCRATCH.\""])
+		drive.hold_car = true
+		car.sim.vx = 0.0
+		var spec := SaveGame.load_spec(String(o.swap))
+		if o.has("paint"): spec.paint = String(o.paint)
+		var at: Vector2 = car.sim.pos + car.sim.forward() * 8.0 + car.sim.right() * 3.2
+		_hand_car = AiCar.new()
+		drive.ysort.add_child(_hand_car)
+		_hand_car.setup_ai(spec, drive.world, drive.skids, drive.hud, at, car.sim.heading, 80)
+		_hand_car.traffic = drive.traffic
+		_hand_car.hold = true
+		drive.traffic.extra.append(_hand_car)
+		_hand_who = Police.Officer.new()
+		_hand_who.civilian = true
+		_hand_who.coat = Color(String(o.get("coat", "#16161c")))
+		_hand_who.name_on = String(o.get("handler", "THEM"))
+		_hand_who.night = drive.night
+		drive.ysort.add_child(_hand_who)
+		_hand_who.pos = at - _hand_car.sim.right() * (float(spec.width) * CarArt.CAR_SCALE * 0.5 + 0.5)
+		_hand_who.heading = (car.sim.pos - _hand_who.pos).angle()
+		drive.hud.post("%s GETS OUT OF THE %s AND WALKS OVER." % [_hand_who.name_on, String(spec.get("model", "CAR")).to_upper()], 4.0)
+
+	func _handover_step(dt: float) -> void:
+		var car: PlayerCar = drive.car
+		_hand_t += dt
+		match _hand:
+			"walk":
+				var window: Vector2 = car.sim.pos - car.sim.right() * (float(car.spec.width) * CarArt.CAR_SCALE * 0.5 + 0.6) + car.sim.forward() * 0.2
+				if _hand_who.walk_to(window, 1.5, dt) or _hand_t > 14.0:
+					_hand = "talk"
+					_hand_t = 0.0
+					_hand_who.heading = (car.sim.pos - _hand_who.pos).angle()
+					for i in _hand_lines.size(): drive.hud.post("%s: %s" % [_hand_who.name_on, String(_hand_lines[i])], 3.0 + 2.4 * (_hand_lines.size() - i))
+			"talk":
+				if _hand_t > 1.6 + 2.4 * _hand_lines.size():
+					# the keys change hands: a beat of white, and you're in the other seat
+					_hand = "swap"
+					_hand_t = 0.0
+					drive.white_out = 1.0
+					var old_spec: Dictionary = car.spec.duplicate(true)
+					var old_at: Vector2 = car.sim.pos
+					var old_h: float = car.sim.heading
+					var new_at: Vector2 = _hand_car.sim.pos
+					var new_h: float = _hand_car.sim.heading
+					var id := String(_hand_car.spec.get("id", ""))
+					drive.traffic.extra.erase(_hand_car)
+					_hand_car.queue_free()
+					drive._spawn_story_car(id, new_at, new_h)
+					drive._teleport(new_at, new_h)
+					# the one you came in stays where you left it, and they take it
+					_hand_car = AiCar.new()
+					drive.ysort.add_child(_hand_car)
+					_hand_car.setup_ai(old_spec, drive.world, drive.skids, drive.hud, old_at, old_h, 81)
+					_hand_car.traffic = drive.traffic
+					_hand_car.hold = true
+					drive.traffic.extra.append(_hand_car)
+			"swap":
+				if _hand_t > 0.6:
+					_hand = "away"
+					_hand_t = 0.0
+			"away":
+				var door: Vector2 = _hand_car.sim.pos - _hand_car.sim.right() * (float(_hand_car.spec.width) * CarArt.CAR_SCALE * 0.5 + 0.5)
+				if _hand_who.walk_to(door, 1.4, dt) or _hand_t > 12.0:
+					_hand_who.queue_free()
+					_hand_who = null
+					_hand = ""
+					drive.hold_car = false
+					_next_objective()
 
 	func _next_objective() -> void:
 		k += 1

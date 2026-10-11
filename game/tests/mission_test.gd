@@ -59,7 +59,8 @@ func _run() -> void:
 	await _race()
 	await _gentle()
 	await _chase()
-	check("every part of the test ran to the end", done == 5, "%d of 5" % done)
+	await _handover()
+	check("every part of the test ran to the end", done == 6, "%d of 6" % done)
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
 	StoryState.active = false
@@ -168,4 +169,25 @@ func _chase() -> void:
 		await _wait(0.05)
 		t += 0.05 * Engine.time_scale
 	check("chase: stay on his bumper and he's caught", _finished(), "%.1f s" % t)
+	done += 1
+
+# ------------------------------------------------------------------ picking up the Charjer
+
+func _handover() -> void:
+	_start("detailing")
+	await _wait(0.5)
+	var r: StoryMissions.MissionRunner = main.mission
+	_park_at(StoryMissions.AIRSTRIP)
+	var t := 0.0
+	while t < 3.0 and r._hand == "":
+		await _wait(0.05)
+		t += 0.05
+	check("handover: stopped at the airstrip, Dom gets out and walks over (no teleporting)", r._hand == "walk" and r._hand_who != null and String(main.car.spec.id) == "silvio" and main.hold_car, r._hand)
+	t = 0.0
+	while t < 40.0 and r._hand != "":
+		await _wait(0.1)
+		t += 0.1
+	check("handover: the keys change hands and you're in the Charjer, on to the next leg", String(main.car.spec.id) == "charjer" and r.k == 1 and not main.hold_car, "%s leg %d after %.1f s" % [String(main.car.spec.id), r.k, t])
+	var left := is_instance_valid(r._hand_car) and String(r._hand_car.spec.get("id", "")) == "silvio" and r._hand_car.sim.pos.distance_to(main.car.sim.pos) < 14.0
+	check("handover: your car's left where you got out of it", left)
 	done += 1
