@@ -79,6 +79,7 @@ func build() -> void:
 	_villages()
 	_landmarks()
 	_index_roads()
+	_gas_off_roads()
 	_wild_signs()
 	_find_bridges_and_crossings()
 	_buildings()
@@ -390,11 +391,53 @@ func _driveway(from: Vector2, to: Vector2) -> void:
 
 func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
-	if dest != "": landmarks.append({ "name": dest, "p": r.get_center(), "dest": true })
+	var g := { "lot": lots.size(), "shop": buildings.size(), "pumps": buildings.size() + 1, "lights": [lights.size(), lights.size() + 1], "mark": -1 }
+	if dest != "":
+		g.mark = landmarks.size()
+		landmarks.append({ "name": dest, "p": r.get_center(), "dest": true })
 	lots.append({ "r": r, "kind": "asphalt", "name": "", "lines": false })
 	buildings.append({ "r": Rect2(r.position + Vector2(r.size.x - 14, 2), Vector2(12, 10)), "h": 5.0, "kind": "shop", "name": name, "zone": zone })
 	buildings.append({ "r": Rect2(r.position + Vector2(4, r.size.y * 0.45), Vector2(r.size.x * 0.55, 3)), "h": 1.0, "kind": "pumps", "name": "", "zone": zone })
 	for i in 2: lights.append({ "p": r.position + Vector2(8 + i * 14, r.size.y * 0.5), "type": "canopy", "seed": int(r.position.x) + i })
+	_gas_bars.append(g)
+
+var _gas_bars: Array = []
+
+## A gas bar laid out by hand can end up with a street through it (the pumps' canopy over the
+## road): move the whole place (lot, shop, pumps, canopy lights and where the GPS takes you) to the
+## nearest spot nothing runs through.
+func _gas_off_roads() -> void:
+	for g in _gas_bars:
+		var r: Rect2 = lots[g.lot].r
+		if _lot_clear(r, int(g.lot)): continue
+		var best := Vector2.ZERO
+		var found := false
+		for d in range(6, 64, 4):
+			for k in 16:
+				var off := Vector2.from_angle(float(k) * TAU / 16.0) * float(d)
+				if _lot_clear(Rect2(r.position + off, r.size), int(g.lot)):
+					best = off
+					found = true
+					break
+			if found: break
+		if not found: continue
+		lots[g.lot].r = Rect2(r.position + best, r.size)
+		for bi in [g.shop, g.pumps]: buildings[bi].r = Rect2((buildings[bi].r as Rect2).position + best, (buildings[bi].r as Rect2).size)
+		for li in g.lights: lights[li].p = (lights[li].p as Vector2) + best
+		if int(g.mark) >= 0: landmarks[g.mark].p = (landmarks[g.mark].p as Vector2) + best
+
+## No road through it (it can touch the road it's on), no river, no rail, no other lot.
+func _lot_clear(r: Rect2, skip: int) -> bool:
+	for gy in 5:
+		for gx in 5:
+			var p := r.position + r.size * Vector2(0.1 + gx * 0.2, 0.1 + gy * 0.2)
+			if not road_at(p, 0.5).is_empty(): return false
+			if river_at(p) > 0 or rail_near(p, 4.0): return false
+	for li in lots.size():
+		if li != skip and (lots[li].r as Rect2).intersects(r): return false
+	for b in buildings:
+		if String(b.kind) != "pumps" and String(b.kind) != "shop" and (b.r as Rect2).intersects(r): return false
+	return true
 
 func _reserve(r: Rect2) -> void:
 	for c in grid_cells:

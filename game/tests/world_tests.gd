@@ -228,6 +228,11 @@ func _init() -> void:
 	check("a house's long wall has a door and windows", slots.any(func(q): return q.kind == "door") and slots.filter(func(q): return q.kind == "window").size() >= 2, str(slots.size()))
 	check("a house has a pitched roof, a shop a flat one", hs.style().roof == "gable" and bn.style().roof == "flat")
 	hs.free()
+	var gmap := MapData.get_map()
+	var over := []
+	for gb in gmap.buildings:
+		if String(gb.kind) == "pumps" and not gmap.road_at((gb.r as Rect2).get_center(), 0.5).is_empty(): over.append(gb.r)
+	check("no gas bar's pumps stand in a road", over.is_empty(), str(over))
 	var pumps := BuildingNode.new()
 	pumps.data = { "kind": "pumps" }
 	check("gas pumps don't block sight", not pumps.blocks_sight() and bn.blocks_sight())
