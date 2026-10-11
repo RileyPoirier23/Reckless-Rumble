@@ -41,6 +41,10 @@ func _init() -> void:
 				who_bad.append("sprite " + String(c[0]))
 	check("every speaker is in the cast", who_bad.is_empty(), str(who_bad))
 	check("every set exists", set_bad.is_empty(), str(set_bad))
+	# a story car goes in the free-drive garage once, never the wrecker
+	var sv := { "garage": [{ "id": "supreem" }] }
+	check("a story car unlocks into the garage once", SaveGame.unlock_story_car(sv, "silvio") and not SaveGame.unlock_story_car(sv, "silvio") and not SaveGame.unlock_story_car(sv, "supreem") and not SaveGame.unlock_story_car(sv, "tow"), str(sv.garage.size()))
+	check("the unlocked car is marked the story's", (sv.garage as Array).size() == 2 and bool((sv.garage[1] as Dictionary).get("story", false)))
 	check("there's a story to tell", lines > 100, "%d lines" % lines)
 	var used := {}
 	for st in StoryScript.STEPS:

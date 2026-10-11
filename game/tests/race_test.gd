@@ -183,6 +183,7 @@ func _police_ticket() -> void:
 		if p.walk == "talk" and p.officer != null and p.officer.pos.distance_to(p._window(main.car)) < 0.8: walked_up = true
 		if p.stop_panel.visible:
 			# the window's down: a story about the wrong car is always a ticket (and then some)
+			if not asked: print("   at the window: %.0f over, %s, heat %.0f" % [p.top_over, str(p.offences), p.heat()])
 			asked = true
 			p.stop_panel.choose("lie")
 	ticket_at_window = walked_up
@@ -296,6 +297,7 @@ func _police_impound() -> void:
 	while t < 30.0 and p.chasing():
 		await _wait(0.25)
 		t += 0.25
+		if p.stop_panel.visible: p.stop_panel.choose("sorry")      # sorry doesn't cover this much heat
 	check("police: high heat, stopped, it's the impound", main.car.sim.pos.distance_to(Jobs.IMPOUND) < 5.0, "%.0f m away" % main.car.sim.pos.distance_to(Jobs.IMPOUND))
 	check("police: the impound fee is on the bill", cash0 - int(main.save.cash) >= Police.IMPOUND_FEE)
 	check("police: the heat drops after", p.heat() <= 10.0, "%.0f" % p.heat())

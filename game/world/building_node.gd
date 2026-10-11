@@ -252,6 +252,37 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 					_quad(top + dir * sx, top + dir * minf(ww, sx + 3.0), top + dir * minf(ww, sx + 3.0) + out - upn * 4.0, top + dir * sx + out - upn * 4.0, Color(1, 1, 1, 0.35))
 					sx += 6.0
 			continue
+		if String(sl.kind) == "bay":
+			# a roll-up door: steel panels, a row of little windows up top, the track either side
+			var dc := Color("9a9ca0") if k == "garage" else Color("7a7c80")
+			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, dc)
+			var py := 0.0
+			while py < wh - 1.0:
+				draw_line(p + upn * py, p + dir * ww + upn * py, Color(0, 0, 0, 0.22), 1.0)
+				py += 4.0
+			var wy := wh * 0.72
+			var wx := 2.0
+			while wx + 3.0 < ww - 1.0:
+				_quad(p + dir * wx + upn * wy, p + dir * (wx + 3.0) + upn * wy, p + dir * (wx + 3.0) + upn * (wy + 3.0), p + dir * wx + upn * (wy + 3.0), Color("26323e"))
+				wx += 5.0
+			draw_line(p, p + upn * wh, TRIM, 1.5)
+			draw_line(p + dir * ww, p + dir * ww + upn * wh, TRIM, 1.5)
+			# the apron out front: a dark strip of oil-stained concrete
+			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 4.0, p - dir * 1.0 + n * 4.0, Color("4e4c4a"))
+			continue
+		if String(sl.kind) == "drivethru":
+			# the drive-thru: a sliding window, a ledge under it, the menu board and its little roof
+			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("26323e"))
+			draw_line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, Color("8a8e92"), 1.0)
+			draw_polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), Color("d8d4cc"), 1.0)
+			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 2.5, p - dir * 1.0 + n * 2.5, Color("8a8884"))
+			var mb := p - dir * 12.0 + n * 7.0
+			_quad(mb, mb + dir * 8.0, mb + dir * 8.0 + upn * 10.0, mb + upn * 10.0, Color("2a1e1c"))
+			_quad(mb + dir * 1.0 + upn * 1.0, mb + dir * 7.0 + upn * 1.0, mb + dir * 7.0 + upn * 9.0, mb + dir * 1.0 + upn * 9.0, Color("f4ece0"))
+			draw_line(mb + dir * 1.5 + upn * 7.0, mb + dir * 6.5 + upn * 7.0, Color("8a2a22"), 1.0)
+			draw_line(mb + dir * 1.5 + upn * 4.5, mb + dir * 6.5 + upn * 4.5, Color("6a6058"), 1.0)
+			draw_line(mb + dir * 1.5 + upn * 2.5, mb + dir * 5.0 + upn * 2.5, Color("6a6058"), 1.0)
+			continue
 		if String(sl.kind) == "door":
 			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("4a2e22") if k != "shop" else Color("26323e"))
 			draw_line(p + upn * wh, p + dir * ww + upn * wh, TRIM, 1.0)
@@ -320,6 +351,20 @@ func window_slots(L: float, H: float) -> Array:
 		return out
 	# shops: a storefront at street level; everything else floors of windows
 	var row0 := 6.0
+	if k == "garage" and L > 40.0:
+		# a service garage: roll-up bay doors along the front, the office with its door at the end
+		var bays := clampi(int((L - 22.0) / 24.0), 1, 4)
+		var bw := minf(20.0, (L - 22.0) / float(bays) - 4.0)
+		var bh := minf(H * 0.78, 24.0)
+		for j in bays:
+			out.append({ "x": 4.0 + float(j) * (bw + 4.0), "z": 0.0, "w": bw, "h": bh, "kind": "bay" })
+		out.append({ "x": L - 18.0, "z": 3.0, "w": 9.0, "h": minf(H * 0.4, 12.0), "kind": "window" })
+		out.append({ "x": L - 8.0, "z": 0.0, "w": 6.0, "h": minf(H * 0.5, 16.0), "kind": "door" })
+		return out
+	if k == "coffee" and L < maxf(fp.size.x, fp.size.y) - 1.0 and L >= 24.0:
+		# the short wall of a coffee shop: the drive-thru window, with its menu board and a ledge
+		out.append({ "x": L * 0.5 - 6.0, "z": 5.0, "w": 12.0, "h": minf(H * 0.4, 12.0), "kind": "drivethru" })
+		return out
 	if k in ["shop", "coffee"] and L > 30.0:
 		out.append({ "x": 6.0, "z": 3.0, "w": L * 0.55, "h": minf(H * 0.4, 16.0), "kind": "store" })
 		out.append({ "x": L * 0.55 + 12.0, "z": 2.5, "w": 8.0, "h": minf(H * 0.45, 17.0), "kind": "door" })

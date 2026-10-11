@@ -421,6 +421,10 @@ func _spawn_car(i: int, at: Vector2, heading: float) -> void:
 ## A story mission: its car, its time and weather, and the runner that checks the objectives.
 func _start_mission(m: Dictionary) -> void:
 	_spawn_story_car(String(m.car), m.start, float(m.heading))
+	# a car the story hands you is in the garage for free drive from here on
+	if SaveGame.unlock_story_car(save, String(m.car)):
+		SaveGame.write(save)
+		hud.notify("UNLOCKED FOR FREE DRIVE: %s %s" % [String(car.spec.get("make", "")), String(car.spec.get("model", ""))], "award", 2, 6.0)
 	sky.set_season(String(m.season))
 	sky.time_h = float(m.time)
 	sky.pick_weather(String(m.weather))
@@ -730,6 +734,7 @@ func _apply_settings(_section := "") -> void:
 	hud.verbosity = GameSettings.chatter_level()
 	hud.show_diag = bool(GameSettings.get_v("ui", "scan_tool"))
 	zoom_mult = float(GameSettings.get_v("ui", "camera_zoom"))
+	sky.rate = float(WorldSky.RATES.get(String(GameSettings.get_v("ui", "clock")), WorldSky.RATES.normal))
 	CarView.set_angle("overhead" if test_camera else String(GameSettings.get_v("ui", "camera_angle")))
 	police.strictness = GameSettings.police_strictness()
 	wildlife.rate = GameSettings.wildlife_rate()

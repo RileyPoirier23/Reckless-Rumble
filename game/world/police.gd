@@ -386,7 +386,7 @@ func _walkup(dt: float, c: PlayerCar) -> void:
 			# the opener, then the window's down and it's your turn (sit there too long and it's a ticket)
 			if walk_t > 2.6 and not stop_panel.visible and not stop_panel.answered:
 				stop_panel.open(c, key_offence())
-			if stop_panel.answered or walk_t > 40.0:
+			if stop_panel.answered or walk_t > 22.0:
 				officer.flash = false
 				if not stop_panel.answered: stop_panel.choose("sorry")
 				_resolve(c, stop_panel.choice)

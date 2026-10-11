@@ -66,6 +66,19 @@ static func pass_hours(sky: WorldSky, data: Dictionary, h: float) -> void:
 	data.clock_h = float(data.get("clock_h", 0.0)) + maxf(h, 0.0)
 
 ## The spec the sim drives for a car in the garage: its base spec with every part bolted on.
+## A car the story put you in is yours to take out in free drive from then on: it goes in the
+## garage (once), marked as the story's. Returns true the first time.
+static func unlock_story_car(data: Dictionary, id: String) -> bool:
+	if id == "" or id == "tow": return false
+	for c in data.get("garage", []):
+		if String((c as Dictionary).get("id", "")) == id: return false
+	var spec := load_spec(id)
+	if spec.is_empty(): return false
+	if not data.has("garage"): data.garage = []
+	(data.garage as Array).append({ "id": id, "paint": String(spec.get("paint", "")), "damage": {}, "parts": {}, "looks": {}, "tune": {},
+		"wear": { "fuel": 0.5 }, "installing": [], "odo_km": float(spec.get("odo_km", 90000.0)), "story": true })
+	return true
+
 static func car_spec(entry: Dictionary) -> Dictionary:
 	return OneTon.apply(Parts.apply(load_spec(String(entry.id)), entry.get("parts", {}), entry.get("tune", {})), entry)
 
