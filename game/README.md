@@ -202,7 +202,7 @@ All the game's text is drawn in Cagebook, the pixel font made for CAGE BOSS, bro
 
 ## Controls (the lot)
 
-The camera sits behind the car and turns with it, so up is always ahead. Time, weather and seasons run on their own (a day is 24 minutes, a season about 4 days), and you change cars in the garage.
+The camera sits behind the car and turns with it, so up is always ahead (T for the other cameras, below). Time, weather and seasons run on their own (a day is 24 minutes, a season about 4 days), and you change cars in the garage.
 
 | | Keyboard | Controller |
 |---|---|---|
@@ -234,9 +234,11 @@ On the controller the stick has a response curve (small movements, small correct
 
 **How it works** (pause menu): the game on five pages: what a day is (the counter in the morning, the road at night), getting about (the objective line, the map and GPS, the tow home), money, the police and the road, and how Leo's karma works. A first-run tip points at it.
 
-**Camera angle:** OVERHEAD looks straight down; ANGLED (the default) tips the camera so the ground is foreshortened and you see the sides of cars and buildings; LOW tips it further. T flips through them while you drive.
+**Camera:** three of them, and T flips through them while you drive (the controller's right stick, flicked up). CHASE (the default) sits behind the car and turns with it, a little slower than the car so you can see a slide happen. FREE ROAM swings round behind the way you're going rather than the way the nose points, lazily, and not at all at a crawl, so a drift keeps the road up the screen and a three-point turn doesn't spin the world; the right stick looks round, and it drifts back behind you when you let go. TOP DOWN keeps north up and turns the car instead of the map.
 
-**The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, camera angle, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, line of sight, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
+**Camera angle:** OVERHEAD looks straight down; ANGLED (the default) tips the camera so the ground is foreshortened and you see the sides of cars and buildings; LOW tips it further. Y flips through them while you drive (right stick, flicked down).
+
+**The rest of Settings:** Display (window or full screen, size, vsync, frame cap, pixel scaling), UI (how much chatter, first-time tips, the scan tool, the camera, camera angle, camera distance, button prompts), Difficulty (easy, normal, hard, or set the driving aids, the police and the moose and deer one by one), Graphics (streetlights, line of sight, rain and snow, cloud shadows, tire smoke, skid marks, lightning flashes, the drunk blur) and Audio (volume, the engine, effects, mute in the background). It's all kept in `user://settings.cfg`, apart from the save, so a new game keeps your wheel set up.
 
 **1ton and the Luchadooros.** The Luchadooros are a lowrider and donk club with a lot in the industrial park, off the road from Northside Salvage (it's on the map). They have three leaders: La Calavera runs the streets, El Pulpo runs his mouth, and 1ton runs the bays. Pull up at their gate and 1ton will talk. Show him a car that's on his laminated list (the big rear-drive sedans and coupes: Impalers, Caprees, a Maliboo, Cutless Supremos, a Grand Nashunal, Broughamms, Town Carrs, Bonnevillains, Crown Victoriouses, a Charjer) and he joins your crew. From then on his bay is a tab in the garage. **Hydraulics** come as two, three or four pumps, hopping 35, 60 or 90 cm, and they weigh what they weigh. **Donk kits** put a car on 24, 26, 28 or 30-inch rims with the lift to clear them: taller gearing, slower off the line, less grip, and a lot more attention. You pay for the parts; he doesn't take money for the labour. On the road, X (A on a controller) dumps the pumps while you're stopped or creeping, and if you hold it the car keeps hopping. A donk sits up off its shadow and its front wheels draw bigger. Three Employee of the Month photos go with it.
 

@@ -87,6 +87,8 @@ func _bindings() -> void:
 	GameSettings.data.bindings = {}
 	Controls.setup()
 	check("the defaults are bound", _has_key("throttle", KEY_W) and _has_axis("throttle", JOY_AXIS_TRIGGER_RIGHT) and _has_key("pause", KEY_ESCAPE))
+	check("T flips the camera, Y tips it (the right stick up and down)", _has_key("camera", KEY_T) and _has_axis("camera", JOY_AXIS_RIGHT_Y)
+		and _has_key("camera_tilt", KEY_Y) and _has_axis("camera_tilt", JOY_AXIS_RIGHT_Y) and String(GameSettings.DEFAULTS.ui.camera_mode) == "chase")
 	Controls.bind("throttle", "key", ["key", KEY_T, 0.0, -1])
 	check("rebinding the keyboard swaps the keys", _has_key("throttle", KEY_T) and not _has_key("throttle", KEY_W) and not _has_key("throttle", KEY_UP))
 	check("...and leaves the controller alone", _has_axis("throttle", JOY_AXIS_TRIGGER_RIGHT))

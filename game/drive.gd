@@ -36,6 +36,12 @@ var _water_t := 0.0
 var night := false
 var zoom_mult := 1.0
 var cam_rot := 0.0
+var cam_mode := "chase"            # top_down, chase or follow (see _turn_camera)
+var _ahead := Vector2.ZERO         # the look-ahead, eased (top down and follow)
+var _orbit := 0.0                  # the follow cam swung round by hand (rad)
+var _orbit_was := 0.0
+const CAM_MODES := ["chase", "follow", "top_down"]
+const CAM_NAMES := { "chase": "CHASE", "follow": "FREE ROAM", "top_down": "TOP DOWN" }
 var _season_seen := ""
 var _blink_was := false
 var dest := { "name": "", "p": Vector2.ZERO }
@@ -271,6 +277,10 @@ void fragment() {
 		var idm: Node = load("res://tests/incident_demo.gd").new()
 		idm.main = self
 		add_child(idm)
+	elif OS.get_cmdline_user_args().has("--cam-demo"):
+		var cmd: Node = load("res://tests/cam_demo.gd").new()
+		cmd.main = self
+		add_child(cmd)
 	elif OS.get_cmdline_user_args().has("--smoke-demo"):
 		var smd: Node = load("res://tests/smoke_demo.gd").new()
 		smd.main = self
@@ -903,11 +913,7 @@ func _process(dt: float) -> void:
 	_burnout_tip(dt)
 	_burnout_count()
 	_awards(dt)
-	# the chase cam: behind the car and turning with it, so up on the screen is always ahead.
-	# It swings round a little slower than the car, so you can see a slide happen.
-	var target := car.sim.heading + PI / 2.0
-	if car.sim.vx < -2.0: target = cam_rot      # reversing: don't spin the world around
-	cam_rot = lerp_angle(cam_rot, target, 1.0 - exp(-3.2 * dt))
+	_turn_camera(dt)
 	cam.rotation = cam_rot
 	if car.impaired > 0.0:
 		# the world won't hold still
@@ -923,6 +929,13 @@ func _process(dt: float) -> void:
 	CarView.set_angle("overhead" if test_camera else String(GameSettings.get_v("ui", "camera_angle")))
 	var spd := car.sim.speed()
 	var ahead := up * HudLayout.look_ahead(spd)     # see more of what's ahead, more as you go faster
+	if cam_mode == "top_down" or cam_mode == "follow":
+		# ahead is the way the car's going, not the top of the screen (the screen doesn't turn
+		# with it, or not straight away)
+		var v := car.sim.world_velocity()
+		var dir := v.normalized() if v.length() > 1.0 else Vector2.from_angle(car.sim.heading)
+		_ahead = _ahead.lerp(dir * HudLayout.look_ahead(spd), 1.0 - exp(-2.0 * dt))
+		ahead = _ahead
 	if _dying:
 		# the death cam: in close on the wreck
 		cam.global_position = cam.global_position.lerp(car.global_position, minf(1.0, 3.0 * dt / maxf(Engine.time_scale, 0.05)))
@@ -1035,6 +1048,35 @@ func _depth_sort(up: Vector2) -> void:
 
 ## Put the car somewhere, stopped dead: the body and the wheels too (wheels left spinning from
 ## before would drive it off again, or creep it out of a parking spot with the handbrake on).
+## Which way the camera faces, by Settings > UI > CAMERA (T flips through them):
+## - top_down: north is always up; the car turns, the map doesn't.
+## - chase: behind the car and turning with it, so up on the screen is always ahead. It swings round
+##   a little slower than the car, so you can see a slide happen.
+## - follow: the free-roam camera. It swings round behind the way you're going (not the way the nose
+##   points, so a drift keeps the road ahead of you up the screen), lazily, and not at all at a crawl,
+##   so a three-point turn doesn't spin the world. The right stick swings it round by hand; let go
+##   and it drifts back behind you.
+func _turn_camera(dt: float) -> void:
+	cam_mode = "chase" if test_camera else String(GameSettings.get_v("ui", "camera_mode"))
+	match cam_mode:
+		"top_down":
+			cam_rot = lerp_angle(cam_rot, 0.0, 1.0 - exp(-4.0 * dt))
+		"follow":
+			var v := car.sim.world_velocity()
+			var spd := v.length()
+			if spd > 2.5 and car.sim.vx > -1.0:
+				var k := clampf((spd - 2.5) / 12.0, 0.0, 1.0) * 1.6        # quicker at speed
+				cam_rot = lerp_angle(cam_rot, v.angle() + PI / 2.0, 1.0 - exp(-k * dt))
+			var look := Input.get_joy_axis(Controls.last_pad, JOY_AXIS_RIGHT_X)
+			if absf(look) > 0.25: _orbit = clampf(_orbit + look * 2.4 * dt, -PI, PI)
+			else: _orbit = lerpf(_orbit, 0.0, 1.0 - exp(-1.5 * dt))
+			cam_rot += _orbit - _orbit_was
+			_orbit_was = _orbit
+		_:
+			var target := car.sim.heading + PI / 2.0
+			if car.sim.vx < -2.0: target = cam_rot      # reversing: don't spin the world around
+			cam_rot = lerp_angle(cam_rot, target, 1.0 - exp(-3.2 * dt))
+
 func _teleport(at: Vector2, heading: float) -> void:
 	car.sim.vx = 0.0
 	car.sim.vy = 0.0
@@ -1095,14 +1137,19 @@ func _inputs() -> void:
 		_pause()
 		return
 	audio.horn = Input.is_action_pressed("horn")
-	# T: the next camera angle
+	# T: the next camera; Y: how far it's tipped
 	if Input.is_action_just_pressed("camera") and not modal_open():
+		var nxt: String = CAM_MODES[(CAM_MODES.find(String(GameSettings.get_v("ui", "camera_mode"))) + 1) % CAM_MODES.size()]
+		GameSettings.set_v("ui", "camera_mode", nxt)
+		GameSettings.save_file()
+		hud.post("CAMERA: " + String(CAM_NAMES[nxt]), 1.5)
+	if Input.is_action_just_pressed("camera_tilt") and not modal_open():
 		var names: Array = CarView.ANGLES.keys()
 		var nxt: String = names[(names.find(String(GameSettings.get_v("ui", "camera_angle"))) + 1) % names.size()]
 		GameSettings.set_v("ui", "camera_angle", nxt)
 		GameSettings.save_file()
 		CarView.set_angle(nxt)
-		hud.post("CAMERA: " + nxt.to_upper(), 1.5)
+		hud.post("CAMERA ANGLE: " + nxt.to_upper(), 1.5)
 	# an H-shifter: a gear's button held is that gear; let go and it's in neutral
 	for gi in Controls.GEARS.size():
 		var act: String = Controls.GEARS[gi][0]
