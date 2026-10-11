@@ -181,6 +181,7 @@ func _tow(dt: float) -> void:
 	var local := (trailer_centre - pos) * PX
 	trailer.position = local
 	trailer.heading = trailer_heading
+	trailer.z_index = 1 if local.dot(CarView.screen_up) < 0.0 else -1   # nearer the camera than the cab: drawn over it
 	trailer.lean = Vector2.ZERO
 	trailer_shape.position = local
 	trailer_shape.rotation = trailer_heading

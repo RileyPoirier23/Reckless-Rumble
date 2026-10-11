@@ -35,6 +35,9 @@ func _init() -> void:
 	_parked()
 	_knots()
 	_supercars_and_lamps()
+	_fenders_and_mirrors()
+	_no_clipping()
+	_ambulance_and_trucks()
 	_async()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
@@ -550,3 +553,183 @@ class FakeDrive extends Node:
 	var furniture: RoadFurniture
 	var sky: WorldSky
 	var ysort := Node2D.new()
+
+## Every wheel sits under its fender: no tyre's top shows through the body over it, slammed or
+## not, whatever the fitment (a poked tyre stands outside the body, so its outside rows don't
+## count), and nothing hangs in the air off the side (a mirror's arm reaches down to the door).
+func _fenders_and_mirrors() -> void:
+	var through: Array = []
+	var hanging: Array = []
+	var ids: Array = ["silvio", "charjer", "supreem", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "mazduh_myata_1990",
+		"daihatsoo_hijinx_1999", "acurra_en_ess_eks_1991", "chevrolay_suburbian_2015", "fjord_econolean_1995"]
+	for id: String in ids:
+		for m: Dictionary in [{}, { "drop": 1.0 }, { "drop": 1.0, "offset": "stance" }, { "drop": 1.0, "offset": "tucked" }, { "drop": -1.0 }]:
+			var p := _plan(id, m)
+			for w: Array in p.wheels:
+				var xc: float = w[0]
+				var yc: float = w[1]
+				var r: float = w[2]
+				var ww: int = w[3]
+				for x in range(int(xc - r * 0.7), int(xc + r * 0.7) + 1):
+					# (the tyre's top slice, as the plan stacks it)
+					var top := float(maxi(0, int(round(r * CarArt.RISE + CarArt.RISE * sqrt(maxf(0.0, r * r - pow(float(x) + 0.5 - xc, 2.0))))) - 1))
+					for y in range(int(round(yc - ww / 2.0)), int(round(yc + ww / 2.0))):
+						if y < 0 or y >= p.sy or x < 0 or x >= p.sx: continue
+						var i := p.idx(x, y)
+						if p.h0[i] < 0 or absf(float(y) + 0.5 - p.cy) > p.hw[x] - 0.5: continue
+						if float(p.h0[i]) < top and through.size() < 12: through.append("%s %s (%d,%d) body %d tyre %.1f" % [id, str(m), x, y, p.h0[i], top])
+			for i2 in p.h0.size():
+				if p.h0[i2] < 0 or p.belt[i2] < 999 or (p.m0[i2] & 255) == CarArt.M_GRILLE: continue
+				var x2 := i2 % p.sx
+				var y2 := i2 / p.sx
+				var av := absf(float(y2) + 0.5 - p.cy)
+				if p.hw[x2] <= 0.0 or av <= p.hw[x2] + 0.01: continue
+				# out past the side: something must hold it up, the body beside it reaching its foot
+				var yin := y2 - 1 if float(y2) > p.cy else y2 + 1
+				var ok := p.b0[i2] <= 0
+				for yy: int in [yin, yin - 1 if float(y2) > p.cy else yin + 1]:
+					if yy >= 0 and yy < p.sy and p.h0[p.idx(x2, yy)] >= p.b0[i2]: ok = true
+				if not ok and hanging.size() < 12: hanging.append("%s %s (%d,%d) %d..%d" % [id, str(m), x2, y2, p.b0[i2], p.h0[i2]])
+	check("every tyre sits under its fender: none shows through the body over it, slammed or not", through.is_empty(), str(through.slice(0, 4)))
+	check("nothing hangs in the air off the side: mirrors reach down to the doors", hanging.is_empty(), str(hanging.slice(0, 4)))
+
+## The ambulance from above: AMBULANCE across its hood (mirrored, for the mirror of the car
+## ahead), the star of life on its roof, its stripes down the sides; a step van's windshield is
+## glass; a semi's tandem stays under its frame.
+func _ambulance_and_trucks() -> void:
+	for id: String in ["fjord_e_fiddy_ambulanz_2014", "ambulance"]:
+		var spec := CarCatalog.spec(id)
+		var a := CarArt.new(spec, Color("f2f2ee"), 0.0, 5, CarArt.CAR_SCALE)
+		var img := a.atlas.get_image()
+		var red := 0
+		var blue := 0
+		var orange := 0
+		for yy in img.get_height():
+			for xx in img.get_width():
+				var c := img.get_pixel(xx, yy)
+				if c == Color("c8201c"): red += 1
+				elif c == Color("1f4fb0"): blue += 1
+				elif c == Color("f07818"): orange += 1
+		var p := CarArt.plan_of(spec, {}, { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }, CarArt.CAR_SCALE, CarGen.design(spec), CarArt._plan_key(spec, {}, {}, CarArt.CAR_SCALE))
+		# the word on the hood: red marks on the hood's top, ahead of the windshield
+		var hood_red := 0
+		var d := CarGen.design(spec)
+		var top_z := p.n - 1
+		for i in p.h0.size():
+			var x := i % p.sx
+			if p.h0[i] < 0 or p.ux[x] < float(d.cowl_x): continue
+			var z: int = p.h0[i]
+			if img.get_pixel(z * p.sx + x, i / p.sx) == Color("c8201c"): hood_red += 1
+		check("%s: AMBULANCE across the hood, the star of life on the roof, red and orange stripes down the sides" % id,
+			hood_red > 30 and blue > 40 and red > 200 and orange > 100, "hood %d, blue %d, red %d, orange %d" % [hood_red, blue, red, orange])
+	var plain := _art("fjord_e_fiddy_ambulanz_2014", {}, 0.0, Color("f2f2ee"))
+	var signed := _art("fjord_e_fiddy_ambulanz_2014", { "decal": 3 }, 0.0, Color("f2f2ee"))
+	check("traffic never hangs a plumber's sign on the ambulance's doors", not _differs(plain, signed))
+	var step := _plan("grumpman_step_up_van_2004")
+	var glass := 0
+	for i3 in step.m0.size():
+		if step.h0[i3] >= 0 and (step.m0[i3] & 255) == CarArt.M_GLASS: glass += 1
+	check("a step van has its windshield from above", glass > 20, "%d" % glass)
+	for id2: String in ["kenwerth_tee_six_eighty_ate_2016", "freightlinear_cascadeeya_2013"]:
+		var tp := _plan(id2)
+		var x_tail := float(CarArt.MX)
+		var behind := 0.0
+		for w: Array in tp.wheels: behind = maxf(behind, x_tail - (float(w[0]) - float(w[2])))
+		check("%s's tandem stays under its frame" % id2, behind <= 1.0 and tp.wheels.size() >= 10, "%.1f px out, %d wheels" % [behind, tp.wheels.size()])
+
+## The sweep from above: in every combination of rim size, tyre, fitment, spacers, stagger, drop,
+## camber, lift and wide arches, no tyre (back ones in the plan, the steering front ones by their
+## stack) shares a slice with the body over it: the body over a tyre always starts above it, and a
+## poked tyre stands outside the body. And the new looks each change the car from above.
+func _no_clipping() -> void:
+	var bad: Array = []
+	var n := 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var cars := ["silvio", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "fjord_escorted_1987", "acurra_en_ess_eks_1991"]
+	for k in 220:
+		var m := {
+			"rim_size": [0.6, 0.7, 0.78, 0.86][rng.randi() % 4], "tire": ["stock", "lowpro", "offroad", "slicks", "mud"][rng.randi() % 5],
+			"offset": CarGen.FITMENTS[rng.randi() % CarGen.FITMENTS.size()], "spacers": rng.randi() % 4,
+			"drop": [-1.0, -0.5, 0.0, 0.5, 1.0][rng.randi() % 5], "camber": [0, -3, -8][rng.randi() % 3],
+			"lift": [0, 2, 4, 6][rng.randi() % 4], "widebody": ["", "overfenders", "widebody"][rng.randi() % 3],
+		}
+		if rng.randf() < 0.3: m.stagger = "staggered"
+		var id: String = cars[k % cars.size()]
+		var p := _plan(id, m)
+		n += 1
+		for w: Array in p.wheels:
+			var xc: float = w[0]
+			var yc: float = w[1]
+			var r: float = w[2]
+			var ww: int = w[3]
+			var s := float(w[5])
+			var zmax := 2.0 * r * CarArt.RISE
+			for x in range(int(floor(xc - r)), int(ceil(xc + r)) + 1):
+				var dx := float(x) + 0.5 - xc
+				if absf(dx) > r or x < 0 or x >= p.sx: continue
+				var dz := CarArt.RISE * sqrt(maxf(0.0, r * r - dx * dx))
+				var zb := maxi(0, int(round(r * CarArt.RISE - dz)))
+				var zt := maxi(zb, int(round(r * CarArt.RISE + dz)) - 1)
+				var y_out := int(round(yc - ww / 2.0)) + (ww - 1 if s > 0.0 else 0)
+				for ring in ww + p.camber:
+					var y := y_out - int(s) * ring
+					if y < 0 or y >= p.sy: continue
+					# this row's slices of the tyre (a leaning one's rows move in up top)
+					for z in range(zb, zt + 1):
+						var sh := CarArt.wheel_lean(float(z), p.camber, zmax)
+						if ring < sh or ring >= sh + ww: continue
+						var i := p.idx(x, y)
+						if p.h0[i] >= 0 and z >= p.b0[i] and z <= p.h0[i] and (p.m0[i] & 255) != CarArt.M_TIRE and bad.size() < 12:
+							bad.append("%s %s (%d,%d,z%d) body %d..%d" % [id, str(m), x, y, z, p.b0[i], p.h0[i]])
+	check("no tyre shares a slice with the body over it, from above, in %d combinations" % n, bad.is_empty(), str(bad.slice(0, 3)))
+	# the front wheels steered to full lock: their ends swing in, never into the body
+	var steer_bad: Array = []
+	for id2: String in cars:
+		for m3: Dictionary in [{}, { "drop": 1.0, "offset": "stance" }, { "drop": 1.0, "camber": -8, "widebody": "widebody" }, { "drop": -1.0, "tire": "mud", "lift": 4 }]:
+			var p2 := _plan(id2, m3)
+			for w2: Array in p2.wheels:
+				if not w2[4]: continue
+				var r2: float = w2[2]
+				var ww2: int = w2[3]
+				var zmax2 := 2.0 * r2 * CarArt.RISE
+				for st: float in [-0.7, 0.7]:
+					var rot := Vector2.from_angle(st)
+					for z in range(0, int(zmax2)):
+						var hz2 := absf(float(z) + 0.5 - r2 * CarArt.RISE) / CarArt.RISE
+						if hz2 > r2: continue
+						var half := sqrt(r2 * r2 - hz2 * hz2)
+						for k2 in 9:
+							var along := lerpf(-half, half, float(k2) / 8.0)
+							for ring2 in ww2 + p2.camber:
+								var off := Vector2(along, (float(ring2) - float(ww2 - 1) / 2.0) * -float(w2[5]))
+								var at := Vector2(float(w2[0]), float(w2[1])) + Vector2(off.x * rot.x - off.y * rot.y, off.x * rot.y + off.y * rot.x)
+								var xi := int(floor(at.x))
+								var yi := int(floor(at.y))
+								if xi < 0 or yi < 0 or xi >= p2.sx or yi >= p2.sy: continue
+								var i2 := p2.idx(xi, yi)
+								if p2.h0[i2] >= 0 and z >= p2.b0[i2] + 1 and z < p2.h0[i2] and steer_bad.size() < 8:
+									steer_bad.append("%s %s steer %.1f (%d,%d,z%d) body %d..%d" % [id2, str(m3), st, xi, yi, z, p2.b0[i2], p2.h0[i2]])
+	check("a front wheel at full lock swings its ends in under the arch, never into the body", steer_bad.is_empty(), str(steer_bad.slice(0, 3)))
+	var same: Array = []
+	var base := _art("silvio")
+	for m2: Dictionary in [{ "lift": 4 }, { "camber": -8 }, { "widebody": "overfenders" }, { "widebody": "widebody" },
+			{ "special": "rally" }, { "special": "drift" }, { "special": "overland" }, { "special": "drag" }, { "special": "time_attack" }]:
+		if not _differs(base, _art("silvio", m2)): same.append(m2)
+	check("lift, camber, wide arches and the special kits all show from above", same.is_empty(), str(same))
+	var wide := _plan("silvio", { "widebody": "widebody" })
+	var narrow := _plan("silvio", {})
+	check("wide arches take a wider fitment", absf(float(wide.wheels[0][1]) - wide.cy) > absf(float(narrow.wheels[0][1]) - narrow.cy))
+	# lit lamps on the end turned away from the camera stay hidden behind the car
+	var cv := CarView.new()
+	CarView.screen_up = Vector2(0, -1)
+	cv.heading = PI / 2.0                 # nose down the screen, toward the camera
+	var e1 := cv.ends_seen()
+	cv.heading = -PI / 2.0                # nose up the screen, away
+	var e2 := cv.ends_seen()
+	cv.heading = 0.0                      # side on: both ends show
+	var e3 := cv.ends_seen()
+	cv.free()
+	check("lamps on the end turned away from the camera don't glow through the car", e1 == [false, true] and e2 == [true, false] and e3 == [true, true])
+	var skinny := _plan("silvio", { "special": "drag" })
+	check("a drag car's front tyres are skinny", skinny.tire_wf < skinny.tire_w)

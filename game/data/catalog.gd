@@ -1263,7 +1263,7 @@ Internashnal|Skool Boss|2011|fleet|bus|10.9|2.44|6.1|11300|RWD|7600|I6|TD|250|10
 Kenwerth|Tee-Six-Eighty-Ate|2016|fleet|semi|6.8|2.5|5.4|8600|RWD|14900|I6|TD|485|2500|2100|A10|0|0|tractor,sleeper,p=c8342c/1a3a6a/e8e8e8/1e1e24/2a6a3a|A sleeper cab, a long nose and an air horn the kids on the overpass have been pumping their arms at since Petitcodiac.
 Freightlinear|Cascadeeya|2013|fleet|semi|6.4|2.5|5.0|8100|RWD|14800|I6|TD|450|2300|2100|A10|0|0|tractor,p=e8e8e8/2c4a8a/8a8e94/d8a03a|Day cab, aero bumper, and a trailer full of somebody's groceries.
 Macc|El-Arr Packer|2009|fleet|boxtruck|9.2|2.5|5.3|14000|RWD|10800|I6|TD|325|1700|2100|A6|0|0|cabover,packer,p=2a6a3a/e8e8e8|Stops every forty feet. Starts again at six in the morning, under your window, on purpose.
-Fjord|E-Fiddy Ambulanz|2014|fleet|boxtruck|6.9|2.4|4.0|5200|RWD|6800|V10|NA|305|570|4750|A6|0|0|cutaway,ambulance,p=f0f0ec|A stretcher in the back, lights on every corner, and a paramedic who would like you to slow down.
+Fjord|E-Fiddy Ambulanz|2014|fleet|boxtruck|6.9|2.4|4.0|5200|RWD|6800|V10|NA|305|570|4750|A6|0|0|cutaway,ambulance,dually,p=f0f0ec|A stretcher in the back, lights on every corner, and a paramedic who would like you to slow down.
 Grumpman|Step-Up Van|2004|fleet|boxtruck|7.3|2.4|4.3|5600|RWD|5700|V8|NA|210|420|4500|A4|0|0|p=6a4a2a/e8e8e8/f0d040|The parcel van: a sliding door that never closes and a driver who leaves the slip anyway.
 Internashnal|Dura-Snore Box|2015|fleet|boxtruck|8.6|2.5|5.4|9500|RWD|7600|I6|TD|260|900|2600|A6|0|0|p=e8e8e8/c8342c/2c4a8a|Twenty-six feet of box with a liftgate and a schedule it has never once kept.
 """

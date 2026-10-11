@@ -120,6 +120,11 @@ func _init() -> void:
 	PixCars.loose_wheel(wp, 20, 20, 12.0, "steel")
 	check("every rim paints", wp.img.get_used_rect().size.x >= 30)
 	_wheels()
+	_stance()
+	_no_clipping()
+	_new_looks()
+	_ambulance()
+	_semis()
 	# --- detail follows size: tiny counter cars and cutscene cars stay clean
 	var tiny := PixCars.image_of({ "id": "toyoda_camree_2015" }, 36, Color("4a6a8a"))
 	var small := PixCars.image_of({ "id": "toyoda_camree_2015" }, 90, Color("4a6a8a"))
@@ -318,6 +323,8 @@ func _wheels() -> void:
 			{ "tire": "letters" }, { "tire": "offroad" }, { "tire": "slicks" }]:
 		if not _differs("silvio", {}, m, {}, {}): same.append(m)
 	check("rims, lip depths and tyres show on the car side-on", same.is_empty(), str(same))
+	var truck := "fjord_f_one_fiddy_2015"
+	check("the bed's roll bar, and its lights, show side-on", _differs(truck, {}, { "bed": "rollbar" }, {}, {}) and _differs(truck, { "bed": "rollbar" }, { "bed": "rollbar_lights" }, {}, {}))
 	# fitment, slammed: every way of sitting the wheels shows side-on (poke stands the tyre in
 	# front of the fender, tucked hides its top in the arch's shadow, stance shows the tread)
 	var low := { "drop": 1.0 }
@@ -342,3 +349,138 @@ func _wheels() -> void:
 	var upright := Pix.new(48, 48, 1)
 	CarGen.wheel(upright, 24, 24, 20.0, "fivespoke", false, {})
 	check("a cambered wheel shows its tread over the top, not under it", _rows_differ(cam.img, upright.img, 0, 10) > 4 and _rows_differ(cam.img, upright.img, 38, 48) == 0)
+
+## Slammed and stanced, every way of sitting the wheels: the body comes down onto its tyres but
+## never through them (the arch's top only laps over the tread by the fitment's tuck), no dark
+## slab of wheel well stands either side of a tyre down at the ground, and a stanced wheel is a
+## big deep rim on a thin stretched tyre that tucks its top in under the fender's lip.
+func _stance() -> void:
+	var through: Array = []
+	var slab: Array = []
+	for id: String in ["silvio", "charjer", "fjord_crown_victorious_2005", "mazduh_myata_1990", "fjord_f_one_fiddy_2015", "jepp_wranglur_1995", "volkswagon_beetel_1967"]:
+		var d := CarGen.design({ "id": id })
+		for drop: float in [0.0, 0.5, 1.0]:
+			for f: String in CarGen.FITMENTS:
+				var m := { "drop": drop, "offset": f, "rim": "deepdish", "lip_depth": 1.0, "shadow": false }
+				var c := CarGen._Car.new(200, d, Color("c8342c"), m, {}, 0)
+				c.run()
+				var tuck := float({ "tucked": 0.3, "stance": 0.12, "poke": 0.1, "flush": 0.06 }.get(f, 0.04))
+				var top_k := float({ "flat": 0.8, "trap": 0.88, "square": 0.9 }.get(String(d.arch), 1.0))
+				for wv: Array in c.wheels:
+					if c.cycled(wv): continue
+					var tyre_top := float(wv[2]) - c.r_tire
+					var arch_top := (wv[3] as Vector2).y - c.arch_r * top_k
+					if arch_top > tyre_top + tuck * c.r_tire + 1.0: through.append("%s drop %.1f %s: arch %.1f tyre %.1f" % [id, drop, f, arch_top, tyre_top])
+					# below the hub, outside the tyre: never the well's dark
+					var ac: Vector2 = wv[3]
+					for yy in range(int(float(wv[2]) + c.r_tire * 0.4), c.gy):
+						for xx in range(int(float(wv[1]) - c.arch_r), int(float(wv[1]) + c.arch_r) + 1):
+							if Vector2(xx + 0.5, yy + 0.5).distance_to(Vector2(float(wv[1]), float(wv[2]))) < c.r_tire + 1.0: continue
+							if Vector2(xx + 0.5, yy + 0.5).distance_to(ac) < c.arch_r: continue
+							if c.p.img.get_pixel(xx, yy) == CarGen.WELL and slab.size() < 20: slab.append("%s drop %.1f %s (%d,%d)" % [id, drop, f, xx, yy])
+	check("slammed, every fitment: the body comes down onto its tyres, never through them", through.is_empty(), str(through.slice(0, 4)))
+	check("slammed, every fitment: no slab of dark well either side of a tyre at the ground", slab.is_empty(), str(slab.slice(0, 4)))
+	var look := CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "offset": "stance", "rim": "deepdish" }, 200)
+	var wm: Dictionary = look[1]
+	check("a stanced wheel is a big rim on a stretched tyre, leaning in", float(wm.rim_size) >= 0.8 and wm.get("stretch", false) and float(wm.get("camber", 0.0)) > 0.0)
+	# the deep lip reads as polished metal, not a white ring: its inner edge darker than its glint
+	var w := Pix.new(56, 56, 1)
+	CarGen.wheel(w, 28, 28, 24.0, "deepdish", false, { "lip_depth": 1.0, "rim_size": 0.82 })
+	var lum := {}
+	for k in 40:
+		var a := TAU * float(k) / 40.0
+		for rr: float in [24.0 * 0.82 * 0.96, 24.0 * 0.82 * 0.72]:
+			var c2 := w.img.get_pixel(28 + int(cos(a) * rr), 28 + int(sin(a) * rr))
+			lum[snappedf(c2.get_luminance(), 0.05)] = true
+	check("a deep dish's lip is a band of light and dark, not one white ring", lum.size() >= 4, str(lum.keys()))
+
+## The ambulance side on: a van's cab (a hood, a windshield with a roof behind it, a door with
+## its window) with the box behind it, white with a red stripe and an orange one, the blue star
+## of life, the side door's window, the corner flashers and the step at the back; dual wheels.
+func _ambulance() -> void:
+	for src: Variant in [SaveGame.load_spec("ambulance"), { "id": "fjord_e_fiddy_ambulanz_2014" }]:
+		var d := CarGen.design(src)
+		var L := float(d.L)
+		var name := "the ambulance" if (src as Dictionary).has("model") and String(src.model).contains("III") else "the fleet's ambulance"
+		check("%s's cab is a van's: a roof over the seats ahead of the box, not a wedge" % name,
+			float(d.roof_f) - float(d.box_x) > 0.4 / L and float(d.cowl_x) - float(d.roof_f) > 0.3 / L and float(d.cab_top) < float(d.h) - 0.5 / L,
+			"roof %.2f box %.2f cowl %.2f" % [float(d.roof_f), float(d.box_x), float(d.cowl_x)])
+		var img := CarGen.render(250, d, Color("f2f2ee"), { "shadow": false })
+		var counts := { "red": 0, "orange": 0, "blue": 0, "glass": 0, "flash": 0 }
+		var bx := 22.0 + float(d.box_x) * 250.0
+		for yy in img.get_height():
+			for xx in img.get_width():
+				var c := img.get_pixel(xx, yy)
+				if c == Color("c8201c"): counts.red += 1
+				elif c == Color("f07818"): counts.orange += 1
+				elif c == Color("1f4fb0"): counts.blue += 1
+				elif c == Color("e02a1e") and float(xx) < bx: counts.flash += 1
+				elif c == CarGen.GLASS and float(xx) < bx: counts.glass += 1
+		check("%s wears its red and orange stripes, the star of life, the box door's window and corner flashers" % name,
+			counts.red > 300 and counts.orange > 100 and counts.blue > 40 and counts.glass > 20 and counts.flash > 10, str(counts))
+		check("%s runs dual rear wheels" % name, (d.art as Dictionary).has("dually"))
+		var left := img.get_used_rect().position.x
+		check("%s has its step standing off the back" % name, left < 22, "starts at %d" % left)
+
+## A semi tractor: tandem drive axles under the frame (neither hanging off its back), both of
+## them side on.
+func _semis() -> void:
+	for id: String in ["kenwerth_tee_six_eighty_ate_2016", "freightlinear_cascadeeya_2013"]:
+		var d := CarGen.design({ "id": id })
+		var c := CarGen._Car.new(220, d, Color("c8342c"), { "shadow": false }, {}, 0)
+		c.run()
+		var t := CarGen.tandem(d)
+		check("%s rides on a tandem, side on, inside its frame" % id, c.wheels.size() == 3 and t.x - t.y > 1.1 / float(d.L) and t.y * float(d.L) - float(d.tire_r) * float(d.L) >= 0.2,
+			"%d wheels, axles at %.2f / %.2f" % [c.wheels.size(), t.x, t.y])
+
+## The sweep: every rim size, tyre, fitment, spacer, stagger, drop, camber, lift, wide arch and
+## donk together, on a sports coupe, a sedan, a pickup and a hatch. Side on no tyre pixel ever sits
+## inside the body except in the band at its very top that the fitment lets tuck under the lip.
+func _no_clipping() -> void:
+	var bad: Array = []
+	var n := 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var cars := ["silvio", "fjord_crown_victorious_2005", "fjord_f_one_fiddy_2015", "fjord_escorted_1987"]
+	for k in 260:
+		var m := {
+			"rim_size": [0.6, 0.7, 0.78, 0.86][rng.randi() % 4], "tire": ["stock", "lowpro", "offroad", "slicks", "mud", "whitewall"][rng.randi() % 6],
+			"offset": CarGen.FITMENTS[rng.randi() % CarGen.FITMENTS.size()], "spacers": rng.randi() % 4,
+			"drop": [-1.0, -0.5, 0.0, 0.5, 1.0][rng.randi() % 5], "camber": [0, -3, -8][rng.randi() % 3],
+			"lift": [0, 2, 4, 6][rng.randi() % 4], "widebody": ["", "overfenders", "widebody"][rng.randi() % 3],
+		}
+		if rng.randf() < 0.3: m.stagger = "staggered"
+		if rng.randf() < 0.2: m.erase("tire")
+		var id: String = cars[k % cars.size()]
+		var d := CarGen.design({ "id": id })
+		var c := CarGen._Car.new(160, d, Color("c8342c"), CarGen.looks(m), {}, 0)
+		c.run()
+		n += 1
+		for wv: Array in c.wheels:
+			if c.cycled(wv) or c.skirted(wv): continue
+			var tc := Vector2(float(wv[1]), float(wv[2]))
+			var band := tc.y - c.r_tire + c.tuck * c.r_tire + 1.0
+			for yy in range(int(band) + 1, int(tc.y + c.r_tire)):
+				for xx in range(int(tc.x - c.r_tire), int(tc.x + c.r_tire) + 1):
+					if Vector2(float(xx) + 0.5, float(yy) + 0.5).distance_to(tc) > c.r_tire - 0.8: continue
+					if c.body_at(xx, yy) and bad.size() < 12: bad.append("%s %s (%d,%d)" % [id, str(m), xx, yy])
+	check("no wheel draws through the body side on, in %d combinations of rim, tyre, fitment, spacers, drop, camber, lift and arches" % n, bad.is_empty(), str(bad.slice(0, 3)))
+
+## The newer looks each show side on: a lift kit, camber, both wide arches and every special kit.
+func _new_looks() -> void:
+	var same: Array = []
+	for m: Dictionary in [{ "lift": 2 }, { "lift": 6 }, { "camber": -3 }, { "camber": -8 }, { "widebody": "overfenders" }, { "widebody": "widebody" },
+			{ "special": "rally" }, { "special": "drift" }, { "special": "overland" }, { "special": "drag" }, { "special": "time_attack" }]:
+		if not _differs("silvio", {}, m, {}, {}): same.append(m)
+	if _differs("silvio", { "camber": -3 }, { "camber": -8 }, {}, {}) == false: same.append("camber -3 vs -8")
+	if _differs("silvio", { "lift": 2 }, { "lift": 6 }, {}, {}) == false: same.append("lift 2 vs 6")
+	check("lift, camber, wide arches and the special kits all show side on", same.is_empty(), str(same))
+	var lo := CarGen._Car.new(160, CarGen.design({ "id": "fjord_f_one_fiddy_2015" }), Color.RED, {}, {}, 0)
+	lo.run()
+	var hi := CarGen._Car.new(160, CarGen.design({ "id": "fjord_f_one_fiddy_2015" }), Color.RED, { "lift": 6 }, {}, 0)
+	hi.run()
+	check("a lift kit stands the body up off its tyres", hi.lift > lo.lift + 2.0 and is_equal_approx(hi.r_tire, lo.r_tire), "%.1f / %.1f px" % [hi.lift, lo.lift])
+	var wm: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "camber": -3 }, 160)[1]
+	var wm8: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "camber": -8 }, 160)[1]
+	var wm0: Dictionary = CarGen.wheel_look(CarGen.design({ "id": "silvio" }), { "offset": "stance", "camber": 0 }, 160)[1]
+	check("camber leans the wheels by its degrees (and 0 stands them up, stanced or not)", float(wm.camber) < float(wm8.camber) and not wm0.has("camber"))
