@@ -125,6 +125,9 @@ func _race_ai() -> void:
 		print("   %s: %.0f%% round at %s, %.1f m/s, seg %d/%d, damage %s" % [race.info[i].name, a.track.dist / race.total * 100.0, str(a.sim.pos.round()), a.sim.speed(), a.track.seg, a.track.pts.size(), str(a.damage)])
 		if a.track.dist / race.total < 0.9:
 			for ln in a.trace.slice(-8): print("      ", ln)
+			var s := a.sim
+			print("      surface %s fuel %.1f rpm %d w_eng %.1f locked %s stalled %s blown %s gasket %s axle %s shift_t %.2f engage? compound %s tires %s" % [s.surface, s.fuel_l, int(s.rpm), s.w_eng, str(s.clutch_locked), str(s.stalled), str(s.engine_blown), str(s.head_gasket), str(s.axle_broken), s.shift_timer, s.compound, str(s.tires)])
+			print("      says: ", str(s.messages))
 	check("street race: somebody wins the Downtown Box", first > 0.0, "%.1f s" % first)
 	check("street race: the winner averages a racer's pace", first > 0.0 and race.total / first > 11.0, "%.1f m/s" % (race.total / maxf(first, 1.0)))
 	var least := 1.0

@@ -133,6 +133,10 @@ func _race() -> void:
 	var start: Vector2 = StoryMissions.MISSIONS.johnny_tram.start
 	r.target.sim.pos = StoryMissions.BRIDGE
 	await _wait(0.3)
+	var tr := 0.0
+	while r.target == null and tr < 3.0:        # (the reset's white-out runs slow; he's back on the line a moment later)
+		await _wait(0.1)
+		tr += 0.1
 	check("race: he gets to the bridge first and it's back to the start, a new count", main.car.sim.pos.distance_to(start) < 6.0 and r.target != null and r.target.hold, "%.0f m from the start, %s" % [main.car.sim.pos.distance_to(start), str(r.target)])
 	# you get there first
 	await _wait(4.5)
