@@ -70,6 +70,8 @@ func _yard(b: Dictionary) -> Dictionary:
 	var extras := ["pool", "trampoline", "shed", "woodpile", "boat", "clothesline", "firepit", "", ""]
 	y.extra = extras[rng.randi() % extras.size()] if depth >= 7.0 else ""
 	y.beds = rng.randf() < 0.75
+	y.hedge = front_d > 3.0 and rng.randf() < 0.4
+	y.shrubs = rng.randi_range(0, 3)
 	y.mailbox = front_d > 2.0 and rng.randf() < 0.8
 	y.flower = [Color("e04a6a"), Color("f0d040"), Color("9a5ad0"), Color("f08a30"), Color("f4f0e8")][rng.randi() % 5]
 	return y
@@ -123,6 +125,17 @@ func _draw() -> void:
 						draw_rect(Rect2(_at(q) - Vector2(1, 1), Vector2(2, 2)), y.flower if s != "fall" else Color("d07a2a"))
 						if rng.randf() < 0.5: draw_rect(Rect2(_at(q + d * 0.2 + f * 0.1) - Vector2(1, 1), Vector2(2, 2)), Color("3a7a2a"))
 						x += 0.45
+		# shrubs at the front corners of the house, and a cedar hedge down the lot line
+		for i in int(y.shrubs):
+			var sp := front_face + side * (half_house - 0.6) * (1.0 if i % 2 == 0 else -1.0) + f * (0.6 + float(i / 2) * 1.2)
+			_bush(sp, rng.randf_range(0.6, 0.9), winter, Color("3a6a2e") if i % 3 != 2 else Color("4a7a3a"))
+		if y.hedge:
+			for sgn2: float in [-1.0, 1.0]:
+				var h0 := front_face + side * sgn2 * (half_house + 2.0)
+				var x2 := 0.4
+				while x2 < fd - 0.4:
+					_bush(h0 + f * x2, 0.55, winter, Color("2e5a2a"))
+					x2 += 0.7
 		# the mailbox at the end of the walk
 		if y.mailbox:
 			var mp := front_face + f * fd + side * 1.2
@@ -240,3 +253,14 @@ func _extra(kind: String, p: Vector2, f: Vector2, side: Vector2, rng: RandomNumb
 			for i in 3:
 				var cp := p + Vector2.from_angle(float(i) * TAU / 3.0 + 0.5) * 1.8
 				draw_rect(Rect2(_at(cp, 3.0) - Vector2(3, 2), Vector2(6, 3)), Color("2a5a3a"))    # the chairs
+
+## A round bush: a dark shadow, a body standing a little off the ground, a lit side and a few
+## leaf flecks (snow on top in winter).
+func _bush(p: Vector2, r: float, winter: bool, col: Color) -> void:
+	var rp := r * PX
+	draw_circle(_at(p) + Vector2(rp * 0.3, rp * 0.2), rp, Color(0, 0, 0, 0.22))
+	var c := _at(p, rp * 0.4)
+	draw_circle(c, rp, col)
+	draw_circle(c + Vector2(-rp * 0.25, -rp * 0.25), rp * 0.6, col.lightened(0.15))
+	draw_circle(c + Vector2(-rp * 0.4, -rp * 0.4), rp * 0.25, col.lightened(0.3))
+	if winter: draw_circle(c + Vector2(0, -rp * 0.3), rp * 0.7, Color(0.93, 0.95, 0.98, 0.9))

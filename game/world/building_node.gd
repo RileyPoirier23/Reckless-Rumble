@@ -579,3 +579,11 @@ class Windows extends Node2D:
 				continue
 			if kind == "store": col = Color("f4e0b0")
 			draw_primitive(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+			# the light it throws on the ground out front, fading away from the wall
+			var out := dir.orthogonal() * (26.0 if kind == "store" else 16.0)
+			var g0 := a + dir * float(sl.x)
+			var g1 := g0 + dir * ww
+			var spread := dir * ww * 0.35
+			var lit := Color(col, 0.2 if kind == "store" else 0.13)
+			var none := Color(col, 0.0)
+			draw_primitive(PackedVector2Array([g0, g1, g1 + out + spread, g0 + out - spread]), PackedColorArray([lit, lit, none, none]), PackedVector2Array())
