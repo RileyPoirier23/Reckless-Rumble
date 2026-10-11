@@ -62,6 +62,7 @@ var salvage: SalvageYard
 var auction: Auction
 var wildlife: Wildlife
 var luchadooros: Luchadooros
+var shops: Shops
 var pause_menu: PauseMenu
 var award_card: AwardCard
 var _award_t := 2.0
@@ -237,6 +238,9 @@ void fragment() {
 	luchadooros = Luchadooros.new()
 	add_child(luchadooros)
 	luchadooros.setup(self)
+	shops = Shops.new()
+	add_child(shops)
+	shops.setup(self)
 	# the soak tests and the screenshot demos stage their own scenes: no patrols wandering in
 	for arg in OS.get_cmdline_user_args():
 		if arg.ends_with("-test"): test_camera = true

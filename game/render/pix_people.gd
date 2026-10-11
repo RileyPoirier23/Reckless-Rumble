@@ -31,6 +31,7 @@ const OUTFITS := {
 	"FRANKIE16": { "kind": "hoodie", "top": 0x2c3a5a, "bottom": 0x34343c, "hat": "cap", "hat_c": 0x8a2e26, "shoes": 0xe8e4dc },
 	"ARIES17": { "kind": "hoodie", "top": 0x4a6a8a, "bottom": 0x2a2a3a, "shoes": 0xe8e0d0 },
 	"ARIES21": { "kind": "leather", "top": 0x1e2a3a, "inner": 0x4a6a8a, "bottom": 0x2a2a3a, "shoes": 0xe8e0d0 },
+	"BRY": { "kind": "coveralls", "top": 0x2a4a8a, "bottom": 0x2a4a8a, "patch": true, "hat": "cap", "hat_c": 0x1e4aa0, "shoes": 0x3a2a1c },
 	"DARRELL": { "kind": "plaid", "top": 0x9a2a24, "bottom": 0x3a4a62, "hat": "trucker", "hat_c": 0x3a5a3a, "shoes": 0x5a3a1c },
 }
 

@@ -11,7 +11,8 @@ const AIRSTRIP_FENCE := Vector2(6620, 1034)     # where Airstrip Rd ends at the 
 const MOUNTAIN_FOOT := Vector2(5950, 1545)
 const HAIRPIN := Vector2(5180, 860)
 const HILL_TOP := Vector2(5000, 720)
-const GENERAL := Vector2(6005, 1500)          # the Port Rumble General's emergency doors, on John St by the Rumble Centre
+const GENERAL := Vector2(6005, 1500)
+const BRY_SHOP := Vector2(6316, 921)           # Bry's Fjord Service, on its lot off Industrial Dr          # the Port Rumble General's emergency doors, on John St by the Rumble Centre
 # runway 7: Dom's line, and his cones an eighth of a mile on
 const RUNWAY_LINE := Vector2(6612, 1028)
 const RUNWAY_END := Vector2(6813, 1028)
@@ -58,6 +59,16 @@ const MISSIONS := {
 			# Dom's eighth-mile: stage, wait for the tree, go. Under his times for a medal.
 			{ "text": "DOM'S EIGHTH-MILE: WAIT FOR GREEN, THEN FLAT OUT TO THE CONES.", "to": RUNWAY_END, "radius": 20.0, "drag": true,
 				"from": RUNWAY_LINE, "medals": [10.9, 11.6, 13.0] },
+		],
+	},
+	"fjord_run": {
+		"title": "THE WATER PUMP",
+		"car": "silvio", "start": COVINGTON, "heading": -PI / 2.0,
+		"time": 16.4, "season": "fall", "weather": "cloudy",
+		"intro": ["GUS: \"BRY'S. INDUSTRIAL DRIVE, NORTHSIDE. HE'S GOT THE PUMP. DON'T LET HIM START.\"", "GUS: \"HE'LL START.\""],
+		"objectives": [
+			{ "text": "BRY'S FJORD SERVICE, ON INDUSTRIAL DR. PULL ONTO THE LOT AND STOP.", "to": BRY_SHOP, "radius": 16.0, "stop": true },
+			{ "text": "BACK TO COVINGTON AUTO WITH THE PUMP. GUS IS WAITING ON IT.", "to": COVINGTON, "radius": 20.0, "stop": true },
 		],
 	},
 	"night_shift": {

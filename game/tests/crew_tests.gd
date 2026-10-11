@@ -125,5 +125,23 @@ func _init() -> void:
 	s2.garage[0].custom = { "hyd": 1 }
 	s2.garage[1].custom = { "donk": 2 }
 	check("1ton in the crew, pumps in one, 26s on another", Awards.met("luchadooro", s2) and Awards.met("hydraulics", s2) and Awards.met("donk", s2))
+	# the mechanic shops and Bry The Fjord Guy
+	var fjord := CarCatalog.spec(Luchadooros.find_car("MUSTANK", 2005))
+	var gmz := CarCatalog.spec(Luchadooros.find_car("CAPREES", 1986))
+	var bry: Dictionary = Shops.SHOPS[0]
+	check("The Bry Special fits a Fjord and nothing else", Parts.fits("spec_bry", fjord) and not Parts.fits("spec_bry", gmz))
+	check("Bry charges his markup until he's in your crew", absf(Shops.mult_for(bry, {}, fjord) - 1.05) < 0.001)
+	check("in the crew, a Fjord gets a fifth off at Bry's (a GMZ doesn't)", absf(Shops.mult_for(bry, { "crew": { "bry": true } }, fjord) - 0.84) < 0.001 and absf(Shops.mult_for(bry, { "crew": { "bry": true } }, gmz) - 1.05) < 0.001)
+	check("Covington Auto charges the catalogue", Shops.mult_for({}, {}, fjord) == 1.0)
+	var map := MapData.get_map()
+	for sh in Shops.SHOPS:
+		var rd := map.nearest_road(sh.spot, 30.0)
+		var bld := map.buildings.filter(func(b): return String(b.name) == String(sh.name))
+		check("%s has its garage on the map, by a road" % String(sh.name), bld.size() == 1 and not rd.is_empty() and String(bld[0].kind) == "garage", "%d buildings, road %s" % [bld.size(), "yes" if not rd.is_empty() else "no"])
+	var lines: Array = []
+	for sh in Shops.SHOPS: lines += sh.lines
+	lines += Shops.BRY_INTRO + Shops.BRY_JOINS
+	var slurs := lines.filter(func(l: String) -> bool: return l.to_lower().contains("fag") or l.to_lower().contains("retard"))
+	check("nothing the mechanics say is a slur", slurs.is_empty(), str(slurs))
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

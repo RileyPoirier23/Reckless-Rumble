@@ -74,6 +74,7 @@ const GUS := [
 ]
 
 var data: Dictionary
+var shop := {}                       # the mechanic shop this is (see Shops), or {} for Covington Auto
 var tab := 0
 var sel := 0                       # which car
 var current := 0
@@ -101,7 +102,8 @@ var top_view := false                # the preview shows the car from above, big
 var preview_key := ""
 var rng := RandomNumberGenerator.new()
 
-func open(save: Dictionary) -> void:
+func open(save: Dictionary, the_shop := {}) -> void:
+	shop = the_shop
 	data = SaveGame.ensure(save)
 	current = int(data.current)
 	sel = current
@@ -163,7 +165,19 @@ func _process(dt: float) -> void:
 
 ## The tabs: 1ton's bay once he's in your crew.
 func tabs() -> Array:
+	if not shop.is_empty(): return (shop.tabs as Array).duplicate()
 	return TABS + ([BAY] if OneTon.in_crew(data) else [])
+
+## What this place charges, over the catalogue (1 at home).
+func _mult() -> float:
+	return Shops.mult_for(shop, data, _base_spec())
+
+func _mechanic() -> String:
+	return String(shop.get("mechanic", "GUS")) if not shop.is_empty() else "GUS"
+
+## The part's for sale over this shop's counter (not on your shelf yet).
+func _counter(id: String) -> bool:
+	return not shop.is_empty() and id != "" and not data.shelf.has(id) and String(_car().parts.get(Parts.slot(id), "")) != id
 
 func _tab(d: int) -> void:
 	tab = (tab + d + tabs().size()) % tabs().size()
@@ -191,6 +205,14 @@ func _options(sl: String) -> Array:
 	if inst != "": out.append(inst)
 	for id in data.shelf:
 		if Parts.slot(String(id)) == sl and Parts.fits(String(id), _base_spec(), _car().get("parts", {})) and not out.has(id): out.append(id)
+	# a shop sells what fits over the counter (The Bry Special only at Bry's, once he's in your crew)
+	if not shop.is_empty():
+		for id in Parts.in_slot(sl):
+			if out.has(id) or not Parts.fits(String(id), _base_spec(), _car().get("parts", {})): continue
+			if String(id) == "spec_bry" and not (String(shop.id) == "bry" and Shops.in_crew(data, "bry")): continue
+			out.append(id)
+	elif Shops.in_crew(data, "bry") and sl == "special" and Parts.fits("spec_bry", _base_spec(), _car().get("parts", {})) and not out.has("spec_bry"):
+		out.append("spec_bry")          # Bry drops one off at Covington Auto for a crew member's Fjord
 	return out
 
 ## The parts as they'd be if you installed what you're looking at (so the numbers preview it).
@@ -219,19 +241,23 @@ func _upgrades_input(dy: int, dx: int, go: bool) -> void:
 			if String(job.slot) == sl:
 				_say("GUS: \"I'M ALREADY IN THERE. ONE THING AT A TIME.\"")
 				return
-		var labour := maxi(40, int(Parts.price(want) * 0.1)) if want != "" else 40
-		if int(data.cash) < labour:
-			_say("GUS: \"LABOUR'S $%d. YOU'VE GOT $%d. I DON'T DO IOUS.\"" % [labour, int(data.cash)])
+		var labour := int((maxi(40, int(Parts.price(want) * 0.1)) if want != "" else 40) * _mult())
+		var counter := _counter(want)
+		var bill := labour + (int(Parts.price(want) * _mult()) if counter else 0)
+		if int(data.cash) < bill:
+			_say("%s: \"THAT'S $%d. YOU'VE GOT $%d. I DON'T DO IOUS.\"" % [_mechanic(), bill, int(data.cash)])
 			return
-		data.cash = int(data.cash) - labour
+		data.cash = int(data.cash) - bill
+		if counter: data.shelf.append(want)      # bought over the counter: straight onto the bench
 		if have != "": data.shelf.append(have)
 		if want != "":
 			# Gus takes the old one off now and the new one goes in on the clock
 			data.shelf.erase(want)
 			_car().parts.erase(sl)
-			var hrs := Parts.install_h(want)
+			var hrs := Parts.install_h(want) * (0.6 if not shop.is_empty() else 1.0)       # a shop does it while you wait
 			_car().installing.append({ "slot": sl, "part": want, "done_h": float(data.get("clock_h", 0.0)) + hrs })
-			_say("GUS STARTS ON THE %s. ABOUT %s. LABOUR: $%d." % [Parts.name_of(want), _hours(hrs), labour])
+			if counter: _say("%s SELLS YOU THE %s AND STARTS ON IT. ABOUT %s. $%d ALL IN." % [_mechanic(), Parts.name_of(want), _hours(hrs), bill])
+			else: _say("%s STARTS ON THE %s. ABOUT %s. LABOUR: $%d." % [_mechanic(), Parts.name_of(want), _hours(hrs), labour])
 		else:
 			_car().parts.erase(sl)
 			_say("BACK TO STOCK. THE OLD PART GOES ON THE SHELF. LABOUR: $%d." % labour)
@@ -377,7 +403,7 @@ func _looks_cost() -> int:
 	for r: String in LOOK_KEYS:
 		var k: String = LOOK_KEYS[r]
 		if str(trial.get(k, "")) != str(old.get(k, "")): cost += int(LOOK_COST[r])
-	return cost
+	return int(cost * _mult())
 
 # ------------------------------------------------------------------ the parts site
 
@@ -441,7 +467,8 @@ func _draw() -> void:
 		draw_rect(Rect2(10, 304, 620, 14), Color(0, 0, 0, 0.7))
 		PixelFont.draw(self, Vector2(16, 308), note, BONE)
 	else:
-		PixelFont.draw(self, Vector2(16, 308), "GUS: " + GUS[_line], Color(BONE, 0.7))
+		var said: String = String((shop.lines as Array)[_line % (shop.lines as Array).size()]) if not shop.is_empty() else GUS[_line]
+		PixelFont.draw(self, Vector2(16, 308), _mechanic() + ": " + said, Color(BONE, 0.7))
 	var hint := ""
 	match ts[tab]:
 		BAY: hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: 1TON PUTS IT IN  {ui_cancel}: CLOSE"
@@ -565,6 +592,7 @@ func _draw_upgrades() -> void:
 		draw_rect(Rect2(r.position.x + 4, y - 3, r.size.x - 8, 14), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.02))
 		PixelFont.draw(self, Vector2(r.position.x + 8, y), Parts.SLOT_NAMES[sl], GOLD if on else ASH)
 		var label := Parts.name_of(shown) if shown != "" else "STOCK"
+		if on and _counter(shown): label += "  ($%s AT THE COUNTER)" % _money(int(Parts.price(shown) * _mult()))
 		if on and ops.size() > 1: label = "< " + label + " >"
 		var col := BONE if shown == inst else GREEN
 		var job := _job(sl)

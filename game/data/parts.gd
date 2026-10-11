@@ -127,6 +127,7 @@ const CATALOG := {
 	"spec_drift": ["special", "DRIFT KIT", 2190, 5, { "special": "drift", "steer": 0.14, "rear_grip": -0.04, "lsd": 1.0 }, "LOCK, A HYDRO HANDBRAKE AND A WELDED DIFF. YOUR TIRES ARE NOW A CONSUMABLE."],
 	"spec_overland": ["special", "OVERLAND KIT", 3490, 6, { "special": "overland", "rough": 0.6, "loose_grip": 1.08, "mass": 60.0, "cda": 0.05, "lift": 2 }, "A ROOF RACK, A LIGHT BAR, A SNORKEL AND A JERRY CAN. YOU WILL USE NONE OF IT. YOU COULD, THOUGH."],
 	"spec_drag": ["special", "DRAG PACK", 1990, 5, { "special": "drag", "compound": "drag", "mass": -20.0, "grip": 0.97 }, "SKINNIES UP FRONT, A WHEELIE BAR OUT BACK. IT GOES STRAIGHT. ONLY STRAIGHT."],
+	"spec_bry": ["special", "THE BRY SPECIAL", 1490, 1, { "special": "bry", "torque": 1.07, "grip": 1.02, "mass": -15.0 }, "BRY'S OWN RECIPE FOR A FJORD: A CAM HE WON'T NAME, A TUNE HE WON'T SHARE, AND A BLUE OVAL ON THE VALVE COVER. FJORDS ONLY. HE CHECKS."],
 	"spec_time_attack": ["special", "TIME ATTACK PACKAGE", 5490, 9, { "special": "time_attack", "cl": 0.5, "cda": 0.08, "grip": 1.03, "kit_lip": true }, "A SPLITTER YOU COULD SERVE DINNER ON, CANARDS AND A WING. DOWNFORCE YOU CAN FEEL ABOVE 80."],
 	"aero_gt": ["aero", "GT WING + SPLITTER", 1890, 6, { "cl": 0.42, "cda": 0.07, "spoiler": "gt", "kit_lip": true }, "SAYS 'I AM THE GUY.' MORE GRIP ABOVE 100 KM/H. MORE LOOKS AT THE TIM BURTONS."],
 }
@@ -146,7 +147,7 @@ const STAGE := {
 	"tire_allseason": 1, "tire_winter": 1, "tire_at": 1, "tire_sport": 2, "tire_semi": 3, "tire_drag": 3,
 	"lift_level": 1, "lift_4": 2, "lift_6": 3, "camber_arms": 1, "camber_plates": 2, "camber_demon": 1,
 	"spacer_15": 1, "spacer_25": 1, "spacer_38": 1, "kit_skirts": 1, "kit_aero": 2, "kit_overfenders": 3, "kit_widebody": 4,
-	"spec_rally": 3, "spec_drift": 3, "spec_overland": 2, "spec_drag": 3, "spec_time_attack": 4,
+	"spec_rally": 3, "spec_drift": 3, "spec_overland": 2, "spec_drag": 3, "spec_time_attack": 4, "spec_bry": 3,
 	"aero_lip": 1, "aero_ducktail": 1, "aero_wing": 2, "aero_gt": 4,
 }
 
@@ -216,6 +217,7 @@ static func fits(id: String, spec: Dictionary, installed := {}) -> bool:
 		"bodykit": return not body in ["tow", "boxtruck", "bus", "semi", "van"] and (not id in ["kit_overfenders", "kit_widebody"] or not body in ["pickup", "suv", "offroad"])
 		"special":
 			match id:
+				"spec_bry": return String(spec.get("make", "")) == "Fjord" and not body in ["bus", "semi", "boxtruck"]
 				"spec_overland": return body in ["pickup", "suv", "wagon", "offroad", "van"]
 				"spec_rally": return not body in ["tow", "boxtruck", "bus", "semi"]
 				_: return not trucky

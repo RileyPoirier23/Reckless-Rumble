@@ -85,6 +85,7 @@ func build() -> void:
 	_buildings()
 	_salvage()
 	_impound()
+	_shops()
 	_driveways()
 	_street_lights()
 	_lights_off_the_road()
@@ -339,6 +340,20 @@ func _impound() -> void:
 	lights.append({ "p": Vector2(6200, 930), "type": "sodium", "seed": 6200 })
 	lights.append({ "p": Vector2(6250, 950), "type": "sodium", "seed": 6250 })
 	landmarks.append({ "name": "NORTHSIDE IMPOUND", "p": Vector2(6182, 934), "dest": true })
+
+## The mechanic shops (see Shops): a garage with its bay doors to the road, a lined lot out front,
+## a sodium light over it. Each takes its block the way the salvage yard does.
+const SHOP_SITES := [
+	{ "block": Rect2(6290, 912, 80, 56), "lot": Rect2(6292, 912, 76, 18), "bld": Rect2(6296, 930, 40, 30), "name": "BRY'S FJORD SERVICE", "zone": "industrial", "light": Vector2(6350, 920) },
+	{ "block": Rect2(6440, 1354, 70, 46), "lot": Rect2(6442, 1354, 66, 18), "bld": Rect2(6446, 1372, 44, 26), "name": "DIEPPE SPEED SHOP", "zone": "dieppe", "light": Vector2(6500, 1362) },
+	{ "block": Rect2(3500, 2140, 60, 46), "lot": Rect2(3502, 2140, 56, 18), "bld": Rect2(3506, 2158, 40, 26), "name": "SALISBURY AUTO", "zone": "salisbury", "light": Vector2(3552, 2148) },
+]
+func _shops() -> void:
+	for s in SHOP_SITES:
+		_clear_block(s.block)
+		lots.append({ "r": s.lot, "kind": "asphalt", "name": "", "lines": true })
+		buildings.append({ "r": s.bld, "h": 8.0, "kind": "garage", "name": String(s.name), "zone": String(s.zone) })
+		lights.append({ "p": s.light, "type": "sodium", "seed": int((s.light as Vector2).x) })
 
 ## Take a block back from the warehouses: what was built there goes.
 func _clear_block(r: Rect2) -> void:

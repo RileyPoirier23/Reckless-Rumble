@@ -32,6 +32,8 @@ const CHOICES := {
 	"mentor_dad": 1.5, "mentor_job": 2.0, "mentor_pizza": 0.5,
 	# the first winter: Dom's lesson, Johnny Tram, the last payment
 	"dom_thanks": 1.0, "dom_ask": 0.5, "dom_brush": -1.0,
+	# Bry and the blue oval
+	"bry_fjord": 0.5, "bry_shrug": 0.0,
 	"johnny_fair": 1.0, "johnny_pinks": -1.0, "pinks_return": 1.5, "pinks_keep": -1.0,
 	"bay3_closed": 2.0, "bay3_open": -2.0,
 	# year two: the tapes, Aries suspended, Hatch's fleet deal
