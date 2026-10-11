@@ -131,6 +131,25 @@ func _knots() -> void:
 	check("hardly anybody turns up the bridge's dead-end stub", stub < 12, "%d of 400" % stub)
 	car.free()
 
+var lamp_bad: Array = []
+
+## A car's lamps where its lamps are: two headlamps in the front half no higher than the roof,
+## two stop lamps in the back half, every glow's spot inside the car's outline and its stack.
+func _lamps_on_the_body(id: String, a: CarArt) -> void:
+	var heads := 0
+	var tails := 0
+	for sp: Array in a.lamp_spots:
+		var at: Vector3 = sp[1]
+		if absf(at.x) > a.size.x / 2.0 or absf(at.y) > a.size.y / 2.0 or at.z < 0.0 or at.z > float(a.n):
+			lamp_bad.append("%s: kind %d off the car at %s" % [id, int(sp[0]), str(at)])
+		match int(sp[0]):
+			2:
+				heads += 1
+				if at.x < 0.0 or at.z > a.roof_z + 1.0: lamp_bad.append("%s: a headlamp at %s" % [id, str(at)])
+			0:
+				if at.x < 0.0: tails += 1
+	if heads < 2 or tails < 2: lamp_bad.append("%s: %d headlamps, %d stop lamps" % [id, heads, tails])
+
 ## Every catalogue car, the fleet and a trailer draw: an atlas of slices, lamps, a wheel stack.
 func _every_car() -> void:
 	var bad: Array = []
@@ -142,7 +161,10 @@ func _every_car() -> void:
 		ok = ok and absi(a.length_px - int(round(float(spec.length) * CarArt.PX * CarArt.CAR_SCALE))) <= 1
 		ok = ok and a.atlas.get_image().get_used_rect().size.x > a.length_px * 0.8
 		if not ok: bad.append(id)
+		_lamps_on_the_body(id, a)
 	check("every car and every fleet vehicle draws from above", bad.is_empty(), str(bad.slice(0, 6)))
+	check("every car's lamps sit on its body: headlamps up front, tail lamps at the back, none floating", lamp_bad.is_empty(),
+		"%d bad: %s" % [lamp_bad.size(), str(lamp_bad.slice(0, 6))])
 	var tr := CarArt.new({ "body": "trailer", "length": 13.6, "width": 2.55, "track": 2.1 }, Color.WHITE, 0.0, 1, CarArt.CAR_SCALE, { "decal": 2 })
 	check("a semi's trailer draws, with no front wheels of its own", tr.atlas != null and tr.wheel_spots.is_empty() and tr.n > 30, "%d slices" % tr.n)
 
@@ -247,6 +269,61 @@ func _mods() -> void:
 	for m: Dictionary in looks:
 		if not _differs(stock, _art("silvio", m)): same.append(m)
 	check("every body-shop option changes the car from above", same.is_empty(), str(same))
+	# every rim, lip depth and tyre shows from above on the back wheels (the atlas) and the front
+	# ones (their own stacks, so they can steer)
+	var wheel_same: Array = []
+	var opts: Array = []
+	for rim: String in PixCars.RIMS: opts.append({ "rim": rim })
+	for t: String in CarGen.TIRES: opts.append({ "tire": t })
+	for dp: float in [0.0, 0.5, 1.0]: opts.append({ "lip_depth": dp })
+	var base := _art("silvio", { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 })
+	for o: Dictionary in opts:
+		var m2 := { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 }
+		m2.merge(o, true)
+		if m2 == { "rim": "fivespoke", "tire": "stock", "lip_depth": 0.25 }: continue
+		var a2 := _art("silvio", m2)
+		if not _differs(base, a2) or a2.wheel_tex.get_image().get_data() == base.wheel_tex.get_image().get_data(): wheel_same.append(o)
+	check("every rim, lip depth and tyre shows from above, back wheels and front", wheel_same.is_empty(), str(wheel_same))
+	# fitment, staggered rears and spacers, slammed: all of it shows from above
+	var low := _art("silvio", { "drop": 1.0 })
+	var fit_same: Array = []
+	var fit_opts: Array = [{ "stagger": "staggered" }, { "spacers": 1 }, { "spacers": 3 }]
+	for f: String in CarGen.FITMENTS:
+		if f != "stock": fit_opts.append({ "offset": f })
+	for o2: Dictionary in fit_opts:
+		var m3 := { "drop": 1.0 }
+		m3.merge(o2)
+		var a3 := _art("silvio", m3)
+		if not _differs(low, a3) and a3.wheel_tex.get_image().get_data() == low.wheel_tex.get_image().get_data(): fit_same.append(o2)
+	check("every fitment, staggered rears and spacers show from above", fit_same.is_empty(), str(fit_same))
+	var poke := _plan("silvio", { "offset": "poke", "spacers": 3 })
+	var tuck := _plan("silvio", { "offset": "tucked" })
+	var stock_p := _plan("silvio", {})
+	check("poke and spacers push the wheels out, tucked pulls them in", absf(float(poke.wheels[0][1]) - poke.cy) > absf(float(stock_p.wheels[0][1]) - stock_p.cy)
+		and absf(float(tuck.wheels[0][1]) - tuck.cy) < absf(float(stock_p.wheels[0][1]) - stock_p.cy))
+	var stance := _art("silvio", { "offset": "stance" })
+	check("a stanced wheel leans its top in (its stack is wider than the tyre)", stance.wheel_size.y > _art("silvio").wheel_size.y)
+	check("staggered rears are wider than the fronts", int(_plan("silvio", { "stagger": "staggered" }).wheels[0][3]) > int(_plan("silvio", { "stagger": "staggered" }).wheels[2][3]))
+	# the lights the body shop sells: angel eyes, smoked tails, underglow, an LED bar on the roof
+	var halo := _art("silvio", { "halo": true })
+	var plain := _art("silvio")
+	check("halo headlights ring the lamps, lit with them", _differs(plain, halo) and halo.lamp_tex.head.get_image().get_data() != plain.lamp_tex.head.get_image().get_data())
+	check("smoked tails darken the lenses", _differs(plain, _art("silvio", { "smoked": true })))
+	check("underglow goes under the car in its colour", _art("silvio", { "underglow": "#3a8ad8" }).underglow == Color("#3a8ad8") and plain.underglow.a == 0.0)
+	var led := _art("fjord_f_one_fiddy_1996", { "roof": "lightbar" })
+	check("an LED roof bar lights on its own (with the high beams), not with the headlamps", led.lamp_tex.bar.get_image().get_used_rect().size.x > 0
+		and _art("fjord_f_one_fiddy_1996").lamp_tex.bar.get_image().get_used_rect().size.x == 0)
+	# light bars sit on the roofs: a cruiser's over the middle of its roof, the wrecker's just behind its windshield
+	var cruiser := _art("charjer")
+	var wrecker := _art("tow")
+	check("a light bar's spot is on the roof", absf(cruiser.roof_mid.x) < cruiser.length_px * 0.3 and absf(cruiser.roof_mid.z - cruiser.roof_z) <= 2.0
+		and wrecker.roof_front.x > wrecker.roof_mid.x and wrecker.roof_front.z >= wrecker.roof_z - 3.0, "%s %s / %s" % [str(cruiser.roof_mid), str(wrecker.roof_front), str(wrecker.roof_mid)])
+	for r4: String in ["FITMENT", "STAGGER", "SPACERS", "LIP DEPTH", "TIRES", "HEADLIGHTS", "TAIL LIGHTS", "UNDERGLOW"]:
+		if not GarageScreen.LOOK_ROWS.has(r4): check("the garage sells %s" % r4, false)
+	var slick := _plan("silvio", { "tire": "slicks" })
+	check("drag slicks are wider at the back than the front", int(slick.wheels[0][3]) > int(slick.wheels[2][3]), "%d / %d" % [int(slick.wheels[0][3]), int(slick.wheels[2][3])])
+	var saved_w := SaveGame.car_looks(JSON.parse_string(JSON.stringify({ "id": "silvio", "looks": { "rim": "threepiece", "lip_depth": 0.75, "tire": "whitewall" }, "parts": {} })))
+	check("rims, lip depth and tyres come back from the save", saved_w.rim == "threepiece" and float(saved_w.lip_depth) == 0.75 and saved_w.tire == "whitewall")
 	var truck := _art("fjord_f_one_fiddy_2015")
 	var truck_same: Array = []
 	for m2: Dictionary in [{ "bed": "tonneau" }, { "bed": "rollbar" }, { "bed": "rollbar_lights" }, { "spare": true }, { "load": "lumber" }, { "ladder": true }]:
@@ -340,6 +417,25 @@ func _fleet() -> void:
 	for i in 200: semi._tow(1.0 / 30.0)
 	var amb := _art("fjord_e_fiddy_ambulanz_2014")
 	check("the ambulance has its roof lights, ready to flash", amb.has_beacons and amb.lamp_tex.has("beacon"))
+	# the fire engine: a light bar and beacons that flash, its ladders, hose bed and deck gun on top
+	var fire_spec := SaveGame.load_spec("fire")
+	var fire := CarArt.new(fire_spec, Color(String(fire_spec.paint)), 0.0, 5, CarArt.CAR_SCALE)
+	var fp := CarArt.plan_of(fire_spec, {}, { "front": 0.0, "rear": 0.0, "left": 0.0, "right": 0.0 }, CarArt.CAR_SCALE, CarGen.design(fire_spec),
+		CarArt._plan_key(fire_spec, {}, {}, CarArt.CAR_SCALE))
+	var on_top := {}
+	for i4 in fp.m2.size():
+		if fp.h2[i4] >= 0: on_top[fp.m2[i4] & 255] = true
+	var hose := false
+	for i5 in fp.m0.size():
+		if fp.h0[i5] >= 0 and (fp.m0[i5] & 255) == CarArt.M_CARGO: hose = true
+	check("the fire engine has its light bar and beacons, ready to flash", fire.has_beacons and fire.lamp_tex.has("beacon")
+		and fire.lamp_tex.beacon.get_image().get_used_rect().size.x > 0)
+	check("the fire engine carries ladders, a deck gun and a hose bed", on_top.has(CarArt.M_LADDER) and on_top.has(CarArt.M_CHROME) and hose)
+	var box_spec := fire_spec.duplicate(true)
+	box_spec.art = {}
+	check("the fire engine isn't a plain box truck any more, from above or side on", _differs(fire, CarArt.new(box_spec, Color(String(fire_spec.paint)), 0.0, 5, CarArt.CAR_SCALE))
+		and PixCars.image_of(fire_spec, 200, Color.RED).get_data() != PixCars.image_of(box_spec, 200, Color.RED).get_data())
+	check("fire is an art cue the catalogue knows", CarCatalog.ART_CUES.has("fire"))
 	var van := _plan("grumpman_step_up_van_2004")
 	var sky := false
 	var vent := false

@@ -58,6 +58,10 @@ const HEAD := Color("f4ecc2")
 const HEAD_RIM := Color("4a463e")
 const TAIL := Color("9a1c1c")
 const TAIL_LIT := Color("ff3b2e")
+const SMOKED := Color("3a1216")      # smoked tail lenses: near black until they light
+const SMOKED_LIT := Color("e8261c")
+const HALO := Color("8ab8e0")        # angel-eye rings round the headlamps
+const HALO_LIT := Color("e4f4ff")
 const REV_LIT := Color("f4f4f0")
 const AMBER := Color("ffa020")
 const AMBER_OFF := Color("a8661a")
@@ -67,7 +71,8 @@ const PRIMER := Color("8a8a84")
 const INK := Color("15181f")
 const CHROME: Array[Color] = [Color("3c434c"), Color("7a848f"), Color("b9c3cd"), Color("e6edf4"), Color("ffffff")]
 
-## What a pixel is made of. A plan stores mat | shade << 8 | region << 12 | variant << 16.
+## What a pixel is made of. A plan stores mat | shade << 8 | region << 12 | variant << 16 (a
+## tyre's: 1 its rim face, bit 20 a spare, bit 21 its inside row, bits 24.. its row from the face).
 enum { M_NONE, M_PAINT, M_GLASS, M_SIDEGLASS, M_TRIM, M_CHROME, M_TIRE, M_HEAD, M_TAIL, M_AMBER, M_REV,
 	M_GRILLE, M_SEAT, M_BED, M_CARGO, M_SIGN, M_PLATE, M_BRAKE3, M_LIGHTBAR, M_STEEL, M_LADDER,
 	M_DASH, M_BEACON, M_WOOD }
@@ -76,7 +81,7 @@ enum { R_NONE, R_HOOD, R_ROOF, R_DECK, R_BODY, R_PILLAR, R_BED, R_BOX, R_DOOR, R
 
 ## Mods that change the shape, not just the colours: they key the plan cache.
 const SHAPE_MODS := ["spoiler", "kit", "fenders", "hood", "roof", "bash", "spare", "bed", "rollbar", "lightbar", "drop",
-	"rim_size", "tire", "offset", "exhaust", "sign", "ladder", "load", "trailer"]
+	"rim_size", "tire", "offset", "spacers", "stagger", "exhaust", "sign", "ladder", "load", "trailer"]
 
 # ------------------------------------------------------------------ what callers read
 
@@ -88,8 +93,16 @@ var n := 16                         # slices
 var atlas: ImageTexture             # every slice, side by side (slice z at x = z * size.x)
 var lamp_z0 := 0                    # the lamps' slices: lamp_tex[kind] holds slices lamp_z0 .. lamp_z0 + lamp_n - 1
 var lamp_n := 0
-var lamp_tex := {}                  # "brake", "rev", "head", "bl", "br", "beacon" -> ImageTexture (lit pixels only)
+var lamp_tex := {}                  # "brake", "rev", "head", "bl", "br", "beacon", "bar" -> ImageTexture (lit pixels only)
 var has_beacons := false            # an emergency rig's lights (lamp_tex.beacon) to flash when it runs code
+## Where each lamp is, for its glow at night: [kind (0 brake, 1 reverse, 2 head, 3 left signal,
+## 4 right signal, 5 beacon, 6 LED roof bar), Vector3(px along the car from its centre, px across,
+## slice), its colour, how many pixels]. One per lamp: each side, front and back, kept apart.
+var lamp_spots: Array = []
+var roof_mid := Vector3.ZERO        # the middle of the cabin's roof (along, across, slice): a police bar sits here
+var roof_front := Vector3.ZERO      # just behind the windshield's top: the wrecker's amber bar
+var roof_w := 10.0                  # how wide the roof is there (px)
+var underglow := Color(0, 0, 0, 0)  # the body shop's underglow (none: transparent)
 var wheel_tex: ImageTexture         # one front wheel's stack, its slices side by side (rim face toward +y)
 var wheel_n := 0
 var wheel_size := Vector2i.ZERO
@@ -140,6 +153,8 @@ class Plan:
 	var front_spots: Array[Vector2] = []
 	var tire_r := 3.0
 	var tire_w := 3
+	var camber := 0                 # a stanced wheel's lean: how many rows its top sits in from its bottom
+	var stretch := false            # a stretched tyre: the rim's lip stands proud of it
 	var zoff := 0
 	var z_nose := Vector3.ZERO      # front face: bumper top, lamp band bottom, hood
 	var z_tail := Vector3.ZERO      # rear face: bumper top, lamp band bottom, deck
@@ -221,12 +236,23 @@ func compute() -> void:
 	n = p.n
 	roof_z = p.roof_z
 	wheel_spots = p.front_spots
+	# the roof's middle and its front edge, for the bars that stand on it
+	var rr := float(p.d.get("roof_r", 0.3))
+	if String(p.d.get("rear", "")) == "boxtruck": rr = maxf(rr, float(p.d.get("box_x", 0.0)))
+	var rf := maxf(rr, float(p.d.get("roof_f", 0.6)))
+	var xf := clampi(int(float(MX) + rf * p.lpx) - 2, 0, p.sx - 1)
+	var xm := clampi(int(float(MX) + (rf + rr) * 0.5 * p.lpx), 0, p.sx - 1)
+	roof_front = Vector3(float(xf) + 0.5 - p.sx / 2.0, 0.0, float(maxi(0, p.h0[p.idx(xf, int(p.cy))])))
+	roof_mid = Vector3(float(xm) + 0.5 - p.sx / 2.0, 0.0, float(maxi(0, p.h0[p.idx(xm, int(p.cy))])))
+	roof_w = maxf(4.0, p.gr * 2.0)
+	var ug: Variant = _mods.get("underglow", "")
+	if ug is Color or (ug is String and String(ug) != ""): underglow = CarGen._col(ug, Color.TRANSPARENT)
 	_Painter.new(self, p, _paint, _mods, _seed).run()
 
 ## The textures, from what compute() painted. Main thread.
 func finish() -> void:
 	atlas = ImageTexture.create_from_image(_imgs.atlas)
-	for kk: String in ["brake", "rev", "head", "bl", "br", "beacon"]: lamp_tex[kk] = ImageTexture.create_from_image(_imgs[kk])
+	for kk: String in ["brake", "rev", "head", "bl", "br", "beacon", "bar"]: lamp_tex[kk] = ImageTexture.create_from_image(_imgs[kk])
 	wheel_tex = ImageTexture.create_from_image(_imgs.wheel)
 	_imgs = {}
 
@@ -248,6 +274,11 @@ static func trailer_design(spec: Dictionary) -> Dictionary:
 		"flare": "none", "arch": "flat", "arch_gap": 0.2 / L, "boxy": true, "stripe_kind": "side", "bed_h": h, "cab_x": 1.0 }
 
 static var _lock := Mutex.new()
+
+## Which row a leaning (cambered) wheel's slice z has moved in to: 0 at the bottom, `lean` at the top.
+static func wheel_lean(z: float, lean: int, zmax: float) -> int:
+	if lean <= 0: return 0
+	return clampi(int(float(lean + 1) * (z + 0.5) / maxf(1.0, zmax)), 0, lean)
 
 static func _plan_key(spec: Dictionary, mods: Dictionary, damage: Dictionary, scale: float) -> String:
 	var f := CarGen.facts(spec)
@@ -297,6 +328,7 @@ class _Shaper:
 	var gh := PackedByteArray()         # 1 where the column has a greenhouse
 	var x_nose := 0
 	var x_tail := 0
+	var bumper := PackedByteArray()     # 1 where a bumper juts out past the body's ends
 	var crush_f := 1.0
 	var crush_r := 0.0
 
@@ -588,16 +620,32 @@ class _Shaper:
 		p.tire_r = r
 		var tw_m := 0.21
 		if fam in ["pickup", "suv", "offroad", "van", "boxtruck"] or String(d.cls) in ["sports", "exotic", "muscle"]: tw_m = 0.25
-		if CarGen._tire_kind(mods) == "mud" or CarGen._donk(mods): tw_m = 0.3
+		var kind := CarGen._tire_kind(mods)
+		if kind in ["mud", "offroad"] or CarGen._donk(mods): tw_m = 0.3
 		if fam in ["kei", "bubble"]: tw_m = 0.17
 		p.tire_w = maxi(2, int(round(tw_m * px)))
 		var track := float(spec.get("track", float(spec.get("width", 1.8)) * 0.85)) * px
 		var vc := track / 2.0
-		match String(mods.get("offset", "stock")):
-			"poke": vc += 1.6
+		# the fitment: how far out the wheels sit (spacers push them further), how far past the
+		# body's side the tyre's outside may stand
+		var fit := CarGen.fitment(mods)
+		var spacer := float(mods.get("spacers", 0)) * px / 15.0           # a pixel a size, at the game's scale
+		var room := 0.4
+		match fit:
+			"poke":
+				vc += 1.6
+				room = 1.6
+			"stance":
+				vc += 1.4
+				room = 1.4
 			"tucked": vc -= 1.0
-		# keep the outside of the tire near the body's side
-		vc = minf(vc, p.wpx / 2.0 - p.tire_w / 2.0 + (1.6 if String(mods.get("offset", "")) == "poke" else 0.4))
+		vc += spacer
+		room = minf(room + spacer, float(CarArt.MY) - 0.4)
+		# keep the outside of the tire near the body's side (flush: out on the fender's lip)
+		vc = minf(vc, p.wpx / 2.0 - p.tire_w / 2.0 + room)
+		if fit == "flush": vc = p.wpx / 2.0 - p.tire_w / 2.0 + 1.0 + minf(spacer, room)
+		p.camber = maxi(1, int(round(p.tire_w * 0.5))) if fit == "stance" else 0
+		p.stretch = fit == "stretch"
 		var xs := [X(float(d.wr)), X(float(d.wf))]
 		if fam == "trailer":
 			# tandem axles at the back, duals on each; no front wheels (the tractor carries that end)
@@ -608,9 +656,15 @@ class _Shaper:
 			xs = []
 		# (a mid-engined car's back wheels sit out under its fat hips)
 		var vc_r := vc + (1.0 if fam in ["mid", "wedge"] else 0.0)
+		# drag slicks: the back tyres half as wide again, growing in toward the middle
+		var tw_r := p.tire_w
+		if kind == "slicks": tw_r = p.tire_w + maxi(1, int(round(p.tire_w * 0.5)))
+		# staggered: wider wheels at the back, the same way
+		if String(mods.get("stagger", "")) == "staggered": tw_r += maxi(1, int(round(p.tire_w * 0.34)))
+		vc_r -= float(tw_r - p.tire_w) / 2.0
 		for i in xs.size():
 			for s: float in [-1.0, 1.0]:
-				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, p.tire_w, i == 1, s])
+				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, tw_r if i == 0 else p.tire_w, i == 1, s])
 				if art.has("dually") and i == 0:
 					p.wheels.append([float(xs[i]), p.cy + s * (vc - p.tire_w - 1.0), r, p.tire_w, false, s])
 				if art.has("tractor") and i == 0:
@@ -627,18 +681,38 @@ class _Shaper:
 			var xc: float = w[0]
 			var yc: float = w[1]
 			var ww: int = w[3]
+			var s3 := float(w[5])
+			var lean := p.camber
+			var zmax := 2.0 * r * rise
 			for x in range(int(floor(xc - r)), int(ceil(xc + r)) + 1):
 				var dx := float(x) + 0.5 - xc
 				if absf(dx) > r or x < 0 or x >= p.sx: continue
 				var dz := rise * sqrt(maxf(0.0, r * r - dx * dx))
 				var zc := r * rise
-				for y in range(int(round(yc - ww / 2.0)), int(round(yc - ww / 2.0)) + ww):
+				var zb := maxi(0, int(round(zc - dz)))
+				var zt := maxi(zb, int(round(zc + dz)) - 1)
+				var y0 := int(round(yc - ww / 2.0))
+				var y_out := (y0 + ww - 1) if s3 > 0.0 else y0
+				# each row of the tread, from the outer face (the rim) in; a stanced wheel leans its
+				# top in, so its rows run further in the higher up they are
+				for ring in ww + lean:
+					var y := y_out - int(s3) * ring
 					if y < 0 or y >= p.sy: continue
+					var lo := zb
+					var hi := zt
+					if lean > 0:
+						lo = -1
+						for z in range(zb, zt + 1):
+							var sh := CarArt.wheel_lean(float(z), lean, zmax)
+							if ring >= sh and ring < sh + ww:
+								if lo < 0: lo = z
+								hi = z
+						if lo < 0: continue
 					var i2 := p.idx(x, y)
-					p.b1[i2] = maxi(0, int(round(zc - dz)))
-					p.h1[i2] = maxi(p.b1[i2], int(round(zc + dz)) - 1)
-					var outer := (y == int(round(yc - ww / 2.0)) + ww - 1) if float(w[5]) > 0.0 else (y == int(round(yc - ww / 2.0)))
-					p.m1[i2] = CarArt.M_TIRE | ((1 if outer else 0) << 16)
+					p.b1[i2] = lo
+					p.h1[i2] = hi
+					p.m1[i2] = CarArt.M_TIRE | ((1 if ring == 0 and lean == 0 else 0) << 16) | ((1 if ring == ww - 1 and lean == 0 else 0) << 21) \
+						| ((1 if lean > 0 else 0) << 22) | (mini(ring, 15) << 24)
 
 	# ------------------------------------------------------------ the body
 
@@ -805,6 +879,9 @@ class _Shaper:
 					if absf(u2 - float(pl[0])) * float(p.lpx) < maxf(0.6, float(pl[2]) * float(p.lpx) * 0.5): mat2 = _pillar(black_pillars)
 				if String(d.get("cab", "")) == "" and art.has("cargo") and u2 < float(d.dlo_r) + 0.02: mat2 = _paint(3, CarArt.R_PILLAR)
 				p.gs[i2] = mat2
+		# no greenhouse to go by (a step van's box runs up past its glass): the top of the body
+		if roof_top <= 0.0:
+			for zv: float in zt: roof_top = maxf(roof_top, zv)
 		p.roof_z = roof_top + float(p.zoff)
 
 	## The shut lines you see from above: round the hood and the trunk lid, across the shoulders
@@ -1026,6 +1103,8 @@ class _Shaper:
 				p.h0[i] = maxi(p.b0[i], int(zz.x) + 1)
 				p.belt[i] = 999
 				p.m0[i] = mat
+				if bumper.is_empty(): bumper.resize(p.h0.size())
+				bumper[i] = 1
 			# chrome wraps round the corners
 			for y in p.sy:
 				var av2 := absf(float(y) + 0.5 - p.cy)
@@ -1042,6 +1121,7 @@ class _Shaper:
 		var tail_kind := String(d.get("tail_lamp", "swept"))
 		var tlpx := maxf(2.0, float(d.get("tail_len", 0.0)) * float(p.lpx) * 0.6)
 		var grille := String(d.get("grille", "none"))
+		var hood_top := int(Z(float(d.hood_h))) + p.zoff + 3
 		var heads: Array[int] = []             # the headlamp pixels, sorted out by height below
 		var was: Array[int] = []               # and what they were before
 		for x in p.sx:
@@ -1056,13 +1136,14 @@ class _Shaper:
 				var side := (0 if v < 0.0 else 1) << 16
 				# the grille between the lamps, seen over the nose: the maker's face in a pixel or two
 				if dn < 1.0 and grille != "none" and _grille_at(grille, vn): p.m0[i] = CarArt.M_GRILLE
-				# headlamps: on the hood's front corners, in the maker's shape
-				if dn <= hpx * 1.7 and head != "none":
+				# headlamps: on the hood's front corners, in the maker's shape (a flat-faced cab, a van, a
+				# bus have no hood up there: their lamps are in the face, not on the roof)
+				if dn <= hpx * 1.7 and head != "none" and p.h0[i] <= hood_top:
 					if _head_at(head, dn, vn, hpx):
 						heads.append(i)
 						was.append(p.m0[i])
 						p.m0[i] = CarArt.M_HEAD | side
-					elif head == "popup" and vn > 0.6 and vn < 0.9 and absf(dn - 3.0) < 0.6: p.m0[i] = _paint(2, CarArt.R_HOOD)
+					elif head == "popup" and vn > 0.6 and vn < 0.9 and absf(dn - 3.0) < 0.6: p.m0[i] = _paint(2, CarArt.R_HOOD) | (1 << 21)   # (lit: they're up)
 					# turn signals at the outer corners
 					if dn < 2.0 and vn >= 0.9: p.m0[i] = CarArt.M_AMBER | side
 				# tail lamps on the deck's back corners (the ones you see from above), big enough to read
@@ -1078,7 +1159,10 @@ class _Shaper:
 		# the lamps' slices (the faces carry them too): from the bumper's top to the hood
 		p.lz0 = maxi(0, int(minf(p.z_nose.x, p.z_tail.x)) - 1)
 		p.lz1 = int(maxf(p.z_nose.z, p.z_tail.z)) + 2
-		if tail_kind == "tall" or fam in ["suv", "van", "minivan", "boxtruck", "offroad"]: p.lz1 = int(p.roof_z) + 1
+		if tail_kind == "tall" or fam in ["suv", "van", "minivan", "boxtruck", "offroad"]:
+			var top_all := 0.0
+			for zv: float in zt: top_all = maxf(top_all, zv)
+			p.lz1 = maxi(p.lz1, int(top_all) + p.zoff + 1)
 		for i in p.m0.size():
 			if (p.m0[i] & 255) == CarArt.M_BRAKE3:
 				p.lz1 = maxi(p.lz1, p.h0[i] + 1)
@@ -1401,7 +1485,8 @@ class _Shaper:
 		var bus := art.has("bus")
 		var school := art.has("schoolbus")
 		var amb := art.has("ambulance")
-		if not (bus or school or amb): return
+		var fire := art.has("fire")
+		if not (bus or school or amb or fire): return
 		var rz0 := int(round(p.roof_z))
 		var x0 := x_tail + 2
 		var x1 := x_nose - 2
@@ -1429,6 +1514,7 @@ class _Shaper:
 						p.h2[i] = rz0 + 1
 						p.m2[i] = CarArt.M_BEACON if av < w * 0.7 else CarArt.M_TAIL
 		if amb: _ambulance_roof()
+		if fire: _fire_roof()
 		p.lz1 = maxi(p.lz1, rz0 + 2)
 
 	## An ambulance's box from above: a red beacon on each of its top corners, a light bar across
@@ -1460,6 +1546,66 @@ class _Shaper:
 				p.h2[i] = top + hgt
 				p.m2[i] = mat
 		p.lz1 = maxi(p.lz1, top + 3)
+
+	## A fire engine from above: the hose bed open at the back with its folds of hose, two ladders
+	## on the rack along the body's roof, a chrome deck gun just behind the cab, red beacons on
+	## the body's back corners and a light bar across the front of the cab roof (red, a white
+	## lens in the middle).
+	func _fire_roof() -> void:
+		var bx := mini(int(round(X(float(d.get("box_x", 1.0))))), x_nose)
+		var top := 0
+		for x in range(x_tail, bx - 3):
+			top = maxi(top, p.h0[p.idx(x, int(p.cy))])
+		var hose1 := x_tail + int(round(0.2 * float(p.lpx)))
+		for x in range(x_tail + 1, bx):
+			var w: float = p.hw[x]
+			for y in p.sy:
+				var i := p.idx(x, y)
+				if p.h0[i] < top - 1: continue
+				var av := absf(float(y) + 0.5 - p.cy)
+				# the hose bed: sunk into the body, the hose folded in it in yellow and white
+				if x < hose1 and x > x_tail + 1 and av < w - 1.4:
+					p.h0[i] = top - 2
+					p.m0[i] = CarArt.M_CARGO | ((x - x_tail) % 3 << 8) | (4 << 16)
+					continue
+				var mat := -1
+				var b := top + 1
+				var hgt := 1
+				if (x <= x_tail + 2) and av > w * 0.62 and av < w - 0.5:
+					mat = CarArt.M_BEACON | (1 << 16)
+				elif x > hose1 + 1 and x < bx - 4:
+					# two ladders on the rack: rails down their edges, rungs across
+					var lad := absf(av - w * 0.5)
+					if lad < w * 0.32:
+						var rail := lad > w * 0.32 - 1.0
+						if rail or (x - hose1) % 3 == 0:
+							mat = CarArt.M_LADDER | ((0 if rail else 1) << 8)
+							b = top + 2
+					if mat < 0 and ((x - hose1) % 9 == 4) and av < w - 0.8:
+						# the rack's crossbars under them
+						mat = CarArt.M_STEEL | (1 << 8)
+						b = top + 1
+				if mat < 0 and x >= bx - 4 and x < bx - 1 and av < 1.6:
+					# the deck gun, stood up behind the cab
+					mat = CarArt.M_CHROME | ((3 if av < 0.8 else 1) << 8)
+					hgt = 3
+				if mat < 0: continue
+				p.b2[i] = b
+				p.h2[i] = b + hgt - 1
+				p.m2[i] = mat
+		# the cab's light bar, across the front of its roof
+		var cab_top := 0
+		for x in range(bx, x_nose):
+			cab_top = maxi(cab_top, p.h0[p.idx(x, int(p.cy))])
+		for x in range(x_nose - 5, x_nose - 2):
+			for y in p.sy:
+				var i2 := p.idx(x, y)
+				var av2 := absf(float(y) + 0.5 - p.cy)
+				if p.h0[i2] < cab_top - 2 or av2 > p.hw[x] - 1.0: continue
+				p.b2[i2] = cab_top + 1
+				p.h2[i2] = cab_top + 1
+				p.m2[i2] = CarArt.M_BEACON | ((2 if av2 < 1.5 else 1) << 16)
+		p.lz1 = maxi(p.lz1, maxi(top, cab_top) + 4)
 
 	## A pickup's bed (and what's in it, or the cover over it); the box behind a box truck's cab.
 	func _bed_and_box() -> void:
@@ -1539,7 +1685,9 @@ class _Shaper:
 						p.h2[i7] = zr + 1
 						p.m2[i7] = CarArt.M_LADDER | (1 << 8)
 		elif rear == "boxtruck":
-			# the box: a flat roof with its ribs, white or the fleet's colour
+			# the box: a flat roof with its ribs, white or the fleet's colour (an ambulance's box
+			# and a fire engine's body are smooth, no skylight, no vents)
+			var smooth := art.has("ambulance") or art.has("fire")
 			var bx := int(round(X(float(d.get("box_x", 0.0)))))
 			for x in range(x_tail, mini(bx, p.sx)):
 				for y in p.sy:
@@ -1547,14 +1695,14 @@ class _Shaper:
 					if p.h0[i8] < 0: continue
 					var av5 := absf(float(y) + 0.5 - p.cy)
 					# the roof bows between its ribs: a shade darker over each one (an ambulance's box is smooth)
-					var rib := (x - x_tail) % 6 == 0 and not art.has("ambulance")
-					p.m0[i8] = _paint(2 if av5 >= p.hw[x] - 1.0 else (3 if rib else 4), CarArt.R_BOX)
+					var rib := (x - x_tail) % 6 == 0 and not smooth
+					if (p.m0[i8] & 255) != CarArt.M_CARGO: p.m0[i8] = _paint(2 if av5 >= p.hw[x] - 1.0 else (3 if rib else 4), CarArt.R_BOX)
 					# a translucent skylight strip down the middle of a parcel box
-					if not art.has("ambulance") and av5 < p.hw[x] * 0.14 and x > x_tail + 2 and x < bx - 3:
+					if not smooth and av5 < p.hw[x] * 0.14 and x > x_tail + 2 and x < bx - 3:
 						p.m0[i8] = CarArt.M_PLATE
 					p.belt[i8] = 999
 			# a roof vent or two near the front of the box
-			if not art.has("ambulance"):
+			if not smooth:
 				for k: int in [5, 12]:
 					var xv := bx - k
 					if xv <= x_tail + 2: continue
@@ -1609,6 +1757,8 @@ class _Shaper:
 					p.h0[i] = deck_z - 1
 					p.b0[i] = 1
 					p.m0[i] = CarArt.M_TRIM
+					# the tail lamps on the flaps' brackets, at the very end of the frame
+					if x == x_tail + 1 and av < w * 0.86: p.m0[i] = CarArt.M_TAIL | ((0 if v < 0.0 else 1) << 16)
 				else:
 					p.h0[i] = -1
 					continue
@@ -1817,6 +1967,9 @@ class _Shaper:
 		var h := p.h0.duplicate()
 		for i in h.size():
 			if h[i] < 0: h[i] = -2
+			# a bumper jutting out under the nose or the tail doesn't make the face above it an inside
+			# step: the face is still the car's outside, with its lamps and its grille
+			elif not bumper.is_empty() and bumper[i] == 1: h[i] = -2
 		# the 3-wide minimum along each row, then down each column: the 8 neighbours (and itself)
 		var row_min := PackedInt32Array()
 		row_min.resize(h.size())
@@ -1843,8 +1996,10 @@ class _Shaper:
 				var hd: int = h[i + sx] if y < sy - 1 else -2
 				var low := mini(mini(hl, hr), mini(hu, hd))
 				p.nmin4[i] = low
-				if hr == low: p.face[i] = 2
-				elif hl == low: p.face[i] = 3
+				# (a step facing forward in the back half, a hose bed's or a bed's wall, is a side, not
+				# the nose: no headlamps lit at the tail)
+				if hr == low and p.ux[x] > 0.6: p.face[i] = 2
+				elif hl == low and p.ux[x] < 0.4: p.face[i] = 3
 				else: p.face[i] = 1
 
 ## The bottom edge of a profile outline, sampled like CarGen.top_line (-1 where there's no body).
@@ -1900,12 +2055,22 @@ class _Painter:
 	var lamp_bl := PackedInt32Array()
 	var lamp_br := PackedInt32Array()
 	var lamp_beacon := PackedInt32Array()
+	var lamp_bar := PackedInt32Array()
+	var spot_acc := {}                 # lamp kind/side/end -> [x, y, z sums, count, colour sum]
+	var halo := false                  # angel-eye rings round the headlamps
+	var smoked := false                # smoked tail lenses
 	var dmg: Dictionary
 	var rim_c := Color("c9ced6")
 	var rim_style := "fivespoke"
 	var rim_frac := 0.66
 	var caliper := Color("5a5e66")
 	var wall := "none"
+	var tire_kind := "stock"
+	var rim_depth := 0.25
+	var cur_depth := 0.25             # the wheel being painted: staggered rears dish deeper
+	var cur_frac := 0.66
+	var stagger := false
+	var lugs := 5
 	var glass: Array[Color] = []
 	var decal := -1
 	var decal_c := Color.WHITE
@@ -1944,7 +2109,11 @@ class _Painter:
 	var grille_none := false
 	var chrome_frame := false
 	var seat_c := Color("26262a")
-	var fleet := ""                    # schoolbus, bus, ambulance, packer: the outfit's bands down the side
+	var fleet := ""                    # schoolbus, bus, ambulance, packer, fire: the outfit's bands down the side
+	var fire_k := 1.0                  # a fire engine's slices per metre (its stripe and compartments go by height)
+	var fire_pump := Vector2.ZERO      # the pump panel, as fractions along the truck
+	var fire_arch := Vector3.ZERO      # the back wheel: x, half the arch's width, how high it reaches (slices)
+	var fire_cols := PackedFloat32Array()  # the compartments' edges (px)
 	var black_roof: Array[Color] = []  # a floating roof: the roof and its pillars in gloss black
 	# per column
 	var door0 := PackedByteArray()     # the front doors' span
@@ -1964,6 +2133,8 @@ class _Painter:
 		year = int(mods.get("year", d.year))
 		finish = String(mods.get("finish", "gloss"))
 		var wear: Dictionary = mods.get("wear", {})
+		halo = mods.get("halo", false)
+		smoked = mods.get("smoked", false)
 		var faded := float(wear.get("faded", 0.0))
 		var base := paint
 		if faded > 0.0: base = base.lerp(Color(base.get_luminance(), base.get_luminance(), base.get_luminance()).lightened(0.18), faded * 0.45)
@@ -2000,10 +2171,12 @@ class _Painter:
 		var look := CarGen.wheel_look(d, mods, 200)
 		rim_style = String(look[0])
 		var wm: Dictionary = look[1]
-		rim_frac = clampf(float(wm.get("rim_size", 0.66)), 0.42, 0.86)
-		if String(wm.get("tire_kind", "stock")) == "mud": rim_frac = minf(rim_frac, 0.6)
-		rim_c = CarGen._col(wm.get("rim_color", null), Color("c9ced6") if not rim_style in ["beadlock", "steel"] else (Color("2a2e36") if rim_style == "beadlock" else Color("d8dce2")))
-		if rim_style in ["deepdish", "wire", "hubcap", "dish"] and not wm.has("rim_color"): rim_c = Color("dfe3e8")
+		tire_kind = String(wm.get("tire_kind", "stock"))
+		rim_frac = CarGen.rim_frac(tire_kind, wm)
+		rim_c = CarGen.rim_paint(rim_style, wm)
+		rim_depth = CarGen.lip_depth(rim_style, wm)
+		stagger = String(mods.get("stagger", "")) == "staggered"
+		lugs = int(wm.get("lugs", 5))
 		caliper = CarGen._col(mods.get("caliper", null), Color("5a5e66"))
 		wall = String(wm.get("wall", "none"))
 		var g0 := CarArt.GLASS.lerp(Color("07090c"), tint * 0.8)
@@ -2028,6 +2201,8 @@ class _Painter:
 		bumper = { "chrome": 1, "chrome5": 1, "rubber": 2, "strip": 2, "steel": 3 }.get(bs, 0)
 		popup = String(d.get("head", "")) == "popup"
 		tail_kind = String(d.get("tail_lamp", "swept"))
+		# a box truck, a fire engine, a bus: the stop and tail lamps low on the back, over the bumper
+		if String(d.family) == "boxtruck" or String(d.body) == "bus": tail_kind = "low"
 		var grille := String(d.get("grille", "none"))
 		grille_w = 0.5 if grille != "big" else 0.62
 		if String(d.family) in ["pickup", "suv", "boxtruck", "van"] or bool(d.get("boxy", false)): grille_w = 0.6
@@ -2046,9 +2221,20 @@ class _Painter:
 			var hides: Array[Color] = [Color("3e3e46"), Color("9a7650"), Color("8a2a24"), Color("d0c4a4")]
 			if int(d.year) >= 1995: hides = [Color("3e3e46"), Color("3e3e46"), Color("9a7650"), Color("8a2a24")]
 			seat_c = hides[absi(String(d.get("id", d.model)).hash()) % hides.size()]
-		for fk: String in ["schoolbus", "bus", "ambulance", "packer"]:
+		for fk: String in ["schoolbus", "bus", "ambulance", "packer", "fire"]:
 			if d.art.has(fk) and fleet == "": fleet = fk
 		if String(d.family) == "trailer": fleet = "trailer"
+		if fleet == "fire":
+			# where the fire engine's stripe, compartments and pump panel fall
+			fire_k = p.zl / maxf(1.0, float(d.L))
+			var box_u := float(d.get("box_x", 1.0))
+			fire_pump = Vector2(box_u - 0.1, box_u - 0.004)
+			var wv0: Array = p.wheels[0]
+			fire_arch = Vector3(float(wv0[0]), float(wv0[2]) * 1.25, float(wv0[2]) * 2.0 * CarArt.RISE + 2.0)
+			var ux0 := float(CarArt.MX)
+			var front0 := fire_arch.x + fire_arch.y + 1.0
+			var pump_x := ux0 + fire_pump.x * float(p.lpx)
+			fire_cols = PackedFloat32Array([ux0 + 0.012 * float(p.lpx), fire_arch.x - fire_arch.y - 1.0, front0, (front0 + pump_x) * 0.5, pump_x])
 		# per column
 		door0.resize(p.sx)
 		door1.resize(p.sx)
@@ -2080,6 +2266,10 @@ class _Painter:
 		lamp_bl.resize(ln)
 		lamp_br.resize(ln)
 		lamp_beacon.resize(ln)
+		lamp_bar.resize(ln)
+		# the back wheels go in with the body (staggered: bigger, deeper rims than the front)
+		cur_depth = minf(1.0, rim_depth + 0.3) if stagger else rim_depth
+		cur_frac = minf(0.86, rim_frac + 0.03) if stagger else rim_frac
 		for y in p.sy:
 			for x in p.sx:
 				var i := y * p.sx + x
@@ -2094,6 +2284,13 @@ class _Painter:
 		art._imgs.bl = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_bl.to_byte_array())
 		art._imgs.br = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_br.to_byte_array())
 		art._imgs.beacon = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_beacon.to_byte_array())
+		art._imgs.bar = Image.create_from_data(lw, p.sy, false, Image.FORMAT_RGBA8, lamp_bar.to_byte_array())
+		# each lamp's middle, for its glow
+		art.lamp_spots = []
+		for key: int in spot_acc:
+			var acc: Array = spot_acc[key]
+			var cnt := float(acc[3])
+			art.lamp_spots.append([key >> 2, Vector3(float(acc[0]) / cnt + 0.5 - p.sx / 2.0, float(acc[1]) / cnt + 0.5 - p.cy, float(acc[2]) / cnt), (acc[4] as Color) / cnt, int(cnt)])
 		_front_wheel_stack()
 
 	func _lamp(kind: int, x: int, y: int, z: int, c: Color) -> void:
@@ -2110,6 +2307,16 @@ class _Painter:
 			5:
 				lamp_beacon[at] = ci
 				art.has_beacons = true
+			6: lamp_bar[at] = ci
+		# where the lamp is, for its glow: each side, the front and the back kept apart
+		var key := (kind << 2) | (0 if float(y) < p.cy else 2) | (0 if x < p.sx / 2 else 1)
+		if not spot_acc.has(key): spot_acc[key] = [0.0, 0.0, 0.0, 0, Color(0, 0, 0, 0)]
+		var acc: Array = spot_acc[key]
+		acc[0] = float(acc[0]) + float(x)
+		acc[1] = float(acc[1]) + float(y)
+		acc[2] = float(acc[2]) + float(z)
+		acc[3] = int(acc[3]) + 1
+		acc[4] = (acc[4] as Color) + c
 
 	## A cheap, steady noise for (x, y): the same pixel gets the same speck every time.
 	func _hn(x: int, y: int, s := 0) -> float:
@@ -2124,10 +2331,12 @@ class _Painter:
 		var b: int = p.b0[i]
 		var m: int = p.m0[i]
 		var c := _top_colour(m, x, y)
+		# pop-up headlamps: the panels light where the lamps stand up
+		if (m & 255) == CarArt.M_PAINT and (m >> 21) & 1 == 1: _lamp(2, x, y, top, CarArt.HEAD)
 		# the rim of every top (where the next pixel over drops away) gets an ink line
 		var rim: int = p.nmin4[i]
 		# (a headlamp's edge is one dark bezel all the way round, whichever way the car's turned)
-		if (m & 255) == CarArt.M_HEAD and (rim < 0 or rim < top - 1): c = CarArt.HEAD_RIM
+		if (m & 255) == CarArt.M_HEAD and (rim < 0 or rim < top - 1): c = CarArt.HALO if halo else CarArt.HEAD_RIM
 		elif rim < 0: c = c.darkened(0.42)
 		elif rim < top - 3 and (m & 255) != CarArt.M_GLASS: c = c.darkened(0.2)
 		var row := y * aw + x
@@ -2159,7 +2368,7 @@ class _Painter:
 			else:
 				var t := clampf(float(z - b) / maxf(1.0, float(mini(belt, top) - b)), 0.0, 1.0)
 				match face:
-					2: sc = _front_face(x, y, z)
+					2: sc = _front_face(x, y, z, top)
 					3: sc = _rear_face(x, y, z)
 					_:
 						var side := 0 if float(y) < p.cy else 1
@@ -2185,17 +2394,36 @@ class _Painter:
 		var b: int = p.b1[i]
 		var m: int = p.m1[i]
 		var outer := ((m >> 16) & 15) == 1
+		var spare := (m >> 20) & 1 == 1
+		var inner := (m >> 21) & 1 == 1
+		var leaning := (m >> 22) & 1 == 1
+		var ring := (m >> 24) & 15
 		var xc := 0.0
+		var ww := p.tire_w
 		var r := p.tire_r
 		for wv: Array in p.wheels:
-			if absf(float(x) + 0.5 - float(wv[0])) <= float(wv[2]) + 0.5: xc = float(wv[0])
-		if (m >> 20) & 1 == 1: xc = float(x) + 0.5
+			if absf(float(x) + 0.5 - float(wv[0])) <= float(wv[2]) + 0.5:
+				xc = float(wv[0])
+				ww = int(wv[3])
+		var dx := float(x) + 0.5 - xc
+		var zc := r * CarArt.RISE
+		if spare:
+			# a spare on the back door stands across the car: its face runs side to side
+			dx = float(y) + 0.5 - p.cy
+			zc = float(b + top + 1) * 0.5
+			r *= 0.95
 		var row := y * aw + x
-		buf[row + top * p.sx] = (Color("2a2d33") if x % 2 == 0 else Color("1f2226")).to_abgr32()
-		var dark := Color("121418").to_abgr32()
-		for z in range(b, top):
-			if outer: buf[row + z * p.sx] = _rim_face(float(x) + 0.5 - xc, float(z) + 0.5 - r * CarArt.RISE, r).to_abgr32()
-			else: buf[row + z * p.sx] = dark
+		# the circle's own top over this column (a leaning wheel's outer rows stop short of it)
+		var z_top := maxi(0, int(round(zc + CarArt.RISE * sqrt(maxf(0.0, r * r - dx * dx)))) - 1) if not spare else top
+		for z in range(b, top + 1):
+			var dz := float(z) + 0.5 - zc
+			var face := outer
+			var inside := inner
+			if leaning:
+				var sh := CarArt.wheel_lean(float(z), p.camber, 2.0 * r * CarArt.RISE)
+				face = ring == sh
+				inside = ring == sh + ww - 1
+			buf[row + z * p.sx] = _wheel_px(dx, dz, r, ring, face, inside, z >= z_top).to_abgr32()
 
 	func _column_bolt(i: int, x: int, y: int) -> void:
 		var top: int = p.h2[i]
@@ -2356,7 +2584,7 @@ class _Painter:
 			CarArt.M_HEAD:
 				if not art.head_ok[clampi(vr, 0, 1)]: return Color("2a2a2e")
 				return CarArt.HEAD.darkened(0.12) if (x + y) % 3 else CarArt.HEAD
-			CarArt.M_TAIL: return CarArt.TAIL if art.tail_ok[clampi(vr, 0, 1)] else Color("3a1a1a")
+			CarArt.M_TAIL: return (CarArt.SMOKED if smoked else CarArt.TAIL) if art.tail_ok[clampi(vr, 0, 1)] else Color("3a1a1a")
 			CarArt.M_AMBER: return CarArt.AMBER_OFF
 			CarArt.M_REV: return Color("d8d8d0")
 			CarArt.M_GRILLE: return Color("17181c")
@@ -2396,6 +2624,7 @@ class _Painter:
 			1: return [Color("8a5a34"), Color("6a4428"), Color("a87a4a")][shade % 3]  # firewood
 			2: return Color("b88a52") if shade == 0 else Color("8a6436")           # boxes
 			3: return [Color("5a3a22"), Color("4a2e1a"), Color("6a4628")][shade % 3]  # mulch
+			4: return [Color("e8c040"), Color("b88a1c"), Color("e4e0d4")][shade % 3]  # folded hose
 		return Color("6a6e74").lightened(_hn(x, y, 5) * 0.1)
 
 	## A roof sign from above: its top edge in the sign's colour.
@@ -2446,6 +2675,7 @@ class _Painter:
 				if absf(t - 0.72) < 0.07: c = Color("c8201c")
 			"packer":
 				if absf(t - 0.6) < 0.12: c = Color("f0f0ec") if (x + z) % 4 != 0 else Color("2a6a3a")
+			"fire": c = _fire_flank(c, x, z, t)
 			"trailer":
 				# the outfit's name down the side, as big as it gets
 				if decal >= 0 and t > 0.35 and t < 0.75 and p.ux[x] > 0.15 and p.ux[x] < 0.85:
@@ -2453,13 +2683,31 @@ class _Painter:
 		if portholes and absf(t - 0.72) < 0.1 and p.ux[x] > wf - 0.08 and p.ux[x] < wf + 0.02 and x % 3 == 0: c = CarArt.CHROME[2]
 		return c
 
+	## A fire engine's flank at slice z: the white reflective stripe at a metre up, the roll-up
+	## aluminium shutters over the compartments (higher over the back wheel), their frames in the
+	## paint, and the brushed chrome pump panel behind the cab.
+	func _fire_flank(c: Color, x: int, z: int, t: float) -> Color:
+		var zm := (float(z) - float(p.zoff)) / fire_k
+		if zm > 0.96 and zm < 1.12: return Color("f2f0e8")
+		var u: float = p.ux[x]
+		var xf := float(x) + 0.5
+		if u > fire_pump.x and u < fire_pump.y and zm > 0.62 and t < 0.94:
+			return CarArt.CHROME[2] if x % 2 == 0 else CarArt.CHROME[3]
+		if u > 0.012 and u < fire_pump.x and zm > 1.22 and t < 0.9:
+			for cx: float in fire_cols:
+				if absf(xf - cx) < 0.6: return pal[0]
+			if absf(xf - fire_arch.x) < fire_arch.y and float(z - p.zoff) < fire_arch.z: return c
+			return CarArt.CHROME[2] if z % 2 == 0 else CarArt.CHROME[1]
+		return c
+
 	## The nose at slice z: bumper, grille, headlamps, turn signals.
-	func _front_face(x: int, y: int, z: int) -> Color:
+	func _front_face(x: int, y: int, z: int, top := 999) -> Color:
 		var v := float(y) + 0.5 - p.cy
 		var vn := absf(v) / maxf(1.0, p.hw[x])
 		var zz := float(z)
 		var bump_top: float = p.z_nose.x + 1.0
-		var hood_z: float = p.z_nose.z
+		# (on a nose that rounds off below the hood line, the lamps sit under this column's own top)
+		var hood_z: float = minf(p.z_nose.z, float(top))
 		if zz <= bump_top:
 			if not art.bumper_front: return Color("1a1a1e")
 			match bumper:
@@ -2475,9 +2723,11 @@ class _Painter:
 		var head_lo := maxf(lamp_lo, hood_z - 3.0)
 		if zz >= head_lo and zz < hood_z - 0.5 and vn > 0.55 and vn < 0.93 and not popup:
 			var lit: bool = art.head_ok[0 if v < 0.0 else 1]
-			if lit: _lamp(2, x, y, z, CarArt.HEAD)
+			var rim := vn < 0.6 or vn > 0.89 or zz < head_lo + 0.5
+			if lit: _lamp(2, x, y, z, CarArt.HALO_LIT if halo and rim else CarArt.HEAD)
 			if not lit: return Color("2a2a2e")
-			return CarArt.HEAD_RIM if vn < 0.6 or vn > 0.89 or zz < head_lo + 0.5 else CarArt.HEAD.darkened(0.08)
+			if rim: return CarArt.HALO if halo else CarArt.HEAD_RIM
+			return CarArt.HEAD.darkened(0.08)
 		if vn >= 0.9 and zz >= lamp_lo - 1.0 and zz < hood_z:
 			_lamp(3 if v < 0.0 else 4, x, y, z, CarArt.AMBER_LIT)
 			return CarArt.AMBER_OFF
@@ -2497,6 +2747,8 @@ class _Painter:
 		if zz <= bump_top:
 			if not art.bumper_rear: return Color("1a1a1e")
 			if vn < 0.22 and zz >= bump_top - 1.0: return Color("d8d4c0")
+			# a fire engine's tailboard: red and yellow chevrons across it
+			if fleet == "fire": return Color("e8c020") if (x + y + z) % 4 < 2 else Color("c8201c")
 			match bumper:
 				1: return CarArt.CHROME[2 if zz == bump_top else 1]
 				2: return CarArt.TRIM
@@ -2512,16 +2764,19 @@ class _Painter:
 				lo = maxf(bump_top + 1.0, deck - 2.0)
 				on = vn > 0.74 and zz >= lo
 			"round", "dual": on = zz >= lo and zz < hi and (absf(vn - 0.78) < 0.12 or tail_kind == "dual" and absf(vn - 0.55) < 0.1)
+			"low":
+				lo = bump_top + 1.0
+				on = zz >= lo and zz < lo + 3.0 and vn > 0.6
 			_: on = zz >= lo and zz < hi and vn > 0.56
 		if on:
 			var ok: bool = art.tail_ok[side]
 			if ok:
-				_lamp(0, x, y, z, CarArt.TAIL_LIT)
+				_lamp(0, x, y, z, CarArt.SMOKED_LIT if smoked else CarArt.TAIL_LIT)
 				if vn > 0.8: _lamp(3 if v < 0.0 else 4, x, y, z, CarArt.TAIL_LIT)
 			if vn > 0.56 and vn < 0.7 and zz < lo + 1.5 and year >= 1970:
 				if ok: _lamp(1, x, y, z, CarArt.REV_LIT)
 				return Color("d8d8d0")
-			return CarArt.TAIL if ok else Color("3a1a1a")
+			return (CarArt.SMOKED if smoked else CarArt.TAIL) if ok else Color("3a1a1a")
 		if vn < 0.22 and zz < mid + 2.0 and zz > bump_top: return Color("d8d4c0")      # the plate
 		return _paint_c(2, CarArt.R_BODY, x, y, 0.6)
 
@@ -2534,14 +2789,15 @@ class _Painter:
 				if art.head_ok[vr]: _lamp(2, x, y, z, CarArt.HEAD)
 			CarArt.M_TAIL:
 				if art.tail_ok[vr]:
-					_lamp(0, x, y, z, CarArt.TAIL_LIT)
+					_lamp(0, x, y, z, CarArt.SMOKED_LIT if smoked else CarArt.TAIL_LIT)
 					_lamp(3 + vr, x, y, z, CarArt.TAIL_LIT)
 			CarArt.M_AMBER: _lamp(3 + vr, x, y, z, CarArt.AMBER_LIT)
 			CarArt.M_BRAKE3: _lamp(0, x, y, z, CarArt.TAIL_LIT)
 			CarArt.M_BEACON:
 				if (m >> 16) & 15 != 0: _lamp(5, x, y, z, Color("ff2a1e") if (m >> 16) & 15 == 1 else Color("f4f8ff"))
 			CarArt.M_LIGHTBAR:
-				if ((m >> 8) & 15) != 0: _lamp(2, x, y, z, Color("fffff0"))
+				# the LED roof bar: on with the high beams
+				if ((m >> 8) & 15) != 0: _lamp(6, x, y, z, Color("f4faff"))
 
 	func _bolt_side(m: int, x: int, y: int, z: int, b: int, top: int) -> Color:
 		var mat := m & 255
@@ -2560,37 +2816,68 @@ class _Painter:
 
 	# ------------------------------------------------------------ wheels
 
-	## The face of a wheel seen from the side, at (dx along, dz up) from its hub: the tire's
-	## sidewall, the rim in its style and colour, the caliper behind the spokes, whitewalls.
+	## The face of a wheel seen from the side, at (dx along, dz up) from its hub, painted the way
+	## the side view paints it (CarGen.tire_px, CarGen.rim_px), lit from the upper left: the tyre's
+	## dark sidewall and its lit shoulder, whitewalls and letters, the polished lip, the barrel's
+	## shadow, the dished face in the rim's style, the cap, and the caliper behind the spokes.
 	func _rim_face(dx: float, dz: float, r: float) -> Color:
-		var dist := Vector2(dx, dz / CarArt.RISE).length()
-		var rr := r * rim_frac
-		if dist > r - 0.6: return Color("101114")
+		var v := Vector2(dx, -dz / CarArt.RISE)
+		var dist := v.length()
+		var rr := r * cur_frac
+		var a := atan2(v.y, v.x)
+		var lit := (v / maxf(0.01, dist)).dot(CarGen.LIGHT)
+		if dist > r - 0.6:
+			# the tread's edge: an off-road tyre's lugs stand out on it, their tops lit
+			if tire_kind in ["mud", "offroad"] and fposmod(a * 9.0 / TAU, 1.0) < 0.5 and lit > 0.2: return CarGen.TIRE_C[2]
+			return Color("0e1013")
 		if dist > rr:
-			if wall == "white" and dist < rr + (r - rr) * 0.55: return Color("e8e6e0")
-			if wall == "letters" and dist < rr + (r - rr) * 0.5 and int(atan2(dz, dx) * 4.0 + 20.0) % 2 == 0: return Color("d8d6d0")
-			return Color("1c1e22")
-		var ang := atan2(dz, dx)
-		var hi := rim_c.lerp(Color.WHITE, 0.4)
-		var lo := rim_c.darkened(0.45)
-		if dist < rr * 0.28: return lo if rim_style != "hubcap" else hi
-		match rim_style:
-			"hubcap", "dish": return hi if dist > rr * 0.7 else rim_c
-			"steel": return rim_c if int(ang * 1.9 + 8.0) % 2 == 0 or dist > rr * 0.75 else lo
-			"deepdish": return hi if dist > rr * 0.62 else (rim_c if int(ang * 0.8 + 8.0) % 2 == 0 else lo)
-			"beadlock": return CarArt.CHROME[3] if dist > rr * 0.78 and int(ang * 3.0 + 12.0) % 2 == 0 else rim_c
-			"mesh", "wire": return rim_c if (int(dx * 2.0 + 9.0) + int(dz * 2.0 + 9.0)) % 2 == 0 else lo
-		var spokes := 5
-		match rim_style:
-			"tenspoke": spokes = 10
-			"multispoke": spokes = 14
-			"turbofan": spokes = 8
-		var twist := 0.6 if rim_style == "turbofan" else 0.0
-		var s := fposmod((ang + dist * twist) * float(spokes) / TAU, 1.0)
-		if s < 0.45: return rim_c if dist < rr * 0.8 else hi
-		# a gap between spokes: the caliper shows through on the top-back quarter
-		if ang > 0.6 and ang < 2.4 and dist > rr * 0.35: return caliper
-		return Color("2a2d33")
+			var t := (dist - rr) / maxf(0.5, r - rr)
+			# a sidewall a pixel or two thick: the whitewall (or the letters) takes all of it
+			if r - rr < 3.0 and t > 0.08 and t < 0.8:
+				if wall == "white": return Color("e8e6dc") if lit > -0.3 else Color("bcb9ae")
+				if wall == "letters" and a < -0.5 and a > -2.6 and fposmod(a * 10.0 / TAU, 1.0) < 0.5: return Color("e0dccf")
+			return CarGen.tire_px(tire_kind, wall, t, false, a, a, lit, false)
+		var c := CarGen.rim_px(rim_style, dist / rr, a, a, lit, rim_c, cur_depth, rr, lugs, rr < 5.0)
+		if c.a < 0.5:
+			# a gap: the caliper on the top-back quarter, the rest dark
+			if a < -0.6 and a > -2.4 and dist > rr * 0.35: return caliper
+			return Color("22252b")
+		return c
+
+	## One pixel of a wheel's stack: the rim's face on the outer row, below the top; the tread
+	## everywhere else (a stretched tyre's rim lip stands proud of it on top, chrome).
+	func _wheel_px(dx: float, dz: float, r: float, ring: int, face: bool, inner: bool, top: bool) -> Color:
+		if face and not top: return _rim_face(dx, dz, r)
+		if face and top and p.stretch: return CarArt.CHROME[3] if dx < 0.0 else CarArt.CHROME[2]
+		return _tread(dx, dz, r, ring, inner, top)
+
+	## The tread at (dx along, dz up) from the hub: blocks round the tyre with grooves between, the
+	## middle rows staggered from the shoulders (`ring` 0 at the outer face, `inner` the inside
+	## row), lit on top, darker down the ends and under. An off-road tyre's blocks are chunky with
+	## the shoulder lugs standing out; a low-profile's are fine; a slick is smooth with a shine down
+	## the middle.
+	func _tread(dx: float, dz: float, r: float, ring: int, inner: bool, top: bool) -> Color:
+		var a := atan2(dz / CarArt.RISE, dx)
+		var shoulder := ring == 0 or inner
+		var tone := 2 if top and dz > 0.0 else (1 if dz > -r * 0.4 else 0)
+		var block: Color = [Color("1b1e23"), Color("262a30"), Color("33383f")][tone]
+		var groove: Color = [Color("0c0e11"), Color("111317"), Color("15171b")][tone]
+		var pitch := 3.0
+		var cut := 0.34
+		match tire_kind:
+			"slicks":
+				return block.lightened(0.12) if tone == 2 and not shoulder else block
+			"mud", "offroad":
+				pitch = 4.0
+				cut = 0.42
+				if shoulder: block = block.lightened(0.08)
+			"lowpro":
+				pitch = 2.5
+		var s := fposmod(a * r / pitch + (0.5 if not shoulder else 0.0), 1.0)
+		if s < cut: return groove
+		# an off-road tyre's shoulder lugs: every other one stands out past the next
+		if tire_kind in ["mud", "offroad"] and shoulder and s > 0.8: return groove
+		return block
 
 	## The front wheel's stack: as many slices as the tire stands tall, the tread on top, the rim's
 	## face on the +y side (CarView mirrors it for the left wheel).
@@ -2598,12 +2885,17 @@ class _Painter:
 		var r := p.tire_r
 		var wl := int(ceil(r * 2.0)) + 1
 		var ww := p.tire_w
+		var lean := p.camber
+		var wy := ww + lean                # a stanced wheel's rows run further in up top
 		var wn := int(ceil(r * 2.0 * CarArt.RISE)) + 1
 		var w_aw := wl * wn
 		var wb := PackedInt32Array()
-		wb.resize(w_aw * ww)
+		wb.resize(w_aw * wy)
 		var zc := r * CarArt.RISE
+		cur_depth = rim_depth
+		cur_frac = rim_frac
 		for z in wn:
+			var sh := CarArt.wheel_lean(float(z), lean, 2.0 * r * CarArt.RISE)
 			for x in wl:
 				var dx := float(x) + 0.5 - float(wl) / 2.0
 				if absf(dx) > r: continue
@@ -2611,15 +2903,13 @@ class _Painter:
 				var zb := int(round(zc - dz))
 				var zt := maxi(zb, int(round(zc + dz)) - 1)
 				if z < zb or z > zt: continue
-				for y in ww:
-					var c := Color("1f2226") if (x % 2 == 0) else Color("2a2d33")
-					if z < zt:
-						c = Color("121418")
-						if y == ww - 1: c = _rim_face(dx, float(z) + 0.5 - zc, r)
-					wb[y * w_aw + z * wl + x] = c.to_abgr32()
+				for y in wy:
+					var ring := wy - 1 - y          # 0 at the outer face
+					if ring < sh or ring >= sh + ww: continue
+					wb[y * w_aw + z * wl + x] = _wheel_px(dx, float(z) + 0.5 - zc, r, ring, ring == sh, ring == sh + ww - 1, z == zt).to_abgr32()
 		art.wheel_n = wn
-		art.wheel_size = Vector2i(wl, ww)
-		art._imgs.wheel = Image.create_from_data(w_aw, ww, false, Image.FORMAT_RGBA8, wb.to_byte_array())
+		art.wheel_size = Vector2i(wl, wy)
+		art._imgs.wheel = Image.create_from_data(w_aw, wy, false, Image.FORMAT_RGBA8, wb.to_byte_array())
 
 ## Parody businesses for the magnetic signs on work vans' doors: [name, colour].
 const DECALS := [

@@ -65,6 +65,11 @@ static func looks_pts(l: Dictionary, stance := false) -> float:
 	var wheels := 0.0
 	if String(l.get("rim", "")) != "": wheels += 2.0
 	wheels += clampf((float(l.get("rim_size", 0.66)) - 0.66) * 15.0, 0.0, 2.0)
+	# the fitment: a deep lip, wheels out on the fenders, camber, staggered rears, spacers
+	wheels += float(l.get("lip_depth", 0.0)) * 0.8
+	wheels += float({ "flush": 0.5, "poke": 0.8, "stance": 1.2, "stretch": 1.0 }.get(String(l.get("offset", "stock")), 0.0))
+	if String(l.get("stagger", "")) == "staggered": wheels += 0.5
+	wheels += minf(0.6, float(l.get("spacers", 0)) * 0.2)
 	var drop := float(l.get("drop", 0.0)) * 2.5
 	p += (wheels + drop) * (2.0 if stance else 1.0)
 	var cal: Variant = l.get("caliper", null)

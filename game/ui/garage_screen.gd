@@ -1,8 +1,9 @@
 ## The garage at Covington Auto. Five tabs:
 ##   CARS      the cars you own; take one out, or have Gus straighten one out
 ##   UPGRADES  bolt on what's on the shelf (Gus charges labour), take parts back off
-##   LOOKS     the body shop: paint and finish, rims, calipers, ride height, tint, stripes, kits,
-##             hoods, fenders, wheel offset, the roof, bull bars, spares and the bed (all of it shows
+##   LOOKS     the body shop: paint and finish, rims (and how deep their dish), tires, calipers,
+##             ride height, tint, halo headlights, smoked tails, underglow, stripes, kits, hoods, fenders, the wheels' fitment (flush, poke,
+##             tucked, stance, stretched), staggered rears, spacers, the roof, bull bars, spares and the bed (all of it shows
 ##             on the car out on the road, too)
 ##   ROCKAUTTO.CA  the shop computer: order parts, standard or express shipping
 ##   DYNO      power and torque curves against stock, and what the car actually does
@@ -35,22 +36,33 @@ const KITS := ["none", "lip", "lip + skirts", "full"]
 const EXHAUSTS := ["single", "dual", "quad"]
 const HOODS := ["stock", "vented", "scoop", "carbon"]
 const FENDERS := ["stock", "flared"]
-const OFFSETS := ["stock", "poke", "tucked"]
+const STAGGERS := ["none", "staggered"]
+## Neon under the sills (the first: none).
+const UNDERGLOWS := ["", "#3a8ad8", "#e0402e", "#6fbf5a", "#a83a8a", "#f0d040", "#e8e8ec"]
+const SPACER_NAMES := ["NONE", "15 MM", "25 MM", "38 MM"]
 const ROOFS := ["stock", "sunroof", "ttops", "vinyl", "rack", "lightbar"]
 const BEDS := ["stock", "tonneau", "rollbar", "rollbar_lights"]
-const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
-	"HOOD", "FENDERS", "WHEEL OFFSET", "ROOF", "BULL BAR", "SPARE", "BED"]
+## How deep the dish (STOCK: the rim's own), and what the body shop calls each.
+const LIP_DEPTHS := [-1.0, 0.0, 0.25, 0.5, 0.75, 1.0]
+const LIP_NAMES := ["STOCK", "FLAT", "SHALLOW", "MEDIUM", "DEEP", "VERY DEEP"]
+const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "LIP DEPTH", "TIRES", "CALIPERS", "RIDE HEIGHT", "TINT", "HEADLIGHTS", "TAIL LIGHTS", "UNDERGLOW", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
+	"HOOD", "FENDERS", "FITMENT", "STAGGER", "SPACERS", "ROOF", "BULL BAR", "SPARE", "BED"]
 const LOOK_SHOWN := 14               # rows on the panel at once (it scrolls)
-const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "ROLL BAR + LIGHTS", "lightbar": "LIGHT BAR", "rack": "ROOF RACK",
-	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "tonneau": "TONNEAU COVER" }
+const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "ROLL BAR + LIGHTS", "lightbar": "LED LIGHT BAR", "rack": "ROOF RACK",
+	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "flush": "FLUSH",
+	"stance": "STANCE (CAMBER)", "stretch": "STRETCHED TIRE", "staggered": "STAGGERED (WIDE REARS)", "tonneau": "TONNEAU COVER",
+	"fivespoke": "5-SPOKE", "tenspoke": "10-SPOKE", "multispoke": "MULTI-SPOKE", "deepdish": "DEEP DISH", "wire": "WIRE + SPINNER",
+	"split": "SPLIT SPOKE", "crossspoke": "CROSS-SPOKE MESH", "threepiece": "3-PIECE DEEP DISH", "blade": "DIRECTIONAL BLADE",
+	"sixspoke": "6-SPOKE TRUCK", "steelie": "STEELIE + TRIM RING", "laced": "WIRE SPOKE", "donk": "DONK BIG LIP",
+	"lowpro": "LOW-PROFILE", "whitewall": "WHITEWALL", "letters": "RAISED WHITE LETTERS", "offroad": "ALL-TERRAIN", "slicks": "DRAG SLICKS" }
 ## What the body shop charges for each kind of change.
-const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "CALIPERS": 180, "RIDE HEIGHT": 150,
-	"TINT": 220, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160,
-	"HOOD": 700, "FENDERS": 850, "WHEEL OFFSET": 300, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
+const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "LIP DEPTH": 500, "TIRES": 650, "CALIPERS": 180, "RIDE HEIGHT": 150,
+	"TINT": 220, "HEADLIGHTS": 450, "TAIL LIGHTS": 250, "UNDERGLOW": 600, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160,
+	"HOOD": 700, "FENDERS": 850, "FITMENT": 300, "STAGGER": 900, "SPACERS": 220, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
 ## Which key in a car's looks each row sets.
-const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
-	"TINT": "tint", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust",
-	"HOOD": "hood", "FENDERS": "fenders", "WHEEL OFFSET": "offset", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
+const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "LIP DEPTH": "lip_depth", "TIRES": "tire", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
+	"TINT": "tint", "HEADLIGHTS": "halo", "TAIL LIGHTS": "smoked", "UNDERGLOW": "underglow", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust",
+	"HOOD": "hood", "FENDERS": "fenders", "FITMENT": "offset", "STAGGER": "stagger", "SPACERS": "spacers", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
 
 const GUS := [
 	"\"TAKE WHAT YOU WANT. BRING IT BACK IN ONE PIECE.\"",
@@ -244,9 +256,14 @@ func _look_value(r: String) -> Variant:
 		"RIMS": return trial.get("rim", "")
 		"RIM COLOUR": return trial.get("rim_color", "#c8ccd4")
 		"RIM SIZE": return float(trial.get("rim_size", 0.66))
+		"LIP DEPTH": return float(trial.get("lip_depth", -1.0))
+		"TIRES": return trial.get("tire", "stock")
 		"CALIPERS": return trial.get("caliper", "#5a5a60")
 		"RIDE HEIGHT": return float(trial.get("drop", 0.0))
 		"TINT": return float(trial.get("tint", 0.0))
+		"HEADLIGHTS": return "HALO (ANGEL EYES)" if trial.get("halo", false) else "STOCK"
+		"TAIL LIGHTS": return "SMOKED" if trial.get("smoked", false) else "STOCK"
+		"UNDERGLOW": return trial.get("underglow", "")
 		"STRIPES": return trial.get("stripes", "none")
 		"LIVERY": return trial.get("livery", "none")
 		"STRIPE COLOUR": return trial.get("stripe_color", "")
@@ -255,7 +272,9 @@ func _look_value(r: String) -> Variant:
 		"EXHAUST TIPS": return trial.get("exhaust", "single")
 		"HOOD": return trial.get("hood", "stock")
 		"FENDERS": return trial.get("fenders", "stock")
-		"WHEEL OFFSET": return trial.get("offset", "stock")
+		"FITMENT": return trial.get("offset", "stock")
+		"STAGGER": return trial.get("stagger", "none")
+		"SPACERS": return int(trial.get("spacers", 0))
 		"ROOF": return trial.get("roof", "stock")
 		"BULL BAR": return "BULL BAR" if trial.get("bash", false) else "NONE"
 		"SPARE": return "ON THE BACK" if trial.get("spare", false) else "NONE"
@@ -289,9 +308,28 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"RIMS": trial.rim = _cycle(PixCars.RIMS, trial.get("rim", PixCars.RIMS[0]), dx)
 			"RIM COLOUR": trial.rim_color = _cycle(RIM_COLORS, trial.get("rim_color", RIM_COLORS[0]), dx)
 			"RIM SIZE": trial.rim_size = clampf(float(trial.get("rim_size", 0.66)) + dx * 0.04, 0.5, 0.8)
+			"LIP DEPTH":
+				# STOCK first: the rim as it comes
+				var lip := float(_cycle(LIP_DEPTHS, float(trial.get("lip_depth", -1.0)), dx))
+				if lip < 0.0: trial.erase("lip_depth")
+				else: trial.lip_depth = lip
+			"TIRES":
+				var tire := String(_cycle(CarGen.TIRES, trial.get("tire", "stock"), dx))
+				if tire == "stock": trial.erase("tire")
+				else: trial.tire = tire
 			"CALIPERS": trial.caliper = _cycle(CALIPERS, trial.get("caliper", CALIPERS[0]), dx)
 			"RIDE HEIGHT": trial.drop = clampf(float(trial.get("drop", 0.0)) + dx * 0.2, 0.0, 1.0)
 			"TINT": trial.tint = clampf(float(trial.get("tint", 0.0)) + dx * 0.25, 0.0, 1.0)
+			"HEADLIGHTS":
+				if trial.get("halo", false): trial.erase("halo")
+				else: trial.halo = true
+			"TAIL LIGHTS":
+				if trial.get("smoked", false): trial.erase("smoked")
+				else: trial.smoked = true
+			"UNDERGLOW":
+				var ug := String(_cycle(UNDERGLOWS, trial.get("underglow", ""), dx))
+				if ug == "": trial.erase("underglow")
+				else: trial.underglow = ug
 			"STRIPES": trial.stripes = _cycle(STRIPES, trial.get("stripes", "none"), dx)
 			"LIVERY": trial.livery = _cycle(LIVERIES, trial.get("livery", "none"), dx)
 			"STRIPE COLOUR":
@@ -306,7 +344,15 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"EXHAUST TIPS": trial.exhaust = _cycle(EXHAUSTS, trial.get("exhaust", "single"), dx)
 			"HOOD": trial.hood = _cycle(HOODS, trial.get("hood", "stock"), dx)
 			"FENDERS": trial.fenders = _cycle(FENDERS, trial.get("fenders", "stock"), dx)
-			"WHEEL OFFSET": trial.offset = _cycle(OFFSETS, trial.get("offset", "stock"), dx)
+			"FITMENT": trial.offset = _cycle(CarGen.FITMENTS, trial.get("offset", "stock"), dx)
+			"STAGGER":
+				var st := String(_cycle(STAGGERS, trial.get("stagger", "none"), dx))
+				if st == "none": trial.erase("stagger")
+				else: trial.stagger = st
+			"SPACERS":
+				var sp := posmod(int(trial.get("spacers", 0)) + dx, SPACER_NAMES.size())
+				if sp == 0: trial.erase("spacers")
+				else: trial.spacers = sp
 			"ROOF": trial.roof = _cycle(ROOFS, trial.get("roof", "stock"), dx)
 			"BULL BAR": trial.bash = not trial.get("bash", false)
 			"SPARE": trial.spare = not trial.get("spare", false)
@@ -561,10 +607,14 @@ func _draw_looks() -> void:
 		match lr:
 			"STRIPE COLOUR" when String(v) == "":
 				PixelFont.draw(self, Vector2(vx, y), "AUTO", BONE)
-			"PAINT", "RIM COLOUR", "CALIPERS", "STRIPE COLOUR":
+			"UNDERGLOW" when String(v) == "":
+				PixelFont.draw(self, Vector2(vx, y), "NONE", BONE)
+			"PAINT", "RIM COLOUR", "CALIPERS", "STRIPE COLOUR", "UNDERGLOW":
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(String(v)))
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(1, 1, 1, 0.3), false, 1.0)
 			"RIM SIZE": PixelFont.draw(self, Vector2(vx, y), "%d IN" % int(14 + (float(v) - 0.5) * 30.0), BONE)
+			"LIP DEPTH": PixelFont.draw(self, Vector2(vx, y), String(LIP_NAMES[maxi(0, LIP_DEPTHS.find(float(v)))]), BONE)
+			"SPACERS": PixelFont.draw(self, Vector2(vx, y), String(SPACER_NAMES[clampi(int(v), 0, SPACER_NAMES.size() - 1)]), BONE)
 			"RIDE HEIGHT": PixelFont.draw(self, Vector2(vx, y), "STOCK" if float(v) < 0.05 else "-%d MM" % int(float(v) * 60.0), BONE)
 			"TINT": PixelFont.draw(self, Vector2(vx, y), "%d%%" % int(float(v) * 100.0), BONE)
 			_: PixelFont.draw(self, Vector2(vx, y), String(LABELS.get(String(v), String(v) if String(v) != "" else "STOCK")).to_upper(), BONE)

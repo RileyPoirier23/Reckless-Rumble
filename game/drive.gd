@@ -987,6 +987,8 @@ func _process(dt: float) -> void:
 	world.update_view(cam.global_position / PX, half_px / PX)
 	# light: the sky colour, the lights, headlights, windows
 	dark.color = sky.ambient_color()
+	# the cars' lamps glow as it gets dark
+	CarView.night = clampf(1.0 - sky.daylight(), 0.0, 1.0)
 	var lamps := sky.lights_on(30)
 	if lamps != night:
 		night = lamps
