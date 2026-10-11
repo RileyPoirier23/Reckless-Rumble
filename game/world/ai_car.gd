@@ -210,7 +210,8 @@ func _inputs(dt: float) -> Array:
 	# traction control, launches included: ease off while the tires spin, feed it back in as they
 	# bite (wheelspin off the line on a wet street goes nowhere, and sideways)
 	var spin := sim.drive_slip()
-	_tc = maxf(0.06, _tc - 3.0 * dt) if spin > 2.5 else minf(1.0, _tc + (1.2 if spin < 1.5 else 0.3) * dt)
+	# (standing still, lift right off: a crack of throttle keeps a spinning wheel spinning for seconds)
+	_tc = maxf(0.0 if v < 1.5 else 0.06, _tc - 3.0 * dt) if spin > 2.5 else minf(1.0, _tc + (1.2 if spin < 1.5 else 0.3) * dt)
 	th = minf(th, _tc)
 	if sim.gear < 0 and th > 0.0: th = maxf(th, 0.4)    # out of reverse
 	# stuck: wants to go, isn't, and it isn't just wheelspin it's working through

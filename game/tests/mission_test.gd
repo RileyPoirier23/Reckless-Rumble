@@ -107,7 +107,8 @@ func _drag() -> void:
 	var medal := ""
 	for m in ["gold", "silver", "bronze"]:
 		if StoryState.flag("launch_" + m): medal = m
-	check("drag: past the cones and it's timed: a medal flag for Dom's scene", _finished() and medal != "", "medal %s, %.2f s" % [medal, float(StoryState.last_result.get("eighth", 0.0))])
+	var along := (main.car.sim.pos - StoryMissions.RUNWAY_LINE).dot((StoryMissions.RUNWAY_END - StoryMissions.RUNWAY_LINE).normalized())
+	check("drag: past the cones and it's timed: a medal flag for Dom's scene", _finished() and medal != "", "medal %s, %.2f s, %.0f m along, go_t %.1f run_t %.1f, k %d, done %s, %.1f m/s, scale %.2f" % [medal, float(StoryState.last_result.get("eighth", 0.0)), along, r._go_t, r._run_t, r.k, str(r.done), main.car.sim.speed(), Engine.time_scale])
 	done += 1
 
 # ------------------------------------------------------------------ Johnny Tram
@@ -117,8 +118,12 @@ func _race() -> void:
 	await _wait(0.4)
 	var r: StoryMissions.MissionRunner = main.mission
 	check("race: Johnny's on the line, held for the count", r.target != null and r.target.hold, str(r.target))
-	await _wait(3.0)
-	check("race: after the count he's off", r.target != null and not r.target.hold)
+	# the count is three seconds of game time (the white-out at the start runs slow)
+	var tc := 0.0
+	while r._go_t >= 0.0 and tc < 10.0:
+		await _wait(0.1)
+		tc += 0.1
+	check("race: after the count he's off", r.target != null and not r.target.hold, "%.1f s, go_t %.1f" % [tc, r._go_t])
 	# he gets there first: it's back to the start, both of you, and the count starts over
 	var start: Vector2 = StoryMissions.MISSIONS.johnny_tram.start
 	r.target.sim.pos = StoryMissions.BRIDGE

@@ -19,6 +19,7 @@ func _ready() -> void:
 	main.sky.time_h = 23.0
 	main.sky.pick_weather("clear")
 	main.sky.forced = true
+	main.sky.snap()                 # (and the road's dry now, not drying from whatever it was)
 	main.save.cash = 2000
 	main.save.heat = 0.0
 	_fresh_car()
@@ -103,7 +104,15 @@ func _race_ai() -> void:
 			if stuck[i] == 6.0:
 				print("   stuck: %s at %s gear %d seg %d/%d off %.1f target %.1f m/s back %.1f in %s slip %.1f pass %.1f hit %s surface %s" % [race.info[i].name, str(a.sim.pos.round()), a.sim.gear, a.track.seg, a.track.pts.size(), a.track.off_line(a.sim.pos), a.target_v, a._back_t, str(a.last_in), a.sim.drive_slip(), a._pass, (a.last_hit.get_class() + ":" + str(a.last_hit.get_script().get_global_name() if a.last_hit.get_script() else "")) if is_instance_valid(a.last_hit) else "-", a.sim.surface])
 				if stuck_max <= 6.0:
-					for ln in a.trace.slice(-25): print("      ", ln)
+					for ln in a.trace.slice(-6): print("      ", ln)
+					# what's physically there: parked cars, traffic, solid poles, the player
+					for k in main.parked.boxes:
+						for bx in main.parked.boxes[k]:
+							if (bx[0] as Vector2).distance_to(a.sim.pos) < 9.0: print("      parked car at ", bx[0], " heading ", bx[1], " half ", bx[2])
+					for tc in main.traffic.cars:
+						if tc.sim.pos.distance_to(a.sim.pos) < 9.0: print("      traffic ", tc.spec.get("model", "?"), " at ", tc.sim.pos.round(), " v ", tc.sim.speed())
+					for it in main.furniture.items_near(a.sim.pos, 7.0): print("      furniture ", it.kind, " at ", it.p)
+					print("      player at ", main.car.sim.pos.round(), " heading ", a.sim.heading)
 				for tc in main.traffic.cars:
 					if tc.pos.distance_to(a.sim.pos) < 12.0: print("      traffic %s %s v%.1f rule %s lead %s" % [tc.state, str(tc.pos.round()), tc.v, tc.last_rule, str(tc.lead_obj)])
 				for o in race.racers:
@@ -111,6 +120,11 @@ func _race_ai() -> void:
 		if first < 0.0 and not race.finish_t.is_empty(): first = race.clock
 	var lap_len := race.total / 2.0
 	print("   downtown box: lap %.0f m, winner %.1f s, finished %d/3, off-line max %.1f m, stuck max %.1f s" % [lap_len, first, race.finish_t.size(), off_max, stuck_max])
+	for i in race.racers.size():
+		var a: AiCar = race.racers[i]
+		print("   %s: %.0f%% round at %s, %.1f m/s, seg %d/%d, damage %s" % [race.info[i].name, a.track.dist / race.total * 100.0, str(a.sim.pos.round()), a.sim.speed(), a.track.seg, a.track.pts.size(), str(a.damage)])
+		if a.track.dist / race.total < 0.9:
+			for ln in a.trace.slice(-8): print("      ", ln)
 	check("street race: somebody wins the Downtown Box", first > 0.0, "%.1f s" % first)
 	check("street race: the winner averages a racer's pace", first > 0.0 and race.total / first > 11.0, "%.1f m/s" % (race.total / maxf(first, 1.0)))
 	var least := 1.0
