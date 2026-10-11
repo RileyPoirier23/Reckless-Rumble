@@ -437,19 +437,37 @@ class Autopilot extends Node:
 			at = route[j]
 		return route[route.size() - 1]
 
-	## Metres to the nearest car in our lane ahead (traffic, police, racers), or INF.
+	## Metres to the nearest car in our way (traffic, police, racers, parked cars), or INF. Not
+	## just our lane: where everybody will be over the next few seconds, so a car crossing the
+	## junction ahead, or pulling out, counts too.
 	func _gap_ahead(p: Vector2, fwd: Vector2) -> float:
 		var out := INF
-		var others: Array = []
-		for c in drive.traffic.cars: others.append(c.pos)
+		var v: float = drive.car.sim.speed()
+		var others: Array = []        # [where, velocity m/s]
+		for c in drive.traffic.cars: others.append([c.pos, Vector2.from_angle(c.heading) * c.v])
 		for a in drive.traffic.extra:
-			if is_instance_valid(a) and a.get("sim") != null: others.append(a.sim.pos)
-		for q in others:
+			if is_instance_valid(a) and a.get("sim") != null: others.append([a.sim.pos, a.sim.world_velocity()])
+		if drive.get("parked") != null:
+			for k in drive.parked.live:
+				for pc in drive.parked.live[k]:
+					if is_instance_valid(pc): others.append([pc.pos, Vector2.ZERO])
+		for o in others:
+			var q: Vector2 = o[0]
+			var qv: Vector2 = o[1]
+			if q.distance_to(p) > 60.0: continue
 			var rel: Vector2 = q - p
 			var ahead := rel.dot(fwd)
-			if ahead < 0.0 or ahead > 40.0: continue
-			if absf(rel.dot(fwd.orthogonal())) > 2.4: continue
-			out = minf(out, ahead)
+			# in our lane ahead
+			if ahead >= 0.0 and ahead <= 40.0 and absf(rel.dot(fwd.orthogonal())) <= 2.4:
+				out = minf(out, ahead)
+				continue
+			# ...or about to be where we'll be
+			for t: float in [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]:
+				var us := p + fwd * maxf(v, 3.0) * t
+				var them := q + qv * t
+				if us.distance_to(them) < 4.5:
+					out = minf(out, maxf(0.0, maxf(v, 3.0) * t - 2.0) + 7.0)
+					break
 		return out
 
 	## Metres to where we have to stop for a junction ahead (red light, stop sign), or -1.

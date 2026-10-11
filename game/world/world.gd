@@ -386,6 +386,16 @@ class Chunk extends Node2D:
 			n.setup(b)
 			world.ysort.add_child(n)
 			nodes.append(n)
+		# the yards round the houses
+		var houses: Array = world._b_build.get(key, []).filter(func(b): return String(b.kind) in ["house", "farmhouse"] and rect.has_point((b.r as Rect2).get_center()))
+		if not houses.is_empty():
+			var near: Array = []
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					near.append_array(world._b_build.get(key + Vector2i(dx, dy), []))
+			var yd := Yards.new()
+			add_child(yd)
+			yd.setup(world, houses, near)
 		# bridge rails: you can hit them
 		for br in world._b_bridge.get(key, []):
 			var dir: Vector2 = (br.b - br.a).normalized()
