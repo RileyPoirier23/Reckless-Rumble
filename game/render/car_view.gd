@@ -9,6 +9,8 @@ const STEP := 1.0                  # screen pixels between slices
 var art: CarArt
 var heading := 0.0
 var steer := 0.0
+var _steer_vis := 0.0              # the wheels' drawn angle: follows steer, but can't snap
+const STEER_RATE := 5.0            # rad/s the drawn wheels can turn
 var lean := Vector2.ZERO           # in the car's frame: x = pitch (+ = nose dips), y = roll (+ = leans right)
 var braking := false
 var reversing := false
@@ -79,7 +81,8 @@ func _ready() -> void:
 	_lamps.material = mat
 	add_child(_lamps)
 
-func _process(_dt: float) -> void:
+func _process(dt: float) -> void:
+	_steer_vis = move_toward(_steer_vis, clampf(steer, -0.7, 0.7), STEER_RATE * dt)
 	if _job != null and _job.done():
 		art = _job.take()
 		_job = null
@@ -139,6 +142,7 @@ func _draw() -> void:
 		# the front wheels: drawn on their own so they can steer
 		if z < art.wheel_n:
 			_front_wheels(screen_up * (z * STEP * lift_k + lift), z)
+			if lift_k > 1.05 and z < art.wheel_n - 1: _front_wheels(screen_up * ((z + 0.5) * STEP * lift_k + lift), z)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 ## The lit lamps on one slice: the tails glow with the headlights on and brighten when braking.
@@ -205,7 +209,15 @@ func _front_wheels(off: Vector2, z: int) -> void:
 		var centre := spot.rotated(heading) + off
 		# the rim's face is on the wheel's +y side: the left wheel is drawn mirrored
 		var flip := -1.0 if spot.y < 0.0 else 1.0
-		draw_set_transform(centre, heading + steer, Vector2(wheel_k, flip))
+		# a turned wheel seen from above: its face narrows (cos) and swings out a little (sin), but
+		# never turns in the screen's plane, or the spokes would wheel round like it was spinning
+		var fwd := Vector2.from_angle(heading)
+		var rt := Vector2(-fwd.y, fwd.x)
+		# (pointing up or down the screen the face is edge-on, so there it can turn all the way)
+		var swing := absf(fwd.dot(screen_up))
+		var xa := (fwd * cos(_steer_vis) + rt * sin(_steer_vis) * swing) * wheel_k
+		var ya := (rt * lerpf(1.0, cos(_steer_vis), swing) - fwd * sin(_steer_vis) * swing) * flip
+		draw_set_transform_matrix(Transform2D(xa, ya, centre))
 		draw_texture_rect_region(art.wheel_tex, Rect2(-ws / 2.0, ws), src)
 		# tread flicker so you can see the wheel turn
 		if z == art.wheel_n - 1:
