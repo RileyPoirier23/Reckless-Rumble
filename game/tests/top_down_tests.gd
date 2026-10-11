@@ -621,6 +621,9 @@ func _ambulance_and_trucks() -> void:
 			if img.get_pixel(z * p.sx + x, i / p.sx) == Color("c8201c"): hood_red += 1
 		check("%s: AMBULANCE across the hood, the star of life on the roof, red and orange stripes down the sides" % id,
 			hood_red > 30 and blue > 40 and red > 200 and orange > 100, "hood %d, blue %d, red %d, orange %d" % [hood_red, blue, red, orange])
+	var plain := _art("fjord_e_fiddy_ambulanz_2014", {}, 0.0, Color("f2f2ee"))
+	var signed := _art("fjord_e_fiddy_ambulanz_2014", { "decal": 3 }, 0.0, Color("f2f2ee"))
+	check("traffic never hangs a plumber's sign on the ambulance's doors", not _differs(plain, signed))
 	var step := _plan("grumpman_step_up_van_2004")
 	var glass := 0
 	for i3 in step.m0.size():

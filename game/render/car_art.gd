@@ -2191,6 +2191,10 @@ class _Painter:
 		primer = String(wear.get("primer", ""))
 		if wear.has("door"): door_c = Color(String(wear.door))
 		decal = int(mods.get("decal", -1))
+		# an ambulance, a fire engine, a garbage truck or a bus wears its own outfit, never a
+		# plumber's magnetic sign
+		for fk: String in ["ambulance", "fire", "packer", "bus", "schoolbus"]:
+			if d.art.has(fk): decal = -1
 		if decal >= 0: decal_c = CarArt.DECALS[decal % CarArt.DECALS.size()][1]
 		dmg_f = float(dmg.front)
 		dmg_r = float(dmg.rear)

@@ -3738,9 +3738,15 @@ class _Car:
 					if on_paint(xx, yy): p.img.set_pixel(xx, yy, vc.lightened(0.12) if (xx + yy * 3) % 7 == 0 else vc)
 			# the opera window in the C-pillar
 			if (d.doors == 2 or d.get("opera", false)) and lod >= 1:
-				var ow := X(float(d.dlo_r)) - lf * 0.05
-				p.rect(int(ow), int(Y(float(d.glass_top))) + 2 * u, int(lf * 0.025), int(lf * 0.03), CarGen.GLASS)
-				p.frame(int(ow) - 1, int(Y(float(d.glass_top))) + 2 * u - 1, int(lf * 0.025) + 2, int(lf * 0.03) + 2, CarGen.CHROME[2])
+				var ow := int(X(float(d.dlo_r)) - lf * 0.05)
+				var oy := int(Y(float(d.glass_top))) + 2 * u
+				var o_w := int(lf * 0.025)
+				var o_h := int(lf * 0.03)
+				# (only where there's a pillar to set it in: on a fastback's sloped C-pillar it
+				# would hang off the outline)
+				if on_paint(ow - 1, oy - 1) and on_paint(ow + o_w, oy - 1) and on_paint(ow - 1, oy + o_h) and on_paint(ow + o_w, oy + o_h):
+					p.rect(ow, oy, o_w, o_h, CarGen.GLASS)
+					p.frame(ow - 1, oy - 1, o_w + 2, o_h + 2, CarGen.CHROME[2])
 
 	## A light bar on the roof over the windshield: a black housing on two feet, its pods lit.
 	func _lightbar() -> void:
@@ -3975,7 +3981,8 @@ class _Car:
 			if mods.get("spare", false) or (art.has("spare") and d.family == "pickup"):
 				var sr := r * 0.75
 				CarGen.wheel(p, bx0 + int(lf * 0.22), rail - int(sr * 0.55), sr, "beadlock", false, { "tire_kind": "mud" })
-			if mods.get("rollbar", false):
+			var bed_mod := String(mods.get("bed", "stock"))
+			if mods.get("rollbar", false) or bed_mod in ["rollbar", "rollbar_lights"]:
 				var rb := Color("2a2e36")
 				var rx0 := bx1 - int(lf * 0.12)
 				var top := rail - int(lf * 0.12)
@@ -3983,7 +3990,12 @@ class _Car:
 				p.rect(rx0 + int(lf * 0.07), top, int(lf * 0.06), 2 * u, rb)
 				p.vline(bx1 - 2 * u, top, rail - top, rb)
 				p.vline(bx1 - u, top, rail - top, rb)
-				pass
+				if bed_mod == "rollbar_lights" and lod >= 1:
+					# the lights along the bar's top
+					var lx := rx0 + int(lf * 0.07)
+					for k in maxi(2, int(lf * 0.06) / maxi(2, 2 * u)):
+						p.rect(lx + k * 2 * u, top - u - 1, u + 1, u + 1, Color("f4f4ec"))
+					p.hline(lx, top - u - 2, int(lf * 0.06), CarGen.INK)
 		elif d.rear == "boxtruck":
 			var bxx := int(X(float(d.box_x))) - 1
 			if bxx < int(X(0.99)):
@@ -4187,7 +4199,8 @@ class _Car:
 		var L := float(d.L)
 		var bx := X(float(d.get("box_x", 0.6)))
 		var top := _first_body(int(X(0.2)))
-		var x0 := int(X(0.004))
+		# (a crushed back end comes in: the outfit starts where the box still is)
+		var x0 := int(X(0.004 + rear * 0.17))
 		var x1 := int(bx) - u
 		var rock := int(Y(float(d.rocker)))
 		var red := Color("c8201c")
@@ -4273,12 +4286,15 @@ class _Car:
 		var ph := maxi(2, int(lf * 0.012))
 		for k in 2:
 			var pxa := x0 + u if k == 0 else x1 - lw - u
+			if not body_at(pxa + lw / 2, top + 1): continue
 			p.rect(pxa, top - ph, lw, ph, Color("e02a1e"))
 			p.hline(pxa, top - ph, lw, Color("ff9a8a"))
 			p.frame(pxa - 1, top - ph - 1, lw + 2, ph + 1, CarGen.INK)
-		# the rear step: diamond plate standing off the back under the doors
-		var stx0 := int(X(-0.022))
-		var stx1 := int(X(0.03))
+		# the rear step: diamond plate standing off the back under the doors (gone with a
+		# hard hit there)
+		if rear > 0.4: return
+		var stx0 := int(X(-0.022 + rear * 0.17))
+		var stx1 := int(X(0.03 + rear * 0.17))
 		var sty := int(Y(0.56 / L))
 		var sth := maxi(2, int(lf * 0.012))
 		p.rect(stx0, sty, stx1 - stx0, sth, CarGen.CHROME[1])
@@ -4297,7 +4313,7 @@ class _Car:
 				for k in 3:
 					var a := Vector2.from_angle(PI * 0.5 + float(k) * PI / 3.0)
 					if absf(v.dot(a)) <= r: dmin = minf(dmin, absf(v.dot(a.orthogonal())))
-				if dmin <= arm: p.px(xx, yy, blue if dmin <= arm - 1.0 or r < 5.0 else Color("163a84"))
+				if dmin <= arm and on_paint(xx, yy): p.px(xx, yy, blue if dmin <= arm - 1.0 or r < 5.0 else Color("163a84"))
 		if r >= 6.0:
 			p.vline(cx, int(cy - r * 0.8), int(r * 1.6), Color("f4f6fa"))
 			for k in int(r * 1.2):

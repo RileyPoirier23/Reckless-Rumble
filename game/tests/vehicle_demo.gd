@@ -19,6 +19,8 @@ func roster() -> Array:
 		["sedan", "fjord_crown_victorious_2005", {}],
 		["sedan_old", "fjord_fairlame_1957", {}],
 		["coupe", "silvio", {}],
+		["tuned", "silvio", { "spoiler": "gt", "kit": { "lip": true, "skirts": true, "diffuser": true }, "fenders": "flared", "drop": 0.8, "rim": "deepdish", "offset": "stance", "exhaust": "quad" }],
+		["winged", "silvio", { "spoiler": "wing", "hood": "scoop", "roof": "rack" }],
 		["muscle", "charjer", {}],
 		["hatch", "fjord_escorted_1987", {}],
 		["wagon", "fjord_country_square_1978", {}],
@@ -47,6 +49,7 @@ func roster() -> Array:
 		["fire", "fire", {}],
 		["ambulance", "ambulance", {}],
 		["ambulanz", "fjord_e_fiddy_ambulanz_2014", {}],
+		["amb_traffic", "fjord_e_fiddy_ambulanz_2014", { "wear": { "dirt": 0.35, "salt": 0.6 }, "decal": 3 }],
 	]
 	return r.filter(func(v: Array) -> bool: return only == "" or String(v[0]).contains(only))
 
@@ -77,13 +80,14 @@ func _run(mode: String) -> void:
 	if mode in ["dmg", "all"]: await _dmg()
 	if mode in ["garage", "all"]: await _garage()
 	if mode in ["lit", "all"]: await _lit()
+	if mode in ["options", "all"]: await _options()
 	print("done")
 	quit()
 
 # ------------------------------------------------------------------ side
 
 func _side() -> void:
-	var cars := roster()
+	var cars := roster().filter(func(v: Array) -> bool: return v[0] != "trailer")
 	var cols := 3
 	var cw := 560
 	var ch := 200
@@ -102,6 +106,7 @@ func _side() -> void:
 	img.save_png(out + "/side.png")
 	# each one on its own, big
 	for c: Array in cars:
+		if c[0] == "trailer": continue
 		var s := spec_of(c[1])
 		var L := float(s.get("length", 4.5))
 		var shot := PixCars.image_of(s, int(minf(PixCars.length_px(L), 460.0)), paint_of(c[1], s), c[2])
@@ -205,16 +210,15 @@ func _steer() -> void:
 	var s := spec_of(String(only) if only != "" and CarCatalog.has(only) else "silvio")
 	for ang: String in ["overhead", "low"]:
 		CarView.set_angle(ang)
-		_scene()
-		cam.zoom = Vector2(1.0, 1.0 * CarView.squash)
-		var steers := [-0.6, -0.3, 0.0, 0.3, 0.6]
-		var heads := [0.0, 45.0, 90.0, 135.0, 180.0, 270.0]
-		for i in heads.size():
+		for h: float in [0.0, 45.0, 90.0, 135.0, 180.0, 270.0]:
+			_scene()
+			cam.zoom = Vector2(2.8, 2.8 * CarView.squash)
+			var steers := [-0.6, 0.0, 0.6]
 			for j in steers.size():
-				var v := _view(s, Color("c8342c"), { "rim": "fivespoke" }, deg_to_rad(heads[i]), Vector2((j - 2) * 120, (i - 2.5) * 56))
+				var v := _view(s, Color("c8342c"), { "rim": "fivespoke" }, deg_to_rad(h), Vector2((j - 1) * 72, 0))
 				v.steer = steers[j]
 				v._steer_vis = steers[j]
-		await _shoot("steer_%s" % ang)
+			await _shoot("steer_%s_%d" % [ang, int(h)])
 	CarView.set_angle("angled")
 
 ## Crashed and worn: front, rear, side hits; lost bumpers, broken lamps; dirt, rust, decals.
@@ -235,7 +239,7 @@ func _dmg() -> void:
 	# and the side view
 	var img := Image.create(4 * 380, 4 * 150, false, Image.FORMAT_RGBA8)
 	img.fill(Color("8a9aa8"))
-	var sides := [{ "front": 0.9, "glass": 1.0, "lights": 1.0, "bumper": 1.0 }, { "rear": 0.9, "roof": 0.6 }, { "flat": 1, "wheel_off": 2 }, {}]
+	var sides := [{ "front": 0.9, "glass": true, "smoke": 0.6, "bumper": "hang" }, { "rear": 0.9, "roof": 0.6, "bumper": "gone" }, { "flat": "rear", "wheel_off": "front" }, {}]
 	for i in cars.size():
 		var s := spec_of(cars[i])
 		for j in sides.size():
@@ -292,3 +296,68 @@ func _lit() -> void:
 			await _shoot("lit_%s_%s" % [c[0], ang])
 	CarView.night = 0.0
 	CarView.set_angle("angled")
+
+## Every option the body shop sells, one at a time on the Silvio (the truck things on the F-150):
+## side on in a grid, and from above at the angled camera, 24 to a page.
+func _options() -> void:
+	var opts: Array = []
+	for r: String in PixCars.RIMS: opts.append(["rim " + r, { "rim": r }])
+	for t: String in CarGen.TIRES: opts.append(["tire " + t, { "tire": t }])
+	for f: String in GarageScreen.FINISHES: opts.append(["finish " + f, { "finish": f }])
+	for d: float in [-1.0, -0.5, 0.5, 1.0]: opts.append(["drop %.1f" % d, { "drop": d }])
+	for k: float in [0.0, 0.5, 1.0]: opts.append(["lip %.1f" % k, { "rim": "fivespoke", "lip_depth": k }])
+	for z: float in [0.66, 0.78, 0.86]: opts.append(["rim size %.2f" % z, { "rim": "fivespoke", "rim_size": z }])
+	for st: String in GarageScreen.STRIPES: opts.append(["stripes " + st, { "stripes": st }])
+	for lv: String in GarageScreen.LIVERIES: opts.append(["livery " + lv, { "livery": lv }])
+	for sp: String in GarageScreen.SPOILERS: opts.append(["spoiler " + sp, { "spoiler": sp }])
+	opts.append(["kit full", { "kit": { "lip": true, "skirts": true, "diffuser": true } }])
+	for ex: String in GarageScreen.EXHAUSTS: opts.append(["exhaust " + ex, { "exhaust": ex }])
+	for hd: String in GarageScreen.HOODS: opts.append(["hood " + hd, { "hood": hd }])
+	opts.append(["fenders flared", { "fenders": "flared" }])
+	for ft: String in CarGen.FITMENTS: opts.append(["fit " + ft, { "offset": ft, "drop": 0.8 }])
+	opts.append(["staggered", { "stagger": "staggered" }])
+	for sc: int in [1, 2, 3]: opts.append(["spacers %d" % sc, { "spacers": sc }])
+	for rf: String in GarageScreen.ROOFS: opts.append(["roof " + rf, { "roof": rf }])
+	opts.append(["tint", { "tint": 0.8 }])
+	opts.append(["halo", { "halo": true, "lights_on": true }])
+	opts.append(["smoked", { "smoked": true }])
+	opts.append(["underglow", { "underglow": "#3a8ad8" }])
+	opts.append(["truck bash", { "bash": true, "truck": true }])
+	opts.append(["truck spare", { "spare": true, "truck": true }])
+	for bd: String in GarageScreen.BEDS: opts.append(["truck bed " + bd, { "bed": bd, "truck": true }])
+	opts.append(["truck lifted mud", { "drop": -1.0, "tire": "mud", "truck": true }])
+	var sil := spec_of("silvio")
+	var trk := spec_of("fjord_f_one_fiddy_2015")
+	# side on
+	var cols := 6
+	var cw := 220
+	var ch := 100
+	var img := Image.create(cols * cw, int(ceil(opts.size() / float(cols))) * ch, false, Image.FORMAT_RGBA8)
+	img.fill(Color("8a9aa8"))
+	var pix := Pix.new(img.get_width(), img.get_height(), 1)
+	pix.img = img
+	for i in opts.size():
+		var o: Array = opts[i]
+		var m: Dictionary = (o[1] as Dictionary).duplicate()
+		var s2 := trk if m.get("truck", false) else sil
+		m.erase("truck")
+		var shot := PixCars.image_of(s2, 170, Color("c8342c"), m)
+		var at := Vector2i((i % cols) * cw + 4, (i / cols) * ch + ch - 12 - shot.get_height())
+		img.blend_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), at)
+		pix.text((i % cols) * cw + 6, (i / cols) * ch + ch - 9, String(o[0]).to_upper(), Color("10141a"))
+	img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
+	img.save_png(out + "/options_side.png")
+	# from above
+	CarView.set_angle("angled")
+	var page := 0
+	for i0 in range(0, opts.size(), 24):
+		_scene()
+		cam.zoom = Vector2(1.6, 1.6 * CarView.squash)
+		for k in mini(24, opts.size() - i0):
+			var o2: Array = opts[i0 + k]
+			var m2: Dictionary = (o2[1] as Dictionary).duplicate()
+			var s3 := trk if m2.get("truck", false) else sil
+			m2.erase("truck")
+			_view(s3, Color("c8342c"), m2, deg_to_rad(25.0), Vector2((k % 6 - 2.5) * 66.0, (k / 6 - 1.5) * 52.0 / CarView.squash))
+		await _shoot("options_top_%d" % page)
+		page += 1

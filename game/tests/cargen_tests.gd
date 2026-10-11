@@ -321,6 +321,8 @@ func _wheels() -> void:
 			{ "tire": "letters" }, { "tire": "offroad" }, { "tire": "slicks" }]:
 		if not _differs("silvio", {}, m, {}, {}): same.append(m)
 	check("rims, lip depths and tyres show on the car side-on", same.is_empty(), str(same))
+	var truck := "fjord_f_one_fiddy_2015"
+	check("the bed's roll bar, and its lights, show side-on", _differs(truck, {}, { "bed": "rollbar" }, {}, {}) and _differs(truck, { "bed": "rollbar" }, { "bed": "rollbar_lights" }, {}, {}))
 	# fitment, slammed: every way of sitting the wheels shows side-on (poke stands the tyre in
 	# front of the fender, tucked hides its top in the arch's shadow, stance shows the tread)
 	var low := { "drop": 1.0 }
