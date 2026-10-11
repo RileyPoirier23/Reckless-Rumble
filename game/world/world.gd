@@ -544,8 +544,11 @@ class Chunk extends Node2D:
 				match z.style:
 					"rural":
 						var f := world.forest.get_noise_2d(p.x, p.y)
-						if world.map.field_noise.get_noise_2d(p.x, p.y) > 0.22: dens = 0.01
-						else: dens = 0.75 if f > 0.05 else 0.08
+						if world.map.field_noise.get_noise_2d(p.x, p.y) > 0.22: dens = 0.03
+						else: dens = 0.75 if f > 0.05 else 0.16
+						# the tree line along a back road: thick just past the ditch
+						var rd2 := world.map.road_at(p, 13.0)
+						if not rd2.is_empty() and world.map.road_at(p, 6.0).is_empty() and String(rd2.road.cls) in ["rural", "gravel", "highway"]: dens = maxf(dens, 0.45)
 					"residential", "village": dens = 0.12
 					"oldtown", "commercial": dens = 0.03
 				if roll > dens:
@@ -569,6 +572,32 @@ class Chunk extends Node2D:
 				cs.shape = sh
 				cs.position = p * PX
 				body.add_child(cs)
+		# the low growth between: a finer pass of grass tufts, clover and wildflowers, so the ground's
+		# never a bare lawn (the country thick with it, town lawns barely)
+		var fine := 3.5
+		for gy in int(CHUNK / fine):
+			for gx in int(CHUNK / fine):
+				var q := rect.position + Vector2(gx + rng.randf(), gy + rng.randf()) * fine
+				var zq := world.map.zone_at(q)
+				var odds := 0.0
+				match String(zq.style):
+					"rural": odds = 0.42
+					"village": odds = 0.12
+					"residential": odds = 0.04
+				if rng.randf() > odds: continue
+				if world.map.ground_at(q) != "grass" or not world.map.road_at(q, 3.0).is_empty() or world.map.rail_near(q, 3.0): continue
+				var inside := false
+				for b in near_builds:
+					if b.r.grow(2.0).has_point(q): inside = true
+				if inside: continue
+				var roadside := not world.map.road_at(q, 9.0).is_empty()
+				var pick := rng.randf()
+				var kind2 := "grass"
+				if roadside: kind2 = "lupine" if pick < 0.3 else ("grass" if pick < 0.8 else "flowers")
+				elif world.forest.get_noise_2d(q.x, q.y) > 0.05: kind2 = "fern" if pick < 0.6 else "grass"
+				else: kind2 = "grass" if pick < 0.6 else ("flowers" if pick < 0.85 else "shrub")
+				var sz: Vector2i = DECOR_SIZE.get(kind2, Vector2i(8, 14))
+				decor.append([q, kind2, rng.randi_range(sz.x, maxi(sz.x, sz.y - 4)), rng.randi()])
 
 
 class Layer extends Node2D:
