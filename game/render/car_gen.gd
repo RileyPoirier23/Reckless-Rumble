@@ -1705,6 +1705,12 @@ static func wheel_look(d: Dictionary, mods: Dictionary, len: int) -> Array:
 	# the body shop's whitewalls and raised white letters
 	if kind == "whitewall": wm.wall = "white"
 	elif kind == "letters": wm.wall = "letters"
+	# the fitment: a stretched tyre over a bigger rim, a stanced wheel leaning in
+	match fitment(mods):
+		"stretch":
+			wm.stretch = true
+			wm.rim_size = maxf(float(wm.rim_size), 0.78)
+		"stance": wm.camber = 1.0
 	var year := int(mods.get("year", d.year))
 	wm.lugs = 6 if d.family in ["pickup", "suv", "offroad", "van"] else (4 if year < 1985 and d.cls in ["economy", "kei"] else 5)
 	if d.family == "boxtruck": wm.lugs = 8
@@ -4517,7 +4523,14 @@ class _Car:
 		var look := CarGen.wheel_look(d, mods, len)
 		var rim: String = look[0]
 		var wm: Dictionary = look[1]
+		var before: Image = p.img.duplicate()
+		var depth := CarGen.lip_depth(rim, wm)
+		var size0 := float(wm.rim_size)
 		for wv: Array in wheels:
+			# staggered: the back rims are bigger and dished deeper
+			var stag: bool = String(mods.get("stagger", "")) == "staggered" and wv[0] == "rear"
+			wm.lip_depth = minf(1.0, depth + 0.3) if stag else depth
+			wm.rim_size = size0 + (0.03 if stag else 0.0)
 			var cx := int(round(float(wv[1])))
 			var cy := int(round(float(wv[2])))
 			if String(dmg.get("wheel_off", "")) == String(wv[0]):
@@ -4540,6 +4553,32 @@ class _Car:
 			if wv[0] == "rear" and d.art.has("dually"): wm.dually = true
 			else: wm.erase("dually")
 			CarGen.wheel(p, cx, cy, r_tire, rim, flat, wm)
+			if not CarGen.pokes(mods) and not cycled(wv): _fender_over(wv, before)
+
+	## A wheel that sits in its arch (not poking out past it): where the tyre rides up behind the
+	## fender, the fender's lip is back over it, rolled and catching the light. Flush, the lip
+	## shines right on the tyre's shoulder; tucked, the wheel sits up in the arch's shadow.
+	func _fender_over(wv: Array, before: Image) -> void:
+		var cx := float(wv[1])
+		var cy := float(wv[2])
+		var ac: Vector2 = wv[3]
+		var fit := CarGen.fitment(mods)
+		var lip_c: Color = pal.hi if fit == "flush" else pal.lt
+		for xx in range(int(cx - r_tire) - 1, int(cx + r_tire) + 2):
+			for yy in range(int(cy - r_tire) - 1, int(ac.y) + 1):
+				if not body_at(xx, yy): continue
+				var c := before.get_pixel(xx, yy)
+				if c.a < 0.6: continue
+				var edge := not body_at(xx, yy + 1) and yy < int(ac.y)
+				# the lip's edge (the next pixel down is in the arch) is rolled and lit
+				if edge: c = lip_c
+				p.img.set_pixel(xx, yy, c)
+				if edge and fit == "tucked":
+					# tucked up inside: the fender's shadow across the top of the wheel
+					for k in range(1, 2 * u + 2):
+						var sy := yy + k
+						if body_at(xx, sy) or Vector2(float(xx) - cx, float(sy) - cy).length() > r_tire: break
+						p.img.set_pixel(xx, sy, p.img.get_pixel(xx, sy).darkened(0.45))
 
 	## A cycle fender: a thin painted arc hugging the top of an open front wheel, on a stay to
 	## the hub, the way a hot rod wears them.
@@ -4806,6 +4845,20 @@ const STEPPED := ["fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish",
 ## (chunky tread, a little taller) and drag slicks (tall soft sidewalls, smooth, wider at the back).
 const TIRES := ["stock", "lowpro", "whitewall", "letters", "offroad", "slicks"]
 
+## How the wheels sit in the arches (the looks' "offset"): stock and flush in line with the
+## body, poke standing out past the arches, tucked inside them, stance poking and leaning its tops
+## in (negative camber), stretch a narrow tyre pulled over a wide rim so the sidewall angles in.
+const FITMENTS := ["stock", "flush", "poke", "tucked", "stance", "stretch"]
+
+static func fitment(mods: Dictionary) -> String:
+	var f := String(mods.get("offset", "stock"))
+	return f if f in FITMENTS else "stock"
+
+## True when the wheels stand out past the arches (poke, stance, or on spacers): side
+## on, the tyre sits in front of the fender's lip instead of tucked up behind it.
+static func pokes(mods: Dictionary) -> bool:
+	return fitment(mods) in ["poke", "stance"] or int(mods.get("spacers", 0)) >= 1
+
 ## How deep this wheel's dish is: the body shop's LIP DEPTH, or the rim's own.
 static func lip_depth(rim: String, mods: Dictionary) -> float:
 	return clampf(float(mods.get("lip_depth", RIM_DEPTH.get(rim, 0.25))), 0.0, 1.0)
@@ -4861,6 +4914,8 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 	var wall := String(mods.get("wall", "none"))
 	var simple: bool = mods.get("simple", false) or r < 5.0
 	var lugs := int(mods.get("lugs", 5))
+	var camber := float(mods.get("camber", 0.0))
+	var stretch: bool = mods.get("stretch", false)
 	var rotor := Color("33373e")
 	if r < 4.5:
 		# counter size: a dark tyre and a grey hub, no spokes to turn into a white square
@@ -4895,7 +4950,15 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 					if fposmod((a + spin * 0.5) * 16.0 / TAU, 1.0) < 0.5: p.px(xx, yy, TIRE_C[2] if lit > 0.5 else TIRE_C[0])
 				continue
 			if dist > rr:
-				p.px(xx, yy, tire_px(kind, wall, (dist - rr) / maxf(0.5, r - rr), sqrt(q) * r > r - 1.45, a - spin * 0.5, a, lit, simple))
+				var tc := tire_px(kind, wall, (dist - rr) / maxf(0.5, r - rr), sqrt(q) * r > r - 1.45, a - spin * 0.5, a, lit, simple)
+				if stretch and (dist - rr) < (r - rr) * 0.55:
+					# a stretched sidewall angles in from the lip: it faces up and out, into the light
+					tc = TIRE_C[3] if lit > -0.2 else TIRE_C[2]
+				if camber > 0.0 and dy < 0.0 and sqrt(q) * r > r - (0.6 + 2.2 * camber) * (-dy / r) * maxf(1.0, r / 10.0):
+					# a cambered wheel leans its top in, so the tread shows over the top of the tyre
+					var blk := fposmod((a - spin * 0.5) * r * 1.2 / TAU, 1.0) < 0.3
+					tc = TIRE_C[0] if blk else (TIRE_C[3] if lit > 0.3 else TIRE_C[2])
+				p.px(xx, yy, tc)
 				continue
 			var rt := dist / rr
 			var c := rim_px(rim, rt, a - spin, a, lit, rc, depth, rr, lugs, simple)

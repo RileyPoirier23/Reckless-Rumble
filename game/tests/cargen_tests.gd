@@ -318,3 +318,18 @@ func _wheels() -> void:
 			{ "tire": "letters" }, { "tire": "offroad" }, { "tire": "slicks" }]:
 		if not _differs("silvio", {}, m, {}, {}): same.append(m)
 	check("rims, lip depths and tyres show on the car side-on", same.is_empty(), str(same))
+	# fitment, slammed: every way of sitting the wheels shows side-on (poke stands the tyre in
+	# front of the fender, tucked hides its top in the arch's shadow, stance shows the tread)
+	var low := { "drop": 1.0 }
+	var fit_same: Array = []
+	for f: String in CarGen.FITMENTS:
+		if f == "stock": continue
+		if not _differs("silvio", low, { "drop": 1.0, "offset": f }, {}, {}): fit_same.append(f)
+	for m2: Dictionary in [{ "drop": 1.0, "stagger": "staggered" }, { "drop": 1.0, "spacers": 2 }]:
+		if not _differs("silvio", low, m2, {}, {}): fit_same.append(m2)
+	check("every fitment, staggered rears and spacers show side-on", fit_same.is_empty(), str(fit_same))
+	var cam := Pix.new(48, 48, 1)
+	CarGen.wheel(cam, 24, 24, 20.0, "fivespoke", false, { "camber": 1.0 })
+	var upright := Pix.new(48, 48, 1)
+	CarGen.wheel(upright, 24, 24, 20.0, "fivespoke", false, {})
+	check("a cambered wheel shows its tread over the top, not under it", _rows_differ(cam.img, upright.img, 0, 10) > 4 and _rows_differ(cam.img, upright.img, 38, 48) == 0)

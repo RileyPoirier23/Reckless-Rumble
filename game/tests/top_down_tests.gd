@@ -262,6 +262,28 @@ func _mods() -> void:
 		var a2 := _art("silvio", m2)
 		if not _differs(base, a2) or a2.wheel_tex.get_image().get_data() == base.wheel_tex.get_image().get_data(): wheel_same.append(o)
 	check("every rim, lip depth and tyre shows from above, back wheels and front", wheel_same.is_empty(), str(wheel_same))
+	# fitment, staggered rears and spacers, slammed: all of it shows from above
+	var low := _art("silvio", { "drop": 1.0 })
+	var fit_same: Array = []
+	var fit_opts: Array = [{ "stagger": "staggered" }, { "spacers": 1 }, { "spacers": 3 }]
+	for f: String in CarGen.FITMENTS:
+		if f != "stock": fit_opts.append({ "offset": f })
+	for o2: Dictionary in fit_opts:
+		var m3 := { "drop": 1.0 }
+		m3.merge(o2)
+		var a3 := _art("silvio", m3)
+		if not _differs(low, a3) and a3.wheel_tex.get_image().get_data() == low.wheel_tex.get_image().get_data(): fit_same.append(o2)
+	check("every fitment, staggered rears and spacers show from above", fit_same.is_empty(), str(fit_same))
+	var poke := _plan("silvio", { "offset": "poke", "spacers": 3 })
+	var tuck := _plan("silvio", { "offset": "tucked" })
+	var stock_p := _plan("silvio", {})
+	check("poke and spacers push the wheels out, tucked pulls them in", absf(float(poke.wheels[0][1]) - poke.cy) > absf(float(stock_p.wheels[0][1]) - stock_p.cy)
+		and absf(float(tuck.wheels[0][1]) - tuck.cy) < absf(float(stock_p.wheels[0][1]) - stock_p.cy))
+	var stance := _art("silvio", { "offset": "stance" })
+	check("a stanced wheel leans its top in (its stack is wider than the tyre)", stance.wheel_size.y > _art("silvio").wheel_size.y)
+	check("staggered rears are wider than the fronts", int(_plan("silvio", { "stagger": "staggered" }).wheels[0][3]) > int(_plan("silvio", { "stagger": "staggered" }).wheels[2][3]))
+	for r4: String in ["FITMENT", "STAGGER", "SPACERS", "LIP DEPTH", "TIRES"]:
+		if not GarageScreen.LOOK_ROWS.has(r4): check("the garage sells %s" % r4, false)
 	var slick := _plan("silvio", { "tire": "slicks" })
 	check("drag slicks are wider at the back than the front", int(slick.wheels[0][3]) > int(slick.wheels[2][3]), "%d / %d" % [int(slick.wheels[0][3]), int(slick.wheels[2][3])])
 	var saved_w := SaveGame.car_looks(JSON.parse_string(JSON.stringify({ "id": "silvio", "looks": { "rim": "threepiece", "lip_depth": 0.75, "tire": "whitewall" }, "parts": {} })))

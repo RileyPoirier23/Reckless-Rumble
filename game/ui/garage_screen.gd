@@ -2,8 +2,8 @@
 ##   CARS      the cars you own; take one out, or have Gus straighten one out
 ##   UPGRADES  bolt on what's on the shelf (Gus charges labour), take parts back off
 ##   LOOKS     the body shop: paint and finish, rims (and how deep their dish), tires, calipers,
-##             ride height, tint, stripes, kits,
-##             hoods, fenders, wheel offset, the roof, bull bars, spares and the bed (all of it shows
+##             ride height, tint, stripes, kits, hoods, fenders, the wheels' fitment (flush, poke,
+##             tucked, stance, stretched), staggered rears, spacers, the roof, bull bars, spares and the bed (all of it shows
 ##             on the car out on the road, too)
 ##   ROCKAUTTO.CA  the shop computer: order parts, standard or express shipping
 ##   DYNO      power and torque curves against stock, and what the car actually does
@@ -36,17 +36,19 @@ const KITS := ["none", "lip", "lip + skirts", "full"]
 const EXHAUSTS := ["single", "dual", "quad"]
 const HOODS := ["stock", "vented", "scoop", "carbon"]
 const FENDERS := ["stock", "flared"]
-const OFFSETS := ["stock", "poke", "tucked"]
+const STAGGERS := ["none", "staggered"]
+const SPACER_NAMES := ["NONE", "15 MM", "25 MM", "38 MM"]
 const ROOFS := ["stock", "sunroof", "ttops", "vinyl", "rack", "lightbar"]
 const BEDS := ["stock", "tonneau", "rollbar", "rollbar_lights"]
 ## How deep the dish (STOCK: the rim's own), and what the body shop calls each.
 const LIP_DEPTHS := [-1.0, 0.0, 0.25, 0.5, 0.75, 1.0]
 const LIP_NAMES := ["STOCK", "FLAT", "SHALLOW", "MEDIUM", "DEEP", "VERY DEEP"]
 const LOOK_ROWS := ["PAINT", "FINISH", "RIMS", "RIM COLOUR", "RIM SIZE", "LIP DEPTH", "TIRES", "CALIPERS", "RIDE HEIGHT", "TINT", "STRIPES", "LIVERY", "STRIPE COLOUR", "SPOILER", "BODY KIT", "EXHAUST TIPS",
-	"HOOD", "FENDERS", "WHEEL OFFSET", "ROOF", "BULL BAR", "SPARE", "BED"]
+	"HOOD", "FENDERS", "FITMENT", "STAGGER", "SPACERS", "ROOF", "BULL BAR", "SPARE", "BED"]
 const LOOK_SHOWN := 14               # rows on the panel at once (it scrolls)
 const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "ROLL BAR + LIGHTS", "lightbar": "LIGHT BAR", "rack": "ROOF RACK",
-	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "tonneau": "TONNEAU COVER",
+	"vented": "LOUVRED", "scoop": "SCOOP", "carbon": "CARBON", "flared": "WIDE + FLARED", "poke": "POKE", "tucked": "TUCKED", "flush": "FLUSH",
+	"stance": "STANCE (CAMBER)", "stretch": "STRETCHED TIRE", "staggered": "STAGGERED (WIDE REARS)", "tonneau": "TONNEAU COVER",
 	"fivespoke": "5-SPOKE", "tenspoke": "10-SPOKE", "multispoke": "MULTI-SPOKE", "deepdish": "DEEP DISH", "wire": "WIRE + SPINNER",
 	"split": "SPLIT SPOKE", "crossspoke": "CROSS-SPOKE MESH", "threepiece": "3-PIECE DEEP DISH", "blade": "DIRECTIONAL BLADE",
 	"sixspoke": "6-SPOKE TRUCK", "steelie": "STEELIE + TRIM RING", "laced": "WIRE SPOKE", "donk": "DONK BIG LIP",
@@ -54,11 +56,11 @@ const LABELS := { "ttops": "T-TOPS", "rollbar": "ROLL BAR", "rollbar_lights": "R
 ## What the body shop charges for each kind of change.
 const LOOK_COST := { "PAINT": 900, "FINISH": 600, "RIMS": 1200, "RIM COLOUR": 250, "RIM SIZE": 400, "LIP DEPTH": 500, "TIRES": 650, "CALIPERS": 180, "RIDE HEIGHT": 150,
 	"TINT": 220, "STRIPES": 350, "LIVERY": 600, "STRIPE COLOUR": 120, "SPOILER": 450, "BODY KIT": 900, "EXHAUST TIPS": 160,
-	"HOOD": 700, "FENDERS": 850, "WHEEL OFFSET": 300, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
+	"HOOD": 700, "FENDERS": 850, "FITMENT": 300, "STAGGER": 900, "SPACERS": 220, "ROOF": 650, "BULL BAR": 450, "SPARE": 200, "BED": 550 }
 ## Which key in a car's looks each row sets.
 const LOOK_KEYS := { "FINISH": "finish", "RIMS": "rim", "RIM COLOUR": "rim_color", "RIM SIZE": "rim_size", "LIP DEPTH": "lip_depth", "TIRES": "tire", "CALIPERS": "caliper", "RIDE HEIGHT": "drop",
 	"TINT": "tint", "STRIPES": "stripes", "LIVERY": "livery", "STRIPE COLOUR": "stripe_color", "SPOILER": "spoiler", "BODY KIT": "kit_name", "EXHAUST TIPS": "exhaust",
-	"HOOD": "hood", "FENDERS": "fenders", "WHEEL OFFSET": "offset", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
+	"HOOD": "hood", "FENDERS": "fenders", "FITMENT": "offset", "STAGGER": "stagger", "SPACERS": "spacers", "ROOF": "roof", "BULL BAR": "bash", "SPARE": "spare", "BED": "bed" }
 
 const GUS := [
 	"\"TAKE WHAT YOU WANT. BRING IT BACK IN ONE PIECE.\"",
@@ -265,7 +267,9 @@ func _look_value(r: String) -> Variant:
 		"EXHAUST TIPS": return trial.get("exhaust", "single")
 		"HOOD": return trial.get("hood", "stock")
 		"FENDERS": return trial.get("fenders", "stock")
-		"WHEEL OFFSET": return trial.get("offset", "stock")
+		"FITMENT": return trial.get("offset", "stock")
+		"STAGGER": return trial.get("stagger", "none")
+		"SPACERS": return int(trial.get("spacers", 0))
 		"ROOF": return trial.get("roof", "stock")
 		"BULL BAR": return "BULL BAR" if trial.get("bash", false) else "NONE"
 		"SPARE": return "ON THE BACK" if trial.get("spare", false) else "NONE"
@@ -325,7 +329,15 @@ func _looks_input(dy: int, dx: int, go: bool) -> void:
 			"EXHAUST TIPS": trial.exhaust = _cycle(EXHAUSTS, trial.get("exhaust", "single"), dx)
 			"HOOD": trial.hood = _cycle(HOODS, trial.get("hood", "stock"), dx)
 			"FENDERS": trial.fenders = _cycle(FENDERS, trial.get("fenders", "stock"), dx)
-			"WHEEL OFFSET": trial.offset = _cycle(OFFSETS, trial.get("offset", "stock"), dx)
+			"FITMENT": trial.offset = _cycle(CarGen.FITMENTS, trial.get("offset", "stock"), dx)
+			"STAGGER":
+				var st := String(_cycle(STAGGERS, trial.get("stagger", "none"), dx))
+				if st == "none": trial.erase("stagger")
+				else: trial.stagger = st
+			"SPACERS":
+				var sp := posmod(int(trial.get("spacers", 0)) + dx, SPACER_NAMES.size())
+				if sp == 0: trial.erase("spacers")
+				else: trial.spacers = sp
 			"ROOF": trial.roof = _cycle(ROOFS, trial.get("roof", "stock"), dx)
 			"BULL BAR": trial.bash = not trial.get("bash", false)
 			"SPARE": trial.spare = not trial.get("spare", false)
@@ -585,6 +597,7 @@ func _draw_looks() -> void:
 				draw_rect(Rect2(vx, y - 2, 30, 9), Color(1, 1, 1, 0.3), false, 1.0)
 			"RIM SIZE": PixelFont.draw(self, Vector2(vx, y), "%d IN" % int(14 + (float(v) - 0.5) * 30.0), BONE)
 			"LIP DEPTH": PixelFont.draw(self, Vector2(vx, y), String(LIP_NAMES[maxi(0, LIP_DEPTHS.find(float(v)))]), BONE)
+			"SPACERS": PixelFont.draw(self, Vector2(vx, y), String(SPACER_NAMES[clampi(int(v), 0, SPACER_NAMES.size() - 1)]), BONE)
 			"RIDE HEIGHT": PixelFont.draw(self, Vector2(vx, y), "STOCK" if float(v) < 0.05 else "-%d MM" % int(float(v) * 60.0), BONE)
 			"TINT": PixelFont.draw(self, Vector2(vx, y), "%d%%" % int(float(v) * 100.0), BONE)
 			_: PixelFont.draw(self, Vector2(vx, y), String(LABELS.get(String(v), String(v) if String(v) != "" else "STOCK")).to_upper(), BONE)

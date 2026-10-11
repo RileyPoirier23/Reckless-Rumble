@@ -77,7 +77,7 @@ enum { R_NONE, R_HOOD, R_ROOF, R_DECK, R_BODY, R_PILLAR, R_BED, R_BOX, R_DOOR, R
 
 ## Mods that change the shape, not just the colours: they key the plan cache.
 const SHAPE_MODS := ["spoiler", "kit", "fenders", "hood", "roof", "bash", "spare", "bed", "rollbar", "lightbar", "drop",
-	"rim_size", "tire", "offset", "exhaust", "sign", "ladder", "load", "trailer"]
+	"rim_size", "tire", "offset", "spacers", "stagger", "exhaust", "sign", "ladder", "load", "trailer"]
 
 # ------------------------------------------------------------------ what callers read
 
@@ -141,6 +141,8 @@ class Plan:
 	var front_spots: Array[Vector2] = []
 	var tire_r := 3.0
 	var tire_w := 3
+	var camber := 0                 # a stanced wheel's lean: how many rows its top sits in from its bottom
+	var stretch := false            # a stretched tyre: the rim's lip stands proud of it
 	var zoff := 0
 	var z_nose := Vector3.ZERO      # front face: bumper top, lamp band bottom, hood
 	var z_tail := Vector3.ZERO      # rear face: bumper top, lamp band bottom, deck
@@ -249,6 +251,11 @@ static func trailer_design(spec: Dictionary) -> Dictionary:
 		"flare": "none", "arch": "flat", "arch_gap": 0.2 / L, "boxy": true, "stripe_kind": "side", "bed_h": h, "cab_x": 1.0 }
 
 static var _lock := Mutex.new()
+
+## Which row a leaning (cambered) wheel's slice z has moved in to: 0 at the bottom, `lean` at the top.
+static func wheel_lean(z: float, lean: int, zmax: float) -> int:
+	if lean <= 0: return 0
+	return clampi(int(float(lean + 1) * (z + 0.5) / maxf(1.0, zmax)), 0, lean)
 
 static func _plan_key(spec: Dictionary, mods: Dictionary, damage: Dictionary, scale: float) -> String:
 	var f := CarGen.facts(spec)
@@ -595,11 +602,26 @@ class _Shaper:
 		p.tire_w = maxi(2, int(round(tw_m * px)))
 		var track := float(spec.get("track", float(spec.get("width", 1.8)) * 0.85)) * px
 		var vc := track / 2.0
-		match String(mods.get("offset", "stock")):
-			"poke": vc += 1.6
+		# the fitment: how far out the wheels sit (spacers push them further), how far past the
+		# body's side the tyre's outside may stand
+		var fit := CarGen.fitment(mods)
+		var spacer := float(mods.get("spacers", 0)) * px / 15.0           # a pixel a size, at the game's scale
+		var room := 0.4
+		match fit:
+			"poke":
+				vc += 1.6
+				room = 1.6
+			"stance":
+				vc += 1.4
+				room = 1.4
 			"tucked": vc -= 1.0
-		# keep the outside of the tire near the body's side
-		vc = minf(vc, p.wpx / 2.0 - p.tire_w / 2.0 + (1.6 if String(mods.get("offset", "")) == "poke" else 0.4))
+		vc += spacer
+		room = minf(room + spacer, float(CarArt.MY) - 0.4)
+		# keep the outside of the tire near the body's side (flush: out on the fender's lip)
+		vc = minf(vc, p.wpx / 2.0 - p.tire_w / 2.0 + room)
+		if fit == "flush": vc = p.wpx / 2.0 - p.tire_w / 2.0 + 1.0 + minf(spacer, room)
+		p.camber = maxi(1, int(round(p.tire_w * 0.5))) if fit == "stance" else 0
+		p.stretch = fit == "stretch"
 		var xs := [X(float(d.wr)), X(float(d.wf))]
 		if fam == "trailer":
 			# tandem axles at the back, duals on each; no front wheels (the tractor carries that end)
@@ -612,9 +634,10 @@ class _Shaper:
 		var vc_r := vc + (1.0 if fam in ["mid", "wedge"] else 0.0)
 		# drag slicks: the back tyres half as wide again, growing in toward the middle
 		var tw_r := p.tire_w
-		if kind == "slicks":
-			tw_r = p.tire_w + maxi(1, int(round(p.tire_w * 0.5)))
-			vc_r -= float(tw_r - p.tire_w) / 2.0
+		if kind == "slicks": tw_r = p.tire_w + maxi(1, int(round(p.tire_w * 0.5)))
+		# staggered: wider wheels at the back, the same way
+		if String(mods.get("stagger", "")) == "staggered": tw_r += maxi(1, int(round(p.tire_w * 0.34)))
+		vc_r -= float(tw_r - p.tire_w) / 2.0
 		for i in xs.size():
 			for s: float in [-1.0, 1.0]:
 				p.wheels.append([float(xs[i]), p.cy + s * (vc_r if i == 0 else vc), r, tw_r if i == 0 else p.tire_w, i == 1, s])
@@ -634,20 +657,38 @@ class _Shaper:
 			var xc: float = w[0]
 			var yc: float = w[1]
 			var ww: int = w[3]
+			var s3 := float(w[5])
+			var lean := p.camber
+			var zmax := 2.0 * r * rise
 			for x in range(int(floor(xc - r)), int(ceil(xc + r)) + 1):
 				var dx := float(x) + 0.5 - xc
 				if absf(dx) > r or x < 0 or x >= p.sx: continue
 				var dz := rise * sqrt(maxf(0.0, r * r - dx * dx))
 				var zc := r * rise
+				var zb := maxi(0, int(round(zc - dz)))
+				var zt := maxi(zb, int(round(zc + dz)) - 1)
 				var y0 := int(round(yc - ww / 2.0))
-				for y in range(y0, y0 + ww):
+				var y_out := (y0 + ww - 1) if s3 > 0.0 else y0
+				# each row of the tread, from the outer face (the rim) in; a stanced wheel leans its
+				# top in, so its rows run further in the higher up they are
+				for ring in ww + lean:
+					var y := y_out - int(s3) * ring
 					if y < 0 or y >= p.sy: continue
+					var lo := zb
+					var hi := zt
+					if lean > 0:
+						lo = -1
+						for z in range(zb, zt + 1):
+							var sh := CarArt.wheel_lean(float(z), lean, zmax)
+							if ring >= sh and ring < sh + ww:
+								if lo < 0: lo = z
+								hi = z
+						if lo < 0: continue
 					var i2 := p.idx(x, y)
-					p.b1[i2] = maxi(0, int(round(zc - dz)))
-					p.h1[i2] = maxi(p.b1[i2], int(round(zc + dz)) - 1)
-					# which row of the tread this is, from the outer face (the rim) in
-					var ring := (y0 + ww - 1 - y) if float(w[5]) > 0.0 else (y - y0)
-					p.m1[i2] = CarArt.M_TIRE | ((1 if ring == 0 else 0) << 16) | ((1 if ring == ww - 1 else 0) << 21) | (mini(ring, 15) << 24)
+					p.b1[i2] = lo
+					p.h1[i2] = hi
+					p.m1[i2] = CarArt.M_TIRE | ((1 if ring == 0 and lean == 0 else 0) << 16) | ((1 if ring == ww - 1 and lean == 0 else 0) << 21) \
+						| ((1 if lean > 0 else 0) << 22) | (mini(ring, 15) << 24)
 
 	# ------------------------------------------------------------ the body
 
@@ -1981,6 +2022,9 @@ class _Painter:
 	var wall := "none"
 	var tire_kind := "stock"
 	var rim_depth := 0.25
+	var cur_depth := 0.25             # the wheel being painted: staggered rears dish deeper
+	var cur_frac := 0.66
+	var stagger := false
 	var lugs := 5
 	var glass: Array[Color] = []
 	var decal := -1
@@ -2084,6 +2128,7 @@ class _Painter:
 		rim_frac = CarGen.rim_frac(tire_kind, wm)
 		rim_c = CarGen.rim_paint(rim_style, wm)
 		rim_depth = CarGen.lip_depth(rim_style, wm)
+		stagger = String(mods.get("stagger", "")) == "staggered"
 		lugs = int(wm.get("lugs", 5))
 		caliper = CarGen._col(mods.get("caliper", null), Color("5a5e66"))
 		wall = String(wm.get("wall", "none"))
@@ -2172,6 +2217,9 @@ class _Painter:
 		lamp_bl.resize(ln)
 		lamp_br.resize(ln)
 		lamp_beacon.resize(ln)
+		# the back wheels go in with the body (staggered: bigger, deeper rims than the front)
+		cur_depth = minf(1.0, rim_depth + 0.3) if stagger else rim_depth
+		cur_frac = minf(0.86, rim_frac + 0.03) if stagger else rim_frac
 		for y in p.sy:
 			for x in p.sx:
 				var i := y * p.sx + x
@@ -2279,11 +2327,15 @@ class _Painter:
 		var outer := ((m >> 16) & 15) == 1
 		var spare := (m >> 20) & 1 == 1
 		var inner := (m >> 21) & 1 == 1
+		var leaning := (m >> 22) & 1 == 1
 		var ring := (m >> 24) & 15
 		var xc := 0.0
+		var ww := p.tire_w
 		var r := p.tire_r
 		for wv: Array in p.wheels:
-			if absf(float(x) + 0.5 - float(wv[0])) <= float(wv[2]) + 0.5: xc = float(wv[0])
+			if absf(float(x) + 0.5 - float(wv[0])) <= float(wv[2]) + 0.5:
+				xc = float(wv[0])
+				ww = int(wv[3])
 		var dx := float(x) + 0.5 - xc
 		var zc := r * CarArt.RISE
 		if spare:
@@ -2292,10 +2344,17 @@ class _Painter:
 			zc = float(b + top + 1) * 0.5
 			r *= 0.95
 		var row := y * aw + x
+		# the circle's own top over this column (a leaning wheel's outer rows stop short of it)
+		var z_top := maxi(0, int(round(zc + CarArt.RISE * sqrt(maxf(0.0, r * r - dx * dx)))) - 1) if not spare else top
 		for z in range(b, top + 1):
 			var dz := float(z) + 0.5 - zc
-			var c := _rim_face(dx, dz, r) if outer and z < top else _tread(dx, dz, r, ring, inner, z == top)
-			buf[row + z * p.sx] = c.to_abgr32()
+			var face := outer
+			var inside := inner
+			if leaning:
+				var sh := CarArt.wheel_lean(float(z), p.camber, 2.0 * r * CarArt.RISE)
+				face = ring == sh
+				inside = ring == sh + ww - 1
+			buf[row + z * p.sx] = _wheel_px(dx, dz, r, ring, face, inside, z >= z_top).to_abgr32()
 
 	func _column_bolt(i: int, x: int, y: int) -> void:
 		var top: int = p.h2[i]
@@ -2688,7 +2747,7 @@ class _Painter:
 	func _rim_face(dx: float, dz: float, r: float) -> Color:
 		var v := Vector2(dx, -dz / CarArt.RISE)
 		var dist := v.length()
-		var rr := r * rim_frac
+		var rr := r * cur_frac
 		var a := atan2(v.y, v.x)
 		var lit := (v / maxf(0.01, dist)).dot(CarGen.LIGHT)
 		if dist > r - 0.6:
@@ -2702,12 +2761,19 @@ class _Painter:
 				if wall == "white": return Color("e8e6dc") if lit > -0.3 else Color("bcb9ae")
 				if wall == "letters" and a < -0.5 and a > -2.6 and fposmod(a * 10.0 / TAU, 1.0) < 0.5: return Color("e0dccf")
 			return CarGen.tire_px(tire_kind, wall, t, false, a, a, lit, false)
-		var c := CarGen.rim_px(rim_style, dist / rr, a, a, lit, rim_c, rim_depth, rr, lugs, rr < 5.0)
+		var c := CarGen.rim_px(rim_style, dist / rr, a, a, lit, rim_c, cur_depth, rr, lugs, rr < 5.0)
 		if c.a < 0.5:
 			# a gap: the caliper on the top-back quarter, the rest dark
 			if a < -0.6 and a > -2.4 and dist > rr * 0.35: return caliper
 			return Color("22252b")
 		return c
+
+	## One pixel of a wheel's stack: the rim's face on the outer row, below the top; the tread
+	## everywhere else (a stretched tyre's rim lip stands proud of it on top, chrome).
+	func _wheel_px(dx: float, dz: float, r: float, ring: int, face: bool, inner: bool, top: bool) -> Color:
+		if face and not top: return _rim_face(dx, dz, r)
+		if face and top and p.stretch: return CarArt.CHROME[3] if dx < 0.0 else CarArt.CHROME[2]
+		return _tread(dx, dz, r, ring, inner, top)
 
 	## The tread at (dx along, dz up) from the hub: blocks round the tyre with grooves between, the
 	## middle rows staggered from the shoulders (`ring` 0 at the outer face, `inner` the inside
@@ -2743,12 +2809,17 @@ class _Painter:
 		var r := p.tire_r
 		var wl := int(ceil(r * 2.0)) + 1
 		var ww := p.tire_w
+		var lean := p.camber
+		var wy := ww + lean                # a stanced wheel's rows run further in up top
 		var wn := int(ceil(r * 2.0 * CarArt.RISE)) + 1
 		var w_aw := wl * wn
 		var wb := PackedInt32Array()
-		wb.resize(w_aw * ww)
+		wb.resize(w_aw * wy)
 		var zc := r * CarArt.RISE
+		cur_depth = rim_depth
+		cur_frac = rim_frac
 		for z in wn:
+			var sh := CarArt.wheel_lean(float(z), lean, 2.0 * r * CarArt.RISE)
 			for x in wl:
 				var dx := float(x) + 0.5 - float(wl) / 2.0
 				if absf(dx) > r: continue
@@ -2756,14 +2827,13 @@ class _Painter:
 				var zb := int(round(zc - dz))
 				var zt := maxi(zb, int(round(zc + dz)) - 1)
 				if z < zb or z > zt: continue
-				for y in ww:
-					var c: Color
-					if y == ww - 1 and z < zt: c = _rim_face(dx, float(z) + 0.5 - zc, r)
-					else: c = _tread(dx, float(z) + 0.5 - zc, r, ww - 1 - y, y == 0, z == zt)
-					wb[y * w_aw + z * wl + x] = c.to_abgr32()
+				for y in wy:
+					var ring := wy - 1 - y          # 0 at the outer face
+					if ring < sh or ring >= sh + ww: continue
+					wb[y * w_aw + z * wl + x] = _wheel_px(dx, float(z) + 0.5 - zc, r, ring, ring == sh, ring == sh + ww - 1, z == zt).to_abgr32()
 		art.wheel_n = wn
-		art.wheel_size = Vector2i(wl, ww)
-		art._imgs.wheel = Image.create_from_data(w_aw, ww, false, Image.FORMAT_RGBA8, wb.to_byte_array())
+		art.wheel_size = Vector2i(wl, wy)
+		art._imgs.wheel = Image.create_from_data(w_aw, wy, false, Image.FORMAT_RGBA8, wb.to_byte_array())
 
 ## Parody businesses for the magnetic signs on work vans' doors: [name, colour].
 const DECALS := [
