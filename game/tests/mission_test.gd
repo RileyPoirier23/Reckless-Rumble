@@ -97,7 +97,11 @@ func _drag() -> void:
 	check("drag: go before green and it's a red light (back on the line, the tree again)", r._go_t < 2.0 and main.car.sim.pos.distance_to(StoryMissions.RUNWAY_LINE) < 4.0, "tree %.1f s" % r._go_t)
 	# then sit still through the tree and run it flat out
 	main.car.sim.vx = 0.0
-	while r._go_t < 2.4 and r._go_t >= 0.0: await _wait(0.1)
+	# the tree again: the red light's reset is a frame behind the check, so wait for green itself
+	var tw := 0.0
+	while r._go_t < 2.4 and tw < 10.0:
+		await _wait(0.05)
+		tw += 0.05
 	var t0 := 0.0
 	while not _finished() and t0 < 20.0:
 		main.car.sim.vx = 30.0
@@ -107,7 +111,7 @@ func _drag() -> void:
 	var medal := ""
 	for m in ["gold", "silver", "bronze"]:
 		if StoryState.flag("launch_" + m): medal = m
-	var along := (main.car.sim.pos - StoryMissions.RUNWAY_LINE).dot((StoryMissions.RUNWAY_END - StoryMissions.RUNWAY_LINE).normalized())
+	var along: float = (main.car.sim.pos - StoryMissions.RUNWAY_LINE).dot((StoryMissions.RUNWAY_END - StoryMissions.RUNWAY_LINE).normalized())
 	check("drag: past the cones and it's timed: a medal flag for Dom's scene", _finished() and medal != "", "medal %s, %.2f s, %.0f m along, go_t %.1f run_t %.1f, k %d, done %s, %.1f m/s, scale %.2f" % [medal, float(StoryState.last_result.get("eighth", 0.0)), along, r._go_t, r._run_t, r.k, str(r.done), main.car.sim.speed(), Engine.time_scale])
 	done += 1
 
