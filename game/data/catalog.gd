@@ -477,6 +477,24 @@ static func _build_spec(e: Dictionary) -> Dictionary:
 			break
 	if sporty: mu_b += 0.1
 	if truck: mu_b -= 0.1
+	# --- what the tyres and the chassis can hold on to: a sports car on sticky rubber corners and
+	# stops a good deal better than a tall truck on all-seasons, an old car on skinny bias-plies
+	# worse still. (The sim's compound tables do the rest: all-seasons in the wet, winters in snow.)
+	var grip := 1.0
+	if sporty: grip = 1.06
+	elif cls in ["muscle", "pony", "classic"]: grip = 0.96
+	elif cls in ["luxury", "sedan", "wagon", "coupe", "compact", "jdm", "euro"]: grip = 0.98
+	elif cls in ["economy", "kei", "oddball", "minivan", "crossover"]: grip = 0.93
+	elif cls in ["suv", "offroad", "pickup", "hd_pickup", "work_truck", "van"]: grip = 0.87
+	elif cls == "fleet": grip = 0.84
+	if body in ["boxtruck", "bus", "semi"]: grip = 0.8
+	if year < 1965: grip -= 0.14
+	elif year < 1975: grip -= 0.09
+	elif year < 1990: grip -= 0.04
+	s["grip"] = snappedf(grip, 0.01)
+	if not s.tires.has("compound"):
+		s.tires.compound = "sport" if cls in ["exotic", "rally"] else ("offroad" if cls == "offroad" else
+			("allseason" if truck or cls in ["suv", "crossover", "minivan", "van", "economy", "fleet", "work_truck"] else "summer"))
 	s["brakes"] = {
 		"max_torque": snappedf(mass * G * mu_b * r, 50.0),
 		"bias": { "FWD": 0.68, "AWD": 0.64 }.get(drive, 0.62) if pos == "front" else (0.56 if pos == "rear" else 0.58),

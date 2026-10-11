@@ -114,6 +114,34 @@ func _init() -> void:
 	var back := car("FWD")
 	run(back, 1.0, 0.0, 1.0)
 	run(back, 3.0, 0.0, 1.0, -0.6)
+	# standing water at speed: summer tyres ride up on it, winters' deep tread cuts through
+	var plane := {}
+	for comp in ["summer", "winter"]:
+		var row := []
+		for kmh in [60.0, 120.0]:
+			var wc := car("RWD", "wet")
+			wc.compound = comp
+			for i in 4: wc.tires[i].temp = float(CarSim.COMPOUND[comp].opt)
+			wc.vx = kmh / 3.6
+			row.append(wc.tire_mu(0))
+		plane[comp] = row
+	check("hydroplaning: summer tyres lose a good third of their wet grip at 120", float(plane.summer[1]) < float(plane.summer[0]) * 0.75, "%.2f -> %.2f" % [float(plane.summer[0]), float(plane.summer[1])])
+	check("...winters hardly notice", float(plane.winter[1]) > float(plane.winter[0]) * 0.9, "%.2f -> %.2f" % [float(plane.winter[0]), float(plane.winter[1])])
+	# a truck on all-seasons stops longer than a sports car on summers
+	var stops := {}
+	for id in ["ferraree_eff_forty_1990", "chevrolay_suburbian_2015"]:
+		var b := CarSim.new(CarCatalog.spec(id))
+		b.assist = CarSim.Assist.STREET
+		b.set_ambient(20.0)
+		b.cold_start()
+		for i in 4: b.tires[i].temp = float(CarSim.COMPOUND[b.compound].opt)
+		rolling(b, 100.0)
+		var d := 0.0
+		while b.vx > 0.3 and d < 400.0:
+			b.step(1.0 / 120.0, 0.0, 1.0, 0.0, 0.0)
+			d += b.vx / 120.0
+		stops[id] = d
+	check("a Suburban stops from 100 a good deal longer than an F40", float(stops["chevrolay_suburbian_2015"]) > float(stops["ferraree_eff_forty_1990"]) * 1.2, "%.0f vs %.0f m" % [float(stops["chevrolay_suburbian_2015"]), float(stops["ferraree_eff_forty_1990"])])
 	check("no NaNs at 300 km/h or in reverse", ok_num(fast) and ok_num(back) and back.vx < -0.5, "reverse %.1f m/s" % back.vx)
 	# braking is braking: hold it from 50 km/h and the car stops and stays stopped (it never backs
 	# up, the wheels never turn backwards); let go and press it again to reverse; in reverse the gas

@@ -209,6 +209,12 @@ func tire_mu(i: int) -> float:
 		mu *= 0.3 + 0.7 * tread                 # but tread is what clears water and snow
 	if t.tread <= 0.6: mu *= 0.75
 	if t.flat: mu *= 0.3
+	# standing water at speed: the tread can't clear it and the tyre rides up on it (hydroplaning);
+	# worse on bald tyres and worn ones, hardly at all on winters and all-seasons' deep tread
+	if surface == "wet" and absf(vx) > 22.0:
+		var deep := 1.4 if compound in ["winter", "allseason", "offroad"] else 0.35
+		var plane := clampf((absf(vx) - 22.0) / 16.0, 0.0, 1.0) * clampf(1.0 - 0.6 * tread * deep, 0.0, 1.0)
+		mu *= 1.0 - 0.55 * plane * (0.5 if arcade() else 1.0)
 	# a rally or overland kit: skid plates, the right springs and a driver who's stopped flinching
 	if surface in ["gravel", "grass", "mud", "snow", "leaves", "dirt"]: mu *= float(spec.get("loose_grip", 1.0))
 	return mu * float(spec.get("grip", 1.0))

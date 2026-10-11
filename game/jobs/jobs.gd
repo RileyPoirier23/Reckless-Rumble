@@ -69,10 +69,10 @@ const LADDER := [
 		"line": "\"One of us drives. Neither of us will tell you which.\"" },
 	{ "name": "DOUG FROM THE PARTS COUNTER", "car": "fjord_mustank_1988", "rt": [0.20, 0.40], "spread": 0.15, "fee": 60,
 		"line": "\"That's a forty-dollar part you're running there. I sold it to you.\"" },
-	{ "name": "SHAYLA RICHARD", "car": "toyoda_supreem_twin_turbo_1995", "rt": [0.12, 0.30], "spread": 0.10, "fee": 100,
-		"line": "\"Two turbos. One attitude. Try to keep up on the tree.\"" },
-	{ "name": "BIG MARC GAUDET", "car": "chevrolay_shovelle_ess_ess_1970", "rt": [0.08, 0.22], "spread": 0.07, "fee": 150,
+	{ "name": "BIG MARC GAUDET", "car": "chevrolay_shovelle_ess_ess_1970", "rt": [0.08, 0.22], "spread": 0.07, "fee": 100,
 		"line": "\"Your dad used to run this lane. He never broke out. Not once.\"" },
+	{ "name": "SHAYLA RICHARD", "car": "toyoda_supreem_twin_turbo_1995", "rt": [0.12, 0.30], "spread": 0.10, "fee": 150,
+		"line": "\"Two turbos. One attitude. Try to keep up on the tree.\"" },
 	{ "name": "JOHNNY TRAM", "car": "fjord_gt_fourty_ish_2005", "rt": [0.03, 0.14], "spread": 0.04, "fee": 250,
 		"line": "\"Airstrip 7 is mine. You can rent it for an eighth of a mile.\"" },
 ]
