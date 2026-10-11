@@ -197,6 +197,10 @@ func _inputs(dt: float) -> Array:
 	# speed: the bends ahead, the car ahead, and never into a wall pointing the wrong way
 	target_v = minf(plan_speed(), follow)
 	if absf(alpha) > 1.2: target_v = minf(target_v, 6.0)
+	# running code through traffic: ease off behind anything it can't get round, and never ram it
+	if siren and float(blk[0]) < INF:
+		if float(blk[0]) < 18.0: target_v = minf(target_v, 9.0)
+		if float(blk[0]) < 5.0 and float(blk[1]) < 1.5: target_v = 0.0
 	var err := target_v - v
 	var th := 0.0
 	var br := 0.0
@@ -253,12 +257,7 @@ func _rescue(dt: float, here: float) -> bool:
 func _lights(dt: float, _st: float) -> void:
 	lights_on = night
 	view.headlights = lights_on
-	head_light.visible = lights_on
-	head_light.rotation = sim.heading
-	head_light.texture_scale = 1.4
-	head_light.offset = Vector2(80.0 * head_light.texture_scale, 0)
-	tail_light.visible = lights_on or view.braking
-	tail_light.energy = 1.4 if view.braking else 0.6
+	_lamps_on = lights_on
 	# running code: the rig's own roof lights in the art (an ambulance's, a fire engine's) flash too
 	view.beacons = siren
 	if lights.a <= 0.0: return

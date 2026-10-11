@@ -22,25 +22,22 @@ func _ready() -> void:
 	main.save.cash = 2000
 	main.save.heat = 0.0
 	_fresh_car()
-	if not OS.get_cmdline_user_args().has("--police-only"):
-		await _race_ai()
-	if OS.get_cmdline_user_args().has("--race-only"):
-		print("%d failed" % fails)
-		get_tree().quit()
-		return
-	if not OS.get_cmdline_user_args().has("--police-only"): await _race_win()
-	await _police_ticket()
-	await _police_walk_off()
-	await _police_lose()
-	await _police_impound()
-	await _wildlife()
-	if not OS.get_cmdline_user_args().has("--police-only"): await _pinks()
-	await _ride()
-	await _salvage()
-	await _meet()
-	await _auction()
-	await _calendar()
-	var want := 13 if not OS.get_cmdline_user_args().has("--police-only") else 10
+	var args := OS.get_cmdline_user_args()
+	var police_only := args.has("--police-only")
+	# RT_PARTS="pinks,ride" runs only those parts (for working on one)
+	var only := Array(OS.get_environment("RT_PARTS").split(",", false))
+	var parts: Array = [["race_ai", _race_ai, not police_only], ["race_win", _race_win, not police_only], ["police_ticket", _police_ticket, true],
+		["police_walk_off", _police_walk_off, true], ["police_warning", _police_warning, true], ["police_lose", _police_lose, true], ["police_impound", _police_impound, true], ["wildlife", _wildlife, true],
+		["pinks", _pinks, not police_only], ["ride", _ride, true], ["salvage", _salvage, true], ["meet", _meet, true], ["auction", _auction, true], ["calendar", _calendar, true]]
+	var want := 0
+	for part: Array in parts:
+		if not bool(part[2]) or (not only.is_empty() and not only.has(String(part[0]))): continue
+		want += 1
+		await (part[1] as Callable).call()
+		if String(part[0]) == "race_ai" and args.has("--race-only"):
+			print("%d failed" % fails)
+			get_tree().quit()
+			return
 	check("every part of the test ran to the end", done == want, "%d of %d" % [done, want])
 	print("%d failed" % fails)
 	Engine.time_scale = 1.0
@@ -179,18 +176,24 @@ func _police_ticket() -> void:
 	var tickets0 := int(main.save.get("tickets", 0))
 	var walked_up := false
 	var ticket_at_window := false
+	var asked := false
 	while t < 30.0 and int(main.save.get("tickets", 0)) == tickets0:
 		await _wait(0.25)
 		t += 0.25
 		if p.walk == "talk" and p.officer != null and p.officer.pos.distance_to(p._window(main.car)) < 0.8: walked_up = true
+		if p.stop_panel.visible:
+			# the window's down: a story about the wrong car is always a ticket (and then some)
+			asked = true
+			p.stop_panel.choose("lie")
 	ticket_at_window = walked_up
 	check("police: the officer gets out and walks up to your window before the ticket", ticket_at_window)
+	check("police: at the window it's your turn to talk", asked)
 	if int(main.save.get("tickets", 0)) == tickets0:
 		print("   no ticket: state %s, you at %s doing %.1f, cop at %s doing %.1f, want %.1f, bust_t %.1f, siren %s, path %d pts done %s" % [p.state, str(main.car.sim.pos.round()), main.car.sim.speed(), str(k.sim.pos.round()), k.sim.speed(), k.target_v, p.bust_t, str(k.siren), k.track.pts.size(), str(k.track.done)])
 		for ln in k.trace.slice(-12): print("      ", ln)
 	var paid := cash0 - int(main.save.cash)
 	check("police: pull over and it's a ticket", int(main.save.get("tickets", 0)) == tickets0 + 1, "%.1f s" % t)
-	check("police: the ticket is for the speeding", paid >= 100 and paid < 1000, "$%d" % paid)
+	check("police: the ticket is for the speeding, and the story cost extra", paid >= 160 and paid < 1000, "$%d" % paid)
 	check("police: a ticket isn't the impound", main.car.sim.pos.distance_to(Jobs.IMPOUND) > 100.0)
 	check("police: they stand down after", p.state == "calm" and not k.siren)
 	await _wait(3.5)
@@ -218,6 +221,33 @@ func _police_walk_off() -> void:
 	check("police: drive off on the officer and it's a chase", p.chasing() and p.state == "chase" and p.offences.has("fleeing") and int(main.save.get("tickets", 0)) == tickets0, "%s %s" % [p.state, str(p.offences)])
 	p.clear()
 	check("police: the officer's gone when they clear off", p.officer == null and p.walk == "")
+	done += 1
+
+## Polite about a plain speed and, some nights, it's a warning: no ticket, the heat down, and on your way.
+func _police_warning() -> void:
+	var p: Police = main.police
+	var warnings0 := int(main.save.get("warnings", 0))
+	var tries := 0
+	while tries < 4 and int(main.save.get("warnings", 0)) == warnings0:
+		tries += 1
+		main.save.heat = 0.0
+		var k := _cruiser_behind(30.0)
+		main.car.sim.vx = 26.0
+		await _wait(1.0)
+		main.hold_car = true
+		var t := 0.0
+		var tickets0 := int(main.save.get("tickets", 0))
+		while t < 30.0 and p.chasing():
+			await _wait(0.25)
+			t += 0.25
+			if p.stop_panel.visible: p.stop_panel.choose("sorry")
+		if int(main.save.get("warnings", 0)) == warnings0 and int(main.save.get("tickets", 0)) == tickets0:
+			print("   no warning and no ticket: state %s walk %s" % [p.state, p.walk])
+		await _wait(2.0)
+		main.hold_car = false
+		p.clear()
+	check("police: sorry officer, and sooner or later it's a warning instead of a ticket", int(main.save.get("warnings", 0)) == warnings0 + 1, "%d stops" % tries)
+	check("police: after a warning they've stood down and you can drive on", not p.chasing() and not p.writing())
 	done += 1
 
 ## A chase you get out of: far enough away, long enough, they lose you.
@@ -347,11 +377,17 @@ func _pinks() -> void:
 	main.sky.day = 4                    # a Friday
 	main.sky.time_h = 23.0
 	var cars0 := (main.save.garage as Array).size()
+	# in one of your own cars (a tow call earlier can leave you in Toby's wrecker, and that's not for betting)
+	for i in cars0:
+		if String((main.save.garage[i] as Dictionary).get("id", "")) != "tow":
+			if main.car_i != i: main._spawn_car(i, main.car.sim.pos, main.car.sim.heading)
+			break
 	j.start("street")
 	check("pinks: Friday night with the rep, it's pink slips", not j.race_rival.is_empty(), str(j.race_rival.get("name", "")))
 	main._teleport(j.race_start, 0.0)
 	await _wait(0.2)
-	check("pinks: you're racing for your own car", j.sign_in() and j.race != null and j.race.racers.size() == 1)
+	var why := j.pinks_block()
+	check("pinks: you're racing for your own car", j.sign_in() and j.race != null and j.race.racers.size() == 1, why if why != "" else "%d racers" % (j.race.racers.size() if j.race else 0))
 	var race: StreetRace = j.race
 	await _wait(4.3)
 	for i in race.checks.size():

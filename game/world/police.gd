@@ -35,6 +35,7 @@ var enabled := true
 var strictness := 1.0          # Settings > Difficulty: relaxed 0.6, normal 1, strict 1.5
 var rng := RandomNumberGenerator.new()
 var hud_panel: PoliceHud
+var stop_panel: StopPanel       # the exchange at your window: what you say to the officer
 var _route_t := 0.0
 var _spawn_t := 2.0
 var _next_id := 0
@@ -79,6 +80,12 @@ func setup(the_drive: Node) -> void:
 	hud_panel.size = Vector2(640, 360)
 	hud_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	drive.get_node("HudLayer").add_child(hud_panel)
+	stop_panel = StopPanel.new()
+	stop_panel.police = self
+	stop_panel.size = Vector2(640, 360)
+	stop_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stop_panel.visible = false
+	drive.get_node("HudLayer").add_child(stop_panel)
 
 # ------------------------------------------------------------------ the rules (pure: tested)
 
@@ -121,7 +128,7 @@ func chasing() -> bool:
 	return state != "calm"
 
 func writing() -> bool:
-	return write_t > 0.0
+	return write_t > 0.0 or (stop_panel != null and stop_panel.visible)
 
 # ------------------------------------------------------------------ the frame
 
@@ -376,13 +383,21 @@ func _walkup(dt: float, c: PlayerCar) -> void:
 						break
 				var lines: Array = OPENERS[key]
 				drive.hud.post("%s: %s" % [officer.name_on, String(lines[rng.randi() % lines.size()])], 4.0)
-			if walk_t > 3.2:
+			# the opener, then the window's down and it's your turn (sit there too long and it's a ticket)
+			if walk_t > 2.6 and not stop_panel.visible and not stop_panel.answered:
+				stop_panel.open(c, key_offence())
+			if stop_panel.answered or walk_t > 40.0:
 				officer.flash = false
-				_bust(c)
+				if not stop_panel.answered: stop_panel.choose("sorry")
+				_resolve(c, stop_panel.choice)
+				stop_panel.answered = false
 				walk = "back"
 				walk_t = 0.0
 
 func _end_walk() -> void:
+	if stop_panel != null:
+		stop_panel.visible = false
+		stop_panel.answered = false
 	if is_instance_valid(officer): officer.queue_free()
 	officer = null
 	walk = ""
@@ -390,8 +405,60 @@ func _end_walk() -> void:
 	walk_car = null
 	write_t = minf(write_t, 0.8)
 
-func _bust(c: PlayerCar) -> void:
-	var f := fine(top_over, offences)
+## The worst thing on the list, for the lines.
+func key_offence() -> String:
+	for o in ["ramming", "fleeing", "racing", "red_light", "stop_sign"]:
+		if offences.has(o): return o
+	return "speeding"
+
+## What you said at the window, and what it got you. A warning's on the table for a plain speeder
+## who's polite (or a good excuse, now and then); lies cost extra; "floor it" is a chase.
+func _resolve(c: PlayerCar, choice: String) -> void:
+	var who := officer.name_on if officer != null else "CONSTABLE TREMBLAY"
+	var plain := key_offence() == "speeding" and top_over < 25.0 * strictness and heat() < 40.0
+	match choice:
+		"floor":
+			# they get a hand on the door and you're gone
+			if not offences.has("fleeing"): offences.append("fleeing")
+			add_heat(25.0)
+			state = "chase"
+			bust_t = 0.0
+			c.locked = false
+			drive.hud.post("%s: \"HEY. HEY!\"  THAT'S A CHASE NOW." % who, 4.0)
+			if is_instance_valid(walk_car): _to_chase(walk_car)
+			Karma.deed("fled")
+			return
+		"lie":
+			Karma.deed("lied")
+			var f := fine(top_over, offences) + 60
+			drive.hud.post("%s: \"THE WRONG CAR. WITH YOU IN IT. SURE.\"" % who, 4.0)
+			_bust(c, f, "AND $60 FOR THE STORY")
+		"excuse":
+			if plain and rng.randf() < 0.4:
+				drive.hud.post("%s: \"GUS'S PLACE? TELL HIM HE STILL OWES ME A BRAKE JOB. SLOW DOWN.\"" % who, 5.0)
+				_warn()
+			else:
+				drive.hud.post("%s: \"EVERYBODY'S LATE. LICENCE AND REGISTRATION.\"" % who, 4.0)
+				_bust(c)
+		_:
+			if plain and rng.randf() < 0.55:
+				drive.hud.post("%s: \"...KEEP IT UNDER THE LIMIT, KID. I'LL BE ON THIS ROAD ALL NIGHT.\"" % who, 5.0)
+				_warn()
+			else:
+				_bust(c)
+
+## Let off with a warning: no ticket, the heat drops, and that's the end of it.
+func _warn() -> void:
+	drive.save.heat = heat() * 0.4
+	drive.save.warnings = int(drive.save.get("warnings", 0)) + 1
+	Karma.deed("pulled_over")
+	drive.hud.post("A WARNING. NO TICKET. YOU DON'T BREATHE UNTIL THE DOOR SHUTS.", 5.0)
+	write_t = 1.2
+	SaveGame.write(drive.save)
+	_stand_down()
+
+func _bust(c: PlayerCar, fine_override := -1, extra := "") -> void:
+	var f := fine(top_over, offences) if fine_override < 0 else fine_override
 	var take := impounds(heat(), offences, chase_t)
 	if take: f += IMPOUND_FEE
 	drive.save.cash = int(drive.save.get("cash", 0)) - f
@@ -405,6 +472,7 @@ func _bust(c: PlayerCar) -> void:
 		if o != "speeding": lines.append({ "racing": "STREET RACING", "fleeing": "FAILING TO STOP FOR POLICE", "ramming": "DAMAGE TO A POLICE VEHICLE", "stunting": "STUNT DRIVING",
 			"red_light": "RUNNING A RED LIGHT", "stop_sign": "FAILING TO STOP AT A STOP SIGN" }.get(o, String(o).to_upper()))
 	var what := ", ".join(lines) if not lines.is_empty() else "BEING YOU, AT NIGHT, IN THAT"
+	if extra != "": what += ", " + extra
 	var who := officer.name_on if officer != null else "CONSTABLE TREMBLAY"
 	drive.hud.post("%s: \"LICENCE AND REGISTRATION.\"" % who, 4.0)
 	drive.hud.post("TICKET: %s. $%d." % [what, f], 7.0)
@@ -603,3 +671,62 @@ class PoliceHud extends Control:
 			msg = "LOSING THEM  %d" % int(ceilf(maxf(0.0, police.lose_s() - police.lost_t)))
 		if police.bust_t > 0.3: msg = "STOPPING... %d" % int(ceilf(Police.BUST_S - police.bust_t))
 		PixelFont.draw_centered(self, bar.get_center().x, bar.position.y + 2, msg, Color.WHITE)
+
+
+## The exchange at your window, over the HUD: the officer's line, and what you say back.
+class StopPanel extends Control:
+	const BONE := Color("f3ead2")
+	const GOLD := Color("d9a441")
+	const ASH := Color("8a8478")
+	var police: Police
+	var sel := 0
+	var choice := ""
+	var answered := false
+	var offence := "speeding"
+	var over := 0.0
+	var t := 0.0
+	const OPTIONS := [
+		["sorry", "\"SORRY, OFFICER. I KNOW.\""],
+		["excuse", "\"I'M LATE FOR A SHIFT AT COVINGTON AUTO.\""],
+		["lie", "\"YOU'VE GOT THE WRONG CAR.\""],
+		["floor", "SAY NOTHING. FLOOR IT."],
+	]
+
+	func open(c: PlayerCar, the_offence: String) -> void:
+		offence = the_offence
+		over = police.top_over
+		sel = 0
+		choice = ""
+		answered = false
+		t = 0.0
+		visible = true
+		c.sim.vx = 0.0
+
+	func choose(k: String) -> void:
+		choice = k
+		answered = true
+		visible = false
+
+	func _process(dt: float) -> void:
+		if not visible: return
+		t += dt
+		queue_redraw()
+		if Input.is_action_just_pressed("ui_down"): sel = (sel + 1) % OPTIONS.size()
+		if Input.is_action_just_pressed("ui_up"): sel = (sel + OPTIONS.size() - 1) % OPTIONS.size()
+		if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("use"):
+			choose(String(OPTIONS[sel][0]))
+
+	func _draw() -> void:
+		var r := Rect2(170, 196, 300, 118)
+		draw_rect(r, Color(0.05, 0.05, 0.07, 0.94))
+		draw_rect(r, GOLD, false, 1.0)
+		var who := police.officer.name_on if police.officer != null else "THE OFFICER"
+		PixelFont.draw(self, r.position + Vector2(10, 8), who, GOLD)
+		var what: String = { "speeding": "%d OVER" % int(over), "racing": "STREET RACING", "fleeing": "FAILING TO STOP", "ramming": "HITTING A CRUISER",
+			"red_light": "A RED LIGHT", "stop_sign": "A STOP SIGN" }.get(offence, offence.to_upper())
+		PixelFont.draw(self, r.position + Vector2(10, 20), "FLASHLIGHT IN THE CAR. " + what + ". WHAT DO YOU SAY?", ASH)
+		for i in OPTIONS.size():
+			var y := r.position.y + 40 + i * 16
+			if i == sel: draw_rect(Rect2(r.position.x + 6, y - 3, r.size.x - 12, 14), Color(1, 1, 1, 0.08))
+			PixelFont.draw(self, Vector2(r.position.x + 14, y), ("> " if i == sel else "  ") + String(OPTIONS[i][1]), BONE if i == sel else ASH)
+		PixelFont.draw(self, Vector2(r.position.x + 10, r.end.y - 12), Hints.fmt("{ui_accept} SAY IT"), ASH)

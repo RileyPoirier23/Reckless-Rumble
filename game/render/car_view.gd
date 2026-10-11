@@ -99,6 +99,9 @@ func _notification(what: int) -> void:
 		_job = null
 
 func _ready() -> void:
+	# lit by the streetlights (mask 2) but never by a car's own lamps (those light the road, mask 1):
+	# a tail lamp's red pool used to wash over the car's own roof
+	light_mask = 2
 	# the lamps glow: they're drawn unshaded, so the night doesn't darken them
 	_lamps = LampLayer.new()
 	_lamps.view = self
@@ -185,6 +188,11 @@ func _draw() -> void:
 			draw_set_transform(off + screen_up * STEP * lift_k * 0.5, heading, Vector2.ONE)
 			draw_texture_rect_region(art.atlas, Rect2(-half, sz), Rect2(float(z) * sz.x, 0.0, sz.x, sz.y))
 		if _lamps == null: _lamp_slice(self, z, off, half, bl, br)
+		# the back wheels are in the stack: their tread rolls over the top slice
+		if z == art.wheel_n - 1:
+			for rw: Array in art.wheel_rears:
+				draw_set_transform((rw[0] as Vector2).rotated(heading) + screen_up * (z * STEP * lift_k + lift), heading, Vector2.ONE)
+				_tread(rw[1])
 		# the front wheels: drawn on their own so they can steer
 		if z < art.wheel_n:
 			_front_wheels(screen_up * (z * STEP * lift_k + lift), z)
@@ -346,7 +354,15 @@ func _front_wheels(off: Vector2, z: int) -> void:
 		var ya := (rt * lerpf(1.0, cos(_steer_vis), swing) - fwd * sin(_steer_vis) * swing) * flip
 		draw_set_transform_matrix(Transform2D(xa, ya, centre))
 		draw_texture_rect_region(art.wheel_tex, Rect2(-ws / 2.0, ws), src)
-		# tread flicker so you can see the wheel turn
-		if z == art.wheel_n - 1:
-			var f := int(absf(wheel_turn) * 3.0) % 3
-			draw_rect(Rect2(-ws.x / 2.0 + float(f) * ws.x / 3.0, -ws.y / 2.0, 1.0, ws.y), Color(1, 1, 1, 0.12))
+		if z == art.wheel_n - 1: _tread(ws)
+
+## The tread rolling with the wheel: dark blocks spaced round the tyre, drawn where they'd show
+## from above (quick over the top, bunched at the front and back edges), so a moving wheel turns.
+func _tread(size: Vector2) -> void:
+	var r := size.x * 0.5
+	for i in 4:
+		var ph := wheel_turn + float(i) * TAU / 4.0
+		var c := cos(ph)
+		if c < 0.12: continue
+		var x := sin(ph) * (r - 0.6)
+		draw_rect(Rect2(x - 0.5, -size.y / 2.0 + 0.5, 1.0, size.y - 1.0), Color(0.04, 0.04, 0.06, 0.42 * c))

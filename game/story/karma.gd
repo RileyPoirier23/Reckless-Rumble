@@ -56,6 +56,8 @@ const DEEDS := {
 	"crash_traffic": [-0.5, 2.0],     # put a car into somebody else's
 	"ticket": [-0.5, 1.5],            # pulled over: a ticket
 	"pulled_over": [0.25, 0.5],       # ...but he did pull over
+	"lied": [-0.5, 1.0],              # a story at the window
+	"fled": [-1.0, 2.0],              # drove off on the officer standing there
 	"escape": [-2.0, 4.0],            # ran from the police and got away
 	"impound": [-1.0, 2.0],           # ran and got caught
 	"hit_police": [-2.0, 4.0],        # drove into a police car

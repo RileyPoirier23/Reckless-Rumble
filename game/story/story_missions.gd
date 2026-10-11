@@ -400,6 +400,7 @@ class MissionRunner extends Node2D:
 		target.skill = float(c.get("skill", 0.8))
 		target.speed_cap = float(c.get("cap", 30.0))
 		if c.has("tires"): target.sim.compound = String(c.tires)
+		target.sim.warm_tires()
 		target.others = [drive.car]
 		# his road starts where he is: the router starts at the nearest junction, which can be
 		# behind him (and he'd turn round for it)

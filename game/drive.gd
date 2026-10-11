@@ -363,6 +363,10 @@ void fragment() {
 		var mt: Node = load("res://tests/mission_test.gd").new()
 		mt.main = self
 		add_child(mt)
+	elif OS.get_cmdline_user_args().has("--lights-shot"):
+		var ls: Node = load("res://tests/lights_shot.gd").new()
+		ls.main = self
+		add_child(ls)
 	elif OS.get_cmdline_user_args().has("--jobs-demo"):
 		var jd: Node = load("res://tests/jobs_demo.gd").new()
 		jd.main = self
@@ -1024,7 +1028,6 @@ func _process(dt: float) -> void:
 		night = lamps
 		world.set_night(night)
 	car.lights_on = night or sky.fog > 0.4 or sky.rain > 0.5 or sky.snow > 0.5
-	car.tail_light.visible = car.lights_on or car.view.braking
 	_light_t -= dt
 	if _light_t <= 0.0:
 		_light_t = 0.12

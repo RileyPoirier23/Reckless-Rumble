@@ -216,14 +216,23 @@ func _player_threat(din: Vector2) -> float:
 	# time to meet, under three seconds: the nearer, the harder they get out of the way
 	return clampf(1.0 - (along / closing) / 3.0, 0.0, 1.0)
 
-## A siren coming up behind: move over and slow down (0 = carry on, 1 = pulled over).
+## Lights and siren near: a unit coming up behind or straight at it, and it's over to the right
+## and slowing (1 = pulled over); one crossing or passing by, and it hangs back (0.5).
 func _siren_behind() -> float:
 	var fwd := Vector2(cos(heading), sin(heading))
+	var out := 0.0
 	for o in traffic.extra:
-		if not is_instance_valid(o) or not o.siren: continue
-		var rel: Vector2 = (o as AiCar).sim.pos - pos
-		if rel.length_squared() < 50.0 * 50.0 and rel.dot(fwd) < 2.0: return 1.0
-	return 0.0
+		if not is_instance_valid(o) or not o.siren or o.hold: continue
+		var k := o as AiCar
+		var rel: Vector2 = k.sim.pos - pos
+		var d2 := rel.length_squared()
+		if d2 > 65.0 * 65.0: continue
+		var closing := (k.sim.world_velocity() - velocity_vec()).dot(rel.normalized()) < -1.0 or k.sim.speed() < 1.0
+		var behind := rel.dot(fwd) < 2.0 and d2 < 50.0 * 50.0
+		var oncoming := rel.dot(fwd) > 0.0 and k.sim.forward().dot(fwd) < -0.5 and absf(rel.dot(Vector2(-fwd.y, fwd.x))) < 6.0
+		if behind or oncoming: return 1.0
+		if closing: out = maxf(out, 0.5)
+	return out
 
 # ------------------------------------------------------------------ driving
 

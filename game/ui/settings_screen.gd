@@ -76,7 +76,7 @@ func rows() -> Array:
 	match TABS[tab]:
 		"CONTROLS":
 			for r in Controls.REBIND: out.append({ "kind": "bind", "action": r[0], "label": r[1], "desc": "ACCEPT TO PRESS A NEW KEY OR BUTTON. LEFT/RIGHT PICKS THE KEYBOARD OR CONTROLLER COLUMN. DELETE CLEARS IT." })
-			out.append({ "kind": "choice", "sec": "controls", "key": "transmission", "label": "GEARBOX", "opts": ["auto", "manual"], "desc": "AUTOMATIC, OR SHIFT IT YOURSELF. THE AUTO/MANUAL BUTTON SWITCHES IT ON THE ROAD TOO." })
+			out.append({ "kind": "choice", "sec": "controls", "key": "transmission", "label": "GEARBOX", "opts": ["auto", "manual"], "desc": "AUTOMATIC, OR SHIFT IT YOURSELF ON THE SHOULDER BUTTONS (Q AND E ON A KEYBOARD, WHERE G SWITCHES IT TOO)." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "pad_deadzone", "label": "STICK DEAD ZONE", "min": 0.04, "max": 0.3, "step": 0.02, "desc": "HOW FAR THE STICK MOVES BEFORE THE CAR STEERS. RAISE IT IF THE CAR WANDERS ON ITS OWN." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "pad_curve", "label": "STICK CURVE", "min": 1.0, "max": 2.6, "step": 0.1, "desc": "1.0 IS STRAIGHT. HIGHER MEANS GENTLER NEAR THE MIDDLE, FULL LOCK STILL AT THE END." })
 			out.append({ "kind": "slider", "sec": "controls", "key": "speed_steer", "label": "LESS LOCK AT SPEED", "min": 0.0, "max": 1.5, "step": 0.1, "desc": "HOW MUCH THE STICK AND KEYS STEER LESS AT SPEED, SO YOU DON'T SPIN IT ON THE HIGHWAY. 0 IS NONE." })
@@ -108,8 +108,8 @@ func rows() -> Array:
 			out.append({ "kind": "choice", "sec": "ui", "key": "messages", "label": "CHATTER", "opts": ["all", "important", "off"], "desc": "PASSENGERS, THE CROWD AT THE MEET: ALL OF IT, LESS OF IT, OR NONE. WHAT MATTERS ALWAYS SHOWS." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "tips", "label": "FIRST-TIME TIPS", "desc": "THE ONE-TIME HINTS ABOUT THE MAP, GIGS AND THE CONTROLS." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "scan_tool", "label": "SCAN TOOL", "desc": "THE DIAGNOSTIC COMPUTER UNDER THE DASH: FAULT CODES, THE TIRES, THE WARNING LIGHTS." })
-			out.append({ "kind": "choice", "sec": "ui", "key": "camera_mode", "label": "CAMERA", "opts": ["chase", "follow", "top_down"], "desc": "CHASE TURNS WITH THE CAR. FREE ROAM SWINGS ROUND BEHIND WHERE YOU'RE GOING (RIGHT STICK LOOKS ROUND). TOP DOWN KEEPS NORTH UP. T FLIPS THROUGH THEM." })
-			out.append({ "kind": "choice", "sec": "ui", "key": "camera_angle", "label": "CAMERA ANGLE", "opts": ["overhead", "angled", "low"], "desc": "STRAIGHT DOWN, TIPPED, OR DOWN LOW TO SEE THE SIDES OF THINGS. Y FLIPS THROUGH THEM WHILE YOU DRIVE." })
+			out.append({ "kind": "choice", "sec": "ui", "key": "camera_mode", "label": "CAMERA", "opts": ["chase", "follow", "top_down"], "desc": "CHASE TURNS WITH THE CAR. FREE ROAM SWINGS ROUND BEHIND WHERE YOU'RE GOING (RIGHT STICK LOOKS ROUND). TOP DOWN KEEPS NORTH UP. Y (TRIANGLE) OR T FLIPS THROUGH THEM WHILE YOU DRIVE." })
+			out.append({ "kind": "choice", "sec": "ui", "key": "camera_angle", "label": "CAMERA ANGLE", "opts": ["overhead", "angled", "low"], "desc": "STRAIGHT DOWN, TIPPED, OR DOWN LOW TO SEE THE SIDES OF THINGS. (THE Y KEY FLIPS THROUGH THEM TOO.)" })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_zoom", "label": "CAMERA DISTANCE", "opts": [0.8, 0.9, 1.0, 1.1, 1.2], "desc": "FURTHER OUT SEES MORE ROAD; CLOSER IN SEES MORE CAR." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "controls_card", "label": "CONTROLS CARD AT START", "desc": "SHOW THE CONTROLS EVERY TIME YOU START DRIVING (F1 ANY TIME)." })
 			out.append({ "kind": "choice", "sec": "controls", "key": "prompts", "label": "BUTTON PROMPTS", "opts": ["auto", "keyboard", "xbox", "playstation"], "desc": "AUTO FOLLOWS WHATEVER YOU TOUCHED LAST." })

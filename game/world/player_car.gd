@@ -26,8 +26,15 @@ var hyd := 0                    # 1ton's hydraulics kit (0 none .. 3 four pumps)
 var looks := {}                 # what the body shop, the parts and 1ton did to it (SaveGame.car_looks): the art wears them
 var hop := 0.0                  # metres off the ground mid-hop
 var _hop_v := 0.0
-var head_light: PointLight2D
-var tail_light: PointLight2D
+var head_light: PointLight2D       # the left beam (and the right): a smashed assembly's goes dark
+var head_light_r: PointLight2D
+var tail_light: PointLight2D       # the red wash behind each tail lamp (white backing up)
+var tail_light_r: PointLight2D
+var blink_lights: Array[PointLight2D] = []   # amber at the corners: front left, front right, rear left, rear right
+var glow_light: PointLight2D       # the underglow kit's light on the road
+var _lamps_on := false             # the headlights are lit this frame (the beams follow in _set_lamps)
+static var _tail_cone: ImageTexture
+static var _spot: GradientTexture2D
 var damage_bucket := 0
 var throttle_in := 0.0
 var start_pos := Vector2.ZERO
@@ -99,20 +106,15 @@ func setup(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: Hud
 	burn_cloud.scale_amount_curve = _grow_curve()
 	steam = _particles(Color(0.95, 0.97, 1.0, 0.5), 1.6, 30)
 	engine_smoke = _particles(Color(0.12, 0.12, 0.14, 0.7), 2.0, 40)
-	head_light = PointLight2D.new()
 	if _cone == null: _cone = _cone_tex()
-	head_light.texture = _cone
-	head_light.energy = 1.3
-	head_light.color = Color(1.0, 0.98, 0.92)
-	CarArt.reach_road(head_light)
-	add_child(head_light)
-	tail_light = PointLight2D.new()
-	tail_light.texture = city._light_tex(Color(1, 0.2, 0.15))
-	tail_light.texture_scale = 0.25
-	tail_light.energy = 0.6
-	tail_light.color = Color(1, 0.12, 0.08)
-	CarArt.reach_road(tail_light)
-	add_child(tail_light)
+	if _tail_cone == null: _tail_cone = CarArt.beam_tex(72, 56, 0.8)
+	if _spot == null: _spot = World.light_tex(Color.WHITE)
+	head_light = _lamp(_cone, Color(1.0, 0.98, 0.92), 1.3)
+	head_light_r = _lamp(_cone, Color(1.0, 0.98, 0.92), 1.3)
+	tail_light = _lamp(_tail_cone, Color(1, 0.12, 0.08), 0.6)
+	tail_light_r = _lamp(_tail_cone, Color(1, 0.12, 0.08), 0.6)
+	for i in 4: blink_lights.append(_lamp(_spot, Color(1.0, 0.62, 0.1), 0.5, 0.12))
+	glow_light = _lamp(_spot, Color.WHITE, 0.0, 0.5)
 
 ## Every tire spinning hard adds to the smoke hanging round the car (SmokeField): the harder and
 ## longer it spins, the thicker the cloud gets. A burnout's tires are going nowhere, so their smoke
@@ -214,6 +216,67 @@ static func _grow_curve() -> Curve:
 ## The headlight beam: 160 px long from the bumper, out ahead of the car.
 static func _cone_tex() -> ImageTexture:
 	return CarArt.beam_tex(160, 96)
+
+## A lamp on the car. It lights the road (cull mask 1) and never the car's own body (mask 2).
+func _lamp(tex: Texture2D, col: Color, energy: float, scale := 1.0) -> PointLight2D:
+	var l := PointLight2D.new()
+	l.texture = tex
+	l.color = col
+	l.energy = energy
+	l.texture_scale = scale
+	l.shadow_enabled = false
+	l.visible = false
+	CarArt.reach_road(l)
+	add_child(l)
+	return l
+
+## Every lamp where its assembly is, pointed the way it points: a beam out of each headlight, a red
+## wash behind each tail (white when backing up, bright on the brakes), the blinkers' amber at the
+## corners, the underglow kit's pool under the middle. A smashed assembly gives nothing, and the
+## one left carries a little more. `beam` 0..1 is the high beams.
+func _set_lamps(on: bool, beam: float, tails_on: bool, braking: bool) -> void:
+	var fwd := sim.forward()
+	var rt := sim.right()
+	var hl := float(spec.length) * CarArt.CAR_SCALE * PX * 0.5
+	var hw := float(spec.width) * CarArt.CAR_SCALE * PX * 0.3
+	var ok_h: Array = view.art.head_ok if view.art != null else [true, true]
+	var ok_t: Array = view.art.tail_ok if view.art != null else [true, true]
+	var scale := lerpf(1.4, 2.4, beam)
+	var e := lerpf(1.25, 1.75, beam)
+	for i in 2:
+		var side := -1.0 if i == 0 else 1.0
+		var l := head_light if i == 0 else head_light_r
+		var alone: bool = not ok_h[1 - i]
+		l.visible = on and ok_h[i]
+		l.rotation = sim.heading
+		l.position = fwd * hl + rt * side * hw
+		l.texture_scale = scale * (0.86 if alone else 0.78)
+		l.energy = e * (0.95 if alone else 0.72)
+		l.offset = Vector2(80.0 * l.texture_scale, 0)
+		var t := tail_light if i == 0 else tail_light_r
+		var alone_t: bool = not ok_t[1 - i]
+		t.visible = (tails_on or braking or view.reversing) and ok_t[i]
+		t.rotation = sim.heading + PI
+		t.position = -fwd * hl + rt * side * hw
+		t.texture_scale = 0.9 if braking else 0.6
+		t.offset = Vector2(36.0 * t.texture_scale, 0)
+		t.color = Color(0.95, 0.95, 0.9) if view.reversing else Color(1, 0.12, 0.08)
+		t.energy = (0.9 if view.reversing else (1.3 if braking else 0.55)) * (1.15 if alone_t else 1.0)
+	var bl := view.blink_left and CarView.blink_on()
+	var br := view.blink_right and CarView.blink_on()
+	for i in 4:
+		var l := blink_lights[i]
+		var side := -1.0 if i % 2 == 0 else 1.0
+		l.visible = bl if side < 0.0 else br
+		l.position = fwd * (hl if i < 2 else -hl) + rt * side * hw * 1.3
+		l.energy = 0.2 + 0.5 * CarView.night
+	var ug: Color = view.art.underglow if view.art != null else Color(0, 0, 0, 0)
+	glow_light.visible = ug.a > 0.0 and CarView.night > 0.05
+	if glow_light.visible:
+		glow_light.color = Color(ug.r, ug.g, ug.b)
+		glow_light.texture_scale = float(spec.length) * CarArt.CAR_SCALE * PX / 128.0 * 1.35
+		# it breathes
+		glow_light.energy = (0.2 + 0.55 * CarView.night) * (0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.004))
 
 func respawn() -> void:
 	sim.reset_parts()
@@ -319,11 +382,7 @@ func _lights(dt: float, st: float) -> void:
 	var want := 1.0 if (high_beams or flashing) else 0.0
 	beam = move_toward(beam, want, dt * 5.0)
 	var on := lights_on or flashing
-	head_light.visible = on
-	head_light.texture_scale = lerpf(1.4, 2.4, beam)
-	head_light.energy = lerpf(1.25, 1.75, beam) * (0.0 if not on else 1.0)
-	# the texture's left edge (the lamp end of the beam) sits on the front bumper
-	head_light.offset = Vector2(80.0 * head_light.texture_scale, 0)
+	_lamps_on = on
 	view.headlights = on
 	# an LED roof bar comes on with the brights (flashing them too)
 	view.high_beams = on and beam > 0.5
@@ -637,9 +696,4 @@ func _update_look(dt: float, br: float) -> void:
 	steam.emitting = sim.coolant_c > 112.0 or sim.head_gasket
 	engine_smoke.global_position = nose
 	engine_smoke.emitting = sim.engine_health < 0.45
-	# the beam starts at the front bumper and points out ahead; the red glow sits behind the back one
-	head_light.rotation = sim.heading
-	head_light.position = sim.forward() * float(spec.length) * CarArt.CAR_SCALE * PX * 0.5
-	tail_light.position = -sim.forward() * (float(spec.length) * CarArt.CAR_SCALE * PX * 0.5 + 8.0)
-	tail_light.visible = lights_on or view.braking
-	tail_light.energy = 1.4 if view.braking else 0.6
+	_set_lamps(_lamps_on, beam, lights_on, view.braking)

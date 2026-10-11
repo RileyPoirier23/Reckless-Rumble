@@ -193,6 +193,7 @@ func setup(the_drive: Node, r: Dictionary, rng: RandomNumberGenerator, pinks := 
 		a.setup_ai(spec, drive.world, drive.skids, drive.hud, slots[i], float(heads[i]), 60 + k)
 		a.traffic = drive.traffic
 		a.skill = float(names[k].skill)
+		a.sim.warm_tires()           # they've been doing burnouts in the lot for an hour
 		a.hold = true
 		a.set_path(run, r.loop, 0.0)
 		racers.append(a)

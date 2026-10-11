@@ -232,6 +232,11 @@ func _dispatch(sc: Scene, u: Dictionary, i: int) -> void:
 	var map: MapData = drive.world.map
 	var L := map.g_pos[sc.a].distance_to(map.g_pos[sc.b])
 	var stop: Vector2 = drive.traffic.lane_point(sc.a, sc.b, clampf(sc.s + float(u.at), 2.0, L - 2.0), sc.lane)
+	# parked over on the shoulder as far as the road allows, not across the lane
+	var rd: Dictionary = drive.traffic.edge_road(sc.a, sc.b)
+	var dir := (map.g_pos[sc.b] - map.g_pos[sc.a]).normalized()
+	var shoulder := clampf(float(rd.get("w", 9.0)) * 0.5 - absf(sc.lane) - 1.4, 0.0, 2.2)
+	stop += Vector2(-dir.y, dir.x) * signf(sc.lane if sc.lane != 0.0 else 1.0) * shoulder
 	var path := approach(sc.a, sc.b, drive.car.sim.pos)
 	path.append(stop)
 	var k := AiCar.new()

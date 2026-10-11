@@ -109,6 +109,7 @@ var wheel_tex: ImageTexture         # one front wheel's stack, its slices side b
 var wheel_n := 0
 var wheel_size := Vector2i.ZERO
 var wheel_spots: Array[Vector2] = [] # the front wheels' centres, px from the car's centre, left then right
+var wheel_rears: Array = []          # the other wheels: [centre px from the car's centre, size (length, width) px]
 var roof_z := 12.0                  # the top of the cabin, in slices (light bars, the police bar)
 var px := PX * CAR_SCALE            # this art's pixels per metre (PX x the scale it was drawn at)
 var k := K
@@ -240,6 +241,9 @@ func compute() -> void:
 	n = p.n
 	roof_z = p.roof_z
 	wheel_spots = p.front_spots
+	wheel_rears = []
+	for w: Array in p.wheels:
+		if not w[4]: wheel_rears.append([Vector2(float(w[0]) - p.sx / 2.0, float(w[1]) - p.cy), Vector2(2.0 * float(w[2]), float(w[3]))])
 	# the roof's middle and its front edge, for the bars that stand on it
 	var rr := float(p.d.get("roof_r", 0.3))
 	if String(p.d.get("rear", "")) == "boxtruck": rr = maxf(rr, float(p.d.get("box_x", 0.0)))

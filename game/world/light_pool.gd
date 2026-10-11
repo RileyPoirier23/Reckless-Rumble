@@ -50,6 +50,7 @@ func setup(the_world: World, the_sky: WorldSky) -> void:
 		l.texture = tex
 		l.visible = false
 		l.shadow_enabled = false
+		l.range_item_cull_mask = 1 | 2      # the road and the cars both
 		CarArt.reach_road(l)        # streetlights pool on the road, not just on the cars
 		add_child(l)
 		pool.append(l)
