@@ -4637,33 +4637,69 @@ class _Car:
 
 # ================================================================== wheels
 
-## One wheel, pixel by pixel: a tyre with its sidewall lit from the upper left (whitewalls or
-## raised white letters by era, mud lugs, a thin low-profile), then the rim: a polished lip, the
-## barrel's depth, the face (spokes, mesh, a dish, steel with holes, a hubcap, wire), and through
-## the gaps the brake rotor and the caliper, lug nuts and a centre cap.
-## mods: tire_kind (stock, mud, lowpro), rim_size, rim_color, caliper, wall (none, white,
-## letters), lugs, dually, simple (no small parts).
+## Where the light comes from on every wheel, side view and top-down: the upper left (screen
+## y down).
+const LIGHT := Vector2(-0.62, -0.78)
+## Rubber, darkest to the shoulder's sheen.
+const TIRE_C: Array[Color] = [Color("0f1114"), Color("191c21"), Color("23272d"), Color("2f343c"), Color("40464f")]
+## How deep a rim's dish is when the body shop hasn't touched it (0 flat .. 1 as deep as they
+## come): how wide the lip is, how much barrel shows round the face and how hard the face bowls.
+const RIM_DEPTH := { "deepdish": 0.85, "dish": 0.3, "steel": 0.15, "hubcap": 0.0, "wire": 0.45, "beadlock": 0.3, "mesh": 0.4 }
+## Rims whose lip is polished bright whatever colour the face is.
+const CHROME_LIPS := ["deepdish", "wire"]
+## Rims whose spokes step down toward the hub in rings (the flat-faced ones don't).
+const STEPPED := ["fivespoke", "tenspoke", "multispoke", "turbofan", "deepdish", "beadlock"]
+
+## How deep this wheel's dish is: the body shop's LIP DEPTH, or the rim's own.
+static func lip_depth(rim: String, mods: Dictionary) -> float:
+	return clampf(float(mods.get("lip_depth", RIM_DEPTH.get(rim, 0.25))), 0.0, 1.0)
+
+## A rim's colour: the body shop's, or the rim's own (black beadlocks, silver steel, bright chrome
+## on the wire wheels, hubcaps and dishes).
+static func rim_paint(rim: String, mods: Dictionary) -> Color:
+	var v: Variant = mods.get("rim_color", null)
+	if v is Color or (v is String and String(v) != ""): return _col(v, Color("c9ced6"))
+	match rim:
+		"beadlock": return Color("2a2e36")
+		"steel": return Color("d8dce2")
+		"deepdish", "wire", "hubcap", "dish": return Color("dfe3e8")
+	return Color("c9ced6")
+
+## How much of a tyre's radius is rim: the body shop's size, a low-profile's thin wall, an
+## off-road tyre's tall one.
+static func rim_frac(kind: String, mods: Dictionary) -> float:
+	var size := clampf(float(mods.get("rim_size", 0.78 if kind == "lowpro" else 0.66)), 0.42, 0.86)
+	if kind in ["mud", "offroad"]: size = minf(size, 0.6)
+	return size
+
+## A rim's rings, as fractions of its radius: x the polished lip, y the barrel's inside wall
+## showing round a face set back in it. The deeper the dish, the wider both.
+static func rim_rings(rim: String, depth: float) -> Vector2:
+	match rim:
+		"hubcap", "dish": return Vector2(0.07, 0.0)
+	return Vector2(0.06 + 0.2 * depth, 0.02 + 0.1 * depth)
+
+## Five values of a painted rim, shadow to glint, for a lip that isn't chrome.
+static func _metal(rc: Color) -> Array[Color]:
+	return [rc.darkened(0.55), rc.darkened(0.28), rc, rc.lerp(Color.WHITE, 0.38), rc.lerp(Color.WHITE, 0.75)]
+
+## One wheel, pixel by pixel: the tyre (tire_px) with mud lugs standing proud of it, the rim
+## (rim_px), and through the rim's gaps the brake rotor and the caliper.
+## mods: tire_kind (stock, mud, lowpro), rim_size, rim_color, lip_depth, caliper, wall (none,
+## white, letters), lugs, dually, simple (no small parts).
 static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false, mods := {}, spin := 0.0) -> void:
 	var ry := r * (0.84 if flat else 1.0)
 	var ccy := float(cy) + (r - ry)
 	var kind := String(mods.get("tire_kind", "stock"))
-	var size := clampf(float(mods.get("rim_size", 0.66 if kind != "lowpro" else 0.78)), 0.42, 0.86)
-	if kind == "mud": size = minf(size, 0.6)
-	var rr := r * size
-	var rc := _col(mods.get("rim_color", null), Color("c9ced6") if not rim in ["beadlock", "steel"] else (Color("2a2e36") if rim == "beadlock" else Color("d8dce2")))
-	if rim == "deepdish" and not mods.has("rim_color"): rc = Color("dfe3e8")
-	if rim in ["wire", "hubcap", "dish"] and not mods.has("rim_color"): rc = Color("dde3ea")
+	var knobby := kind in ["mud", "offroad"]
+	var rr := r * rim_frac(kind, mods)
+	var rc := rim_paint(rim, mods)
+	var depth := lip_depth(rim, mods)
 	var cal := _col(mods.get("caliper", null), Color("5a5e66"))
 	var wall := String(mods.get("wall", "none"))
 	var simple: bool = mods.get("simple", false) or r < 5.0
 	var lugs := int(mods.get("lugs", 5))
-	var light := Vector2(-0.62, -0.78)
-	var hi := rc.lerp(Color.WHITE, 0.55)
-	var lo := rc.darkened(0.45)
-	var dark := Color("14171c")
-	var rotor := Color("3c4149")
-	var tire_c: Array[Color] = [Color("121418"), Color("1c1f25"), Color("272b32"), Color("343942"), Color("454b55")]
-	var lip_w := maxf(1.0, rr * (0.1 if rim != "deepdish" else 0.26))
+	var rotor := Color("33373e")
 	if r < 4.5:
 		# counter size: a dark tyre and a grey hub, no spokes to turn into a white square
 		var q0 := 1.0 - 0.5 / r
@@ -4671,7 +4707,7 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			for xx in range(cx - int(r) - 1, cx + int(r) + 2):
 				var ddx := float(xx) - float(cx)
 				var ddy := float(yy) - ccy
-				if (ddx * ddx) / (r * r) + (ddy * ddy) / (ry * ry) <= q0: p.px(xx, yy, tire_c[1])
+				if (ddx * ddx) / (r * r) + (ddy * ddy) / (ry * ry) <= q0: p.px(xx, yy, TIRE_C[1])
 		var hub := Color("7d838c") if rim != "beadlock" else Color("4a4e56")
 		p.px(cx, int(ccy), hub)
 		if r >= 3.4:
@@ -4688,154 +4724,237 @@ static func wheel(p: Pix, cx: int, cy: int, r: float, rim: String, flat := false
 			var dy := float(yy) - ccy
 			var q := (dx * dx) / (r * r) + (dy * dy) / (ry * ry)
 			var dist := sqrt(dx * dx + dy * dy)
+			var a := atan2(dy, dx)
+			var lit := (Vector2(dx, dy) / maxf(0.01, dist)).dot(LIGHT)   # -1 facing away .. 1 facing the light
 			# a round tyre, no single pixels poking out at twelve, three, six and nine o'clock
 			if q > 1.0 - 0.55 / r:
-				# mud tyres: knobs standing proud of the round
-				if kind == "mud" and q < 1.14:
-					var a0 := atan2(dy, dx) + spin * 0.5
-					if fposmod(a0 * 16.0 / TAU, 1.0) < 0.5: p.px(xx, yy, tire_c[0])
+				# mud tyres: knobs standing proud of the round, their tops catching the light
+				if knobby and q < 1.14:
+					if fposmod((a + spin * 0.5) * 16.0 / TAU, 1.0) < 0.5: p.px(xx, yy, TIRE_C[2] if lit > 0.5 else TIRE_C[0])
 				continue
-			var a := atan2(dy, dx)
-			var nd := Vector2(dx, dy) / maxf(0.01, dist)
-			var lit := nd.dot(light)          # -1 facing away .. 1 facing the light
 			if dist > rr:
-				# the tyre: a crisp black tread edge, the sidewall lit from the upper left with a
-				# bright bead ring just outside the rim
-				var t := (dist - rr) / maxf(0.5, r - rr)
-				var c: Color
-				if sqrt(q) * r > r - 1.45: c = tire_c[0]
-				else:
-					var k := 1 + int(clampf((lit + 1.0) * 0.5 * 3.0 + (0.4 if t < 0.35 else 0.0), 0.0, 2.99))
-					c = tire_c[k]
-					if not simple and dist - rr < 1.0 and lit > -0.35: c = tire_c[4]
-					elif not simple and absf(t - 0.62) < 0.5 / maxf(1.0, r - rr) and lit > 0.25: c = tire_c[3]
-					if kind == "mud" and t > 0.7 and fposmod((a + spin * 0.5) * 16.0 / TAU, 1.0) < 0.3: c = tire_c[0]
-					if wall == "white" and not simple and t > 0.25 and t < 0.6: c = Color("e8e6dc") if lit > -0.3 else Color("b8b6ac")
-					if wall == "letters" and not simple and t > 0.38 and t < 0.6 and a < -0.6 and a > -2.5:
-						var sa := fposmod((a - spin) * 30.0 / TAU, 1.0)
-						if sa < 0.55 and int((a - spin) * 30.0 / TAU) % 4 != 3: c = Color("e8e4d8")
-				p.px(xx, yy, c)
+				p.px(xx, yy, tire_px(kind, wall, (dist - rr) / maxf(0.5, r - rr), sqrt(q) * r > r - 1.45, a - spin * 0.5, a, lit, simple))
 				continue
 			var rt := dist / rr
-			var ang := a - spin
-			var c2: Color
-			if dist > rr - lip_w:
-				# the polished lip
-				c2 = hi if lit > 0.2 else (rc if lit > -0.4 else lo)
-				if lit > 0.75: c2 = Color.WHITE
-				if rim == "deepdish": c2 = Color("f4f6f8") if lit > 0.0 else Color("9aa0a8")
-				p.px(xx, yy, c2)
-				continue
-			if dist > rr - lip_w - maxf(1.0, rr * 0.08) and not rim in ["hubcap", "dish"]:
-				# the barrel: the inside of the rim, darker away from the light
-				c2 = rc.darkened(0.55) if lit > 0.0 else rc.darkened(0.3)
-				p.px(xx, yy, c2)
-				continue
-			var face := _rim_face(rim, rt, ang, lit, rc, hi, lo, simple)
-			if face.a < 0.5:
+			var c := rim_px(rim, rt, a - spin, a, lit, rc, depth, rr, lugs, simple)
+			if c.a < 0.5:
 				# a gap: the brakes behind, in the dark
-				if rt > 0.44 and absf(ang + 0.75) < 0.4 and rt < 0.86 and not simple:
-					c2 = cal if lit > -0.2 else cal.darkened(0.25)
-					if rt > 0.82 or absf(ang + 0.75) > 0.33: c2 = cal.darkened(0.4)
+				var ang := a - spin
+				if rt > 0.44 and absf(a + 0.75) < 0.4 and rt < 0.86 and not simple:
+					c = cal if lit > -0.2 else cal.darkened(0.25)
+					if rt > 0.82 or absf(a + 0.75) > 0.33: c = cal.darkened(0.4)
 				elif rt > 0.5 and rt < 0.88 and not simple:
-					c2 = rotor if lit > 0.2 else rotor.darkened(0.25)
+					c = rotor if lit > 0.2 else rotor.darkened(0.25)
+					# the rotor's cross-drilling, turning with the wheel
+					if rr > 12.0 and fposmod(ang * 9.0 / TAU, 1.0) < 0.2 and absf(rt - 0.7) < 0.06: c = rotor.darkened(0.45)
 				else:
-					c2 = dark
-				p.px(xx, yy, c2)
-				continue
-			p.px(xx, yy, face)
-	# lug nuts and the centre cap
-	if not simple and not rim in ["hubcap", "wire"]:
-		for k in lugs:
-			var la := TAU * float(k) / float(lugs) + spin - PI / 2.0
-			var lx := float(cx) + cos(la) * rr * 0.26
-			var ly := ccy + sin(la) * rr * 0.26
-			p.px(int(round(lx)), int(round(ly)), lo.darkened(0.2) if rim != "steel" else Color("3a3e46"))
+					c = Color("14171c")
+			p.px(xx, yy, c)
 	if rim == "wire" and not simple:
 		# a knock-off spinner
 		for k in 2:
 			var sa2 := spin + PI * float(k) + 0.4
 			p.line(cx, int(ccy), cx + int(cos(sa2) * rr * 0.32), int(ccy + sin(sa2) * rr * 0.32), Color("f4f6f8"))
-	var cap := maxf(1.0, rr * 0.13)
-	if simple:
-		p.px(cx, int(ccy), rc.darkened(0.2))
-	else:
-		p.disc(cx, int(ccy), cap, rc.lerp(Color.WHITE, 0.2) if rim != "beadlock" else Color("3a3e46"))
-		p.px(cx - 1, int(ccy) - 1, Color.WHITE)
-	if not simple and cap > 1.5: p.ring(cx, int(ccy), cap + 0.5, lo)
 	if mods.get("dually", false) and not simple:
 		# the dually's hub sticks out past the tyre
 		p.disc(cx, int(ccy), rr * 0.42, Color("b8c0c8"))
-		p.ring(cx, int(ccy), rr * 0.42, lo)
+		p.ring(cx, int(ccy), rr * 0.42, rc.darkened(0.45))
 		p.disc(cx, int(ccy), rr * 0.2, Color("8a9098"))
+		p.px(cx - int(rr * 0.12), int(ccy) - int(rr * 0.12), Color.WHITE)
 
-## The colour of a rim's face at (radius fraction, angle), or a transparent colour for a gap.
-static func _rim_face(rim: String, rt: float, ang: float, lit: float, rc: Color, hi: Color, lo: Color, simple: bool) -> Color:
+## One pixel of a tyre, lit from the upper left: `t` from the bead (0) out to the tread (1),
+## `edge` on the tread's crisp outline, `ang` round the tyre (turning with it), `sa` the same
+## where it sits on the screen. Dark rubber with a lighter shoulder where it rolls over into the
+## tread, the bead bright above the rim and in the lip's shadow below it; whitewalls and raised
+## white letters; an off-road tyre's lugs climbing the shoulder.
+static func tire_px(kind: String, wall: String, t: float, edge: bool, ang: float, sa: float, lit: float, simple: bool) -> Color:
+	var knobby := kind in ["mud", "offroad"]
+	if edge:
+		# the tread's outline: its blocks show where the light rakes across the top
+		if not simple and lit > 0.35 and fposmod(ang * 26.0 / TAU, 1.0) < 0.45: return TIRE_C[1]
+		return TIRE_C[0]
+	var c := TIRE_C[1]
+	if t < 0.14:
+		c = TIRE_C[3] if lit > 0.3 else (TIRE_C[0] if lit < -0.2 else TIRE_C[1])
+	elif t > 0.66:
+		# the shoulder rolls over into the tread and catches the light
+		c = TIRE_C[3] if lit > 0.0 else (TIRE_C[2] if lit > -0.45 else TIRE_C[1])
+		if lit > 0.55 and t > 0.72 and t < 0.92 and not simple: c = TIRE_C[4]
+		if knobby and fposmod(ang * 16.0 / TAU, 1.0) < 0.42: c = TIRE_C[3] if lit > 0.1 else TIRE_C[0]
+	elif lit > 0.45:
+		c = TIRE_C[2]
+	if simple: return c
+	if wall == "white" and t > 0.22 and t < 0.6:
+		c = Color("f0eee6") if lit > 0.3 else (Color("dcd9ce") if lit > -0.4 else Color("b4b1a6"))
+	if wall == "letters" and t > 0.36 and t < 0.64 and sa < -0.55 and sa > -2.6:
+		var la := fposmod(ang * 30.0 / TAU, 1.0)
+		if la < 0.55 and int(fposmod(ang, TAU) * 30.0 / TAU) % 4 != 3: c = Color("e8e4d8") if lit > -0.2 else Color("c8c4b8")
+	return c
+
+## One pixel of a rim, lit from the upper left. `rt` how far out (0 hub .. 1 the lip's edge),
+## `ang` round it (turning with the wheel), `sa` where that is on the screen, `lit` how squarely
+## the spot faces the light, `px` the rim's radius in pixels (no ring thinner than a pixel),
+## `lugs` how many nuts. The lip is polished and rolls over toward the light (chrome glints white
+## at the top of it); inside it the barrel's wall shows, dark in the lip's shadow and lit across
+## the bottom; the face sits back in the barrel, dished, so its spokes darken toward the light and
+## brighten away from it, and step down in rings to the hub, where the lug nuts and the centre
+## cap sit. Transparent where there's a gap (the brakes show through).
+static func rim_px(rim: String, rt: float, ang: float, sa: float, lit: float, rc: Color, depth: float, px: float, lugs: int, simple: bool) -> Color:
+	var rings := rim_rings(rim, depth)
+	var lip := maxf(rings.x, 1.0 / maxf(1.0, px))
+	var barrel := rings.y
+	if barrel > 0.0:
+		if px >= 6.0: barrel = maxf(barrel, 0.9 / px)
+		else: barrel = (1.0 / maxf(1.0, px)) if depth > 0.55 else 0.0
+	if rt > 1.0 - lip:
+		# the lip: polished, rolling over at its outer edge, a glint where it faces the light
+		var chrome := rim in CHROME_LIPS or rc.get_luminance() > 0.8
+		var ramp: Array[Color] = CHROME if chrome else _metal(rc)
+		var tl := (rt - (1.0 - lip)) / lip               # 0 inner edge .. 1 outer edge
+		var k := 2
+		if lit > 0.82: k = 4
+		elif lit > 0.3: k = 3
+		elif lit < -0.3: k = 1
+		if tl > 0.66 and lit < 0.3 and lip * px > 1.5: k = maxi(0, k - 1)
+		if chrome and lit < -0.88 and tl < 0.6: k = 3       # chrome shows the ground's light low down
+		return ramp[k]
+	if rt > 1.0 - lip - barrel:
+		# the barrel's inside: in the lip's shadow on the upper left, lit low on the right
+		var bc: Array[Color] = [rc.darkened(0.74), rc.darkened(0.52), rc.darkened(0.25)]
+		return bc[0] if lit > 0.25 else (bc[1] if lit > -0.35 else bc[2])
+	var f := rt / (1.0 - lip - barrel)                    # 0 hub .. 1 where the face meets the barrel
+	var fpx := px * (1.0 - lip - barrel)
+	var hub := _hub_f(rim)
+	var c: Color
+	if f < hub and not rim in ["hubcap", "dish"]:
+		c = _hub_px(rim, f, ang, sa, lit, rc, fpx, lugs, simple)
+	else:
+		c = _face_px(rim, f, ang, sa, lit, rc, fpx, simple)
+		if c.a < 0.5: return c
+		if not rim in ["hubcap", "dish"]:
+			# dished: the face bows in toward the hub, so it falls away from the light on the upper
+			# left and turns up to it on the lower right, the more so the deeper the dish
+			# (in flat bands, not a smear: pixel art keeps its clusters)
+			var bowl := -lit * clampf((f - hub) / maxf(0.1, 1.0 - hub) + 0.3, 0.0, 1.0) * (0.4 + depth)
+			if bowl > 0.25: c = c.lightened(0.08 + 0.08 * depth)
+			elif bowl < -0.25: c = c.darkened(0.1 + 0.12 * depth)
+			# the lip throws a shadow across the face's top left edge
+			if depth > 0.2 and lit > 0.35 and f > 1.0 - 1.2 / maxf(1.0, fpx): c = c.darkened(0.2 + 0.25 * depth)
+			# the spokes step down toward the hub: a shadowed drop where they do, its riser lit
+			if rim in STEPPED and not simple and fpx >= 7.0 and absf(f - 0.64) * fpx < 0.5:
+				c = c.darkened(0.3) if lit > -0.2 else c.lightened(0.14)
+	return c
+
+## Where a rim's hub (the mounting face, the lugs and the cap) ends, as a fraction of its face.
+static func _hub_f(rim: String) -> float:
+	match rim:
+		"steel": return 0.38
+		"wire", "mesh", "deepdish": return 0.3
+	return 0.34
+
+## The hub: a raised pad lit on its upper left, the lug nuts round it (bright on the light side,
+## shadowed below), and the centre cap, a little dome with a glint and the badge in the middle.
+static func _hub_px(rim: String, f: float, ang: float, sa: float, lit: float, rc: Color, fpx: float, lugs: int, simple: bool) -> Color:
+	var hub := _hub_f(rim)
+	var cap := 0.17 if rim != "wire" else 0.22
+	var cap_c := rc.lerp(Color.WHITE, 0.3) if rim != "beadlock" else Color("3a3e46")
+	if f < cap:
+		var tc := f / cap
+		if not simple and fpx * cap >= 2.4 and tc > 0.78: return rc.darkened(0.5)        # the cap's rim
+		if not simple and lit > 0.55 and tc > 0.3 and tc < 0.85: return Color.WHITE      # its glint
+		if not simple and fpx * cap >= 3.0 and tc < 0.3: return rc.darkened(0.3)         # the badge
+		return cap_c if lit > -0.3 else cap_c.darkened(0.2)
+	# lug nuts in a ring round the cap
+	if not simple and fpx >= 6.0 and lugs > 0 and not rim in ["wire", "hubcap"]:
+		var fl := hub - (hub - cap) * 0.4
+		var seg := TAU / float(lugs)
+		var k := roundf((ang + PI / 2.0) / seg)
+		var la := k * seg - PI / 2.0
+		var off := (Vector2(cos(ang), sin(ang)) * f - Vector2(cos(la), sin(la)) * fl) * fpx
+		var lr := maxf(0.75, fpx * 0.055)
+		if off.length() < lr:
+			# the nut's face toward the light is bright (the offset turned back onto the screen)
+			var on := off.rotated(sa - ang)
+			return Color("e6eaee") if on.dot(LIGHT) > 0.15 else (Color("8c929a") if on.dot(LIGHT) > -0.3 else Color("3e434a"))
+	# the seam round the cap
+	if not simple and f < cap + 0.8 / maxf(1.0, fpx): return rc.darkened(0.4)
+	# the pad, standing a little proud of the spokes: lit round its upper left edge
+	if f > hub - 1.0 / maxf(1.0, fpx): return rc.lerp(Color.WHITE, 0.3) if lit > 0.3 else (rc if lit > -0.3 else rc.darkened(0.35))
+	return rc if lit > -0.45 else rc.darkened(0.15)
+
+## A spoke n-up round the face: its colour, or a gap. `fs` how far along the spoke (0 hub .. 1
+## barrel), `f` how far out on the face. Each spoke is bevelled: the edge facing the light is
+## bright, the other dark.
+static func _spoke(n: int, fs: float, f: float, ang: float, sa: float, half0: float, half1: float, rc: Color, fpx: float) -> Color:
+	var seg := TAU / float(n)
+	var off := fposmod(ang + PI / 2.0, seg) - seg * 0.5
+	var half := seg * lerpf(half0, half1, fs)
+	if absf(off) > half: return Color(0, 0, 0, 0)
+	if half * f * fpx >= 1.4 and (half - absf(off)) * f * fpx < 1.0:
+		# which edge this is, and whether it faces the light
+		var nl := (Vector2(-sin(sa), cos(sa)) * signf(off)).dot(LIGHT)
+		if nl > 0.2: return rc.lerp(Color.WHITE, 0.35)
+		if nl < -0.2: return rc.darkened(0.28)
+	return rc
+
+## The face of each rim between the hub and the barrel (f from 0 at the middle to 1 at the
+## barrel), or a transparent colour for a gap.
+static func _face_px(rim: String, f: float, ang: float, sa: float, lit: float, rc: Color, fpx: float, simple: bool) -> Color:
 	var gap := Color(0, 0, 0, 0)
+	var hi := rc.lerp(Color.WHITE, 0.55)
+	var lo := rc.darkened(0.45)
 	var shade := hi if lit > 0.35 else (rc if lit > -0.35 else lo)
+	var hub := _hub_f(rim)
+	var fs := clampf((f - hub) / maxf(0.1, 1.0 - hub), 0.0, 1.0)  # along the spokes: 0 hub .. 1 barrel
 	match rim:
 		"fivespoke", "tenspoke", "multispoke", "beadlock":
 			var n: int = { "fivespoke": 5, "tenspoke": 10, "multispoke": 15, "beadlock": 6 }[rim]
 			if simple: n = mini(n, 6)
-			if rt < 0.3: return rc if rt > 0.2 else shade
-			if rim == "beadlock" and rt > 0.84: return Color("3a3e46") if fposmod(ang * 14.0 / TAU, 1.0) > 0.3 else Color("c9cfd6")
-			var seg := TAU / float(n)
-			var off := fposmod(ang + PI / 2.0, seg) - seg * 0.5
-			var half := seg * lerpf(0.34 if n <= 6 else 0.26, 0.18 if n <= 6 else 0.14, rt)
-			if absf(off) > half: return gap
-			# each spoke catches the light along one edge
-			var side_lit := (off < 0.0) == (sin(ang) < 0.0)
-			if absf(off) > half * 0.6 and side_lit and n <= 6: return hi
-			return rc if lit > -0.45 else rc.darkened(0.22)
+			if rim == "beadlock" and f > 0.84:
+				# the beadlock's bolt ring
+				return Color("3a3e46") if fposmod(ang * 14.0 / TAU, 1.0) > 0.3 else Color("c9cfd6")
+			return _spoke(n, fs, f, ang, sa, 0.34 if n <= 6 else 0.26, 0.18 if n <= 6 else 0.14, rc, fpx)
 		"mesh":
 			# a cross-spoke lattice: eight spokes, an X between each pair, dark behind it
-			if rt < 0.24: return shade
-			if rt > 0.88: return rc if lit > -0.3 else lo
+			if f > 0.92: return rc if lit > -0.3 else lo
 			var nm := 6 if simple else 8
 			var seg_m := TAU / float(nm)
 			var um := fposmod(ang + PI / 2.0, seg_m) / seg_m
-			var vm := (rt - 0.24) / 0.64
 			var wm := 0.15 if not simple else 0.22
-			if um < 0.08 or um > 0.92 or absf(um - vm) < wm or absf(um - (1.0 - vm)) < wm:
+			if um < 0.08 or um > 0.92 or absf(um - fs) < wm or absf(um - (1.0 - fs)) < wm:
 				return hi if lit > 0.2 else (rc if lit > -0.45 else rc.darkened(0.2))
 			return gap
 		"wire":
-			if rt < 0.24: return shade
-			var k3 := fposmod(ang * 24.0 / TAU + rt * 3.0, 1.0)
-			var k4 := fposmod(ang * 24.0 / TAU - rt * 3.0, 1.0)
+			var k3 := fposmod(ang * 24.0 / TAU + f * 3.0, 1.0)
+			var k4 := fposmod(ang * 24.0 / TAU - f * 3.0, 1.0)
 			if k3 < 0.16 or k4 < 0.16: return Color("eef2f6") if lit > -0.2 else Color("a8b0b8")
 			return Color("4c5159")
 		"turbofan":
-			if rt < 0.3 or rt > 0.86: return shade
-			if fposmod(ang * 12.0 / TAU + rt * 1.4, 1.0) < 0.38: return gap
+			if f > 0.9: return shade
+			if fposmod(ang * 12.0 / TAU + f * 1.4, 1.0) < 0.38: return gap
 			return rc.lightened(0.1) if lit > 0.0 else rc.darkened(0.15)
 		"deepdish":
-			if rt > 0.62: return Color("8a9098") if rt < 0.66 else (Color("e8ecf0") if lit > 0.0 else Color("a8aeb6"))
-			if rt < 0.22: return shade
-			var off2 := fposmod(ang, TAU / 8.0) - TAU / 16.0
-			if absf(off2) < 0.16: return rc.darkened(0.3) if lit < 0.0 else rc
-			return gap
+			return _spoke(8, fs, f, ang, sa, 0.2, 0.12, rc, fpx)
 		"dish":
 			# a shallow bowl: its rim catches the light on the upper left, the inside of the bowl
 			# the other way round, darkest where it dips toward the hub
-			if rt > 0.82: return hi if lit > 0.2 else (rc if lit > -0.3 else lo)
-			if rt < 0.2: return hi if lit > 0.0 else rc
-			var bowl := -lit * 0.55 + (rt - 0.5) * 0.9
+			if f > 0.82: return hi if lit > 0.2 else (rc if lit > -0.3 else lo)
+			if f < 0.2: return hi if lit > 0.0 else rc
+			var bowl := -lit * 0.55 + (f - 0.5) * 0.9
 			if bowl > 0.3: return hi
 			if bowl > -0.05: return rc
 			if bowl > -0.35: return rc.darkened(0.18)
 			return lo
 		"steel":
-			if rt > 0.84: return lo
-			if rt > 0.5 and rt < 0.68:
+			if f > 0.84: return lo if lit > -0.2 else rc.darkened(0.2)
+			if f > 0.5 and f < 0.68:
 				var off3 := fposmod(ang, TAU / 6.0) - TAU / 12.0
 				if absf(off3) < 0.22: return gap
-			if rt < 0.36: return hi if lit > 0.0 else rc
 			return rc if lit > -0.4 else lo
 		"hubcap":
-			if rt > 0.88: return Color("c8ccd4")
-			if absf(rt - 0.62) < 0.05: return Color("8a8e96")
-			if rt < 0.3: return Color("f4f6f8") if lit > 0.0 else Color("b8bcc4")
+			if f > 0.88: return Color("c8ccd4")
+			if absf(f - 0.62) < 0.05: return Color("8a8e96")
+			if f < 0.3: return Color("f4f6f8") if lit > 0.0 else Color("b8bcc4")
 			return Color("e8ecf0") if lit > 0.2 else (Color("c8ccd4") if lit > -0.4 else Color("9a9ea6"))
 	return shade
 

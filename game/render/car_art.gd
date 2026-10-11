@@ -67,7 +67,8 @@ const PRIMER := Color("8a8a84")
 const INK := Color("15181f")
 const CHROME: Array[Color] = [Color("3c434c"), Color("7a848f"), Color("b9c3cd"), Color("e6edf4"), Color("ffffff")]
 
-## What a pixel is made of. A plan stores mat | shade << 8 | region << 12 | variant << 16.
+## What a pixel is made of. A plan stores mat | shade << 8 | region << 12 | variant << 16 (a
+## tyre's: 1 its rim face, bit 20 a spare, bit 21 its inside row, bits 24.. its row from the face).
 enum { M_NONE, M_PAINT, M_GLASS, M_SIDEGLASS, M_TRIM, M_CHROME, M_TIRE, M_HEAD, M_TAIL, M_AMBER, M_REV,
 	M_GRILLE, M_SEAT, M_BED, M_CARGO, M_SIGN, M_PLATE, M_BRAKE3, M_LIGHTBAR, M_STEEL, M_LADDER,
 	M_DASH, M_BEACON, M_WOOD }
@@ -632,13 +633,15 @@ class _Shaper:
 				if absf(dx) > r or x < 0 or x >= p.sx: continue
 				var dz := rise * sqrt(maxf(0.0, r * r - dx * dx))
 				var zc := r * rise
-				for y in range(int(round(yc - ww / 2.0)), int(round(yc - ww / 2.0)) + ww):
+				var y0 := int(round(yc - ww / 2.0))
+				for y in range(y0, y0 + ww):
 					if y < 0 or y >= p.sy: continue
 					var i2 := p.idx(x, y)
 					p.b1[i2] = maxi(0, int(round(zc - dz)))
 					p.h1[i2] = maxi(p.b1[i2], int(round(zc + dz)) - 1)
-					var outer := (y == int(round(yc - ww / 2.0)) + ww - 1) if float(w[5]) > 0.0 else (y == int(round(yc - ww / 2.0)))
-					p.m1[i2] = CarArt.M_TIRE | ((1 if outer else 0) << 16)
+					# which row of the tread this is, from the outer face (the rim) in
+					var ring := (y0 + ww - 1 - y) if float(w[5]) > 0.0 else (y - y0)
+					p.m1[i2] = CarArt.M_TIRE | ((1 if ring == 0 else 0) << 16) | ((1 if ring == ww - 1 else 0) << 21) | (mini(ring, 15) << 24)
 
 	# ------------------------------------------------------------ the body
 
@@ -1906,6 +1909,9 @@ class _Painter:
 	var rim_frac := 0.66
 	var caliper := Color("5a5e66")
 	var wall := "none"
+	var tire_kind := "stock"
+	var rim_depth := 0.25
+	var lugs := 5
 	var glass: Array[Color] = []
 	var decal := -1
 	var decal_c := Color.WHITE
@@ -2000,10 +2006,11 @@ class _Painter:
 		var look := CarGen.wheel_look(d, mods, 200)
 		rim_style = String(look[0])
 		var wm: Dictionary = look[1]
-		rim_frac = clampf(float(wm.get("rim_size", 0.66)), 0.42, 0.86)
-		if String(wm.get("tire_kind", "stock")) == "mud": rim_frac = minf(rim_frac, 0.6)
-		rim_c = CarGen._col(wm.get("rim_color", null), Color("c9ced6") if not rim_style in ["beadlock", "steel"] else (Color("2a2e36") if rim_style == "beadlock" else Color("d8dce2")))
-		if rim_style in ["deepdish", "wire", "hubcap", "dish"] and not wm.has("rim_color"): rim_c = Color("dfe3e8")
+		tire_kind = String(wm.get("tire_kind", "stock"))
+		rim_frac = CarGen.rim_frac(tire_kind, wm)
+		rim_c = CarGen.rim_paint(rim_style, wm)
+		rim_depth = CarGen.lip_depth(rim_style, wm)
+		lugs = int(wm.get("lugs", 5))
 		caliper = CarGen._col(mods.get("caliper", null), Color("5a5e66"))
 		wall = String(wm.get("wall", "none"))
 		var g0 := CarArt.GLASS.lerp(Color("07090c"), tint * 0.8)
@@ -2185,17 +2192,25 @@ class _Painter:
 		var b: int = p.b1[i]
 		var m: int = p.m1[i]
 		var outer := ((m >> 16) & 15) == 1
+		var spare := (m >> 20) & 1 == 1
+		var inner := (m >> 21) & 1 == 1
+		var ring := (m >> 24) & 15
 		var xc := 0.0
 		var r := p.tire_r
 		for wv: Array in p.wheels:
 			if absf(float(x) + 0.5 - float(wv[0])) <= float(wv[2]) + 0.5: xc = float(wv[0])
-		if (m >> 20) & 1 == 1: xc = float(x) + 0.5
+		var dx := float(x) + 0.5 - xc
+		var zc := r * CarArt.RISE
+		if spare:
+			# a spare on the back door stands across the car: its face runs side to side
+			dx = float(y) + 0.5 - p.cy
+			zc = float(b + top + 1) * 0.5
+			r *= 0.95
 		var row := y * aw + x
-		buf[row + top * p.sx] = (Color("2a2d33") if x % 2 == 0 else Color("1f2226")).to_abgr32()
-		var dark := Color("121418").to_abgr32()
-		for z in range(b, top):
-			if outer: buf[row + z * p.sx] = _rim_face(float(x) + 0.5 - xc, float(z) + 0.5 - r * CarArt.RISE, r).to_abgr32()
-			else: buf[row + z * p.sx] = dark
+		for z in range(b, top + 1):
+			var dz := float(z) + 0.5 - zc
+			var c := _rim_face(dx, dz, r) if outer and z < top else _tread(dx, dz, r, ring, inner, z == top)
+			buf[row + z * p.sx] = c.to_abgr32()
 
 	func _column_bolt(i: int, x: int, y: int) -> void:
 		var top: int = p.h2[i]
@@ -2560,37 +2575,55 @@ class _Painter:
 
 	# ------------------------------------------------------------ wheels
 
-	## The face of a wheel seen from the side, at (dx along, dz up) from its hub: the tire's
-	## sidewall, the rim in its style and colour, the caliper behind the spokes, whitewalls.
+	## The face of a wheel seen from the side, at (dx along, dz up) from its hub, painted the way
+	## the side view paints it (CarGen.tire_px, CarGen.rim_px), lit from the upper left: the tyre's
+	## dark sidewall and its lit shoulder, whitewalls and letters, the polished lip, the barrel's
+	## shadow, the dished face in the rim's style, the cap, and the caliper behind the spokes.
 	func _rim_face(dx: float, dz: float, r: float) -> Color:
-		var dist := Vector2(dx, dz / CarArt.RISE).length()
+		var v := Vector2(dx, -dz / CarArt.RISE)
+		var dist := v.length()
 		var rr := r * rim_frac
-		if dist > r - 0.6: return Color("101114")
-		if dist > rr:
-			if wall == "white" and dist < rr + (r - rr) * 0.55: return Color("e8e6e0")
-			if wall == "letters" and dist < rr + (r - rr) * 0.5 and int(atan2(dz, dx) * 4.0 + 20.0) % 2 == 0: return Color("d8d6d0")
-			return Color("1c1e22")
-		var ang := atan2(dz, dx)
-		var hi := rim_c.lerp(Color.WHITE, 0.4)
-		var lo := rim_c.darkened(0.45)
-		if dist < rr * 0.28: return lo if rim_style != "hubcap" else hi
-		match rim_style:
-			"hubcap", "dish": return hi if dist > rr * 0.7 else rim_c
-			"steel": return rim_c if int(ang * 1.9 + 8.0) % 2 == 0 or dist > rr * 0.75 else lo
-			"deepdish": return hi if dist > rr * 0.62 else (rim_c if int(ang * 0.8 + 8.0) % 2 == 0 else lo)
-			"beadlock": return CarArt.CHROME[3] if dist > rr * 0.78 and int(ang * 3.0 + 12.0) % 2 == 0 else rim_c
-			"mesh", "wire": return rim_c if (int(dx * 2.0 + 9.0) + int(dz * 2.0 + 9.0)) % 2 == 0 else lo
-		var spokes := 5
-		match rim_style:
-			"tenspoke": spokes = 10
-			"multispoke": spokes = 14
-			"turbofan": spokes = 8
-		var twist := 0.6 if rim_style == "turbofan" else 0.0
-		var s := fposmod((ang + dist * twist) * float(spokes) / TAU, 1.0)
-		if s < 0.45: return rim_c if dist < rr * 0.8 else hi
-		# a gap between spokes: the caliper shows through on the top-back quarter
-		if ang > 0.6 and ang < 2.4 and dist > rr * 0.35: return caliper
-		return Color("2a2d33")
+		var a := atan2(v.y, v.x)
+		var lit := (v / maxf(0.01, dist)).dot(CarGen.LIGHT)
+		if dist > r - 0.6:
+			# the tread's edge: an off-road tyre's lugs stand out on it, their tops lit
+			if tire_kind in ["mud", "offroad"] and fposmod(a * 9.0 / TAU, 1.0) < 0.5 and lit > 0.2: return CarGen.TIRE_C[2]
+			return Color("0e1013")
+		if dist > rr: return CarGen.tire_px(tire_kind, wall, (dist - rr) / maxf(0.5, r - rr), false, a, a, lit, false)
+		var c := CarGen.rim_px(rim_style, dist / rr, a, a, lit, rim_c, rim_depth, rr, lugs, rr < 5.0)
+		if c.a < 0.5:
+			# a gap: the caliper on the top-back quarter, the rest dark
+			if a < -0.6 and a > -2.4 and dist > rr * 0.35: return caliper
+			return Color("22252b")
+		return c
+
+	## The tread at (dx along, dz up) from the hub: blocks round the tyre with grooves between, the
+	## middle rows staggered from the shoulders (`ring` 0 at the outer face, `inner` the inside
+	## row), lit on top, darker down the ends and under. An off-road tyre's blocks are chunky with
+	## the shoulder lugs standing out; a low-profile's are fine; a slick is smooth with a shine down
+	## the middle.
+	func _tread(dx: float, dz: float, r: float, ring: int, inner: bool, top: bool) -> Color:
+		var a := atan2(dz / CarArt.RISE, dx)
+		var shoulder := ring == 0 or inner
+		var tone := 2 if top and dz > 0.0 else (1 if dz > -r * 0.4 else 0)
+		var block: Color = [Color("1b1e23"), Color("262a30"), Color("33383f")][tone]
+		var groove: Color = [Color("0c0e11"), Color("111317"), Color("15171b")][tone]
+		var pitch := 3.0
+		var cut := 0.34
+		match tire_kind:
+			"slicks":
+				return block.lightened(0.12) if tone == 2 and not shoulder else block
+			"mud", "offroad":
+				pitch = 4.0
+				cut = 0.42
+				if shoulder: block = block.lightened(0.08)
+			"lowpro":
+				pitch = 2.5
+		var s := fposmod(a * r / pitch + (0.5 if not shoulder else 0.0), 1.0)
+		if s < cut: return groove
+		# an off-road tyre's shoulder lugs: every other one stands out past the next
+		if tire_kind in ["mud", "offroad"] and shoulder and s > 0.8: return groove
+		return block
 
 	## The front wheel's stack: as many slices as the tire stands tall, the tread on top, the rim's
 	## face on the +y side (CarView mirrors it for the left wheel).
@@ -2612,10 +2645,9 @@ class _Painter:
 				var zt := maxi(zb, int(round(zc + dz)) - 1)
 				if z < zb or z > zt: continue
 				for y in ww:
-					var c := Color("1f2226") if (x % 2 == 0) else Color("2a2d33")
-					if z < zt:
-						c = Color("121418")
-						if y == ww - 1: c = _rim_face(dx, float(z) + 0.5 - zc, r)
+					var c: Color
+					if y == ww - 1 and z < zt: c = _rim_face(dx, float(z) + 0.5 - zc, r)
+					else: c = _tread(dx, float(z) + 0.5 - zc, r, ww - 1 - y, y == 0, z == zt)
 					wb[y * w_aw + z * wl + x] = c.to_abgr32()
 		art.wheel_n = wn
 		art.wheel_size = Vector2i(wl, ww)
