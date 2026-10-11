@@ -15,6 +15,21 @@ static func texture(kind: String, season: String, snow: bool, variant: int, r: i
 	var v := variant % 5
 	var key := "%s|%s|%d|%d|%d" % [kind, season, int(snow), v, r]
 	if _cache.has(key): return _cache[key]
+	var t := ArtBaker.get_tex("decor", key, "%s|%s|%d" % [kind, season, int(snow)], r, func() -> Image: return paint(kind, season, snow, v, r))
+	if ArtBaker._caches.get("decor", {}).has(key): _cache[key] = t
+	return t
+
+## Every look and size of every kind for this season, painted in the background before it's needed.
+static func warm_up(season: String, snow: bool) -> void:
+	for kind in KINDS:
+		for r in range(6, 49, 3):
+			for v in 5:
+				var key := "%s|%s|%d|%d|%d" % [kind, season, int(snow), v, r]
+				if _cache.has(key): continue
+				ArtBaker.want("decor", key, "%s|%s|%d" % [kind, season, int(snow)], r, func() -> Image: return paint(kind, season, snow, v, r))
+
+## Paint one (thread-safe: it only touches its own image).
+static func paint(kind: String, season: String, snow: bool, v: int, r: int) -> Image:
 	var size := r * 2 + r / 2 + 6
 	var p := Pix.new(size, size, v * 389 + r)
 	var c := Vector2i(r + 3, r + 3)
@@ -37,9 +52,7 @@ static func texture(kind: String, season: String, snow: bool, variant: int, r: i
 		"cattail": _cattail(p, c, r, season, snow, rng)
 		"bale": _bale(p, c, r, snow, v)
 		"blueberry": _blueberry(p, c, r, season, snow, rng)
-	var t := ImageTexture.create_from_image(p.img)
-	_cache[key] = t
-	return t
+	return p.img
 
 static func origin(r: int) -> Vector2:
 	r = clampi((r / 3) * 3, 6, 48)

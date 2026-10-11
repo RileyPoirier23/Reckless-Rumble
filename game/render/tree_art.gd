@@ -13,6 +13,22 @@ static func texture(kind: String, season: String, snow: bool, variant: int, r: i
 	var v := variant % 6
 	var key := "%s|%s|%d|%d|%d" % [kind, season, int(snow), v, r]
 	if _cache.has(key): return _cache[key]
+	var t := ArtBaker.get_tex("tree", key, "%s|%s|%d" % [kind, season, int(snow)], r, func() -> Image: return paint(kind, season, snow, v, r))
+	# (only the real thing goes in this cache: a stand-in stays the baker's)
+	if ArtBaker._caches.get("tree", {}).has(key): _cache[key] = t
+	return t
+
+## Every look and size of every kind for this season, painted in the background before it's needed.
+static func warm_up(season: String, snow: bool) -> void:
+	for kind in ["spruce", "fir", "tamarack", "pine", "cedar", "snag", "birch", "aspen", "oak", "maple"]:
+		for r in range(12, 65, 4):
+			for v in 6:
+				var key := "%s|%s|%d|%d|%d" % [kind, season, int(snow), v, r]
+				if _cache.has(key): continue
+				ArtBaker.want("tree", key, "%s|%s|%d" % [kind, season, int(snow)], r, func() -> Image: return paint(kind, season, snow, v, r))
+
+## Paint one (thread-safe: it only touches its own image).
+static func paint(kind: String, season: String, snow: bool, v: int, r: int) -> Image:
 	var size := r * 2 + int(r * 0.7) + 4
 	var p := Pix.new(size, size, v * 977 + r)
 	var c := Vector2i(r + 2, r + 2)            # the trunk; the shadow falls to the lower right
@@ -29,9 +45,7 @@ static func texture(kind: String, season: String, snow: bool, variant: int, r: i
 		"aspen": _deciduous(p, c, r, season, snow, v, "aspen")
 		"oak": _deciduous(p, c, r, season, snow, v, "oak")
 		_: _deciduous(p, c, r, season, snow, v, "maple")
-	var t := ImageTexture.create_from_image(p.img)
-	_cache[key] = t
-	return t
+	return p.img
 
 ## Where the trunk sits inside the texture (to place it).
 static func origin(r: int) -> Vector2:
