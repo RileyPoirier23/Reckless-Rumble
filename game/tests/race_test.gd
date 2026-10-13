@@ -249,7 +249,8 @@ func _police_warning() -> void:
 	p.enabled = true
 	main.hold_car = false
 	var tries := 0
-	while tries < 4 and int(main.save.get("warnings", 0)) == warnings0:
+	# (a plain speeder's let off 55% of the time: eight goes before it counts as broken)
+	while tries < 8 and int(main.save.get("warnings", 0)) == warnings0:
 		tries += 1
 		main.save.heat = 0.0
 		var k := _cruiser_behind(30.0)
@@ -278,6 +279,10 @@ func _police_warning() -> void:
 		p.clear()
 	check("police: sorry officer, and sooner or later it's a warning instead of a ticket", int(main.save.get("warnings", 0)) == warnings0 + 1, "%d stops" % tries)
 	check("police: after a warning they've stood down and you can drive on", not p.chasing() and not p.writing())
+	# (however it went, the next part starts free: a stop still open left the pinks race with nobody in it)
+	p.clear()
+	main.car.locked = false
+	main.hold_car = false
 	done += 1
 
 ## A chase you get out of: far enough away, long enough, they lose you.
