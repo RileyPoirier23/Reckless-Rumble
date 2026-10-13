@@ -59,6 +59,11 @@ func _show_map(r: Rect2, heading_up: bool, tilt: float, scale_px_per_m: float) -
 	_clip.queue_redraw()
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('ui_gps_process', _t0)
+
+func _process_timed(_dt: float) -> void:
 	queue_redraw()
 
 func set_route(p: PackedVector2Array, name: String) -> void:
@@ -81,6 +86,11 @@ func _signal() -> bool:
 	return fmod(sim.pos.x * 0.01 + sim.pos.y * 0.013, 3.0) < 1.2
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_gps', _t0)
+
+func _draw_timed() -> void:
 	if sim == null: return
 	_frame(self, false)
 	_top.queue_redraw()

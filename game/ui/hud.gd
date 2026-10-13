@@ -136,6 +136,11 @@ func _shown(e: Dictionary) -> void:
 	_seen[String(e.text)] = clock
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('ui_hud_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	clock += dt
 	if not msgs.is_empty():
 		msgs[0].t = float(msgs[0].t) - dt
@@ -150,7 +155,29 @@ func _process(dt: float) -> void:
 	for k in _timed.keys():
 		_timed[k][2] = float(_timed[k][2]) - dt
 		if float(_timed[k][2]) <= 0.0: _timed.erase(k)
-	queue_redraw()
+	# redrawn when what's on it changes (the clock, a line of text, a gauge): the pixel text is
+	# a few hundred rects, not worth laying down sixty times a second for the same picture
+	var key := _draw_key()
+	if key != _drawn_key:
+		_drawn_key = key
+		queue_redraw()
+
+var _drawn_key := ""
+## Everything _draw reads, as one string.
+func _draw_key() -> String:
+	if sim == null or stepped_aside: return "off"
+	var e: Dictionary = msgs[0] if not msgs.is_empty() else {}
+	var a := 0.0
+	if not e.is_empty(): a = snappedf(clampf(float(e.t) * 2.0, 0.0, 1.0) * clampf((float(e.dur) - float(e.t)) * 6.0 + 0.3, 0.0, 1.0), 0.05)
+	var k := "%s|%d|%d|%s|%s|%s|%d|%s|%s|%s|%s|%s|%s|%s|%.2f|%d|%d|%s|%d%d" % [str(sim.spec.get("id", "")), sim.assist, int(sim.auto_gearbox), sky.clock_str(), sky.season, sky.label(), int(sky.temperature()), sky.weather,
+		place, surface, objective, str(e.get("text", "")), str(e.get("who", "")), str(e.get("kind", "")), a, int(sim.engine_blown), int(show_help), _prompt, int(Hints.pad), int(Hints.playstation)]
+	if show_diag:
+		var tr := ""
+		for t in sim.tires: tr += "%.1f%d%d," % [float(t.tread), int(t.flat), int(float(t.temp) >= 120.0)]
+		var blink := CarView.blink_on()
+		k += "|%s|%d|%d|%d|%.2f|%d|%d|%d|%s|%.2f|%s|%s" % [str(codes()), int(_flash_t > 0.0 and fmod(_flash_t, 0.3) > 0.15), int(sim.coolant_c), int(sim.oil_c), snappedf(sim.fuel_frac(), 0.01),
+			int(blink and player != null and (player.view.blink_left or player.view.blink_right)), int(player != null and player.beam > 0.5 and player.view.headlights), int(sim.burn_fuel), tr, snappedf(clampf(_event_t, 0.0, 1.0), 0.05), _event, diag_style]
+	return k
 
 ## The lines the current subtitle takes (who: text, wrapped).
 func sub_lines() -> Array[String]:
@@ -179,6 +206,11 @@ func _panel(r: Rect2, a := 0.78) -> void:
 	draw_rect(r, Color(1, 1, 1, 0.08), false, 1.0)
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_hud', _t0)
+
+func _draw_timed() -> void:
 	if sim == null or stepped_aside: return
 	var spec := sim.spec
 	# ---- top left: the car

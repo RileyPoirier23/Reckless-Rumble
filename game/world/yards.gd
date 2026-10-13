@@ -31,6 +31,11 @@ func setup(the_world: World, houses: Array, near: Array) -> void:
 		if not y.is_empty(): yards.append(y)
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('world_yards_process', _t0)
+
+func _process_timed(_dt: float) -> void:
 	var s := world.sky.season if world and world.sky else ""
 	if CarView.screen_up != _up or CarView.lift_k != _k or s != _season:
 		_up = CarView.screen_up
@@ -102,6 +107,11 @@ func _at(p: Vector2, z := 0.0) -> Vector2:
 	return p * PX + CarView.screen_up * z * CarView.lift_k
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_yards', _t0)
+
+func _draw_timed() -> void:
 	var s := _season
 	var winter := s == "winter" or (world and world.sky.snow_cover > 0.3)
 	for y in yards:

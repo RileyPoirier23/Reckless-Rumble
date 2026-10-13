@@ -375,6 +375,10 @@ void fragment() {
 		var mt: Node = load("res://tests/mission_test.gd").new()
 		mt.main = self
 		add_child(mt)
+	elif OS.get_cmdline_user_args().has("--perf-probe"):
+		var pp: Node = load("res://tests/perf_probe.gd").new()
+		pp.main = self
+		add_child(pp)
 	elif OS.get_cmdline_user_args().has("--lights-shot"):
 		var ls: Node = load("res://tests/lights_shot.gd").new()
 		ls.main = self
@@ -951,12 +955,16 @@ func _apply_season(s: String, reset := true) -> void:
 	}
 	hud.notify(tips[s], "tip")
 
+var _pt := 0
+
 func _process(dt: float) -> void:
+	_pt = Time.get_ticks_usec()
 	if garage and garage.visible:
 		CarView.screen_up = Vector2(0, -1)      # the garage is drawn straight on
 		CarView.set_angle("overhead")
 		return
 	sky.step(dt)
+	_pt = Prof.lap('sky', _pt)
 	if sky.season != _season_seen:
 		if _season_seen != "": _apply_season(sky.season, false)
 		_season_seen = sky.season
@@ -972,6 +980,7 @@ func _process(dt: float) -> void:
 	_burnout_tip(dt)
 	_burnout_count()
 	_awards(dt)
+	_pt = Prof.lap('hud_misc', _pt)
 	_turn_camera(dt)
 	cam.rotation = cam_rot
 	if car.impaired > 0.0:
@@ -1006,9 +1015,12 @@ func _process(dt: float) -> void:
 	var r := Vector2(320, 180 / CarView.squash).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	_pt = Prof.lap('traffic', _pt)
 	if not car.on_traffic_hit.is_valid(): car.on_traffic_hit = func(o: TrafficCar, dv: float) -> void: incidents.reported(o, dv, true)
 	incidents.step(dt)
+	_pt = Prof.lap('incidents', _pt)
 	parked.step(dt, cam.global_position / PX)
+	_pt = Prof.lap('parked', _pt)
 	CarView.view_centre = cam.global_position
 	CarView.view_radius = r
 	# the GPS shows the police (flashing when they're after you) and whoever you're racing
@@ -1020,6 +1032,7 @@ func _process(dt: float) -> void:
 		for a in jobs.race.racers: bl.append([a.sim.pos, Color("d9a441")])
 	bl.append_array(incidents.blips())
 	gps.blips = bl
+	_pt = Prof.lap('blips', _pt)
 	# the nearest siren coming
 	var sir := INF
 	for k in police.cruisers:
@@ -1027,19 +1040,23 @@ func _process(dt: float) -> void:
 	sir = minf(sir, float(incidents.nearest_siren(car.sim.pos)[0]))
 	audio.siren = clampf(1.0 - sir / 260.0, 0.0, 1.0)
 	if not StoryState.active: _deliveries(dt)
+	_pt = Prof.lap('deliveries', _pt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
 		_save_t = 30.0
 		_store_car()
 		SaveGame.write(save)
 	_depth_sort(up)
+	_pt = Prof.lap('depth_sort', _pt)
 	sight.update_sight(dt, car.global_position, r)
+	_pt = Prof.lap('sight', _pt)
 	# the blinker relay clicks
 	var b_on := CarView.blink_on() and (car.view.blink_left or car.view.blink_right)
 	if b_on != _blink_was:
 		_blink_was = b_on
 		audio.tick = 1.0
 	world.update_view(cam.global_position / PX, half_px / PX)
+	_pt = Prof.lap('world_view', _pt)
 	# light: the sky colour, the lights, headlights, windows
 	dark.color = sky.ambient_color()
 	# the cars' lamps glow as it gets dark
@@ -1054,14 +1071,17 @@ func _process(dt: float) -> void:
 		_light_t = 0.12
 		lights.refresh(cam.global_position, half_px)
 	lights.animate(dt)
+	_pt = Prof.lap('lights', _pt)
 	dash.lit = night
 	dash.beacons = car.beacons
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
 	_brush(dt)
+	_pt = Prof.lap('brush', _pt)
 	# the smoke drifts off downwind and rises up the screen
 	smoke_field.wind = wind * CarArt.PX * 0.5
 	smoke_field.step(dt, CarView.screen_up * 9.0)
+	_pt = Prof.lap('smoke', _pt)
 	var wx := GameSettings.weather_amount()
 	rain_fx.emitting = sky.rain > 0.08 and wx > 0.0
 	snow_fx.emitting = sky.snow > 0.08 and wx > 0.0
@@ -1097,6 +1117,7 @@ func _process(dt: float) -> void:
 	if car.sim.pos.distance_to(Vector2(5080, 800)) < 60.0 and car.throttle_in < 0.05 and car.sim.speed() < 6.0:
 		car.sim.set_world_velocity(car.sim.world_velocity() + Vector2(-0.6, -0.5).normalized() * 0.9 * dt)
 	_inputs()
+	_pt = Prof.lap("rest", _pt)
 
 ## Cars and buildings drawn back to front along the camera's view (y-sort, but for a camera
 ## that turns).
@@ -1279,6 +1300,11 @@ class Clouds extends Node2D:
 	func _ready() -> void:
 		tex = World.light_tex(Color(0, 0, 0))
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('drive_process', _t0)
+
+	func _process_timed(dt: float) -> void:
 		off += sky.wind_dir * (2.0 + sky.wind) * dt * CarArt.PX
 		queue_redraw()
 	func _draw() -> void:

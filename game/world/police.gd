@@ -133,6 +133,11 @@ func writing() -> bool:
 # ------------------------------------------------------------------ the frame
 
 func _physics_process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_physics_process_timed(dt)
+	Prof.lap('police_phys', _t0)
+
+func _physics_process_timed(dt: float) -> void:
 	var c: PlayerCar = drive.car
 	if c == null or c.dead or not enabled or StoryState.active:
 		if not cruisers.is_empty() and (c == null or not c.dead): clear()
@@ -556,12 +561,16 @@ func _spawn(c: PlayerCar) -> void:
 
 ## A patrol car, here, pointing this way.
 func spawn_at(at: Vector2, h: float) -> AiCar:
+	var _t := Time.get_ticks_usec()
 	var k := AiCar.new()
 	drive.ysort.add_child(k)
+	_t = Prof.lap("police_new", _t)
 	var spec := SaveGame.load_spec(CRUISER)
 	spec.paint = PAINT
 	spec.name = "PORT RUMBLE POLICE"
+	_t = Prof.lap("police_spec", _t)
 	k.setup_ai(spec, drive.world, drive.skids, drive.hud, at, h, 40 + _next_id % 8)
+	_t = Prof.lap("police_setup", _t)
 	_next_id += 1
 	k.traffic = drive.traffic
 	k.lights = Color(1, 0.2, 0.2)
@@ -614,6 +623,11 @@ class Officer extends Node2D:
 		return d.length() < 0.2
 
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('world_police_process_621', _t0)
+
+	func _process_timed(dt: float) -> void:
 		shout_t = maxf(0.0, shout_t - dt)
 		position = pos * CarArt.PX
 		rotation = heading
@@ -644,6 +658,11 @@ class PoliceHud extends Control:
 	var t := 0.0
 
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('world_police_process_651', _t0)
+
+	func _process_timed(dt: float) -> void:
 		t += dt
 		queue_redraw()
 
@@ -710,6 +729,11 @@ class StopPanel extends Control:
 		visible = false
 
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('world_police_process_717', _t0)
+
+	func _process_timed(dt: float) -> void:
 		if not visible: return
 		t += dt
 		queue_redraw()

@@ -47,6 +47,11 @@ static func spawn(parent: Node, at_m: Vector2, heading: float, v: Vector2, what:
 		g.finished.connect(g.queue_free)
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('world_debris_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	position += vel * dt * PX
 	rotation += spin * dt
 	vel = vel.move_toward(Vector2.ZERO, 7.0 * dt)     # scraping along the asphalt

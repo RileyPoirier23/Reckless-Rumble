@@ -43,6 +43,11 @@ func _input(e: InputEvent) -> void:
 ## On the road the pointer gets out of the way when the mouse sits still; it's back the moment
 ## the mouse moves (and always in a menu).
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('ui_input_watch_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	_mouse_t += dt
 	var scene := get_tree().current_scene
 	var driving := scene != null and scene.scene_file_path == "res://drive.tscn" and not get_tree().paused

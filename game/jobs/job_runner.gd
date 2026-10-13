@@ -177,6 +177,11 @@ func pay(n: int) -> void:
 # ------------------------------------------------------------------ the frame
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('jobs_job_runner_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	queue_redraw()
 	if not active() or car() == null or car().dead: return
 	t += dt

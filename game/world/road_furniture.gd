@@ -513,6 +513,11 @@ func items_near(c: Vector2, radius: float) -> Array:
 	return out
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('world_road_furniture_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	if drive == null or drive.car == null: return
 	_t += dt
 	var cm: Vector2 = drive.cam.global_position / PX
@@ -567,6 +572,11 @@ func _lamps() -> void:
 				lamps.append([head, ang, Vector2(0, 1), col, 1.4, night])
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_furniture', _t0)
+
+func _draw_timed() -> void:
 	var up := _up()
 	var ang := _face_angle()
 	# the backs of signs first, so a face on the same post (chevrons both ways) shows over them
@@ -787,6 +797,11 @@ func _diamond(icon: String) -> void:
 class Glow extends Node2D:
 	var fx: RoadFurniture
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_furn_glow', _t0)
+
+	func _draw_timed() -> void:
 		for l in fx.lamps:
 			draw_set_transform(l[0], l[1], Vector2.ONE)
 			var col: Color = l[3]
@@ -798,6 +813,11 @@ class Glow extends Node2D:
 class Paint extends Node2D:
 	var fx: RoadFurniture
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_furn_paint', _t0)
+
+	func _draw_timed() -> void:
 		var snow := clampf(fx.drive.sky.snow_cover * 1.3, 0.0, 0.9) if fx.drive else 0.0
 		var col := Color(0.92, 0.92, 0.9, 0.9 * (1.0 - snow))
 		for it in fx.vis:

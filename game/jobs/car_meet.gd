@@ -194,6 +194,11 @@ func parked() -> bool:
 	return d < 0.6 or d > PI - 0.6
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('jobs_car_meet_process_196', _t0)
+
+func _process_timed(dt: float) -> void:
 	queue_redraw()
 	var c: PlayerCar = drive.car
 	if c == null: return
@@ -380,6 +385,11 @@ class MeetHud extends Control:
 			pics.append(ImageTexture.create_from_image(PixCars.showroom(spec, 120, paint, looks)))
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('jobs_car_meet_process_382', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		queue_redraw()
 		if panel_on and is_instance_valid(meet) and Input.is_action_just_pressed("ui_accept"): meet.leave()
 

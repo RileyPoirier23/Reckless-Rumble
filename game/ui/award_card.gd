@@ -34,6 +34,11 @@ func close() -> void:
 	done.emit()
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('ui_award_card_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	if not visible: return
 	t += dt
 	queue_redraw()

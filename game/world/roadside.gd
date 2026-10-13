@@ -48,6 +48,11 @@ func quiet() -> bool:
 		and not drive.modal_open() and not drive.hold_car and drive.incidents.scenes.is_empty()
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('world_roadside_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	if drive.car == null: return
 	if car == null:
 		if not quiet(): return

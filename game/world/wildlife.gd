@@ -47,6 +47,11 @@ static func pick_kind(season: String, x: float, zone_kind := "moose") -> String:
 	return "moose" if x < moose else "deer"
 
 func _physics_process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_physics_process_timed(dt)
+	Prof.lap('wildlife_phys', _t0)
+
+func _physics_process_timed(dt: float) -> void:
 	var c: PlayerCar = drive.car
 	if c == null or StoryState.active or not enabled:
 		if not animals.is_empty(): clear()
@@ -154,6 +159,11 @@ class Animal extends AnimatableBody2D:
 		t = 0.0
 
 	func _physics_process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_physics_process_timed(dt)
+		Prof.lap('world_wildlife_physics_process', _t0)
+
+	func _physics_process_timed(dt: float) -> void:
 		t += dt
 		var c: PlayerCar = wild.drive.car
 		if c == null: return
@@ -229,6 +239,11 @@ class Animal extends AnimatableBody2D:
 		queue_redraw()
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('world_wildlife_process', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		queue_redraw()
 
 	func _draw() -> void:

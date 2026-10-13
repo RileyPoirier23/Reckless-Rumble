@@ -18,9 +18,19 @@ var lit := false          # backlight on (headlights on)
 var beacons := false      # the wrecker's light bar is on
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('ui_dash_process', _t0)
+
+func _process_timed(_dt: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_dash', _t0)
+
+func _draw_timed() -> void:
 	if sim == null: return
 	match style:
 		"digital80": _digital80()

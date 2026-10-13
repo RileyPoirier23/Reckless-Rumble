@@ -414,6 +414,11 @@ func set_beacons(on: bool) -> void:
 	if not quiet and hud: hud.notify("LIGHT BAR ON." if on else "LIGHT BAR OFF. JUST A TRUCK NOW.", "status", 1, 2.0)
 
 func _physics_process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_physics_process_timed(dt)
+	Prof.lap('player_phys', _t0)
+
+func _physics_process_timed(dt: float) -> void:
 	if dead: return
 	# locked: ease to a stop and hold it there on the handbrake (the brake pedal past 0.3 at a
 	# standstill would find reverse)

@@ -141,6 +141,11 @@ func next_station() -> void:
 	_t = 4.0
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('world_radio_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	if drive.car == null or not on() or StoryState.active and not drive.free_roam: return
 	if drive.modal_open() or drive.car.sim.speed() < 3.0: return
 	var k := NIGHT_DRIVE_K if drive.jobs.kind == "cruise" else 1.0

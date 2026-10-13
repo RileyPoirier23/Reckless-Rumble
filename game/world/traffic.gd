@@ -682,11 +682,20 @@ func leader(car: TrafficCar, reach: float) -> Array:
 	var best: Array = [INF, 0.0, null]
 	var path := car._path if car._path.size() > 1 else car.path_ahead(reach)
 	if path.size() < 2: return best
-	var k0 := Vector2i(floori((car.pos.x - reach) / 20.0), floori((car.pos.y - reach) / 20.0))
-	var k1 := Vector2i(floori((car.pos.x + reach) / 20.0), floori((car.pos.y + reach) / 20.0))
+	# only the cells the path runs through (a car counts within a few metres of the line, its
+	# trailer a few more): a third of the square round the car
+	var lo := car.pos
+	var hi := car.pos
+	for q in path:
+		lo = lo.min(q)
+		hi = hi.max(q)
+	var k0 := Vector2i(floori((lo.x - 12.0) / 20.0), floori((lo.y - 12.0) / 20.0))
+	var k1 := Vector2i(floori((hi.x + 12.0) / 20.0), floori((hi.y + 12.0) / 20.0))
 	for y in range(k0.y, k1.y + 1):
 		for x in range(k0.x, k1.x + 1):
-			for o in _grid.get(Vector2i(x, y), []):
+			var cell := Vector2i(x, y)
+			if not _grid.has(cell): continue
+			for o in _grid[cell]:
 				if o == car: continue
 				# two cars each waiting on the other: the older one goes (but nobody drives on into
 				# a car that's still moving, whoever it thinks is in its way)

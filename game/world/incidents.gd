@@ -383,6 +383,11 @@ class Cone extends Node2D:
 		return global_position
 
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('world_incidents_process', _t0)
+
+	func _process_timed(dt: float) -> void:
 		if drive == null or drive.car == null: return
 		var car: PlayerCar = drive.car
 		if not down and car.global_position.distance_to(global_position) < float(car.spec.get("length", 4.5)) * 0.5 * CarArt.PX and car.sim.speed() > 1.0:

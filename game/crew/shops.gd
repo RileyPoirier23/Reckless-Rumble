@@ -74,6 +74,11 @@ static func mult_for(shop: Dictionary, save: Dictionary, spec: Dictionary) -> fl
 	return m
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('crew_shops_process', _t0)
+
+func _process_timed(_dt: float) -> void:
 	if drive.car == null or StoryState.active or drive.modal_open(): return
 	var s := at_shop()
 	if s.is_empty(): return
