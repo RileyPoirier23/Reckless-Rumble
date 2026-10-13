@@ -4,9 +4,9 @@ func _init() -> void:
 	var white := 0
 	var n := 0
 	var seen := {}
-	for day in range(1, 60):
-		for i in 5:
-			var c: Dictionary = rules.customer(day) if i < 4 else rules.walk_in(day)
+	for day in range(1, 60, 4):
+		for i in 4:
+			var c: Dictionary = rules.customer(day) if i < 3 else rules.walk_in(day)
 			if c.is_empty() or not c.has("car") or String(c.get("kind", "")) == "audit": continue
 			var spec := { "cat": String(c.car.get("cat", "")), "length": c.car.len, "width": c.car.wid, "wheelbase": float(c.car.get("wheelbase", float(c.car.len) * 0.6)), "body": c.car.get("side_body", "sedan") }
 			var art := CarArt.new(spec, Color(c.car.paint), 0.15 if c.get("sheet", {}).get("rust", false) else 0.0, c.person.face)

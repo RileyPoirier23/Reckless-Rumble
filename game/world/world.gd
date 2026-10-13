@@ -107,6 +107,24 @@ static func rail_span(map: MapData, a: Vector2, b: Vector2, bridge_name: String)
 	if s1 - s0 < 2.0: return []
 	return [a + d * s0, a + d * s1]
 
+## The part of segment a-b inside r ([] when none).
+static func clip_to_rect(a: Vector2, b: Vector2, r: Rect2) -> Array:
+	var t0 := 0.0
+	var t1 := 1.0
+	var d := b - a
+	for axis in 2:
+		var lo: float = r.position[axis]
+		var hi: float = r.end[axis]
+		if absf(d[axis]) < 0.0001:
+			if a[axis] < lo or a[axis] > hi: return []
+			continue
+		var ta := (lo - a[axis]) / d[axis]
+		var tb := (hi - a[axis]) / d[axis]
+		t0 = maxf(t0, minf(ta, tb))
+		t1 = minf(t1, maxf(ta, tb))
+	if t1 - t0 <= 0.0: return []
+	return [a + d * t0, a + d * t1]
+
 static func ck(m: Vector2) -> Vector2i:
 	return Vector2i(floori(m.x / CHUNK), floori(m.y / CHUNK))
 
@@ -509,6 +527,9 @@ class Chunk extends Node2D:
 			for side in [-1.0, 1.0]:
 				var off: Vector2 = dir.orthogonal() * side * (br.w / 2.0 + 0.6)
 				var span := World.rail_span(world.map, br.a + off, br.b + off, String(br.get("name", "")))
+				if span.is_empty(): continue
+				# (only this chunk's stretch of it: the deck crosses several, and each used to add the whole rail)
+				span = World.clip_to_rect(span[0], span[1], rect.grow(0.5))
 				if span.is_empty(): continue
 				var cs := CollisionShape2D.new()
 				var seg := SegmentShape2D.new()

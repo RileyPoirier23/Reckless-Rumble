@@ -43,6 +43,13 @@ func _ready() -> void:
 		main.traffic.extra.append(k)
 		cars.append(k)
 	main._teleport(cars[0].sim.pos + Vector2(0, 8), 0.0)
+	# CA_PROBE=x,y: just list every collider within 15 m of a spot, then quit
+	if OS.get_environment("CA_PROBE") != "":
+		var sp := OS.get_environment("CA_PROBE").split(",")
+		var at := Vector2(float(sp[0]), float(sp[1]))
+		main._teleport(at + Vector2(0, 30), 0.0)
+		_probe(at)
+		return
 	# the lead car stands in for you: traffic gets out of its way, turns round at dead ends near it
 	main.traffic.player = cars[0]
 	main.traffic.ignore_player = false
@@ -61,7 +68,7 @@ func _process(dt: float) -> void:
 			var r := spin.note(c.get_instance_id(), c.pos, c.heading, t, "traffic (%s, a%d b%d next%d rule %s turn %.2f v%.1f)" % [c.state, c.a, c.b, c.c_next, c.last_rule, c.turn_ahead, c.v])
 			if r != "":
 				var map: MapData = main.world.map
-				r += "\n      a%d %s b%d %s next%d %s | s %.1f lane_i %d pull %.2f evade %.2f boxes %s junction %s\n      path %s\n      ahead %s" % [c.a, map.g_pos[c.a], c.b, map.g_pos[c.b], c.c_next, map.g_pos[c.c_next] if c.c_next >= 0 else Vector2.ZERO, c.s, c.lane_i, c.pull, c.evade, str(c.boxes), str(main.traffic.junctions.get(c.b, {}).get("control", "-")), str(c._path), "-"]
+				r += "\n      a%d %s b%d %s next%d %s | s %.1f lane_i %d from %d lane_t %.2f lane %.2f pull %.2f evade %.2f yield %.2f boxes %s junction %s cls %s\n      path %s" % [c.a, map.g_pos[c.a], c.b, map.g_pos[c.b], c.c_next, map.g_pos[c.c_next] if c.c_next >= 0 else Vector2.ZERO, c.s, c.lane_i, c.lane_from, c.lane_t, c._lane(main.traffic.edge_road(c.a, c.b)), c.pull, c.evade, c._siren_behind(), str(c.boxes), str(main.traffic.junctions.get(c.b, {}).get("control", "-")), str(main.traffic.edge_road(c.a, c.b).get("cls", "?")), str(c._path)]
 				circles.append(r)
 		for k in cars:
 			var r2 := spin.note(k.get_instance_id(), k.sim.pos, k.sim.heading, t, k.name)
@@ -87,4 +94,31 @@ func _process(dt: float) -> void:
 	for key in by:
 		if not String(key).begins_with("TrafficCar"): fails += 1
 	print("%d failed" % fails)
+	get_tree().quit()
+
+func _probe(at: Vector2) -> void:
+	await get_tree().create_timer(2.5, true, false, true).timeout
+	var q := PhysicsShapeQueryParameters2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 15.0 * CarArt.PX
+	q.shape = circle
+	q.transform = Transform2D(0.0, at * CarArt.PX)
+	q.collision_mask = 0xffffffff
+	q.collide_with_areas = false
+	var hits: Array = main.car.get_world_2d().direct_space_state.intersect_shape(q, 64)
+	print("probe at (%.0f,%.0f): %d colliders" % [at.x, at.y, hits.size()])
+	for h in hits:
+		var o = h.collider
+		var where := ""
+		if o is Node2D: where = "(%.0f,%.0f)" % [(o as Node2D).global_position.x / CarArt.PX, (o as Node2D).global_position.y / CarArt.PX]
+		var shp := ""
+		if o is CollisionObject2D:
+			var owner_id: int = (o as CollisionObject2D).shape_find_owner(int(h.shape))
+			var sh := (o as CollisionObject2D).shape_owner_get_shape(owner_id, 0)
+			var tr := (o as CollisionObject2D).shape_owner_get_transform(owner_id)
+			shp = "%s at (%.1f,%.1f)" % [sh.get_class(), ((o as Node2D).global_position + tr.origin).x / CarArt.PX, ((o as Node2D).global_position + tr.origin).y / CarArt.PX]
+			if sh is SegmentShape2D: shp += " a(%.1f,%.1f) b(%.1f,%.1f)" % [((o as Node2D).global_position + (sh as SegmentShape2D).a).x / CarArt.PX, ((o as Node2D).global_position + (sh as SegmentShape2D).a).y / CarArt.PX, ((o as Node2D).global_position + (sh as SegmentShape2D).b).x / CarArt.PX, ((o as Node2D).global_position + (sh as SegmentShape2D).b).y / CarArt.PX]
+			if sh is RectangleShape2D: shp += " size (%.1f,%.1f)" % [(sh as RectangleShape2D).size.x / CarArt.PX, (sh as RectangleShape2D).size.y / CarArt.PX]
+			if sh is CircleShape2D: shp += " r %.1f" % ((sh as CircleShape2D).radius / CarArt.PX)
+		print("   %s %s %s" % [PlayerCar.hit_name(o), where, shp])
 	get_tree().quit()

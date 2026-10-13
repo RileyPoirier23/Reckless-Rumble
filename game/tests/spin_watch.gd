@@ -20,5 +20,7 @@ func note(id: int, pos: Vector2, heading: float, t: float, label := "") -> Strin
 		hi = hi.max(sp[i][1])
 	if turned > 2.5 * PI and (hi - lo).length() < 14.0:
 		_seen[id] = true
-		return "%s going round in circles at (%.0f,%.0f): turned %.0f deg in 12 s within %.0f m" % [label, pos.x, pos.y, rad_to_deg(turned), (hi - lo).length()]
+		var tr := ""
+		for i in range(sp.size() - 24, sp.size(), 2): tr += " (%.1f,%.1f)h%.0f" % [sp[i][1].x, sp[i][1].y, rad_to_deg(sp[i][2])]
+		return "%s going round in circles at (%.0f,%.0f): turned %.0f deg in 12 s within %.0f m\n      trace%s" % [label, pos.x, pos.y, rad_to_deg(turned), (hi - lo).length(), tr]
 	return ""
