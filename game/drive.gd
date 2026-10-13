@@ -375,6 +375,10 @@ void fragment() {
 		var mt: Node = load("res://tests/mission_test.gd").new()
 		mt.main = self
 		add_child(mt)
+	elif OS.get_cmdline_user_args().has("--collide-audit"):
+		var ca: Node = load("res://tests/collide_audit.gd").new()
+		ca.main = self
+		add_child(ca)
 	elif OS.get_cmdline_user_args().has("--perf-probe"):
 		var pp: Node = load("res://tests/perf_probe.gd").new()
 		pp.main = self

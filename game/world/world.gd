@@ -91,6 +91,22 @@ func setup(the_sky: WorldSky, the_ysort: Node2D) -> void:
 		cs.position = (r.position + r.size / 2.0) * PX
 		walls.add_child(cs)
 
+## A bridge rail's solid span: the deck runs a few metres past the water each end, and where that
+## end sits in the junction with the next street the rail stops short of it (an invisible rail
+## end in the road was a wall you hit turning onto the bridge). [] when nothing's left.
+static func rail_span(map: MapData, a: Vector2, b: Vector2, bridge_name: String) -> Array:
+	var on_other := func(p: Vector2) -> bool:
+		var rd := map.road_at(p, 0.6)
+		return not rd.is_empty() and String(rd.road.name) != bridge_name
+	var L := a.distance_to(b)
+	var d := (b - a) / maxf(L, 0.001)
+	var s0 := 0.0
+	while s0 < L and on_other.call(a + d * s0): s0 += 1.0
+	var s1 := L
+	while s1 > s0 and on_other.call(a + d * s1): s1 -= 1.0
+	if s1 - s0 < 2.0: return []
+	return [a + d * s0, a + d * s1]
+
 static func ck(m: Vector2) -> Vector2i:
 	return Vector2i(floori(m.x / CHUNK), floori(m.y / CHUNK))
 
@@ -492,10 +508,12 @@ class Chunk extends Node2D:
 			var dir: Vector2 = (br.b - br.a).normalized()
 			for side in [-1.0, 1.0]:
 				var off: Vector2 = dir.orthogonal() * side * (br.w / 2.0 + 0.6)
+				var span := World.rail_span(world.map, br.a + off, br.b + off, String(br.get("name", "")))
+				if span.is_empty(): continue
 				var cs := CollisionShape2D.new()
 				var seg := SegmentShape2D.new()
-				seg.a = (br.a + off) * PX
-				seg.b = (br.b + off) * PX
+				seg.a = (span[0] as Vector2) * PX
+				seg.b = (span[1] as Vector2) * PX
 				cs.shape = seg
 				body.add_child(cs)
 

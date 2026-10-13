@@ -23,6 +23,8 @@ var _trace := {}
 var _tr_t := 0.0
 var _why := ""
 var _stuck_car = null
+var _spin := {}
+var _circled := {}
 
 const SPOTS := [[Vector2(5860, 1250), "north end"], [Vector2(6005, 1470), "downtown"], [Vector2(4300, 1400), "trans-canada"], [Vector2(3440, 2120), "salisbury"]]
 const SECONDS := 150.0
@@ -192,6 +194,23 @@ func _process(dt: float) -> void:
 			if not _trace.has(k): _trace[k] = []
 			_trace[k].append("t%.1f p(%.1f,%.1f) h%.0f v%.1f a%d b%d c%d li%d s%.1f rule %s ent%d wait%.1f turn%.2f lead %s" % [t, c.pos.x, c.pos.y, rad_to_deg(c.heading), c.v, c.a, c.b, c.c_next, c.lane_i, c.s, c.last_rule, c.entered, c.wait_t, c.turn_ahead, str(c.lead_obj.get_instance_id() % 10000) if c.lead_obj is Object else "-"])
 			if _trace[k].size() > 30: _trace[k].pop_front()
+			# going round in circles: a lap of heading inside a few metres over the last twelve seconds
+			if not _spin.has(k): _spin[k] = []
+			var sp: Array = _spin[k]
+			sp.append([t, c.pos, c.heading])
+			while sp.size() > 48: sp.pop_front()
+			if sp.size() >= 40 and c.state == "drive" and not _circled.has(k):
+				var turned := 0.0
+				var lo: Vector2 = sp[0][1]
+				var hi: Vector2 = sp[0][1]
+				for i in range(1, sp.size()):
+					turned += absf(angle_difference(float(sp[i - 1][2]), float(sp[i][2])))
+					lo = lo.min(sp[i][1])
+					hi = hi.max(sp[i][1])
+				if turned > 2.5 * PI and (hi - lo).length() < 14.0:
+					_circled[k] = true
+					fails += 1
+					print("FAIL  a car going round in circles at (%.0f,%.0f): turned %.0f deg in 12 s within %.0f m, a%d b%d next%d rule %s turn%.2f v%.1f" % [c.pos.x, c.pos.y, rad_to_deg(turned), (hi - lo).length(), c.a, c.b, c.c_next, c.last_rule, c.turn_ahead, c.v])
 	for c in cars:
 		if c.state == "drive":
 			speed_sum += c.v
