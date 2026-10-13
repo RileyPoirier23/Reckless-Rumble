@@ -116,22 +116,46 @@ func _knots() -> void:
 			if not tr.junctions.has(m) or String(tr.junctions[m].control) != "signal" or float(e[1]) > 25.0: continue
 			if tr.junctions[n].majors.has(int(e[2].idx)) and tr.junctions[m].majors.has(int(e[2].idx)) and int(tr.junctions[n].offset) != int(tr.junctions[m].offset): out_of_step.append([n, m])
 	check("lights a few metres apart on the same main road run in step", out_of_step.is_empty(), str(out_of_step))
-	# (found by where they are: the map's node numbers move when roads are added)
+	# John St's last stretch used to be laid on top of Main St at King St: the grid trims a row
+	# that close to the main road now, so that corner is Main St's alone (found by where it is:
+	# the map's node numbers move when roads are added)
 	var john_king := map.nearest_node(Vector2(6250, 1500))
-	var john_main := map.nearest_node(Vector2(6279, 1500))
-	var john_robinson := map.nearest_node(Vector2(6180, 1500))
-	check("John St where it runs on top of Main St is nobody's route", tr.shadowed.has(Vector2i(john_king, john_main)) and tr.shadowed.size() < 10, str(tr.shadowed.keys()))
-	check("waiting on John St at King St, the nose is out of Main St's junction", tr.stop_line(john_king, john_robinson) > 10.0, "%.1f" % tr.stop_line(john_king, john_robinson))
+	var corner: Array = []
+	for e in map.g_adj[john_king]: corner.append(String(e[2].name))
+	check("John St where it would run on top of Main St isn't laid at all", corner.has("MAIN ST") and not corner.has("JOHN ST"), str(corner))
+	check("few stretches of road lie over a bigger one", tr.shadowed.size() < 10, str(tr.shadowed.keys()))
+	# and whatever stretch still lies over another road, nobody's routed down it
 	var car := TrafficCar.new()
 	car.rng.seed = 5
-	var picks := {}
-	for i in 400:
-		var c := tr.next_node(792, 795, car)
-		picks[c] = int(picks.get(c, 0)) + 1
-	check("from John St at King St, hardly anybody goes down the John St stretch on top of Main St", int(picks.get(48, 0)) < 12, str(picks))
-	var stub := 0
-	for i in 400: if tr.next_node(52, 51, car) == 342: stub += 1
-	check("hardly anybody turns up the bridge's dead-end stub", stub < 12, "%d of 400" % stub)
+	var down: Array = []
+	for k: Vector2i in tr.shadowed:
+		if map.g_adj[k.x].size() < 3: continue
+		for e in map.g_adj[k.x]:
+			if e[0] == k.y: continue
+			var n := 0
+			for i in 200: if tr.next_node(e[0], k.x, car) == k.y: n += 1
+			if n > 6: down.append([k, n])
+	check("hardly anybody goes down a stretch laid over another road", down.is_empty(), str(down))
+	# nobody's sent up a short dead-end stub to turn round in the road
+	var stubs: Array = []
+	for b in map.g_pos.size():
+		if map.g_adj[b].size() != 1 or float(map.g_adj[b][0][1]) > 80.0: continue
+		var a: int = map.g_adj[b][0][0]
+		if map.g_adj[a].size() < 3: continue     # (no choice at the end of a road off the map)
+		for e in map.g_adj[a]:
+			if e[0] == b: continue
+			var n := 0
+			for i in 200: if tr.next_node(e[0], a, car) == b: n += 1
+			if n > 6: stubs.append([b, map.g_pos[b], n])
+	check("hardly anybody turns up a dead-end stub", stubs.is_empty(), str(stubs))
+	# every approach waits somewhere between the edge of the box and the node before it
+	var odd: Array = []
+	for n: int in tr.junctions:
+		var r := float(tr.junctions[n].radius)
+		for e in map.g_adj[n]:
+			var sl := tr.stop_line(n, int(e[0]))
+			if sl < r + 1.0 or sl > maxf(float(e[1]), r + 1.3): odd.append([n, int(e[0]), sl])
+	check("every stop line sits between the box and the road's last node (or the box, on a stub inside it)", odd.is_empty(), str(odd.slice(0, 6)))
 	car.free()
 
 var lamp_bad: Array = []
