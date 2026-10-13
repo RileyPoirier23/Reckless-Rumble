@@ -9,7 +9,31 @@ extends Node2D
 
 const PX := CarArt.PX
 const CHUNK := 64.0
-const MAX_NEW_PER_FRAME := 3
+const MAX_NEW_PER_FRAME := 1            # (one a frame, from further out: the work is spread thin, no hitch)
+const GRID_STEP := 2.0
+const GROUNDS := ["asphalt", "gravel", "grass", "mud", "water"]
+
+## A chunk's ground, cell by cell (thread-safe: it only reads the map and the noise).
+static func survey(map: MapData, patch: FastNoiseLite, r: Rect2) -> Dictionary:
+	var n := int(CHUNK / GRID_STEP)
+	var g := PackedByteArray()
+	var rank := PackedByteArray()
+	var nz := PackedFloat32Array()
+	g.resize(n * n)
+	rank.resize(n * n)
+	nz.resize(n * n * 3)
+	for gy in n:
+		for gx in n:
+			var i := gy * n + gx
+			var m := r.position + Vector2(gx, gy) * GRID_STEP + Vector2(1, 1)
+			g[i] = maxi(0, GROUNDS.find(map.ground_at(m)))
+			rank[i] = map.road_rank_at(m) if g[i] <= 1 else 0
+			nz[i * 3] = patch.get_noise_2d(m.x, m.y)
+			nz[i * 3 + 1] = patch.get_noise_2d(m.x * 2.3, m.y * 2.3)
+			nz[i * 3 + 2] = patch.get_noise_2d(m.x * 2.0, m.y * 2.0)
+	return { "g": g, "rank": rank, "n": nz }
+var _art_look := ""
+var _landed_seen := 0
 
 var map: MapData
 var sky: WorldSky
@@ -31,8 +55,10 @@ var night := false
 # buckets: which map things belong to which chunk
 var _b_build := {}
 var _b_light := {}
+var _b_sign := {}
 var _b_lot := {}
 var _b_seg := {}
+var _b_junc := {}
 var _b_river := {}
 var _b_rail := {}
 var _b_bridge := {}
@@ -82,6 +108,32 @@ static func light_tex(c: Color) -> GradientTexture2D:
 
 func _light_tex(c: Color) -> GradientTexture2D:
 	return light_tex(c)
+
+## Plants that a car flattens when it drives through them (the rocks, stumps, logs and bales stay put).
+const TRAMPLES := ["shrub", "alder", "lupine", "flowers", "fern", "grass", "cattail", "blueberry"]
+
+## A car's been through here (`p` metres, `r` metres round it): the soft growth it went over is
+## flattened for good. Returns where, for the leaves to fly: [[point m, kind]].
+func trample(p: Vector2, r: float) -> Array:
+	var hits: Array = []
+	var k := Vector2i(floori(p.x / CHUNK), floori(p.y / CHUNK))
+	var ch: Chunk = chunks.get(k)
+	if ch == null: return hits
+	var any := false
+	for d in ch.decor:
+		if d.size() > 4 and d[4]: continue
+		if not String(d[1]) in TRAMPLES: continue
+		var dp: Vector2 = d[0]
+		if absf(dp.x - p.x) > r + 1.5 or absf(dp.y - p.y) > r + 1.5: continue
+		if dp.distance_to(p) < r + float(d[2]) / PX * 0.35:
+			if d.size() < 5: d.append(true)
+			else: d[4] = true
+			hits.append([dp, String(d[1])])
+			any = true
+	if any: ch.layers["decor"].queue_redraw()
+	for n in ch.get_children():
+		if n is Yards: hits.append_array((n as Yards).trample(p, r))
+	return hits
 
 func ambient() -> float:
 	return sky.temperature()
@@ -145,7 +197,11 @@ func _bucket_rect(b: Dictionary, r: Rect2, v) -> void:
 func _bucket() -> void:
 	for b in map.buildings: _add(_b_build, ck(b.r.get_center()), b)
 	for l in map.lights: _add(_b_light, ck(l.p), l)
+	for sg in map.wild_signs: _add(_b_sign, ck(sg.p), sg)
 	for l in map.lots: _bucket_rect(_b_lot, l.r, l)
+	for j in map.junctions:
+		var R: float = float(j.reach) + 4.0
+		_bucket_rect(_b_junc, Rect2(j.p - Vector2(R, R), Vector2(R, R) * 2.0), j)
 	for ri in map.roads.size():
 		var g: Dictionary = road_geo[ri]
 		var SL: PackedVector2Array = g.SL
@@ -167,8 +223,8 @@ func _bucket() -> void:
 
 ## Keep the chunks around the view alive; make a few new ones per frame, nearest first.
 func update_view(center_m: Vector2, half_m: Vector2) -> void:
-	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 0.75)
-	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 0.75)
+	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 1.4)
+	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 1.4)
 	var want := {}
 	for y in range(c0.y, c1.y + 1):
 		for x in range(c0.x, c1.x + 1): want[Vector2i(x, y)] = true
@@ -194,10 +250,24 @@ func update_view(center_m: Vector2, half_m: Vector2) -> void:
 	for i in mini(3, _dirty.size()):
 		var k: Vector2i = _dirty.pop_front()
 		if chunks.has(k): chunks[k].redraw_weather()
+	# sprites painted in the background: in they go, over whatever stood in for them
+	if ArtBaker.landed_n != _landed_seen:
+		_landed_seen = ArtBaker.landed_n
+		for k in chunks:
+			for L in chunks[k].layers.values():
+				if L.needs_art: L.queue_redraw()
+	# a new season (or the first snow): paint its trees and bushes in the background, ahead of time
+	var look := "%s|%d" % [sky.season, int(sky.snow_cover > 0.25)]
+	if ArtBaker.painter != null and look != _art_look:
+		_art_look = look
+		TreeArt.warm_up(sky.season, sky.snow_cover > 0.25)
+		DecorArt.warm_up(sky.season, sky.snow_cover > 0.25)
 
 ## Fill a radius right away (at the start, and after a teleport).
 func warm(center_m: Vector2, half_m: Vector2) -> void:
-	for i in 40:
+	# (the screen's loading: what comes into view in the next few frames is painted straight away)
+	ArtBaker.sync_until = Engine.get_process_frames() + 3
+	for i in 120:
 		var before := chunks.size()
 		update_view(center_m, half_m)
 		if chunks.size() == before: break
@@ -248,6 +318,89 @@ func asphalt_tint() -> Color:
 	t = t.lerp(Color(3.2, 3.3, 3.5), clampf(sky.snow_cover * 0.9, 0.0, 0.85))
 	return t
 
+static var _ground_shader: Shader
+static var _ground_detail: ImageTexture
+
+## Smooth colour between cells (linear), then a pixel-art grass texture on top at two scales so
+## it never looks tiled, dirt specks, summer flowers, fall leaf litter, and snow that flattens it all.
+static func ground_shader() -> Shader:
+	if _ground_shader: return _ground_shader
+	_ground_shader = Shader.new()
+	_ground_shader.code = """shader_type canvas_item;
+uniform sampler2D detail : filter_nearest, repeat_enable;
+uniform vec2 origin = vec2(0.0);
+uniform float cells = 18.0;
+uniform float snow = 0.0;
+uniform float flowers = 0.0;
+uniform float fall = 0.0;
+void fragment() {
+	vec2 cpx = vec2(cells * 48.0);
+	vec2 wp = floor(origin + UV * cpx);
+	vec3 base = texture(TEXTURE, UV).rgb;
+	vec4 d = texture(detail, wp / 256.0);
+	vec4 d2 = texture(detail, wp / 256.0 * 0.29 + vec2(0.37, 0.71));
+	float amp = 1.0 - snow * 0.75;
+	float lum = ((d.r - 0.5) * 0.5 + (d2.r - 0.5) * 0.35) * amp;
+	lum = floor(lum * 10.0 + 0.5) / 10.0;
+	vec3 c = base * (1.0 + lum);
+	c = mix(c, base * vec3(0.8, 0.7, 0.56), d.g * 0.85 * amp);
+	if (d.b > 0.75 && flowers > 0.5 && snow < 0.3) c = mix(c, vec3(0.96, 0.92, 0.78), 0.85);
+	else if (d.b > 0.6 && d.b <= 0.75 && flowers > 0.5 && snow < 0.3) c = mix(c, vec3(0.95, 0.82, 0.25), 0.8);
+	if (d2.b > 0.62 && fall > 0.5 && snow < 0.3) c = mix(c, mix(vec3(0.78, 0.33, 0.12), vec3(0.9, 0.62, 0.16), d.r), 0.75);
+	COLOR = vec4(c, 1.0);
+}"""
+	return _ground_shader
+
+static func ground_detail() -> ImageTexture:
+	if _ground_detail: return _ground_detail
+	var S := 256
+	var img := Image.create(S, S, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242
+	var noise := FastNoiseLite.new()
+	noise.seed = 77
+	noise.frequency = 0.05
+	var lum := PackedFloat32Array()
+	lum.resize(S * S)
+	for y in S:
+		for x in S:
+			# tileable noise: sample a torus
+			var ax := float(x) / S * TAU
+			var ay := float(y) / S * TAU
+			var v := noise.get_noise_3d(cos(ax) * 40.0, sin(ax) * 40.0 + cos(ay) * 40.0, sin(ay) * 40.0)
+			lum[y * S + x] = 0.5 + v * 0.25
+	# grass blades: a light stroke with a dark root
+	for i in 2600:
+		var x := rng.randi() % S
+		var y := rng.randi() % S
+		var h := rng.randi_range(2, 4)
+		var lean := rng.randi_range(-1, 1)
+		for k in h:
+			var px := (x + (lean if k == h - 1 else 0) + S) % S
+			var py := (y - k + S) % S
+			lum[py * S + px] = clampf(lum[py * S + px] + 0.22, 0.0, 1.0)
+		lum[((y + 1) % S) * S + x] = clampf(lum[((y + 1) % S) * S + x] - 0.2, 0.0, 1.0)
+	for y in S:
+		for x in S:
+			img.set_pixel(x, y, Color(lum[y * S + x], 0.0, 0.0, 1.0))
+	# dirt specks and bare patches
+	for i in 700:
+		var x := rng.randi() % S
+		var y := rng.randi() % S
+		var c := img.get_pixel(x, y)
+		c.g = rng.randf_range(0.5, 1.0)
+		img.set_pixel(x, y, c)
+		if rng.randf() < 0.3: img.set_pixel((x + 1) % S, y, c)
+	# flowers (b > 0.75 white daisies, 0.6..0.75 yellow) and leaf litter
+	for i in 160:
+		var x := rng.randi() % S
+		var y := rng.randi() % S
+		var c := img.get_pixel(x, y)
+		c.b = rng.randf_range(0.6, 1.0)
+		img.set_pixel(x, y, c)
+	_ground_detail = ImageTexture.create_from_image(img)
+	return _ground_detail
+
 func ground_color(m: Vector2, zone: Dictionary) -> Color:
 	var s := sky.season
 	var n := patch.get_noise_2d(m.x * 0.4, m.y * 0.4)
@@ -279,11 +432,36 @@ class Chunk extends Node2D:
 	var layers := {}
 	var body: StaticBody2D
 	var nodes: Array[Node] = []           # things it put in the y-sort layer
-	var trees: Array = []                 # [pos, kind, size]
+	var trees: Array = []                 # [pos, kind, size, seed]
+	var decor: Array = []                 # [pos, kind, radius px, seed]: undergrowth, rocks, flowers, bales
 	var signals: Array[Node2D] = []
 
+	var _grid := {}                       # the ground under every 2 m cell (see ground_grid)
+	var _surveying := false
+
+	## The ground under every 2 m cell, with the noise the weather reads there: surveyed once (on
+	## the background painter when there is one), since the ground never changes. {} until then.
+	func ground_grid() -> Dictionary:
+		if not _grid.is_empty() or _surveying: return _grid
+		var map := world.map
+		var patch := world.patch
+		var r := rect
+		if ArtBaker.painter == null:
+			_grid = World.survey(map, patch, r)
+			return _grid
+		_surveying = true
+		var me: WeakRef = weakref(self)
+		ArtBaker.painter.work(func() -> Dictionary: return World.survey(map, patch, r), func(res: Dictionary) -> void:
+			var c: Chunk = me.get_ref()
+			if c == null or not is_instance_valid(c): return
+			c._grid = res
+			c._surveying = false
+			if c.layers.has("weather"): c.layers.weather.queue_redraw())
+		return _grid
+
 	func build() -> void:
-		for spec in [["ground", -4000], ["water", -3999], ["base", -3998], ["road", -3997], ["marks", -3996], ["rail", -3995], ["weather", -3994], ["canopy", 3000]]:
+		_soil_layer()
+		for spec in [["ground", -4000], ["water", -3999], ["base", -3998], ["decor", -3998], ["road", -3997], ["marks", -3996], ["rail", -3995], ["weather", -3994], ["canopy", 3000]]:
 			var L := Layer.new()
 			L.chunk = self
 			L.kind = spec[0]
@@ -299,6 +477,16 @@ class Chunk extends Node2D:
 			n.setup(b)
 			world.ysort.add_child(n)
 			nodes.append(n)
+		# the yards round the houses
+		var houses: Array = world._b_build.get(key, []).filter(func(b): return String(b.kind) in ["house", "farmhouse"] and rect.has_point((b.r as Rect2).get_center()))
+		if not houses.is_empty():
+			var near: Array = []
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					near.append_array(world._b_build.get(key + Vector2i(dx, dy), []))
+			var yd := Yards.new()
+			add_child(yd)
+			yd.setup(world, houses, near)
 		# bridge rails: you can hit them
 		for br in world._b_bridge.get(key, []):
 			var dir: Vector2 = (br.b - br.a).normalized()
@@ -311,6 +499,111 @@ class Chunk extends Node2D:
 				cs.shape = seg
 				body.add_child(cs)
 
+	var soil: Sprite2D
+	var soil_mat: ShaderMaterial
+
+	## The ground itself: an 18x18 map of cell colours (one cell of border so neighbouring
+	## chunks blend into each other), smoothed and textured by the ground shader.
+	func _soil_layer() -> void:
+		soil = Sprite2D.new()
+		soil.centered = false
+		soil.z_index = -4001
+		soil.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		soil_mat = ShaderMaterial.new()
+		soil_mat.shader = World.ground_shader()
+		soil_mat.set_shader_parameter("detail", World.ground_detail())
+		soil.material = soil_mat
+		add_child(soil)
+		paint_soil()
+
+	func paint_soil() -> void:
+		var n := int(World.CHUNK / 4.0) + 2
+		var img := Image.create(n, n, false, Image.FORMAT_RGB8)
+		for gy in n:
+			for gx in n:
+				var m := rect.position + Vector2(gx - 1 + 0.5, gy - 1 + 0.5) * 4.0
+				img.set_pixel(gx, gy, world.ground_color(m, world.map.zone_at(m)))
+		soil.texture = ImageTexture.create_from_image(img)
+		# the sprite covers n cells; shift it so cell 1 lines up with the chunk's corner
+		soil.scale = Vector2(4.0 * PX, 4.0 * PX)
+		soil.position = (rect.position - Vector2(4.0, 4.0)) * PX
+		soil_mat.set_shader_parameter("origin", soil.position)
+		soil_mat.set_shader_parameter("cells", float(n))
+		soil_mat.set_shader_parameter("snow", clampf(world.sky.snow_cover * 1.6, 0.0, 1.0))
+		soil_mat.set_shader_parameter("flowers", 1.0 if world.sky.season in ["summer", "spring"] else 0.0)
+		soil_mat.set_shader_parameter("fall", 1.0 if world.sky.season == "fall" else 0.0)
+
+	## Which tree grows here: conifers in the woods (in stands, not salt-and-pepper), maples and
+	## oaks in town, cedar hedges, tamarack in the wet spots, the odd dead snag.
+	const SPECIES := {
+		"forest": [["spruce", 34], ["fir", 24], ["pine", 9], ["tamarack", 5], ["birch", 10], ["maple", 8], ["aspen", 6], ["snag", 2]],
+		"rural": [["maple", 26], ["birch", 14], ["aspen", 14], ["spruce", 18], ["oak", 7], ["pine", 8], ["fir", 6], ["snag", 4], ["tamarack", 3]],
+		"town": [["maple", 34], ["oak", 15], ["birch", 9], ["spruce", 12], ["cedar", 16], ["pine", 5], ["aspen", 5], ["fir", 4]],
+		"downtown": [["maple", 48], ["oak", 22], ["cedar", 18], ["birch", 12]],
+	}
+	const SPECIES_SIZE := { "spruce": Vector2(2.0, 3.6), "fir": Vector2(1.6, 2.8), "pine": Vector2(3.0, 4.6), "tamarack": Vector2(1.8, 3.0),
+		"birch": Vector2(1.8, 3.0), "maple": Vector2(2.4, 4.2), "aspen": Vector2(1.6, 2.8), "oak": Vector2(3.2, 4.8), "cedar": Vector2(1.2, 2.0), "snag": Vector2(1.6, 2.8) }
+
+	static func species(forest: FastNoiseLite, rng: RandomNumberGenerator, style: String, p: Vector2) -> String:
+		var set := "town"
+		if style == "rural": set = "forest" if forest.get_noise_2d(p.x, p.y) > 0.05 else "rural"
+		elif style in ["oldtown", "commercial", "downtown", "industrial"]: set = "downtown"
+		var table: Array = SPECIES[set]
+		# stands: a slow noise tilts the odds so you get a patch of birch, a patch of fir...
+		var stand := forest.get_noise_2d(p.x * 3.1 + 900.0, p.y * 3.1 - 400.0)
+		var total := 0.0
+		var weights: Array[float] = []
+		for k in table.size():
+			var wgt := float(table[k][1]) * (1.0 + 1.6 * maxf(0.0, stand * (1.0 if k % 2 == 0 else -1.0)))
+			weights.append(wgt)
+			total += wgt
+		var r := rng.randf() * total
+		for k in table.size():
+			r -= weights[k]
+			if r <= 0.0: return String(table[k][0])
+		return String(table[0][0])
+
+	## The low stuff between the trees: what grows depends on where you are.
+	static func maybe_decor(map: MapData, forest: FastNoiseLite, decor: Array, rng: RandomNumberGenerator, z: Dictionary, p: Vector2, near_builds: Array) -> void:
+		var q := p + Vector2(rng.randf_range(-2.0, 2.0), rng.randf_range(-2.0, 2.0))
+		var g := map.ground_at(q)
+		if g == "mud":
+			if rng.randf() < 0.55: decor.append([q, "cattail", rng.randi_range(10, 16), rng.randi()])
+			return
+		if g != "grass": return
+		if not map.road_at(q, 3.5).is_empty() or map.rail_near(q, 3.0): return
+		for b in near_builds:
+			if b.r.grow(1.5).has_point(q): return
+		var roadside := not map.road_at(q, 9.0).is_empty()
+		var table: Array
+		match String(z.style):
+			"rural":
+				if roadside: table = [["lupine", 20], ["grass", 24], ["alder", 14], ["flowers", 10], ["rocks", 4], ["shrub", 8], ["", 14]]
+				elif map.field_noise.get_noise_2d(q.x, q.y) > 0.22:
+					var barren := forest.get_noise_2d(q.x * 0.5 + 3000.0, q.y * 0.5)
+					if barren > 0.25: table = [["blueberry", 60], ["boulder", 4], ["rocks", 6], ["", 30]]
+					else: table = [["grass", 16], ["flowers", 12], ["bale", 4], ["boulder", 2], ["lupine", 4], ["", 50]]
+				elif forest.get_noise_2d(q.x, q.y) > 0.05: table = [["fern", 28], ["shrub", 16], ["stump", 7], ["log", 8], ["boulder", 7], ["grass", 6], ["", 20]]
+				else: table = [["shrub", 16], ["grass", 18], ["flowers", 10], ["boulder", 5], ["stump", 3], ["alder", 8], ["", 30]]
+			"residential", "village": table = [["shrub", 14], ["flowers", 8], ["grass", 6], ["rocks", 2], ["", 70]]
+			_: table = [["shrub", 6], ["", 94]]
+		var total := 0.0
+		for e in table: total += float(e[1])
+		var r := rng.randf() * total
+		var kind := ""
+		for e in table:
+			r -= float(e[1])
+			if r <= 0.0:
+				kind = String(e[0])
+				break
+		if kind == "": return
+		var size: Vector2i = DECOR_SIZE.get(kind, Vector2i(8, 14))
+		decor.append([q, kind, rng.randi_range(size.x, size.y), rng.randi()])
+
+	const DECOR_SIZE := { "shrub": Vector2i(15, 27), "alder": Vector2i(21, 33), "boulder": Vector2i(9, 21), "rocks": Vector2i(18, 27),
+		"stump": Vector2i(9, 13), "log": Vector2i(21, 36), "lupine": Vector2i(15, 24), "flowers": Vector2i(15, 27), "fern": Vector2i(12, 21),
+		"grass": Vector2i(12, 21), "cattail": Vector2i(15, 24), "bale": Vector2i(13, 16), "blueberry": Vector2i(27, 48) }
+
 	func release() -> void:
 		for n in nodes: n.queue_free()
 		nodes.clear()
@@ -321,55 +614,122 @@ class Chunk extends Node2D:
 			if n is BuildingNode: n.windows.visible = on
 
 	func redraw_weather() -> void:
-		for k in ["ground", "road", "base", "weather", "canopy"]: layers[k].queue_redraw()
+		paint_soil()
+		for k in ["ground", "road", "base", "weather", "canopy", "decor"]: layers[k].queue_redraw()
 
-	func _trees() -> void:
+	## Plant the chunk's trees and the low growth: thread-safe (it only reads the map and the noise),
+	## so out on the road it runs on the background painter. Returns [trees, decor].
+	static func plant(map: MapData, forest: FastNoiseLite, key: Vector2i, rect: Rect2, near_builds: Array) -> Array:
+		var trees: Array = []
+		var decor: Array = []
 		var rng := RandomNumberGenerator.new()
 		rng.seed = key.x * 92821 + key.y * 68917
-		var zone := world.map.zone_at(rect.get_center())
 		var step := 7.0
-		var near_builds: Array = []
-		for dy in range(-1, 2):
-			for dx in range(-1, 2):
-				near_builds.append_array(world._b_build.get(key + Vector2i(dx, dy), []))
 		for gy in int(CHUNK / step):
 			for gx in int(CHUNK / step):
 				var p := rect.position + Vector2(gx + rng.randf(), gy + rng.randf()) * step
 				var roll := rng.randf()
-				var z := world.map.zone_at(p)
+				var z := map.zone_at(p)
 				var dens := 0.0
 				match z.style:
 					"rural":
-						var f := world.forest.get_noise_2d(p.x, p.y)
-						if world.map.field_noise.get_noise_2d(p.x, p.y) > 0.22: dens = 0.01
-						else: dens = 0.75 if f > 0.05 else 0.08
+						var f := forest.get_noise_2d(p.x, p.y)
+						if map.field_noise.get_noise_2d(p.x, p.y) > 0.22: dens = 0.03
+						else: dens = 0.75 if f > 0.05 else 0.16
+						# the tree line along a back road: thick just past the ditch
+						var rd2 := map.road_at(p, 13.0)
+						if not rd2.is_empty() and map.road_at(p, 6.0).is_empty() and String(rd2.road.cls) in ["rural", "gravel", "highway"]: dens = maxf(dens, 0.45)
 					"residential", "village": dens = 0.12
 					"oldtown", "commercial": dens = 0.03
-				if roll > dens: continue
-				if world.map.ground_at(p) != "grass": continue
-				if not world.map.road_at(p, 5.0).is_empty(): continue
-				if world.map.rail_near(p, 5.0): continue
+				if roll > dens:
+					maybe_decor(map, forest, decor, rng, z, p, near_builds)
+					continue
+				if map.ground_at(p) != "grass": continue
+				if not map.road_at(p, 5.0).is_empty():
+					maybe_decor(map, forest, decor, rng, z, p, near_builds)
+					continue
+				if map.rail_near(p, 5.0): continue
 				var blocked := false
 				for b in near_builds:
 					if b.r.grow(3.0).has_point(p): blocked = true
 				if blocked: continue
-				var kind := "spruce" if rng.randf() < (0.65 if z.style == "rural" else 0.3) else ("birch" if rng.randf() < 0.35 else "maple")
-				var size := 2.2 + rng.randf() * 1.8
+				var kind := species(forest, rng, z.style, p)
+				var size: float = SPECIES_SIZE.get(kind, Vector2(2.2, 4.0)).x + rng.randf() * (SPECIES_SIZE.get(kind, Vector2(2.2, 4.0)).y - SPECIES_SIZE.get(kind, Vector2(2.2, 4.0)).x)
 				trees.append([p, kind, size, rng.randi()])
-				var cs := CollisionShape2D.new()
-				var sh := CircleShape2D.new()
-				sh.radius = 0.5 * PX
-				cs.shape = sh
-				cs.position = p * PX
-				body.add_child(cs)
+		# the low growth between: a finer pass of grass tufts, clover and wildflowers, so the ground's
+		# never a bare lawn (the country thick with it, town lawns barely)
+		var fine := 3.5
+		for gy in int(CHUNK / fine):
+			for gx in int(CHUNK / fine):
+				var q := rect.position + Vector2(gx + rng.randf(), gy + rng.randf()) * fine
+				var zq := map.zone_at(q)
+				var odds := 0.0
+				match String(zq.style):
+					"rural": odds = 0.42
+					"village": odds = 0.12
+					"residential": odds = 0.04
+				if rng.randf() > odds: continue
+				if map.ground_at(q) != "grass" or not map.road_at(q, 3.0).is_empty() or map.rail_near(q, 3.0): continue
+				var inside := false
+				for b in near_builds:
+					if b.r.grow(2.0).has_point(q): inside = true
+				if inside: continue
+				var roadside := not map.road_at(q, 9.0).is_empty()
+				var pick := rng.randf()
+				var kind2 := "grass"
+				if roadside: kind2 = "lupine" if pick < 0.3 else ("grass" if pick < 0.8 else "flowers")
+				elif forest.get_noise_2d(q.x, q.y) > 0.05: kind2 = "fern" if pick < 0.6 else "grass"
+				else: kind2 = "grass" if pick < 0.6 else ("flowers" if pick < 0.85 else "shrub")
+				var sz: Vector2i = DECOR_SIZE.get(kind2, Vector2i(8, 14))
+				decor.append([q, kind2, rng.randi_range(sz.x, maxi(sz.x, sz.y - 4)), rng.randi()])
+		return [trees, decor]
 
+	## The trunks: you can hit them (one shared circle for all of them).
+	static var _trunk: CircleShape2D
+
+	func _planted(res: Array) -> void:
+		trees = res[0]
+		decor = res[1]
+		if _trunk == null:
+			_trunk = CircleShape2D.new()
+			_trunk.radius = 0.5 * PX
+		for t in trees:
+			var cs := CollisionShape2D.new()
+			cs.shape = _trunk
+			cs.position = (t[0] as Vector2) * PX
+			body.add_child(cs)
+		for k in ["canopy", "decor"]:
+			if layers.has(k): layers[k].queue_redraw()
+
+	func _trees() -> void:
+		var near_builds: Array = []
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				near_builds.append_array(world._b_build.get(key + Vector2i(dx, dy), []))
+		var map := world.map
+		var forest := world.forest
+		var k := key
+		var r := rect
+		if ArtBaker.painter == null or Engine.get_process_frames() <= ArtBaker.sync_until:
+			_planted(plant(map, forest, k, r, near_builds))
+			return
+		var me: WeakRef = weakref(self)
+		ArtBaker.painter.work(func() -> Array: return plant(map, forest, k, r, near_builds), func(res: Array) -> void:
+			var c: Chunk = me.get_ref()
+			if c != null and is_instance_valid(c): c._planted(res))
 
 class Layer extends Node2D:
 	var chunk: Chunk
 	var kind := ""
+	var needs_art := false            # drawn with a stand-in sprite: redraw when the real one's painted
 
 	func _draw() -> void:
 		var w := chunk.world
+		ArtBaker.stood_in = false
+		_draw_kind(w)
+		needs_art = ArtBaker.stood_in
+
+	func _draw_kind(w: World) -> void:
 		match kind:
 			"ground": _ground(w)
 			"water": _water(w)
@@ -379,6 +739,7 @@ class Layer extends Node2D:
 			"rail": _rail(w)
 			"weather": _weather(w)
 			"canopy": _canopy(w)
+			"decor": _decor(w)
 
 	## Quads straight to the GPU as two triangles: never fails, even when a sharp bend folds it.
 	func _quad(pts: PackedVector2Array, col: Color) -> void:
@@ -388,13 +749,7 @@ class Layer extends Node2D:
 		return Rect2(r.position * PX, r.size * PX)
 
 	func _ground(w: World) -> void:
-		var r := chunk.rect
-		var cell := 4.0
-		for gy in int(World.CHUNK / cell):
-			for gx in int(World.CHUNK / cell):
-				var m := r.position + Vector2(gx + 0.5, gy + 0.5) * cell
-				var z := w.map.zone_at(m)
-				draw_rect(Rect2((r.position + Vector2(gx, gy) * cell) * PX, Vector2(cell, cell) * PX), w.ground_color(m, z))
+		# (the grass and dirt are the chunk's soil sprite, under this layer)
 		# sidewalks under the city streets
 		for e in w._b_seg.get(chunk.key, []):
 			var rd: Dictionary = w.map.roads[e[0]]
@@ -402,9 +757,42 @@ class Layer extends Node2D:
 			var g: Dictionary = w.road_geo[e[0]]
 			var a: Vector2 = rd.pts[e[1]]
 			var b: Vector2 = rd.pts[e[1] + 1]
-			var nrm: Vector2 = (b - a).normalized().orthogonal() * (rd.w / 2.0 + 2.5)
+			# the sidewalk's outer edge stays where an 11 m street's was, so the city doesn't move
+			var side: float = rd.w / 2.0 + 2.5 + (maxf(0.0, 11.0 - float(rd.w)) / 2.0 if rd.cls == "street" else 0.0)
+			var nrm: Vector2 = (b - a).normalized().orthogonal() * side
 			var col := Color("9a968e").lerp(Color("e8ecf2"), clampf(w.sky.snow_cover * 1.4, 0, 1))
 			_quad(PackedVector2Array([(a + nrm) * PX, (b + nrm) * PX, (b - nrm) * PX, (a - nrm) * PX]), col)
+			_sidewalk_detail(w, rd, a, b, side)
+
+	## What's on a sidewalk: a grass strip between the curb and the walk on the residential streets
+	## (a boulevard), the concrete slabs' joints across it, the curb's lit top and the gutter's
+	## shadow along the road. (The road's drawn over the middle, so only the strips either side show.)
+	func _sidewalk_detail(w: World, rd: Dictionary, a: Vector2, b: Vector2, side: float) -> void:
+		var snowy := clampf(w.sky.snow_cover * 1.4, 0.0, 1.0)
+		var L := a.distance_to(b)
+		if L < 0.5: return
+		var d := (b - a) / L
+		var n := d.orthogonal()
+		var edge := float(rd.w) / 2.0
+		var boulevard := String(w.map.zone_at(a).get("style", "")) in ["residential", "village"]
+		var walk0 := edge + (1.4 if boulevard else 0.3)
+		for sg: float in [-1.0, 1.0]:
+			var nn := n * sg
+			if boulevard and snowy < 0.5:
+				var gc := w.ground_color(a + nn * (edge + 0.8), { "style": "residential" })
+				_quad(PackedVector2Array([(a + nn * (edge + 0.3)) * PX, (b + nn * (edge + 0.3)) * PX, (b + nn * walk0) * PX, (a + nn * walk0) * PX]), gc)
+			# the curb: a lit top edge and the gutter's dark line on the road side of it
+			draw_line((a + nn * (edge + 0.12)) * PX, (b + nn * (edge + 0.12)) * PX, Color(1, 1, 1, 0.22 * (1.0 - snowy)), 2.0)
+			draw_line((a + nn * (edge - 0.05)) * PX, (b + nn * (edge - 0.05)) * PX, Color(0, 0, 0, 0.3), 1.0)
+			# the slabs' joints, every metre and a half (the same spacing whichever end you start)
+			if snowy < 0.6:
+				var x := fposmod(-(a.dot(d)), 1.5)
+				while x < L:
+					var p := a + d * x
+					draw_line((p + nn * walk0) * PX, (p + nn * side) * PX, Color(0, 0, 0, 0.14), 1.0)
+					x += 1.5
+				# the walk's outer edge
+				draw_line((a + nn * walk0) * PX, (b + nn * walk0) * PX, Color(0, 0, 0, 0.1), 1.0)
 
 	func _water(w: World) -> void:
 		var winter := w.sky.season == "winter"
@@ -456,6 +844,52 @@ class Layer extends Node2D:
 			var uvs := PackedVector2Array()
 			for p in pts: uvs.append(p / 64.0)
 			draw_primitive(pts, PackedColorArray([tint, tint, tint, tint]), uvs, w.asphalt)
+		# the corners rounded off where roads meet: a kerb radius you can actually turn round
+		for j in w._b_junc.get(chunk.key, []):
+			_fillets(w, j, tint)
+
+	## The kerb radius at each corner of a junction: between every two neighbouring arms, the
+	## asphalt's edges meet at a point; an arc of radius r tangent to both replaces that point.
+	func _fillets(w: World, j: Dictionary, tint: Color) -> void:
+		var arms: Array = j.arms
+		var n: Vector2 = j.p
+		var r: float = j.r
+		for i in arms.size():
+			var A: Dictionary = arms[i]
+			var B: Dictionary = arms[(i + 1) % arms.size()]
+			var dA: Vector2 = A.d
+			var dB: Vector2 = B.d
+			var x := dA.cross(dB)
+			if absf(x) < 0.08: continue                # straight on, or back the way it came
+			var sA := signf(x)                         # (a bend's two corners come out on opposite sides)
+			# (orthogonal() turns the other way from the cross product's sign, hence the minus)
+			var pA := n - dA.orthogonal() * float(A.hw) * sA
+			var pB := n + dB.orthogonal() * float(B.hw) * sA
+			var den := dA.cross(dB)
+			var t := (pB - pA).cross(dB) / den
+			var C := pA + dA * t
+			if t < 0.0 or t > 40.0: continue
+			var phi := acos(clampf(dA.dot(dB), -1.0, 1.0))
+			if phi < 0.2 or phi > 2.6: continue     # (nearly straight on: no corner to round)
+			var tt := minf(r / tan(phi / 2.0), 30.0)
+			var Ta := C + dA * tt
+			var Tb := C + dB * tt
+			var u := (dA + dB).normalized()
+			var centre := C + u * (r / sin(phi / 2.0))
+			var pts := PackedVector2Array([C * PX, Ta * PX])
+			var a0 := (Ta - centre).angle()
+			var a1 := (Tb - centre).angle()
+			var sweep := wrapf(a1 - a0, -PI, PI)
+			var steps := maxi(6, int(absf(sweep) / 0.12))
+			for k in range(1, steps):
+				pts.append((centre + Vector2(r, 0).rotated(a0 + sweep * float(k) / steps)) * PX)
+			pts.append(Tb * PX)
+			# a fan of triangles from the corner (the arc's every point can see it), not a polygon:
+			# the tangent runs so close to the arc's first points that a triangulation can fail
+			var cols := PackedColorArray([tint, tint, tint])
+			for k in range(1, pts.size() - 1):
+				var tri := PackedVector2Array([pts[0], pts[k], pts[k + 1]])
+				draw_primitive(tri, cols, PackedVector2Array([tri[0] / 64.0, tri[1] / 64.0, tri[2] / 64.0]), w.asphalt)
 
 	func _other_road(w: World, p: Vector2, ri: int) -> bool:
 		for e in w.map._road_index.get(w.map._cell(p), []):
@@ -480,6 +914,70 @@ class Layer extends Node2D:
 			if chunk.rect.grow(2.0).has_point(p) and not _other_road(w, p + o, ri):
 				draw_line((p + o) * PX, (a + dir * e + o) * PX, col, width)
 			s += dash * 2.0 if dash > 0.0 else 2.0
+
+	## The road's wear, the same every time you drive by: manhole covers down the middle of the city
+	## streets, storm drains at the curb, dark tar patches, and cracks (worse on the back roads).
+	## Under snow you don't see any of it.
+	func _wear(w: World) -> void:
+		if w.sky.snow_cover > 0.4: return
+		for e in w._b_seg.get(chunk.key, []):
+			var ri: int = e[0]
+			var si: int = e[1]
+			var rd: Dictionary = w.map.roads[ri]
+			var a: Vector2 = rd.pts[si]
+			var b: Vector2 = rd.pts[si + 1]
+			var L := a.distance_to(b)
+			if L < 4.0: continue
+			var d := (b - a) / L
+			var n := d.orthogonal()
+			var half := float(rd.w) / 2.0
+			var rng := RandomNumberGenerator.new()
+			rng.seed = ri * 7919 + si * 104729
+			var city: bool = rd.zone != "" and rd.cls in ["street", "arterial"]
+			var x := rng.randf_range(4.0, 20.0)
+			while x < L - 2.0:
+				var p := a + d * x
+				var roll := rng.randf()
+				if city and roll < 0.3:
+					# a manhole cover in the lane, and a storm drain at the curb
+					var mp := p + n * rng.randf_range(-half * 0.5, half * 0.5)
+					draw_circle(mp * PX, 0.45 * PX, Color("2a2a2c"))
+					draw_arc(mp * PX, 0.45 * PX, 0.0, TAU, 12, Color("4a4a4c"), 1.0)
+					draw_line((mp - Vector2(0.25, 0)) * PX, (mp + Vector2(0.25, 0)) * PX, Color("3a3a3c"), 1.0)
+					var side := -1.0 if rng.randf() < 0.5 else 1.0
+					var dp := p + n * side * (half - 0.35)
+					var g0 := (dp - d * 0.4 - n * side * 0.2) * PX
+					draw_primitive(PackedVector2Array([g0, g0 + d * 0.8 * PX, g0 + (d * 0.8 + n * side * 0.4) * PX, g0 + n * side * 0.4 * PX]), PackedColorArray([Color("1e1e20"), Color("1e1e20"), Color("1e1e20"), Color("1e1e20")]), PackedVector2Array())
+					for k in 4: draw_line(g0 + d * (0.15 + k * 0.17) * PX, g0 + (d * (0.15 + k * 0.17) + n * side * 0.4) * PX, Color("4a4a4c"), 1.0)
+				elif roll < 0.55:
+					# a tar patch, darker than the road round it
+					var pw := rng.randf_range(1.0, 2.6)
+					var ph := rng.randf_range(0.8, 1.8)
+					var pc := p + n * rng.randf_range(-half * 0.7, half * 0.7)
+					var q0 := pc - d * pw / 2.0 - n * ph / 2.0
+					var col := Color(0.0, 0.0, 0.0, 0.18)
+					draw_primitive(PackedVector2Array([q0 * PX, (q0 + d * pw) * PX, (q0 + d * pw + n * ph) * PX, (q0 + n * ph) * PX]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+				else:
+					# a crack wandering across a lane
+					var cp := p + n * rng.randf_range(-half * 0.8, half * 0.8)
+					var pts := PackedVector2Array([cp * PX])
+					var dir := (d * rng.randf_range(-1.0, 1.0) + n * rng.randf_range(-1.0, 1.0)).normalized()
+					for k in rng.randi_range(3, 6):
+						dir = dir.rotated(rng.randf_range(-0.7, 0.7))
+						cp += dir * rng.randf_range(0.4, 1.0)
+						pts.append(cp * PX)
+					draw_polyline(pts, Color(0.0, 0.0, 0.0, 0.32), 1.0)
+				x += rng.randf_range(10.0, 30.0) if rd.cls in ["rural", "gravel"] else rng.randf_range(14.0, 40.0)
+			# oil drips down the middle of each lane, where the engines sit
+			if rd.cls in ["street", "arterial", "rural"]:
+				var lane_off := float(rd.w) / 4.0
+				var y := rng.randf_range(2.0, 9.0)
+				while y < L:
+					for lsg: float in [-1.0, 1.0]:
+						if rng.randf() < 0.5: continue
+						var op := a + d * (y + rng.randf_range(-1.0, 1.0)) + n * lsg * (lane_off + rng.randf_range(-0.3, 0.3))
+						draw_circle(op * PX, rng.randf_range(0.25, 0.6) * PX, Color(0, 0, 0, 0.1))
+					y += rng.randf_range(6.0, 14.0)
 
 	func _marks(w: World) -> void:
 		var snowy := clampf(w.sky.snow_cover * 1.5, 0.0, 0.85)
@@ -510,11 +1008,12 @@ class Layer extends Node2D:
 					_line(w, ri, si, 0.0, yellow, 0.0, 1.5)
 				"rural":
 					_line(w, ri, si, 0.0, yellow, 3.0, 2.0)
-					_line(w, ri, si, -4.1, white, 0.0, 1.5)
-					_line(w, ri, si, 4.1, white, 0.0, 1.5)
+					_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
+					_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
 				"ramp":
-					_line(w, ri, si, -3.6, white, 0.0, 1.5)
-					_line(w, ri, si, 3.6, white, 0.0, 1.5)
+					_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
+					_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
+		_wear(w)
 		# parking stalls
 		for l in w._b_lot.get(chunk.key, []):
 			if not l.lines: continue
@@ -527,7 +1026,7 @@ class Layer extends Node2D:
 			for x in range(int(r.position.x) + 3, int(r.end.x) - 2, 3):
 				draw_rect(Rect2(Vector2(x, r.position.y + 1) * PX, Vector2(0.15, 5) * PX), white)
 				if r.size.y > 16: draw_rect(Rect2(Vector2(x, r.end.y - 6) * PX, Vector2(0.15, 5) * PX), white)
-			if l.name != "": PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.6), 2)
+			if l.name != "": PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.32), 2)
 
 	func _rail(w: World) -> void:
 		var snowy := w.sky.snow_cover > 0.3
@@ -552,78 +1051,95 @@ class Layer extends Node2D:
 	func _weather(w: World) -> void:
 		var sky := w.sky
 		if sky.wet < 0.15 and sky.snow_cover < 0.15 and sky.ice < 0.1 and sky.season != "fall": return
+		var gd := chunk.ground_grid()
+		if gd.is_empty(): return                  # still being surveyed in the background: next frame
 		var r := chunk.rect
-		var step := 2.0
-		for gy in int(World.CHUNK / step):
-			for gx in int(World.CHUNK / step):
+		var step := World.GRID_STEP
+		var n := int(World.CHUNK / step)
+		var codes: PackedByteArray = gd.g
+		var ranks: PackedByteArray = gd.rank
+		var noise: PackedFloat32Array = gd.n
+		for gy in n:
+			for gx in n:
+				var i := gy * n + gx
 				var m := r.position + Vector2(gx, gy) * step + Vector2(1, 1)
-				var g := w.map.ground_at(m)
+				var g: String = World.GROUNDS[codes[i]]
 				if g != "asphalt" and g != "gravel":
-					if sky.season == "fall" and g == "grass" and w.patch.get_noise_2d(m.x * 2.0, m.y * 2.0) > 0.35:
+					if sky.season == "fall" and g == "grass" and noise[i * 3 + 2] > 0.35:
 						draw_rect(Rect2(m * PX, Vector2(3, 2)), [Color("c8642a"), Color("d8a03a"), Color("8a3a22")][(gx + gy) % 3])
 					continue
-				var s := w.surface_at(m)
+				var s := sky.surface(g, ranks[i], noise[i * 3])
 				match s:
+					"snow":
+						# packed snow on the pavement: whiter the more there is and the less it's
+						# plowed (a lot goes white, a highway stays mostly black), the odd bare patch
+						var plow := 0.4 if ranks[i] >= 4 else (0.7 if ranks[i] >= 3 else 1.0)
+						var cover := clampf(sky.snow_cover * plow * 1.3, 0.0, 1.0) * (0.55 + 0.45 * clampf(noise[i * 3 + 2] + 0.6, 0.0, 1.0))
+						draw_rect(Rect2(m * PX - Vector2(1, 1), Vector2(step * PX + 1, step * PX + 1)), Color(0.9, 0.92, 0.96, 0.75 * cover))
 					"ice": draw_circle(m * PX + Vector2(12, 12), step * PX * 0.8, Color(0.62, 0.72, 0.86, 0.3))
 					"wet":
 						# puddles: small, in the low spots, catching the light
-						var pn := w.patch.get_noise_2d(m.x * 2.3, m.y * 2.3)
+						var pn := noise[i * 3 + 1]
 						if pn > 0.62 - sky.wet * 0.12:
 							var rad := (0.6 + (pn - 0.5) * 2.5) * PX
 							draw_circle(m * PX + Vector2(6, 6), rad, Color(0.22, 0.27, 0.36, 0.42))
 							draw_line(m * PX + Vector2(6 - rad * 0.5, 6 - rad * 0.3), m * PX + Vector2(6 + rad * 0.3, 6 - rad * 0.3), Color(0.75, 0.82, 0.95, 0.3), 1.0)
 					"leaves": draw_rect(Rect2(m * PX, Vector2(3, 2)), Color("c8642a"))
-		# snow banks along the edges of plowed roads
+		# snow banks along the edges of plowed roads, and the wheel tracks everybody's worn down the
+		# lanes of the rest (two dark lines a track apart each way)
 		if sky.snow_cover > 0.3:
 			for e in w._b_seg.get(chunk.key, []):
 				var rd: Dictionary = w.map.roads[e[0]]
-				if MapData.CLS[rd.cls].rank < 3 or rd.zone != "": continue
 				var g: Dictionary = w.road_geo[e[0]]
 				var si: int = e[1]
-				draw_line(g.L[si] * PX, g.L[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
-				draw_line(g.R[si] * PX, g.R[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+				var rank: int = MapData.CLS[rd.cls].rank
+				if rank >= 3 and rd.zone == "":
+					draw_line(g.L[si] * PX, g.L[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+					draw_line(g.R[si] * PX, g.R[si + 1] * PX, Color(0.9, 0.92, 0.96, 0.8), 0.6 * PX)
+				var plow := 0.4 if rank >= 4 else (0.7 if rank >= 3 else 1.0)
+				if sky.snow_cover * plow < 0.25: continue
+				var a: Vector2 = g.L[si].lerp(g.R[si], 0.5) * PX
+				var b: Vector2 = g.L[si + 1].lerp(g.R[si + 1], 0.5) * PX
+				var nrm := (b - a).normalized().orthogonal()
+				for lane_off in [-2.3, 2.3]:
+					for wheel_off in [-0.75, 0.75]:
+						var o: Vector2 = nrm * (float(lane_off) + float(wheel_off)) * PX
+						draw_line(a + o, b + o, Color(0.3, 0.32, 0.36, 0.5), 0.3 * PX)
+
+	func _decor(w: World) -> void:
+		var s := w.sky.season
+		var snow := w.sky.snow_cover > 0.25
+		for d in chunk.decor:
+			var r: int = d[2]
+			var tex := DecorArt.texture(String(d[1]), s, snow, int(d[3]), r)
+			if tex == null: continue
+			var at := ((d[0] as Vector2) * PX - DecorArt.origin(r)).round()
+			if d.size() > 4 and d[4]:
+				# run over: pressed flat into the ground and bruised dark
+				var sz := Vector2(tex.get_size())
+				draw_texture_rect(tex, Rect2(at + Vector2(-sz.x * 0.1, sz.y * 0.35), Vector2(sz.x * 1.2, sz.y * 0.45)), false, Color(0.6, 0.65, 0.5, 0.85))
+			else:
+				draw_texture(tex, at)
 
 	func _canopy(w: World) -> void:
 		var s := w.sky.season
 		var snow := w.sky.snow_cover > 0.25
-		# streetlight poles and signals (the light itself comes from the light pool)
+		# the high masts and the crossbucks (the streetlight poles, the signals and the signs are
+		# RoadFurniture's, which stands them up the right way however the camera turns)
 		for l in w._b_light.get(chunk.key, []):
 			var p: Vector2 = l.p * PX
 			match String(l.type):
-				"sodium", "sodium_flicker", "dead", "led", "lamp", "led_flood":
+				"led_flood":
 					draw_rect(Rect2(p + Vector2(-1, -2), Vector2(3, 3)), Color("2a2a2e"))
 					draw_rect(Rect2(p + Vector2(-3, -3), Vector2(7, 2)), Color("4a4a50"))
 				"highmast":
 					draw_rect(Rect2(p + Vector2(-6, -6), Vector2(12, 12)), Color("3a3a40"))
-				"signal":
-					draw_rect(Rect2(p + Vector2(-2, -2), Vector2(4, 4)), Color("2a2a2e"))
 				"rail":
 					draw_line(p + Vector2(-6, -6), p + Vector2(6, 6), Color("e8e8e0"), 2.0)
 					draw_line(p + Vector2(-6, 6), p + Vector2(6, -6), Color("e8e8e0"), 2.0)
 		for t in chunk.trees:
 			var p: Vector2 = t[0] * PX
-			var sz: float = t[2] * PX
-			var kind: String = t[1]
-			draw_circle(p + Vector2(sz * 0.4, sz * 0.3), sz * 0.95, Color(0, 0, 0, 0.18))
-			match kind:
-				"spruce":
-					var dark := Color("1e3a26")
-					draw_circle(p, sz, dark)
-					draw_circle(p + Vector2(-sz * 0.15, -sz * 0.15), sz * 0.68, dark.lightened(0.12))
-					draw_circle(p + Vector2(-sz * 0.25, -sz * 0.25), sz * 0.32, dark.lightened(0.24) if not snow else Color("e8eef4"))
-				_:
-					var leaf: Color
-					match s:
-						"summer": leaf = Color("3a6a2a") if kind == "maple" else Color("5a8a3a")
-						"fall": leaf = [Color("c8462a"), Color("e09a2a"), Color("d8c040")][int(t[3]) % 3] if kind == "maple" else Color("d8c050")
-						"winter": leaf = Color(0, 0, 0, 0)
-						"spring": leaf = Color("6a9a4a")
-					if leaf.a == 0.0:
-						# bare branches
-						for k in 5:
-							var ang := float(k) / 5.0 * TAU + float(int(t[3]) % 7)
-							draw_line(p, p + Vector2(cos(ang), sin(ang)) * sz * 0.9, Color("4a3a30"), 2.0)
-						if kind == "birch": draw_circle(p, 2.5, Color("e8e4dc"))
-					else:
-						draw_circle(p, sz, leaf.darkened(0.15))
-						draw_circle(p + Vector2(-sz * 0.2, -sz * 0.2), sz * 0.6, leaf)
+			var r := int(float(t[2]) * PX)
+			var tex := TreeArt.texture(String(t[1]), s, snow, int(t[3]), r)
+			if tex == null: continue
+			draw_texture(tex, (p - TreeArt.origin(r)).round())

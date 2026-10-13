@@ -18,6 +18,17 @@ var _horn_a := 0.0
 var _horn_b := 0.0
 var _horn_env := 0.0
 var tick := 0.0               # blinker relay clicks (set to 1.0 for one click)
+var siren := 0.0              # how loud the nearest siren is (0 none .. 1 right on you)
+var _honks: Array = []        # other people's horns: [samples left, pitch, gain, phase a, phase b]
+
+## Somebody else leans on their horn `dist` metres away: a short blast, quieter with distance, at
+## their car's pitch (every make a little different).
+func honk(dist: float, pitch := 1.0, secs := 0.45) -> void:
+	var gain := clampf(1.0 - dist / 90.0, 0.0, 1.0)
+	if gain <= 0.02 or _honks.size() >= 4: return
+	_honks.append([int(secs * RATE), pitch, gain * gain, 0.0, 0.0])
+var _siren_p := 0.0
+var _siren_t := 0.0
 
 func _ready() -> void:
 	var gen := AudioStreamGenerator.new()
@@ -58,6 +69,21 @@ func _process(_dt: float) -> void:
 			_horn_a = fmod(_horn_a + 415.0 / RATE, 1.0)
 			_horn_b = fmod(_horn_b + 520.0 / RATE, 1.0)
 			s += (signf(sin(_horn_a * TAU)) * 0.5 + signf(sin(_horn_b * TAU)) * 0.5) * 0.22 * _horn_env
+		# other people's horns, out there somewhere
+		for k in range(_honks.size() - 1, -1, -1):
+			var hk: Array = _honks[k]
+			hk[3] = fmod(float(hk[3]) + 440.0 * float(hk[1]) / RATE, 1.0)
+			hk[4] = fmod(float(hk[4]) + 554.0 * float(hk[1]) / RATE, 1.0)
+			var env := minf(1.0, float(hk[0]) / (RATE * 0.03))
+			s += (signf(sin(float(hk[3]) * TAU)) * 0.5 + signf(sin(float(hk[4]) * TAU)) * 0.5) * 0.14 * float(hk[2]) * env
+			hk[0] = int(hk[0]) - 1
+			if int(hk[0]) <= 0: _honks.remove_at(k)
+		# a siren somewhere: the wail, rising and falling every four seconds, square-ish like a horn speaker
+		if siren > 0.01:
+			_siren_t = fmod(_siren_t + 1.0 / RATE, 4.0)
+			var sweep := 0.5 - 0.5 * cos(_siren_t / 4.0 * TAU)
+			_siren_p = fmod(_siren_p + (620.0 + sweep * 780.0) / RATE, 1.0)
+			s += clampf(sin(_siren_p * TAU) * 1.8, -1.0, 1.0) * 0.16 * siren * siren
 		if tick > 0.0:
 			s += (_rng.randf() - 0.5) * tick * 0.8
 			tick = maxf(0.0, tick - 1.0 / (RATE * 0.006))

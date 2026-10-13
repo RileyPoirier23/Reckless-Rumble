@@ -7,6 +7,8 @@
 ## - "counter": a shift at the counter (CLOCK IN ... CLOCK OUT)
 ## - "drive":   the evening in your car, with a mission
 ## - "card":    a title card ("CHAPTER 1: WRONG TURF", "SIX MONTHS LATER")
+## A step with "if" only plays for some Leos (a karma tier, a flag): that's how the endings branch.
+## - "credits": the credits, the thank-you and the memorial (EndCredits)
 class_name StoryState
 extends RefCounted
 
@@ -57,11 +59,21 @@ static func save() -> void:
 
 static func current() -> Dictionary:
 	if step < 0 or step >= StoryScript.STEPS.size(): return { "type": "end" }
+	# the prologue demo stops at the end of day one, with a thank-you
+	if DemoBuild.on() and step >= DemoBuild.end_step():
+		var past := step - DemoBuild.end_step()
+		return DemoBuild.END_CARD if past == 0 else ({ "type": "credits" } if past == 1 else { "type": "end" })
 	return StoryScript.STEPS[step]
 
-## Move on to the next step and go to whichever scene plays it.
+## Is this step for this Leo? A step can ask for a karma tier or a flag ("if", see Karma.holds):
+## the endings branch this way.
+static func step_on(s: Dictionary) -> bool:
+	return not s.has("if") or Karma.holds(s["if"])
+
+## Move on to the next step (past any that aren't for this Leo) and go to whichever scene plays it.
 static func advance(tree: SceneTree) -> void:
 	step += 1
+	while step < StoryScript.STEPS.size() and not step_on(StoryScript.STEPS[step]): step += 1
 	var s := current()
 	if s.get("day_ends", false): day += 1
 	save()
@@ -72,8 +84,9 @@ static func go(tree: SceneTree) -> void:
 	match String(s.type):
 		"scene", "card": tree.change_scene_to_file("res://story/story.tscn")
 		"avatar": tree.change_scene_to_file("res://story/avatar.tscn")
-		"counter": tree.change_scene_to_file("res://counter.tscn")
-		"drive": tree.change_scene_to_file("res://drive.tscn")
+		"credits": tree.change_scene_to_file("res://ui/credits.tscn")
+		"counter": LoadingScreen.go(tree, "res://counter.tscn", "COVINGTON AUTO: CLOCKING IN")
+		"drive": LoadingScreen.go(tree, "res://drive.tscn", String(StoryMissions.MISSIONS.get(String(s.get("mission", "")), {}).get("title", "THE ROAD")))
 		_:
 			active = false
 			tree.change_scene_to_file("res://title.tscn")

@@ -1,6 +1,7 @@
 ## Time of day and the weather. Pure logic (no nodes), so it runs the same in tests.
 ##
-## The clock runs at one game minute per real second (a day is 24 minutes). Sunrise and
+## The clock runs at one game minute per two and a half real seconds (a day is an hour; Settings
+## can make it a day in 24 minutes, or two hours). Sunrise and
 ## sunset follow Moncton's real ones for each season. Weather drifts from one state to the
 ## next on its own, and leaves things behind on the road: water, snow, black ice.
 class_name WorldSky
@@ -34,7 +35,8 @@ const SEASON_DAYS := 4         # a season lasts four game days (about an hour an
 const SEASON_ORDER := ["summer", "fall", "winter", "spring"]
 var _season_day := 0
 var time_h := 8.0              # 0..24
-var rate := 1.0 / 60.0         # game hours per real second
+var rate := 1.0 / 150.0        # game hours per real second (a day an hour long)
+const RATES := { "fast": 1.0 / 60.0, "normal": 1.0 / 150.0, "slow": 1.0 / 300.0 }
 var weather := "clear"
 var weather_left := 3.0        # game hours until the weather turns
 var forced := false
@@ -69,6 +71,16 @@ func set_season(s: String) -> void:
 		"winter": wet = 0.0; snow_cover = 0.55; ice = 0.25
 		"spring": wet = 0.5; snow_cover = 0.05; ice = 0.0
 	pick_weather()
+
+## The weather all the way in, now (a demo, a test): no 25-minute blend.
+func snap() -> void:
+	var w: Dictionary = WEATHER[weather]
+	cloud = w.cloud
+	fog = w.fog
+	wind = w.wind
+	rain = w.rain if temperature() >= -0.5 or weather == "freezing" else 0.0
+	snow = w.snow if temperature() < -0.5 or w.snow > 0.0 else 0.0
+	if weather == "freezing": ice = maxf(ice, 0.5)
 
 func pick_weather(force := "") -> void:
 	if force != "":

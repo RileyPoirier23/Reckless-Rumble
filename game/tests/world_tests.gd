@@ -16,6 +16,10 @@ func _init() -> void:
 	check("map has the places", m.landmarks.filter(func(l): return l.dest).size() >= 12, "%d destinations" % m.landmarks.size())
 	check("Covington Auto's lot is pavement", m.ground_at(Vector2(5570, 1566)) == "asphalt")
 	check("Main St downtown is a road", not m.road_at(Vector2(6000, 1548)).is_empty())
+	var in_lane := 0
+	for l in m.lights:
+		if not String(l.type) in MapData.FLUSH_LIGHTS and not m.road_at(l.p, 0.8).is_empty(): in_lane += 1
+	check("no lamp post stands in a road", in_lane == 0, "%d in a lane" % in_lane)
 	check("the Petitcodiac runs past downtown", m.river_at(Vector2(5950, 1650)) == 1)
 	check("the causeway is a bridge over it", m.ground_at(Vector2(5700, 1680)) == "asphalt" and m.river_at(Vector2(5700, 1680)) == 1)
 	var far := 0
@@ -39,6 +43,29 @@ func _init() -> void:
 			print("   on a road: ", b.kind, " ", b.name, " ", b.r, " ", m.road_at(b.r.get_center(), 0.0).road.name)
 	check("no building sits on a road", bad == 0, "%d" % bad)
 	check("Salisbury has a rail crossing", m.crossings.any(func(c): return m.zone_at(c.p).id == "salisbury"))
+	# ---- the junctions: nothing a car can't turn at (two junctions a car length apart, a 10-degree
+	# fork, a street that stops a metre short of the one it was meant to reach)
+	var acute := 0
+	var stubs := 0
+	var dead := 0
+	for n in m.g_pos.size():
+		var adj: Array = m.g_adj[n]
+		var p: Vector2 = m.g_pos[n]
+		if adj.size() == 1:
+			var B := MapData.BOUNDS
+			if not (p.x <= B.position.x + 2 or p.y <= B.position.y + 2 or p.x >= B.end.x - 2 or p.y >= B.end.y - 2): dead += 1
+		if adj.size() < 3: continue
+		for i in adj.size():
+			if adj[i][1] < 12.0 and m.g_adj[adj[i][0]].size() >= 3: stubs += 1
+			for j in range(i + 1, adj.size()):
+				if adj[i][2] == adj[j][2] or adj[i][2].limited or adj[i][2].cls == "ramp" or adj[j][2].cls == "ramp": continue
+				var d1: Vector2 = (m.g_pos[adj[i][0]] - p).normalized()
+				var d2: Vector2 = (m.g_pos[adj[j][0]] - p).normalized()
+				if rad_to_deg(acos(clampf(d1.dot(d2), -1, 1))) < 40.0: acute += 1
+	check("no junction is a car length from the next", stubs == 0, "%d" % stubs)
+	check("no two roads fork at under 40 degrees", acute == 0, "%d" % acute)
+	check("the only dead ends lead somewhere", dead <= 6, "%d" % dead)
+	check("junctions have kerb radii", m.junctions.size() > 150 and m.junction_at(Vector2(5900, 1390) + Vector2(5.5, 5.5)), "%d" % m.junctions.size())
 	var kinds := {}
 	for l in m.lights: kinds[l.type] = true
 	check("many kinds of light", kinds.size() >= 12, ", ".join(kinds.keys()))
@@ -85,7 +112,7 @@ func _init() -> void:
 	for id in ["silvio", "supreem", "charjer", "tow"]:
 		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
 		var art := CarArt.new(spec, Color(spec.paint))
-		check("%s: drawn" % id, art.slices.size() == CarArt.SLICES)
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10 and art.atlas.get_width() == art.size.x * art.n)
 		check("%s: has a dash and a GPS" % id, spec.has("dash") and spec.has("gps"))
 		var c := CarSim.new(spec)
 		c.set_ambient(20.0)
@@ -112,5 +139,137 @@ func _init() -> void:
 			for i in 240: k.step(1.0 / 120.0, 0.0, 0.0, 0.0, 0.0)
 			lost[surf] = 60.0 - k.speed() * 3.6
 		check("%s: grass slows you down" % id, lost.grass > lost.dry + 3.0, "coasting 2 s in neutral from 60: dry -%.1f, grass -%.1f km/h" % [lost.dry, lost.grass])
+	# ---- every place you can pick on the map: the GPS gets you there by road, into its lot
+	var unreachable2 := ""
+	for l in m.landmarks:
+		if not l.dest: continue
+		var r := m.route_to(Vector2(5570, 1566), l.p)
+		var hop := 0.0
+		for i in r.size() - 1: hop = maxf(hop, r[i].distance_to(r[i + 1]))
+		var off := 0
+		for i in r.size() - 1:
+			for k in 8:
+				var q: Vector2 = r[i].lerp(r[i + 1], k / 8.0)
+				if m.ground_at(q) in ["grass", "mud"]: off += 1
+		if r.is_empty() or r[r.size() - 1].distance_to(l.p) > 3.0 or hop > 450.0 or off > 0:
+			unreachable2 += "%s (hop %.0f m, %d off-road); " % [l.name, hop, off]
+	check("the GPS takes you all the way to every place, on roads and driveways", unreachable2 == "", unreachable2)
+	# ---- mud: slow going, but a rear-drive car on summer tires isn't stuck in it for good
+	var sp: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/silvio.json"))
+	var mc := CarSim.new(sp)
+	mc.set_ambient(10.0)
+	mc.surface = "mud"
+	var mt := 0.0
+	while mc.speed() < 2.0 and mt < 8.0:
+		mc.step(1.0 / 120.0, 0.6, 0.0, 0.0, 0.0)
+		mc.surface = "mud"
+		mt += 1.0 / 120.0
+	check("a rear-drive car crawls out of mud", mc.speed() >= 2.0, "%.1f m/s after %.1f s" % [mc.speed(), mt])
+	var gc := CarSim.new(sp)
+	gc.set_ambient(2.0)
+	var gt := 0.0
+	while gc.speed() < 2.0 and gt < 8.0:
+		gc.surface = "grass"
+		gc.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+		gt += 1.0 / 120.0
+	check("...and off cold grass, flat out", gc.speed() >= 2.0, "%.1f m/s after %.1f s" % [gc.speed(), gt])
+	# ---- the emergency vehicles: drawn, and they get going (a fire truck's no rocket, but it moves)
+	for id in ["ambulance", "fire"]:
+		var spec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/cars/%s.json" % id))
+		var art := CarArt.new(spec, Color(spec.paint))
+		check("%s: drawn" % id, art.atlas != null and art.n >= 10)
+		var c := CarSim.new(spec)
+		c.set_ambient(15.0)
+		var tt := 0.0
+		while c.speed() < 50.0 / 3.6 and tt < 20.0:
+			c.step(1.0 / 120.0, 1.0, 0.0, 0.0, 0.0)
+			tt += 1.0 / 120.0
+		check("%s: 0-50 km/h in under 12 s" % id, tt < 12.0, "%.1f s" % tt)
+	# ---- tire smoke piles up: a long burnout's cloud gets thick and spreads, then it clears
+	var sf := SmokeField.new()
+	var early := 0.0
+	for i in 600:                                  # ten seconds of two tires spinning flat out
+		sf.add(Vector2(100, 100), 3.0 / 60.0)
+		sf.add(Vector2(100, 120), 3.0 / 60.0)
+		sf.step(1.0 / 60.0, Vector2.ZERO)
+		if i == 30: early = sf.thickness_at(Vector2(100, 110))
+	check("tire smoke builds: half a second in it's still a wisp", early < 0.3, "thickness %.2f after 0.5 s" % early)
+	var thick := sf.thickness_at(Vector2(100, 110))
+	var spread := sf.puffs.size()
+	check("tire smoke piles up: thick where the tires spun, and spreading", thick > 0.6 and spread >= 4 and spread < SmokeField.MAX_PUFFS, "thickness %.2f, %d puffs" % [thick, spread])
+	for i in 1800: sf.step(1.0 / 60.0, Vector2(0, -9))
+	check("...and it hangs about, then clears", sf.thickness_at(Vector2(100, 110)) < 0.25, "%.2f after 30 s" % sf.thickness_at(Vector2(100, 110)))
+	sf.free()
+	# ---- a crash scene shuts its lane: traffic won't turn into it
+	var tr := Traffic.new()
+	tr.map = m
+	var jn := -1
+	for n in m.g_adj.size():
+		var streets := 0
+		for e in m.g_adj[n]:
+			if String(e[2].cls) == "street": streets += 1
+		if streets == m.g_adj[n].size() and streets >= 3:
+			jn = n
+			break
+	check("found a street junction to test", jn >= 0)
+	if jn >= 0:
+		var from: int = m.g_adj[jn][0][0]
+		var tc := TrafficCar.new()
+		tc.rng.seed = 7
+		var exits: Array = []
+		for e in m.g_adj[jn]:
+			if e[0] != from: exits.append(e[0])
+		for x in exits.slice(1): tr.blocked[Vector2i(jn, x)] = true
+		var always := true
+		for i in 30:
+			if tr.next_node(from, jn, tc) != exits[0]: always = false
+		check("traffic goes round a shut lane", always)
+		tc.free()
+	tr.free()
+	check("hit and run and staying both count", Karma.DEEDS.has("hit_run") and Karma.DEEDS.has("stayed") and Karma.DEEDS.hit_run[0] < 0.0 and Karma.DEEDS.stayed[0] > 0.0)
+	# ---- line of sight: a building's shadow, and a building in the way
+	var sq := PackedVector2Array([Vector2(0, 0), Vector2(100, 0), Vector2(100, 100), Vector2(0, 100)])
+	var sh := Sight.shadow_of(sq, Vector2(-200, 50), 2000.0)
+	check("behind a building is in its shadow", Geometry2D.is_point_in_polygon(Vector2(400, 50), sh) and Geometry2D.is_point_in_polygon(Vector2(400, 150), sh))
+	check("beside it and in front of it aren't", not Geometry2D.is_point_in_polygon(Vector2(50, 600), sh) and not Geometry2D.is_point_in_polygon(Vector2(-100, 50), sh))
+	check("no shadow from inside the building", Sight.shadow_of(sq, Vector2(50, 50), 2000.0).is_empty())
+	CarView.screen_up = Vector2(0, -1)
+	var bn := BuildingNode.new()
+	bn.setup({ "r": Rect2(0, 0, 10, 10), "h": 30, "kind": "shop" })
+	var top := bn.global_position + bn.fp.position          # the north-west corner, world px
+	check("a car just behind a building is under it", bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx * 0.5)))
+	check("a car in front of it isn't", not bn.covers(bn.global_position + Vector2(bn.fp.size.x / 2.0, 20.0)))
+	check("a car well behind it isn't", not bn.covers(top + Vector2(bn.fp.size.x / 2.0, -bn.hpx - 60.0)))
+	# the walls you see are the ones facing the camera: looking north, the south wall, never the north
+	var faces: Array = bn.visible_walls().map(func(w): return (w[2] as Vector2).round())
+	check("looking north you see a building's south wall, not its back", faces.has(Vector2(0, 1)) and not faces.has(Vector2(0, -1)), str(faces))
+	CarView.screen_up = Vector2(1, 0)
+	faces = bn.visible_walls().map(func(w): return (w[2] as Vector2).round())
+	check("...and looking east, its west wall", faces.has(Vector2(-1, 0)) and not faces.has(Vector2(1, 0)), str(faces))
+	CarView.screen_up = Vector2(0, -1)
+	var hs := BuildingNode.new()
+	hs.position = Vector2(500, 500)
+	hs.setup({ "r": Rect2(0, 0, 11, 9), "h": 7, "kind": "house", "color": 2 })
+	var slots := hs.window_slots(11.0 * CarArt.PX, hs.hpx)
+	check("a house's long wall has a door and windows", slots.any(func(q): return q.kind == "door") and slots.filter(func(q): return q.kind == "window").size() >= 2, str(slots.size()))
+	check("a house has a pitched roof, a shop a flat one", hs.style().roof == "gable" and bn.style().roof == "flat")
+	hs.free()
+	# soft ground keeps your tracks; the road doesn't
+	check("tires leave ruts in mud, snow, grass and gravel, not on the road", not Skids.rut("mud", 0.0).is_empty() and not Skids.rut("snow", 0.0).is_empty()
+		and not Skids.rut("grass", 0.0).is_empty() and not Skids.rut("gravel", 0.0).is_empty() and Skids.rut("asphalt", 0.0).is_empty())
+	var sk := Skids.new()
+	for i in 20: sk.mark(99, Vector2(i * 2.0, 0), 0.5, Color.BLACK, 4.0, 6.0)
+	check("a rut's laid in pieces, not one per frame", sk.alphas.size() > 3 and sk.alphas.size() < 10 and sk.widths[0] == 4.0, str(sk.alphas.size()))
+	sk.free()
+	var gmap := MapData.get_map()
+	var over := []
+	for gb in gmap.buildings:
+		if String(gb.kind) == "pumps" and not gmap.road_at((gb.r as Rect2).get_center(), 0.5).is_empty(): over.append(gb.r)
+	check("no gas bar's pumps stand in a road", over.is_empty(), str(over))
+	var pumps := BuildingNode.new()
+	pumps.data = { "kind": "pumps" }
+	check("gas pumps don't block sight", not pumps.blocks_sight() and bn.blocks_sight())
+	pumps.free()
+	bn.free()
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)

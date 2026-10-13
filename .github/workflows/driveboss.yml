@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Godot and export templates
@@ -45,14 +45,91 @@ jobs:
           grep -q "^0 failed" world.log
       - name: Traffic soak test
         working-directory: game
+        # every spot under three traffic seeds: fixed frames make each run repeatable, the seeds
+        # make it more than the one run
         run: |
-          timeout 900 "$GODOT" --headless --path . -- --traffic-test | tee traffic.log
+          timeout 1800 "$GODOT" --headless --fixed-fps 60 --path . -- --traffic-test --seeds 1,2,3 | tee traffic.log
           grep -q "^0 failed" traffic.log
+      - name: Street race and police test
+        working-directory: game
+        run: |
+          timeout 900 "$GODOT" --headless --path . -- --race-test | tee race.log
+          grep -q "^0 failed" race.log
       - name: Counter tests
         working-directory: game
         run: |
           "$GODOT" --headless --path . -s tests/counter_tests.gd | tee counter.log
           grep -q "^0 failed" counter.log
+      - name: Desk tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/desk_tests.gd | tee desk.log
+          grep -q "^0 failed" desk.log
+      - name: Parts tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/parts_tests.gd | tee parts.log
+          grep -q "^0 failed" parts.log
+      - name: Physics tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/physics_tests.gd | tee physics.log
+          grep -q "^0 failed" physics.log
+      - name: Catalog tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/catalog_tests.gd | tee catalog.log
+          grep -q "^0 failed" catalog.log
+      - name: Side-view car generator tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/cargen_tests.gd | tee cargen.log
+          grep -q "^0 failed" cargen.log
+      - name: Top-down car, traffic and parked car tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/top_down_tests.gd | tee topdown.log
+          grep -q "^0 failed" topdown.log
+      - name: Jobs tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/jobs_tests.gd | tee jobs.log
+          grep -q "^0 failed" jobs.log
+      - name: Market tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/market_tests.gd | tee market.log
+          grep -q "^0 failed" market.log
+      - name: Story tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/story_tests.gd | tee story.log
+          grep -q "^0 failed" story.log
+      - name: HUD layout tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/hud_layout_tests.gd | tee hud.log
+          grep -q "^0 failed" hud.log
+      - name: Settings and controls tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/settings_tests.gd | tee settings.log
+          grep -q "^0 failed" settings.log
+      - name: Employee of the Month tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/awards_tests.gd | tee awards.log
+          grep -q "^0 failed" awards.log
+      - name: Road furniture tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/furniture_tests.gd | tee furniture.log
+          grep -q "^0 failed" furniture.log
+      - name: 1ton and the Luchadooros tests
+        working-directory: game
+        run: |
+          "$GODOT" --headless --path . -s tests/crew_tests.gd | tee crew.log
+          grep -q "^0 failed" crew.log
       - name: Export
         working-directory: game
         run: |

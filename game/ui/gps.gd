@@ -34,6 +34,7 @@ var route := PackedVector2Array()
 var dest_name := ""
 var screen: Rect2            # where the map goes, inside the bezel
 var _route_i := 0
+var blips: Array = []          # [metres, colour]: the police, the other racers
 var _clip: Control
 var _top: Control
 var _args := []
@@ -154,6 +155,11 @@ func _map(ci: CanvasItem, r: Rect2, heading_up: bool, tilt: float, scale_px_per_
 		if r.has_point(end):
 			ci.draw_rect(Rect2(end + Vector2(0, -10), Vector2(2, 10)), P.text)
 			ci.draw_rect(Rect2(end + Vector2(2, -10), Vector2(7, 5)), P.route)
+	for b in blips:
+		var q: Vector2 = toscreen.call(b[0])
+		if r.grow(-3.0).has_point(q):
+			ci.draw_rect(Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5)), Color(0, 0, 0, 0.7))
+			ci.draw_rect(Rect2(q - Vector2(1.5, 1.5), Vector2(3, 3)), b[1])
 	_arrow(ci, centre, 0.0 if heading_up else sim.heading + PI / 2.0, P.route if style != "tomtum" else Color("e04020"))
 
 func _arrow(ci: CanvasItem, c: Vector2, ang: float, col: Color) -> void:
@@ -204,6 +210,12 @@ func _street() -> String:
 func _dist_str(m: float) -> String:
 	return "%d M" % int(snappedf(m, 10.0)) if m < 1000.0 else "%.1f KM" % (m / 1000.0)
 
+## Cut a line to fit so many pixels (the pixel font is 4 px a character).
+static func _fit(s: String, px: float) -> String:
+	var n := int(px / 4.0)
+	return s if s.length() <= n else s.substr(0, maxi(0, n - 1)) + "."
+
+## The turn arrow reaches 13 px either side of p.
 func _turn_icon(ci: CanvasItem, p: Vector2, dir: int, col: Color) -> void:
 	ci.draw_rect(Rect2(p + Vector2(-1, 0), Vector2(3, 10)), col)
 	if dir == 0:
@@ -229,14 +241,14 @@ func _frame_tomtum(ci: CanvasItem, top: bool) -> void:
 		_show_map(screen, true, 1.0, 0.45 + 0.35 * (1.0 - clampf(sim.speed() / 30.0, 0, 1)))
 		return
 	ci.draw_rect(Rect2(screen.position.x, screen.end.y - 14, screen.size.x, 14), P.bar)
-	PixelFont.draw(ci, Vector2(screen.position.x + 3, screen.end.y - 10), _street(), Color.WHITE)
+	PixelFont.draw(ci, Vector2(screen.position.x + 3, screen.end.y - 10), _fit(_street(), screen.size.x - 26), Color.WHITE)
 	PixelFont.draw(ci, Vector2(screen.end.x - 18, screen.end.y - 10), "%d" % int(sim.speed() * 3.6), Color("8aff6a"))
 	if route.size() > 1:
 		var nt := next_turn()
-		ci.draw_rect(Rect2(screen.position, Vector2(58, 22)), Color(P.bar, 0.92))
-		_turn_icon(ci, screen.position + Vector2(10, 9), nt[0], Color("8aff6a"))
-		PixelFont.draw(ci, screen.position + Vector2(22, 4), _dist_str(nt[1]), Color.WHITE)
-		PixelFont.draw(ci, screen.position + Vector2(22, 13), _dist_str(route_left()), Color(1, 1, 1, 0.6))
+		ci.draw_rect(Rect2(screen.position, Vector2(66, 22)), Color(P.bar, 0.92))
+		_turn_icon(ci, screen.position + Vector2(14, 9), nt[0], Color("8aff6a"))
+		PixelFont.draw(ci, screen.position + Vector2(30, 4), _dist_str(nt[1]), Color.WHITE)
+		PixelFont.draw(ci, screen.position + Vector2(30, 13), _dist_str(route_left()), Color(1, 1, 1, 0.6))
 
 func _frame_phone(ci: CanvasItem, top: bool) -> void:
 	var r := Rect2(530, 210, 102, 146)
@@ -258,11 +270,11 @@ func _frame_phone(ci: CanvasItem, top: bool) -> void:
 	if route.size() > 1:
 		var nt := next_turn()
 		ci.draw_rect(Rect2(screen.position + Vector2(0, 8), Vector2(screen.size.x, 20)), Color("0a6a3a"))
-		_turn_icon(ci, screen.position + Vector2(9, 16), nt[0], Color.WHITE)
-		PixelFont.draw(ci, screen.position + Vector2(20, 11), _dist_str(nt[1]), Color.WHITE)
-		PixelFont.draw(ci, screen.position + Vector2(20, 19), dest_name.substr(0, 18), Color(1, 1, 1, 0.75))
+		_turn_icon(ci, screen.position + Vector2(14, 17), nt[0], Color.WHITE)
+		PixelFont.draw(ci, screen.position + Vector2(30, 11), _dist_str(nt[1]), Color.WHITE)
+		PixelFont.draw(ci, screen.position + Vector2(30, 19), _fit(dest_name, screen.size.x - 32), Color(1, 1, 1, 0.75))
 	ci.draw_rect(Rect2(screen.position.x, screen.end.y - 10, screen.size.x, 10), P.bar)
-	PixelFont.draw(ci, Vector2(screen.position.x + 2, screen.end.y - 8), _street().substr(0, 23), P.text)
+	PixelFont.draw(ci, Vector2(screen.position.x + 2, screen.end.y - 8), _fit(_street(), screen.size.x - 4), P.text)
 	# the crack (it was like this when Leo got it)
 	var c := Color(1, 1, 1, 0.45)
 	var o := screen.position
@@ -288,10 +300,10 @@ func _frame_builtin(ci: CanvasItem, top: bool) -> void:
 	PixelFont.draw_centered(ci, r.get_center().x, r.position.y + 5, "NAV", Color.WHITE)
 	# bottom bar
 	ci.draw_rect(Rect2(r.position.x + 2, r.end.y - 14, r.size.x - 4, 12), Color("0e0e10"))
-	PixelFont.draw(ci, Vector2(r.position.x + 5, r.end.y - 11), _street(), P.text)
+	PixelFont.draw(ci, Vector2(r.position.x + 5, r.end.y - 11), _fit(_street(), (r.size.x - 116) if route.size() > 1 else (r.size.x - 10)), P.text)
 	if route.size() > 1:
 		var nt := next_turn()
-		_turn_icon(ci, Vector2(r.end.x - 86, r.end.y - 9), nt[0], Color("e0202a"))
+		_turn_icon(ci, Vector2(r.end.x - 92, r.end.y - 9), nt[0], Color("e0202a"))
 		PixelFont.draw(ci, Vector2(r.end.x - 74, r.end.y - 11), _dist_str(nt[1]), P.text)
 		var eta_min := route_left() / maxf(sim.speed(), 12.0) * sky.rate * 60.0
 		PixelFont.draw(ci, Vector2(r.end.x - 34, r.end.y - 11), "%d MIN" % int(maxf(1.0, eta_min)), Color("e0202a"))
@@ -307,10 +319,10 @@ func _frame_trucker(ci: CanvasItem, top: bool) -> void:
 		return
 	PixelFont.draw(ci, screen.position + Vector2(3, 3), "N", P.text, 2)
 	ci.draw_rect(Rect2(r.position.x + 5, r.end.y - 22, r.size.x - 10, 18), P.bar)
-	PixelFont.draw(ci, Vector2(r.position.x + 9, r.end.y - 19), _street(), Color("ffb040"))
+	PixelFont.draw(ci, Vector2(r.position.x + 9, r.end.y - 19), _fit(_street(), (r.size.x - 84) if route.size() > 1 else (r.size.x - 18)), Color("ffb040"))
 	PixelFont.draw(ci, Vector2(r.position.x + 9, r.end.y - 11), "%d KM/H  %d°C" % [int(sim.speed() * 3.6), int(sky.temperature())], Color("ffb040"))
 	if route.size() > 1:
 		var nt := next_turn()
-		_turn_icon(ci, Vector2(r.end.x - 52, r.end.y - 14), nt[0], Color("ffb040"))
+		_turn_icon(ci, Vector2(r.end.x - 58, r.end.y - 14), nt[0], Color("ffb040"))
 		PixelFont.draw(ci, Vector2(r.end.x - 40, r.end.y - 19), _dist_str(nt[1]), Color("ffb040"))
 		PixelFont.draw(ci, Vector2(r.end.x - 40, r.end.y - 11), _dist_str(route_left()), Color(1, 0.7, 0.25, 0.7))

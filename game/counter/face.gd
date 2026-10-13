@@ -30,31 +30,32 @@ static var _small_cache := {}
 
 ## 64x64 portrait texture (cached). `female` (-1 seed decides, 0 man, 1 woman) and `age`
 ## (-1 seed decides) let a caller match the face to a name and a date of birth.
-static func texture(seed: int, female := -1, age := -1) -> ImageTexture:
-	var key := "%d:%d:%d" % [seed, female, age]
+static func texture(seed: int, female := -1, age := -1, look := {}) -> ImageTexture:
+	var key := "%d:%d:%d:%s" % [seed, female, age, str(look)]
 	if _cache.has(key): return _cache[key]
-	var t := ImageTexture.create_from_image(image(seed, female, age))
+	var t := ImageTexture.create_from_image(image(seed, female, age, look))
 	_cache[key] = t
 	return t
 
 ## 32x32 box-filtered portrait for small slots (CAGE BOSS halfSize), cached.
-static func small_texture(seed: int, female := -1, age := -1) -> ImageTexture:
-	var key := "%d:%d:%d" % [seed, female, age]
+static func small_texture(seed: int, female := -1, age := -1, look := {}) -> ImageTexture:
+	var key := "%d:%d:%d:%s" % [seed, female, age, str(look)]
 	if _small_cache.has(key): return _small_cache[key]
-	var t := ImageTexture.create_from_image(small_image(seed, female, age))
+	var t := ImageTexture.create_from_image(small_image(seed, female, age, look))
 	_small_cache[key] = t
 	return t
 
-static func image(seed: int, female := -1, age := -1) -> Image:
-	return _to_image(paint(civilian(seed, female, age)), P, P)
+static func image(seed: int, female := -1, age := -1, look := {}) -> Image:
+	return _to_image(paint(civilian(seed, female, age, look)), P, P)
 
-static func small_image(seed: int, female := -1, age := -1) -> Image:
-	return _to_image(_half_size(paint(civilian(seed, female, age)), P, P), P >> 1, P >> 1)
+static func small_image(seed: int, female := -1, age := -1, look := {}) -> Image:
+	return _to_image(_half_size(paint(civilian(seed, female, age, look)), P, P), P >> 1, P >> 1)
 
 # ------------------------------------------------------------------ the person behind the seed
 
-## A random civilian: look, gender, age, clothes. Deterministic in the seed.
-static func civilian(seed: int, female_hint := -1, age_hint := -1) -> Dictionary:
+## A random civilian: look, gender, age, clothes. Deterministic in the seed. `pin` overrides
+## any look keys (the cast pins a hair style or a build the seed didn't roll).
+static func civilian(seed: int, female_hint := -1, age_hint := -1, pin := {}) -> Dictionary:
 	var r := RandomNumberGenerator.new()
 	r.seed = (seed * 2654435761 + 0x9e3779b9) & 0x7fffffffffffffff
 	var female := r.randf() < 0.45
@@ -92,6 +93,7 @@ static func civilian(seed: int, female_hint := -1, age_hint := -1) -> Dictionary
 	if skin <= 1 and r.randf() < 0.25: look.iris = 5
 	if skin <= 1 and r.randf() < 0.1: look.freckles = 1
 	if not female and r.randf() < 0.06: look.chain = 1
+	for k in pin: look[k] = pin[k]
 	var ex := r.randf()
 	return {
 		"id": "civ:%d" % seed, "look": look, "female": female, "age": age,
