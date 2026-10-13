@@ -52,6 +52,16 @@ func setup_ai(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: 
 static var _probe_tasks: Array[int] = []
 static var _brake_cache := {}        # by spec: a second of sim per spawn was a hitch every time a cruiser rolled up
 
+## Every probe still running is waited for before the car goes (a task left behind at exit is
+## a crash on the way out).
+static func settle_probes() -> void:
+	for t in _probe_tasks: WorkerThreadPool.wait_for_task_completion(t)
+	_probe_tasks.clear()
+
+func _exit_tree() -> void:
+	settle_probes()
+	super()
+
 ## The probe's answer for this spec: from the cache, or a fair guess while a worker thread runs
 ## the probe (the answer lands on this car, and in the cache, a moment later).
 func brake_known(car_spec: Dictionary) -> float:

@@ -410,6 +410,7 @@ func _wildlife() -> void:
 func _pinks() -> void:
 	var j: JobRunner = main.jobs
 	main.save.street = { "races": 5, "wins": 5, "rep": 6, "pinks": 0 }
+	main.save.cash = maxi(int(main.save.cash), 1000)      # (the police parts can leave you in the hole)
 	main.sky.day = 4                    # a Friday
 	main.sky.time_h = 23.0
 	var cars0 := (main.save.garage as Array).size()
