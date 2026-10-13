@@ -14,6 +14,7 @@ var car: PlayerCar
 var cam: Camera2D
 var dark: CanvasModulate
 var lights: LightPool
+var loader: LoadOverlay           # the card over the road while a stretch of it is built
 var traffic: Traffic
 var furniture: RoadFurniture
 var parked: ParkedCars
@@ -134,6 +135,12 @@ func _ready() -> void:
 	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash_rect.color = Color(1, 1, 1, 0)
 	layer.add_child(flash_rect)
+	var top := CanvasLayer.new()
+	top.name = "LoadLayer"
+	top.layer = 50
+	add_child(top)
+	loader = LoadOverlay.new()
+	top.add_child(loader)
 	hud = Hud.new()
 	hud.size = Vector2(640, 360)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -464,7 +471,15 @@ func _start_mission(m: Dictionary) -> void:
 	mission = StoryMissions.MissionRunner.new()
 	add_child(mission)
 	mission.setup(self, m)
-	world.warm(m.start, Vector2(40, 25))
+	# the whole route is built and painted under the loading card, and stays built: no chunk
+	# coming in mid-chase, no stand-in trees popping into the real thing
+	var pts := PackedVector2Array([m.start])
+	var from: Vector2 = m.start
+	for o in m.objectives:
+		if o.has("to"):
+			pts.append_array(world.map.route_to(from, o.to))
+			from = o.to
+	settle(m.start, pts, String(m.get("title", "THE ROAD")))
 
 ## Story cars aren't from your garage: they're whatever the story puts you in.
 func _spawn_story_car(id: String, at: Vector2, heading: float) -> void:
@@ -554,6 +569,7 @@ func _after_death() -> void:
 	car.dead = false
 	car.respawn()
 	_teleport(car.start_pos, car.start_heading)
+	settle(car.start_pos, PackedVector2Array(), "BACK ON THE ROAD")
 	if car_i >= 0:
 		for k in save.garage[car_i].damage: save.garage[car_i].damage[k] = 0.0
 	hud.post("GUS TOWED WHAT WAS LEFT TO THE SHOP AND REBUILT IT. HE'S NOT TALKING TO YOU.", 6.0)
@@ -572,6 +588,7 @@ func _on_garage_pick(i: int) -> void:
 	_store_car()
 	_spawn_car(i, START, -PI / 2.0)
 	_teleport(START, -PI / 2.0)
+	settle(START, PackedVector2Array(), "THE LOT")
 	SaveGame.write(save)
 	var spec: Dictionary = car.spec
 	hud.post("%s %s. GUS: \"KEYS ARE IN IT.\"" % [String(spec.make).to_upper(), String(spec.model).to_upper()], 3.0)
@@ -1044,6 +1061,7 @@ func _process(dt: float) -> void:
 	sir = minf(sir, float(incidents.nearest_siren(car.sim.pos)[0]))
 	audio.siren = clampf(1.0 - sir / 260.0, 0.0, 1.0)
 	if not StoryState.active: _deliveries(dt)
+	if mission == null and world.keep_rect.has_area(): world.keep_rect = Rect2()
 	_pt = Prof.lap('deliveries', _pt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
@@ -1220,6 +1238,51 @@ func _teleport(at: Vector2, heading: float) -> void:
 	cam.global_position = car.global_position
 	cam.reset_smoothing()
 	world.warm(at, Vector2(40, 25))
+
+const SETTLE_HALF := Vector2(90, 60)     # metres each way: the screen and a bit, at the furthest zoom
+
+## Build and paint the road here (and along `route`, if given) under the loading card, holding
+## the car still until it's all in. Headless (the tests) it's done on the spot, no card.
+func settle(center: Vector2, route := PackedVector2Array(), title := "THE ROAD", tip := "") -> void:
+	var pts := PackedVector2Array([center])
+	var acc := 0.0
+	for i in range(1, route.size()):
+		acc += route[i - 1].distance_to(route[i])
+		if acc >= 60.0:
+			pts.append(route[i])
+			acc = 0.0
+	if route.size() > 1: pts.append(route[route.size() - 1])
+	var box := Rect2(center, Vector2.ZERO)
+	for p in pts: box = box.expand(p)
+	world.keep_rect = box.grow(SETTLE_HALF.x) if pts.size() > 1 else Rect2()
+	if DisplayServer.get_name() == "headless":
+		for p in pts: world.warm(p, SETTLE_HALF)
+		world.warm(center, SETTLE_HALF)
+		return
+	loader.open(title, tip)
+	hold_car = true
+	ArtBaker.sync_until = Engine.get_process_frames() + 900
+	var done := 0
+	for p in pts:
+		var guard := 0
+		while world.missing_near(p, SETTLE_HALF) > 0 and guard < 80:
+			world.update_view(p, SETTLE_HALF)
+			guard += 1
+			if guard % 3 == 0: await get_tree().process_frame
+		done += 1
+		loader.progress = float(done) / float(pts.size() + 1)
+		await get_tree().process_frame
+	# the painter's backlog (sprites still being drawn in the background), within reason
+	var t := 0.0
+	while ArtBaker.busy() and t < 2.0:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	world.update_view(center, SETTLE_HALF)
+	ArtBaker.sync_until = -1
+	loader.progress = 1.0
+	await get_tree().process_frame
+	loader.visible = false
+	hold_car = false
 
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \

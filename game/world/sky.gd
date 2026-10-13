@@ -195,7 +195,7 @@ func step(dt: float) -> void:
 		var freeze := minf(wet, dh * 0.6)
 		wet -= freeze
 		ice += freeze
-		if weather == "freezing": ice += rain * dh * 0.8
+		if weather == "freezing": ice += rain * dh * 0.5
 	else:
 		ice -= dh * 0.6 * maxf(0.2, temp)
 	ice = clampf(ice, 0.0, 1.0)

@@ -353,7 +353,9 @@ static func aids(sim: CarSim, th: float, st: float, hb: float, hb_t: float, whee
 	if sim.assist == CarSim.Assist.SIM: return [th, st, false]
 	var v := sim.speed()
 	var street := sim.assist == CarSim.Assist.STREET
-	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb_t < 2.0)
+	# (showing off: hard lock and gas at a crawl, or the handbrake pulled this last moment; the aids
+	# used to stay off for two seconds after any pull, and that read as the truck stuck sliding)
+	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb > 0.5 or hb_t < 0.6)
 	# traction control: back off the gas while the driven tires spin up
 	var spin := sim.drive_slip()
 	var tc_limit := 2.0 if street else 1.5

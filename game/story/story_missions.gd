@@ -488,6 +488,7 @@ class MissionRunner extends Node2D:
 			_drop_target()
 			_close_t = 0.0
 			drive._teleport(m.start, float(m.heading))
+			drive.settle(m.start, PackedVector2Array(), "AGAIN")
 			drive.white_out = 1.0
 
 	func _spawn_target(c: Dictionary, to: Vector2) -> void:
@@ -532,6 +533,7 @@ class MissionRunner extends Node2D:
 			h = (route[nxt] - route[back]).angle()
 		drive._teleport(at, h)
 		car.sim.set_world_velocity(Vector2.ZERO)
+		drive.settle(at, PackedVector2Array(), "...")
 		drive.white_out = 1.0
 		drive.hud.post("YOU BLACK OUT FOR A SECOND. WHEN YOU COME TO, YOU'RE STILL ON THE ROAD. SOMEHOW.", 5.0)
 		Controls.rumble(0.8, 0.8, 0.5)

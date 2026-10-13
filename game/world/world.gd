@@ -256,6 +256,20 @@ func _bucket() -> void:
 # ------------------------------------------------------------------ streaming
 
 ## Keep the chunks around the view alive; make a few new ones per frame, nearest first.
+## Chunks a view this size at this spot would want but hasn't got.
+func missing_near(center_m: Vector2, half_m: Vector2) -> int:
+	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 1.4)
+	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 1.4)
+	var n := 0
+	for y in range(c0.y, c1.y + 1):
+		for x in range(c0.x, c1.x + 1):
+			if not chunks.has(Vector2i(x, y)): n += 1
+	return n
+
+## Chunks inside this rect (metres) stay built however far the view moves: a mission's route,
+## built under the loading card, isn't thrown away and rebuilt mid-chase. Rect2() keeps nothing.
+var keep_rect := Rect2()
+
 func update_view(center_m: Vector2, half_m: Vector2) -> void:
 	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 1.4)
 	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 1.4)
@@ -272,6 +286,7 @@ func update_view(center_m: Vector2, half_m: Vector2) -> void:
 	# drop the ones well out of view
 	for k in chunks.keys():
 		if k.x < c0.x - 2 or k.x > c1.x + 2 or k.y < c0.y - 2 or k.y > c1.y + 2:
+			if keep_rect.has_area() and keep_rect.intersects(Rect2(Vector2(k) * CHUNK, Vector2(CHUNK, CHUNK))): continue
 			chunks[k].release()
 			chunks.erase(k)
 	# the weather changed the road: redraw a couple of chunks a frame

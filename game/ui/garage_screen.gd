@@ -555,13 +555,20 @@ func _panel() -> Rect2:
 	draw_rect(r, Color(1, 1, 1, 0.12), false, 1.0)
 	return r
 
+const CARS_SHOWN := 8                # rows of cars on the panel at once (it scrolls round the pick)
+
 func _draw_cars() -> void:
 	var r := _panel()
 	var n := (data.garage as Array).size()
-	for i in n:
+	# a window of rows round the one picked: a lot with every car in the catalogue still fits
+	var first := clampi(sel - CARS_SHOWN / 2, 0, maxi(0, n - CARS_SHOWN))
+	var last := mini(n, first + CARS_SHOWN)
+	if first > 0: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 2), "%d MORE ^" % first, ASH)
+	if last < n: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 10 + CARS_SHOWN * 30 - 6), "%d MORE v" % (n - last), ASH)
+	for i in range(first, last):
 		var car: Dictionary = data.garage[i]
 		var spec := SaveGame.load_spec(String(car.id))
-		var y := r.position.y + 10 + i * 30
+		var y := r.position.y + 10 + (i - first) * 30
 		var on := i == sel
 		draw_rect(Rect2(r.position.x + 6, y - 3, r.size.x - 12, 26), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.03))
 		draw_rect(Rect2(r.position.x + 10, y + 2, 10, 10), Color(String(car.paint)))

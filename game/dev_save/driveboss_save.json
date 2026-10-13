@@ -1,0 +1,12622 @@
+{
+	"airstrip_king": true,
+	"burnout_best": 90.0,
+	"cal": {
+		"day": 140,
+		"season": "summer",
+		"season_day": 12,
+		"time_h": 9.0
+	},
+	"cash": 2500000,
+	"clock_h": 900.0,
+	"crew": {
+		"bry": true,
+		"oneton": true
+	},
+	"current": 0,
+	"drag_rung": 5,
+	"garage": [
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "silvio",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": true,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "supreem",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d4c8",
+			"parts": {
+
+			},
+			"story": true,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "charjer",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": true,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "tow",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fairlame_1957",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_thunderburd_1957",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a8ac8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_galaxee_500_1964",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8a03a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_falconn_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mustank_1966",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mustank_fastback_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mustank_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mustank_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mustank_2018",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_pintoh_1974",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_mavericky_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_torinno_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#ff7a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_ell_tee_dud_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8ccb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_country_square_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fairmonte_1981",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_escorted_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_tempoh_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_torus_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_torus_ess_aitch_oh_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_probed_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_aerostare_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_econolean_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_crown_victorious_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_one_fiddy_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a5a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_one_fiddy_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_one_fiddy_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_two_fiddy_super_duty_free_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_three_fiddy_dually_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_f_four_fiddy_service_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_rangor_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_rangor_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_exploder_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_expeditious_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_siesta_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fokus_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fokus_arr_ess_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_escorted_arr_ess_cossie_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fussion_2013",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_escaped_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_edgy_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a5e64",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_fleks_2011",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_transitory_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_e_three_fiddy_cube_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_gt_fourty_ish_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_broncho_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_broncho_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_rancherro_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a9ab8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_windstair_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_five_hunnert_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fjord_contort_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_bel_err_1957",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#9ab87a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_biscaynne_1962",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_impaler_1964",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_impaler_1977",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8ccb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_impaler_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_shovelle_ess_ess_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_novah_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_camareo_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_camareo_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a8a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_camareo_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_camareo_ess_ess_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_corvet_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_corvet_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_corvet_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_corvet_zee_oh_sicks_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#ff7a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_vegan_1973",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a2a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_shovette_1984",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_citashun_1981",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_caprees_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_caprees_wagon_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_cava_lame_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_cava_lame_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_cobbolt_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_maliboo_1980",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_maliboo_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_lumenah_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_astronot_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_upslander_2007",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_expresso_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_suburbian_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_suburbian_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_blazzer_1977",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_ess_ten_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_silver_addo_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_silver_addo_2018",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_silver_addo_thirty_five_hunnert_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_el_caminno_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_avalaunch_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_step_vann_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_sparkk_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_crews_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_equinocks_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chevrolay_voltt_2013",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_sierruh_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a4a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_sierruh_plow_rig_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_sierruh_denial_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a5e64",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_jimmeh_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_vandurruh_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_sy_clone_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_you_kon_denial_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "gmz_top_kickk_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_strato_chieftain_1958",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e89aa8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_parisienna_1966",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_g_t_whoa_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_fireburd_trans_ammo_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_fireburd_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_fieryo_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_sunburd_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_grand_ham_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_grand_prize_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_awkteck_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_bonnevillain_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_acadianne_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_vybe_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_montannuh_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "pontiak_solstiss_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_ninety_ate_1959",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a8ac8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_tornadoh_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_cutless_supremo_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_vista_crusher_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_seara_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_alergo_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "oldsmobeel_sillywet_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a89a7a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_roadmassive_1956",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e89aa8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_rivieruh_1971",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a8a9a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_grand_nashunal_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_le_sabot_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_century_ish_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_roadmassive_wagon_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_rondayvoo_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "buickk_enclaive_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_coupe_de_villain_1959",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_el_dorkado_1976",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_simmeron_1983",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_broughamm_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_escalator_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_fleetwould_hearse_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "cadillak_ctz_vee_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "linkoln_incontinental_1962",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "linkoln_marked_five_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a5a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "linkoln_town_carr_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "linkoln_town_carr_stretch_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0f0ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "linkoln_navigatrix_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "merkury_couger_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "merkury_meteorite_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a9ab8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "merkury_grand_marquee_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "merkury_sabel_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "merkury_linx_1984",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_coronnette_1958",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7fb8b0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_dartt_1968",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8a03a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_charjer_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_challenjer_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a9ab8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_challenjer_hellcatt_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_monacko_1974",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_ommni_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_arees_1984",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_daytoner_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_shaddow_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_spirritt_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_neeon_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_wiper_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_stealthy_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_caravann_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_grand_caravann_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_grand_caravann_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_dakotuh_2000",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_durangoh_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_rammcharjer_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a5a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_a_hunnert_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a8a9a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_sprintur_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_calibrr_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "dodgy_journeyman_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_furry_1958",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c83c3c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_valliant_1966",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_road_rooner_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_cudda_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8a03a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_superburd_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_horizonn_1983",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_voyajer_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_prowlur_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a2a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "plymooth_caravella_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_new_yorkie_1960",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_cordobuh_1976",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8ccb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_le_barren_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_pt_crusher_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_three_hunnert_see_2009",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chryslur_pacifickuh_2018",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_see_jay_five_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_wagonear_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_cherokay_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_wranglur_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_wranglur_unlimitless_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_grand_cherokay_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_commanch_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jepp_compost_2011",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ramm_fifteen_hunnert_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ramm_thirty_five_hunnert_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ramm_promastur_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rambla_americano_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rambla_gremlyn_1974",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8a060",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rambla_pacemaker_1977",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rambla_javelinn_1971",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rambla_eagel_1983",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "studebakker_hawkk_1957",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "studebakker_larkk_1964",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "studebakker_avantee_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a9ab8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "internashnal_scowt_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8ccb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "internashnal_travelalot_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a9ab8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hummor_aitch_won_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hummor_aitch_too_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saturne_ess_ell_won_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saturne_eye_on_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saturne_vuew_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "geoh_metroh_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "geoh_trakker_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "geoh_prysm_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a89a7a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "tesler_model_ess_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "tesler_roadstur_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "deloreon_dmz_twelve_1981",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8bcc0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "bricklynn_ess_vee_won_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#ff7a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "chequer_marathone_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "grumpman_ell_ell_vee_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "asunna_sunrunnur_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "shelbee_kobrah_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "de_tomato_panterruh_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_corolly_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8a060",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_corolly_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a4a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_corolly_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_corolly_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_corolly_drifto_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_starlette_1983",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_celliko_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_celliko_rally_four_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_supreem_twin_turbo_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_cressiduh_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_chasser_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_turtle_1984",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_land_crusher_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_land_crusher_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_hi_lucks_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_tacomah_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_tundruh_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_previous_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_siennuh_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_rave_four_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_rave_four_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_pious_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_camree_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_camree_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_mister_two_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_echoh_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_matrixx_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "toyoda_eff_jay_crusher_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "datsum_five_ten_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "datsum_two_forty_zed_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "datsum_bee_two_ten_1978",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a2a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "datsum_two_eighty_zed_x_1982",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_three_hundred_zed_x_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_two_forty_ess_x_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_skylion_gee_tee_arr_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_stagehand_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_sentruh_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_sentruh_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_alteema_2007",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_maximuh_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_pathfindurr_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_hardbod_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_titann_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_rouge_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_mikra_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_leef_2013",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_kyoob_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "nissun_figarro_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7fb8b0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_en_six_hunnert_1971",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_civil_1977",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a6a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_civil_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_civil_ess_eye_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_civil_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_civil_type_arr_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_c_arr_exx_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a2a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_accordion_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a2a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_accordion_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_prelewd_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_oddyssey_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_see_arr_vee_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_fitt_2009",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_elemental_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_ridgelyne_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_ess_two_grand_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_beet_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hondo_actee_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_in_tegruh_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_legendary_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a5e64",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_en_ess_eks_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d81e1e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_ee_ell_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_tee_ell_ish_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "acurra_em_dee_eks_2007",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_roto_three_1973",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_roto_seven_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_roto_seven_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_roto_ate_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_cosmoh_1991",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_myata_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_myata_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_protejay_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_six_two_sicks_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_emm_pee_vee_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_bee_two_grand_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_tree_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_az_won_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazduh_see_ex_five_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_three_sixty_1968",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_bratt_1980",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_gee_ell_waggin_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_ex_tee_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_justee_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_legacee_2000",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_imprezza_wrecks_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_bahaha_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_outbak_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "subaroo_forestur_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_starrion_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_eclipsed_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_three_grand_gee_tee_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_lanser_evolushun_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_monteareo_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_mirrage_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_dellica_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_minicabbie_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_pajama_minnie_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a89a7a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mitsubishy_outlandish_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_samurrai_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a2a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_sidekik_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_swifft_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_alt_oh_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_cappuchino_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_carrie_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_jimnee_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_esteam_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "suzooki_aerioh_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "isuzoo_troopur_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "isuzoo_impulsive_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "isuzoo_pupp_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "isuzoo_en_pee_arr_2007",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "isuzoo_vehicrossed_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daihatsoo_charaded_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daihatsoo_hijinx_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daihatsoo_kopen_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daihatsoo_rockee_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a89a7a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lexis_ell_ess_four_hunnert_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lexis_ee_ess_three_hunnert_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a5e64",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lexis_eye_ess_three_hunnert_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lexis_arr_ex_three_hunnert_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lexis_ell_eff_ayy_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "infinitee_queue_forty_five_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "infinitee_gee_thirty_five_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "infinitee_queue_ex_fifty_six_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "scionn_toaster_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "scionn_eff_arr_ess_2014",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_ponee_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_stellarr_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_excellent_1993",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_aksent_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_tiburron_2003",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_elantruh_2013",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8d8d0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_velloster_2013",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_santa_fay_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a5a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "hyundie_too_sawn_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_riyoh_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_sole_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_fortay_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8202a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_sedonuh_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_sorrentoh_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "kiah_stingur_2018",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daywoo_lanose_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "daywoo_nubiruh_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_beetel_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_karma_ghiaa_1969",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_hippie_buss_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_thingy_1973",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a2a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_jackrabbit_1980",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_golph_gee_tee_eye_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_sirocko_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_vanagone_westfailure_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_jettuh_1996",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_passatt_wagon_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_twoareg_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_jettuh_tee_dee_eye_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volkswagon_golph_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#5a5e64",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_isette_1958",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e89aa8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_two_oh_two_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_dreier_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_emm_dreier_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_achter_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_zee_dreier_1998",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_funfer_1999",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_emm_funf_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "beemer_werke_ex_funf_2007",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_gullwinger_1955",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_three_hunnert_diesel_1982",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_superleicht_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8c8a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_one_ninety_eee_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_ess_klassy_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_gee_waggen_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8ec",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mercedez_sprintur_cube_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#6a7a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "smartt_fourtoo_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_kwattro_1983",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_five_grand_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_tee_tee_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_ayy_four_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_queue_seven_2010",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "awdi_arr_ate_2011",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_speedstur_1957",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_neuner_1973",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_nine_two_ate_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d81e1e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_neuner_turbo_1986",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_nine_forty_for_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_boxter_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "porch_kayenne_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_amasson_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_pee_eighteen_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_brick_1989",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_seven_forty_turbrick_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a4a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_eight_fiftee_tee_fivr_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_vee_seventy_2004",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "volvoh_ex_see_ninety_2016",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saabb_ninety_sicks_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saabb_nine_hunnert_turbo_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "saabb_nine_five_airhead_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "minni_cupper_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "minni_moak_1966",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "minni_cupper_ess_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fiatt_cinquesomething_1968",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fiatt_spydurr_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fiatt_ex_won_nine_1980",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fiatt_strada_ish_1981",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "fiatt_cinquesomething_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "alfa_romio_duettoh_1967",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "alfa_romio_milanese_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "alfa_romio_giuliana_kloverleaf_2017",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lanchia_deltuh_integrally_1992",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "landrova_series_too_ay_1968",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d8a03a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "landrova_range_rova_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "landrova_defendur_1997",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a8a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "landrova_freeloader_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "landrova_discovered_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#4a4a50",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jagwire_ee_typo_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jagwire_ex_jay_sicks_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jagwire_ex_jay_ess_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a3a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "jagwire_ess_typo_2001",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a8e94",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "triumf_spitflame_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "triumf_wedgie_1977",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8a060",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "emmgee_bee_1974",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2c4a8a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "austen_healthy_frog_eyed_spryte_1959",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "austen_healthy_big_healthy_1965",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lotis_ellann_1966",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lotis_espree_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lotis_eleese_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a2a2e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "reliable_robbin_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8a060",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "renoh_le_carr_1979",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8a060",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "renoh_ally_ants_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8c8c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "peugoh_five_oh_for_1976",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a1a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "peugoh_two_oh_five_tee_sixteen_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "citrowen_goddess_1970",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1a3a6a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "citrowen_deux_chevals_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8442a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ladda_signett_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a2a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ladda_nivva_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a4a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "yugoh_jee_vee_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#8a1a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "trabbie_six_oh_won_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "peeled_pee_fifty_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "messershmidt_kabine_1956",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0e6c8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "amphicarr_floaty_1963",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0d040",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_two_fifty_gee_tee_oh_no_1962",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e89aa8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_deeno_1972",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_three_oh_ate_1984",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#b8b0a0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_mondiale_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#ff7a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_testosterona_1987",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a4a5a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_eff_forty_1990",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#f0c800",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_three_sixty_modennuh_2002",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "ferraree_four_five_ate_2012",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a3e44",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lamberghini_meeura_1968",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#3a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lamberghini_coontash_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#7a2a2a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lamberghini_ell_emm_oh_oh_too_1988",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lamberghini_diabloh_1995",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#d81e1e",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "lamberghini_huracane_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazeratty_biturboh_1985",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "mazeratty_ghibbly_2015",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e86a1a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "aston_martian_double_bee_five_1964",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e4dc",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "aston_martian_lagonduh_1980",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8342c",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "aston_martian_vantidge_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#c8b890",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "bentlee_continentally_gee_tee_2006",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#1e1e24",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rolls_rois_silver_shaddow_1975",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "rolls_rois_phantomm_2005",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#a8acb0",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "bugattee_veyrun_2008",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#2a6a3a",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		},
+		{
+			"damage": {
+				"front": 0.0,
+				"left": 0.0,
+				"rear": 0.0,
+				"right": 0.0
+			},
+			"id": "maclarence_eff_won_1994",
+			"installing": [],
+			"looks": {
+
+			},
+			"odo_km": 12000.0,
+			"paint": "#e8e8e8",
+			"parts": {
+
+			},
+			"story": false,
+			"tune": {
+
+			},
+			"wear": {
+				"fuel": 1.0
+			}
+		}
+	],
+	"heat": 0.0,
+	"meets": {
+		"count": 20,
+		"wins": 10
+	},
+	"orders": [],
+	"rides": {
+		"count": 60,
+		"stars": 290
+	},
+	"salvage": {
+		"bought": [],
+		"day": 0
+	},
+	"shelf": [
+		"intake_kandm",
+		"intake_injenuity",
+		"intake_sock",
+		"exh_magnaflown",
+		"exh_borlah",
+		"exh_straight",
+		"hdr_jbah",
+		"hdr_long",
+		"cam_comp",
+		"cam_tomeii",
+		"ecu_cobbled",
+		"ecu_apexii",
+		"ecu_laptop",
+		"ind_garrette",
+		"ind_greddy",
+		"ind_single",
+		"ind_whippled",
+		"ind_upgrade",
+		"ic_mishimotoh",
+		"fuel_pump",
+		"fuel_e85",
+		"int_rods",
+		"int_built",
+		"clutch_s1",
+		"clutch_s3",
+		"fly_light",
+		"final_short",
+		"final_long",
+		"lsd_kaaz",
+		"lsd_osgiggle",
+		"lsd_welded",
+		"ctr_viscous",
+		"ctr_rally",
+		"ctr_drift",
+		"susp_springs",
+		"susp_coilover",
+		"susp_race",
+		"susp_air",
+		"susp_lift",
+		"sway_rear",
+		"sway_front",
+		"wt_gut",
+		"wt_carbon",
+		"wt_full",
+		"steer_angle",
+		"steer_quick",
+		"pads_hawke",
+		"pads_race",
+		"brk_brenbo",
+		"brk_wilwood",
+		"tire_allseason",
+		"tire_winter",
+		"tire_sport",
+		"tire_semi",
+		"tire_drag",
+		"tire_at",
+		"aero_lip",
+		"aero_ducktail",
+		"aero_wing",
+		"lift_level",
+		"lift_4",
+		"lift_6",
+		"camber_arms",
+		"camber_plates",
+		"camber_demon",
+		"spacer_15",
+		"spacer_25",
+		"spacer_38",
+		"kit_skirts",
+		"kit_aero",
+		"kit_overfenders",
+		"kit_widebody",
+		"spec_rally",
+		"spec_drift",
+		"spec_overland",
+		"spec_drag",
+		"spec_bry",
+		"spec_time_attack",
+		"aero_gt"
+	],
+	"stats": {
+		"auction": 2,
+		"cruise": 10,
+		"earned": 60000,
+		"escape": 3,
+		"helped": 12,
+		"hit_deer": 2,
+		"hit_moose": 1,
+		"km": 2500.0,
+		"paint": 5,
+		"pizza": 60,
+		"race_win": 25,
+		"races": 40,
+		"ran_dry": 1,
+		"rides": 60,
+		"salvage": 8,
+		"sold": 3,
+		"tickets": 5,
+		"totaled": 1,
+		"tows": 20,
+		"tuned": 5
+	},
+	"street": {
+		"pinks": 6,
+		"races": 60,
+		"rep": 10,
+		"wins": 50
+	},
+	"tickets": 5,
+	"tips_seen": [],
+	"version": 1,
+	"warnings": 3
+}

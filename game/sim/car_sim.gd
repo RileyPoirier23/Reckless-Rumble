@@ -98,7 +98,7 @@ var fluid := 1.0
 var _warned := {}
 var _knock_t := 0.0
 
-const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.36, "ice": 0.12, "gravel": 0.62, "leaves": 0.6, "grass": 0.5, "mud": 0.36, "water": 0.25 }
+const SURFACE_MU := { "dry": 1.0, "wet": 0.72, "snow": 0.42, "ice": 0.22, "gravel": 0.62, "leaves": 0.6, "grass": 0.5, "mud": 0.36, "water": 0.25 }   # (ice was 0.12: a truck on all-seasons in freezing rain never stopped sliding)
 const COMPOUND := {
 	"summer": { "dry": 1.05, "wet": 0.95, "snow": 0.55, "ice": 0.55, "gravel": 0.9, "leaves": 0.95, "grass": 0.95, "mud": 0.85, "water": 1.0, "cold_below": 7.0, "opt": 85.0 },
 	"winter": { "dry": 0.88, "wet": 0.97, "snow": 1.3, "ice": 1.55, "gravel": 1.0, "leaves": 1.0, "grass": 1.0, "mud": 1.1, "water": 1.0, "cold_below": -30.0, "opt": 45.0 },
@@ -388,7 +388,8 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	var fade_f := 1.0 - clampf((brake_c[0] - fade_at) / 600.0, 0.0, 0.55)
 	var fade_r := 1.0 - clampf((brake_c[1] - fade_at) / 600.0, 0.0, 0.55)
 	var pad_k := 1.0 if pads_mm > 2.0 else (0.55 if pads_mm > 0.0 else 0.3)              # metal on metal
-	var tb: float = float(spec.brakes.max_torque) * brake * pad_k
+	# (street and arcade: a firmer pedal, so a stop you can see coming is a stop)
+	var tb: float = float(spec.brakes.max_torque) * brake * pad_k * (1.0 if assist == Assist.SIM else 1.3)
 	var bias: float = spec.brakes.bias
 	var line_lock := throttle > 0.6 and brake > 0.6 and avx < 2.0 and String(spec.get("drivetrain", "RWD")) == "RWD"
 	var tb_f := tb * bias * fade_f * (1.5 if line_lock else 1.0)
@@ -436,6 +437,7 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# anti-stall: the auto-clutch opens before the engine drops under idle. Working the clutch
 	# yourself, it only opens if you push the pedal: let it out too soon and the engine stalls
 	var yours := manual_clutch and not arcade()
+	var arcade_hold := false
 	if clutch_locked and w_eng * RPM < float(spec.engine.idle_rpm) * 0.85:
 		if yours and clutch_in < 0.3:
 			if w_eng * RPM < float(spec.engine.idle_rpm) * 0.45: _stall()
@@ -448,8 +450,12 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 		# then bites; once rolling (or already locked) it stays fully in
 		var launch := 1100.0 + 2600.0 * throttle
 		if yours: engage = clampf((1.0 - clutch_in) * 1.25, 0.0, 1.0)     # the pedal is the bite
+		elif not yours and throttle < 0.05 and avx < 1.5 and not arcade_hold:
+			# an automatic at rest with your foot off the gas sits there: no torque-converter creep
+			engage = 0.0
+			clutch_locked = false
 		elif clutch_locked or wheel_e_rpm > 1500.0: engage = 1.0
-		else: engage = clampf((e_rpm - launch * 0.75) / (launch * 0.55), 0.06 if throttle < 0.05 else 0.0, 1.0)
+		else: engage = clampf((e_rpm - launch * 0.75) / (launch * 0.55), 0.0, 1.0)
 	if yours and clutch_in > 0.5: clutch_locked = false
 	if handbrake >= 0.5: clutch_locked = false
 	var tc_max: float = float(spec.engine.clutch_torque) * engage * ((0.15 + 0.85 * clutch_cond) if clutch_cond > 0.08 else 0.0)
