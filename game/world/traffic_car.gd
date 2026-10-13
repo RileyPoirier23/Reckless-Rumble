@@ -506,7 +506,10 @@ func path_ahead(reach: float) -> PackedVector2Array:
 		var p1 := (p0 + p2) / 2.0
 		if absf(den) > 0.05:
 			var t := (p2 - p0).cross(dout) / den
-			p1 = p0 + din * t
+			# (the corner has to sit between the two ends: where the lane lines diverge, a shallow
+			# bend from a one-lane road onto a two-lane one, they meet behind the car or past the
+			# far end, and a curve bent back round that point sent the car round in circles)
+			if t > 0.0 and t < (p2 - p0).dot(din): p1 = p0 + din * t
 		var ahead := false
 		for k in range(1, 7):
 			var u := float(k) / 6.0
