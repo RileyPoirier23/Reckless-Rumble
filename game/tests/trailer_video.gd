@@ -9,12 +9,15 @@ extends SceneTree
 var cap: Captions
 var card: Card
 
+var drive_in: DriveIn
+
 func _initialize() -> void:
 	cap = Captions.new()
 	root.add_child.call_deferred(cap)
 	card = Card.new()
 	root.add_child.call_deferred(card)
-	change_scene_to_file("res://title.tscn")
+	drive_in = DriveIn.new()
+	root.add_child.call_deferred(drive_in)
 	_run()
 
 func _wait(s: float) -> void:
@@ -38,11 +41,22 @@ func _script_of(n: Node) -> String:
 	return s.resource_path if s != null else ""
 
 func _run() -> void:
-	await _wait(0.6)
-	# --- the title
-	await _wait(2.5)
-	card.show_card("DRIVEBOSS", "IN DEVELOPMENT", "FROM THE MAKER OF CAGE BOSS", 4.5)
-	await _wait(5.0)
+	await _wait(0.3)
+	# --- the drive-in: Leo in the Silvio, the leader counts down, the feature flashes up the
+	# title, and the camera goes into the screen
+	await drive_in.ready_to_roll()
+	await _wait(1.6)
+	drive_in.countdown()
+	await _wait(DriveIn.COUNT_S)
+	drive_in.flash()
+	await _wait(0.9)
+	drive_in.push_in(DriveIn.PUSH_S)
+	await _wait(DriveIn.PUSH_S)
+	# the screen fills the frame: the card takes over, same layout, pixel for pixel
+	card.show_card("DRIVEBOSS", "IN DEVELOPMENT", "FROM THE MAKER OF CAGE BOSS", 4.0)
+	await process_frame
+	drive_in.queue_free()
+	await _wait(4.3)
 	# --- the story so far
 	await _story("party", 9.0, "THE STORY", "PORT RUMBLE, NEW BRUNSWICK, OCTOBER 2019. LEO COVINGTON IS 19, HIS DAD IS DEAD, AND HE'S DRUNK AT A PARTY WITH HIS DAD'S CAR KEYS.")
 	await _story("the_meet", 9.0, "THE STORY", "HE DRIVES IT THROUGH THE FAMILIA'S MEET. NOW HE OWES DOM TORTELLINI A CAR, AND HIS DAYS AT THE INSPECTION COUNTER PAY FOR IT.")
@@ -407,7 +421,9 @@ class Card extends CanvasLayer:
 		box.draw.connect(_draw_box)
 		add_child(box)
 
+	var fade_in := true
 	func show_card(the_title: String, the_body: String, the_foot: String, secs: float) -> void:
+		fade_in = title != ""           # (the first card comes off the drive-in's screen: no fade)
 		title = the_title
 		body = the_body
 		foot = the_foot
@@ -420,7 +436,7 @@ class Card extends CanvasLayer:
 
 	func _draw_box() -> void:
 		if title == "" or t > life: return
-		var a := clampf(minf(t / 0.5, (life - t) / 0.6), 0.0, 1.0)
+		var a := clampf(minf(t / 0.5 if fade_in else 1.0, (life - t) / 0.6), 0.0, 1.0)
 		box.draw_rect(Rect2(0, 0, 640, 360), Color(0.03, 0.025, 0.04, 0.96 * a))
 		var gold := Color(0.85, 0.64, 0.25, a)
 		var bone := Color(0.95, 0.92, 0.82, a)
@@ -435,4 +451,154 @@ class Card extends CanvasLayer:
 			var sc := 2 if ln.length() <= 36 else 1
 			PixelFont.draw_centered(box, 320, y, ln, bone, sc, ink)
 			y += 7.0 * sc + 6.0
-		if foot != "": PixelFont.draw_centered(box, 320, 330, foot, Color(0.6, 0.58, 0.52, a), 1, ink)
+		if foot != "": PixelFont.draw_centered(box, 320, 330, foot, Color(0.6, 0.58, 0.52, a * clampf((t - 0.8) / 0.5, 0.0, 1.0)), 1, ink)
+
+
+## The drive-in on the old Shediac Rd: a lot of cars nosed up to the screen under the stars, Leo's
+## Silvio in the middle of the front row. The leader counts down on the screen, the feature
+## flashes up the title, and the camera pushes in until the screen is the whole frame. The title
+## on the screen is the Card's layout at half size, so the push-in ends pixel for pixel where the
+## Card starts.
+class DriveIn extends Node2D:
+	const COUNT_S := 4.0
+	const PUSH_S := 3.0
+	const SCREEN := Rect2(160, 22, 320, 180)       # half the view, so the push-in is a 2x zoom
+	var cam: Camera2D
+	var t := 0.0
+	var phase := "dark"                 # dark, count, flash, title
+	var phase_t := 0.0
+	var push_t := -1.0
+	var views: Array = []
+	var _built := false
+
+	func _ready() -> void:
+		CarView.screen_up = Vector2(0, -1)
+		CarView.night = 1.0
+		cam = Camera2D.new()
+		cam.position = Vector2(320, 180)
+		cam.zoom = Vector2.ONE
+		add_child(cam)
+		cam.make_current()
+		# the lot: four rows of cars, every one from the catalogue, dark paints, nosed at the screen
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 506
+		var ids: Array = CarCatalog.ids()
+		var paints := [Color("3a3c44"), Color("4a3b36"), Color("2d3b55"), Color("5a5a58"), Color("4b2f2f"), Color("36483a"), Color("6a6258"), Color("2a2a30")]
+		for row in 4:
+			var y := 232.0 + row * 34.0
+			var n := 7 + row
+			for k in n:
+				var x := 320.0 + (float(k) - float(n - 1) / 2.0) * (86.0 - row * 8.0) + rng.randf_range(-3.0, 3.0)
+				var leo := row == 0 and k == n / 2
+				var id: String = "silvio" if leo else String(ids[rng.randi() % ids.size()])
+				var spec := CarCatalog.spec(id)
+				if spec.is_empty(): continue
+				var v := CarView.new()
+				v.art = CarArt.build(spec, Color("c0392b") if leo else paints[rng.randi() % paints.size()], {}, rng.randi() % 9 + 1, CarArt.CAR_SCALE, {}).take()
+				v.heading = -PI / 2.0 + rng.randf_range(-0.05, 0.05)
+				v.position = Vector2(x, y)
+				v.headlights = false
+				v.z_index = row
+				add_child(v)
+				views.append(v)
+		_built = true
+
+	func ready_to_roll() -> void:
+		while not _built: await get_tree().process_frame
+		await get_tree().process_frame
+
+	func countdown() -> void:
+		phase = "count"
+		phase_t = 0.0
+
+	func flash() -> void:
+		phase = "flash"
+		phase_t = 0.0
+
+	func push_in(secs: float) -> void:
+		push_t = 0.0
+
+	func _process(dt: float) -> void:
+		t += dt
+		phase_t += dt
+		if phase == "flash" and phase_t > 0.18:
+			phase = "title"
+			phase_t = 0.0
+		if push_t >= 0.0:
+			push_t += dt
+			var u := clampf(push_t / PUSH_S, 0.0, 1.0)
+			u = u * u * (3.0 - 2.0 * u)
+			var z := lerpf(1.0, 2.0, u)
+			cam.zoom = Vector2(z, z)
+			cam.position = Vector2(320, 180).lerp(SCREEN.get_center(), u)
+		queue_redraw()
+
+	func _draw() -> void:
+		# the night: sky, a few stars, the tree line, the lot
+		draw_rect(Rect2(-400, -400, 1440, 620), Color("07070c"))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		for i in 90:
+			var p := Vector2(rng.randf_range(-400, 1040), rng.randf_range(-400, 200))
+			draw_rect(Rect2(p, Vector2(1, 1)), Color(1, 1, 1, rng.randf_range(0.2, 0.7) * (0.6 + 0.4 * sin(t * 2.0 + i))))
+		draw_rect(Rect2(-400, 205, 1440, 20), Color("0d1410"))
+		for i in 60:
+			var x := -400.0 + i * 24.0
+			draw_rect(Rect2(x, 190 + (i * 7) % 12, 14, 30), Color("0b100d"))
+		draw_rect(Rect2(-400, 220, 1440, 600), Color("17171b"))
+		# the humps the rows park on
+		for row in 4:
+			draw_rect(Rect2(-400, 226 + row * 34, 1440, 10), Color("1d1d22"))
+		# the speaker posts
+		for row in 4:
+			for k in 12:
+				var p := Vector2(-20 + k * 60 + row * 13, 236 + row * 34)
+				draw_rect(Rect2(p, Vector2(2, 10)), Color("2a2a30"))
+				draw_rect(Rect2(p + Vector2(-2, -3), Vector2(6, 4)), Color("3a3a42"))
+		# the screen's tower and the screen, and its light on the lot
+		var s := SCREEN
+		draw_rect(Rect2(s.position.x - 6, s.position.y - 6, s.size.x + 12, s.size.y + 50), Color("26242c"))
+		draw_rect(Rect2(s.position.x + 30, s.end.y, 20, 60), Color("1c1b22"))
+		draw_rect(Rect2(s.end.x - 50, s.end.y, 20, 60), Color("1c1b22"))
+		var glow := Color(0.9, 0.9, 1.0, 0.0)
+		match phase:
+			"dark":
+				draw_rect(s, Color("15151a"))
+				PixelFont.draw_centered(self, s.get_center().x, s.get_center().y - 4, "FEATURE PRESENTATION", Color("3a3a44"), 1)
+			"count":
+				draw_rect(s, Color("c9c4b6"))
+				glow.a = 0.06
+				# the leader: a sweep round the circle, a number a second
+				var c := s.get_center()
+				var n := maxi(1, int(ceil(COUNT_S - phase_t)))
+				var sweep := fmod(phase_t, 1.0)
+				draw_circle(c, 60.0, Color("9a958a"))
+				draw_arc(c, 60.0, -PI / 2.0, -PI / 2.0 + TAU * sweep, 48, Color("3a3630"), 4.0)
+				draw_line(Vector2(s.position.x, c.y), Vector2(s.end.x, c.y), Color("8a857a"), 1.0)
+				draw_line(Vector2(c.x, s.position.y), Vector2(c.x, s.end.y), Color("8a857a"), 1.0)
+				PixelFont.draw_centered(self, c.x, c.y - 14, str(n), Color("2a2622"), 4)
+				# the scratches and the flicker
+				for i in 3:
+					var x := s.position.x + fmod(phase_t * 173.0 + i * 97.0, s.size.x)
+					draw_rect(Rect2(x, s.position.y, 1, s.size.y), Color(0, 0, 0, 0.25))
+				draw_rect(s, Color(0, 0, 0, 0.08 * absf(sin(phase_t * 37.0))))
+			"flash":
+				draw_rect(s, Color("fdfbf2"))
+				glow.a = 0.35
+			"title":
+				# the Card's layout at half size (the push-in doubles it)
+				draw_rect(s, Color(0.03, 0.025, 0.04))
+				var c := s.get_center()
+				var gold := Color(0.85, 0.64, 0.25)
+				var bone := Color(0.95, 0.92, 0.82)
+				var ink := Color(0.05, 0.04, 0.06)
+				PixelFont.draw_centered(self, c.x, c.y + (141.0 - 180.0) / 2.0, "DRIVEBOSS", gold, 3, ink)
+				PixelFont.draw_centered(self, c.x, c.y + (211.0 - 180.0) / 2.0, "IN DEVELOPMENT", bone, 1, ink)
+				glow.a = 0.05
+		if glow.a > 0.0:
+			# the screen lights the lot, fading down the rows
+			for row in 5:
+				var a := glow.a * (1.0 - float(row) / 5.0)
+				draw_rect(Rect2(s.position.x - 40 - row * 30, s.end.y + row * 34, s.size.x + 80 + row * 60, 34), Color(glow, a))
+		# the frame's edges
+		draw_rect(s, Color("0a0a0e"), false, 2.0)
