@@ -175,7 +175,10 @@ func open(save: Dictionary, the_shop := {}) -> void:
 	row = 0
 	_line = randi() % GUS.size()
 	_reset_trial()
+	_opened_frame = Engine.get_process_frames()
 	visible = true
+
+var _opened_frame := -1   # the press that opened the garage isn't also a press inside it
 
 func _car() -> Dictionary:
 	return data.garage[sel]
@@ -205,7 +208,7 @@ func _reset_trial() -> void:
 # ------------------------------------------------------------------ input
 
 func _process(dt: float) -> void:
-	if not visible: return
+	if not visible or Engine.get_process_frames() == _opened_frame: return
 	CarView.screen_up = Vector2(0, -1)
 	note_t -= dt
 	if dyno_t >= 0.0: dyno_t += dt
