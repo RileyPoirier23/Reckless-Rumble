@@ -176,6 +176,7 @@ func _ready() -> void:
 	rain_fx = _weather(Color(0.7, 0.78, 0.9, 0.55), Vector2(-30, 260), 300, 0.0)
 	audio = EngineAudio.new()
 	add_child(audio)
+	add_child(PreviewBake.new())
 	# double vision, for the nights Leo shouldn't be driving
 	blur_rect = ColorRect.new()
 	blur_rect.size = Vector2(640, 360)
@@ -201,6 +202,10 @@ void fragment() {
 	death.continued.connect(_after_death)
 	get_node("HudLayer").add_child(death)
 	garage = GarageScreen.new()
+	# the garage's previews start painting in the background now, so they're there when it opens
+	garage.data = SaveGame.ensure(save)
+	garage._sort()
+	if PreviewBake.me != null: PreviewBake.me.prime(garage.data.garage, garage.order, garage.pos_of(int(garage.data.current)))
 	garage.size = Vector2(640, 360)
 	garage.visible = false
 	garage.picked.connect(_on_garage_pick)

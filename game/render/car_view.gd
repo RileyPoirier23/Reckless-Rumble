@@ -131,7 +131,10 @@ func _process(dt: float) -> void:
 
 func _process_timed(dt: float) -> void:
 	_steer_vis = move_toward(_steer_vis, clampf(steer, -0.7, 0.7), STEER_RATE * dt)
-	if _job != null and _job.done():
+	if dt > 0.0:
+		_spin = lerpf(_spin, absf(wheel_turn - _turn_was) / dt, 0.3)
+		_turn_was = wheel_turn
+	if _job != null and _job.ready_to_land():
 		art = _job.take()
 		_job = null
 		_drawn_up = Vector2.ZERO
@@ -191,6 +194,13 @@ func _draw_timed() -> void:
 		# only the body leans; the tires stay planted
 		var body_k := maxf(0.0, (float(z) - 1.5) / float(maxi(1, n - 1)))
 		var off := screen_up * (z * STEP * lift_k + lift) + (fwd * lean.x + rt * lean.y) * body_k
+		# the front wheels: drawn on their own so they can steer. Each slice goes under the body's
+		# slice at the same height, so the fender (the sill, the lip of the arch) stands over the
+		# tyre instead of the tyre showing through it; the arch itself is cut out of the body, so
+		# the tyre shows there, where it should
+		if z < art.wheel_n:
+			_front_wheels(screen_up * (z * STEP * lift_k + lift), z)
+			if lift_k > 1.05 and z < art.wheel_n - 1: _front_wheels(screen_up * ((z + 0.5) * STEP * lift_k + lift), z)
 		draw_set_transform(off, heading, Vector2.ONE)
 		draw_texture_rect_region(art.atlas, Rect2(-half, sz), Rect2(float(z) * sz.x, 0.0, sz.x, sz.y))
 		# tipped down, the slices spread apart: a second copy halfway up fills the gap
@@ -198,15 +208,12 @@ func _draw_timed() -> void:
 			draw_set_transform(off + screen_up * STEP * lift_k * 0.5, heading, Vector2.ONE)
 			draw_texture_rect_region(art.atlas, Rect2(-half, sz), Rect2(float(z) * sz.x, 0.0, sz.x, sz.y))
 		if _lamps == null: _lamp_slice(self, z, off, half, bl, br)
-		# the back wheels are in the stack: their tread rolls over the top slice
+		# the tread rolls over the top slice of every wheel (the back ones are in the stack)
 		if z == art.wheel_n - 1:
 			for rw: Array in art.wheel_rears:
 				draw_set_transform((rw[0] as Vector2).rotated(heading) + screen_up * (z * STEP * lift_k + lift), heading, Vector2.ONE)
 				_tread(rw[1])
-		# the front wheels: drawn on their own so they can steer
-		if z < art.wheel_n:
-			_front_wheels(screen_up * (z * STEP * lift_k + lift), z)
-			if lift_k > 1.05 and z < art.wheel_n - 1: _front_wheels(screen_up * ((z + 0.5) * STEP * lift_k + lift), z)
+			_front_treads(screen_up * (z * STEP * lift_k + lift))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 ## Which ends of the car face the camera: [the back, the front]. The lit lamps are drawn over
@@ -293,6 +300,20 @@ class GlowLayer extends Node2D:
 	var view: CarView
 	var under := false
 
+	## A rounded rectangle (half size `h`, corner radius `r`), as a polygon.
+	static func _rounded(h: Vector2, r: float) -> PackedVector2Array:
+		var pts := PackedVector2Array()
+		r = minf(r, minf(h.x, h.y))
+		var inner := h - Vector2(r, r)
+		for q in 4:
+			var cx := inner.x * (1.0 if q in [0, 1] else -1.0)
+			var cy := inner.y * (1.0 if q in [1, 2] else -1.0)
+			var a0 := float(q - 1) * PI / 2.0
+			for k in 5:
+				var a := a0 + float(k) / 4.0 * PI / 2.0
+				pts.append(Vector2(cx + cos(a) * r, cy + sin(a) * r))
+		return pts
+
 	func _draw() -> void:
 		var _t0 := Time.get_ticks_usec()
 		_draw_timed()
@@ -306,13 +327,28 @@ class GlowLayer extends Node2D:
 		var dark := CarView.night
 		if under:
 			if art.underglow.a <= 0.0: return
-			# a pool of light just past the car's outline, in steps, brighter at night
-			var a := 0.14 + 0.55 * dark
+			# the kit: tubes along the sills and across the ends, and their light washing out over
+			# the road round the car: a rounded pool in steps, bright at the body and fading out,
+			# wider at the sides where the long tubes are. It breathes a little. Brighter at
+			# night; in daylight just a tint on the ground.
+			var a := 0.1 + 0.6 * dark
+			a *= 0.9 + 0.1 * sin(Time.get_ticks_msec() * 0.004)
+			var c := art.underglow
 			draw_set_transform(CarView.screen_up * view.lift, view.heading, Vector2.ONE)
-			var hl := Vector2(art.length_px * 0.43, art.width_px * 0.5)
-			for k in 3:
-				var g := float(k + 1) * 2.0 * art.k
-				draw_rect(Rect2(-hl - Vector2(g * 0.6, g), hl * 2.0 + Vector2(g * 1.2, g * 2.0)), Color(art.underglow, a * [0.5, 0.3, 0.16][k]))
+			var hl := Vector2(art.length_px * 0.46, art.width_px * 0.5)
+			var steps := 5
+			for k in range(steps - 1, -1, -1):
+				var g := float(k + 1) * 1.8 * art.k
+				var fade := pow(1.0 - float(k) / steps, 1.6)
+				var pts := _rounded(hl + Vector2(g * 0.9, g * 1.1), minf(g * 1.6 + 2.0, hl.y))
+				draw_colored_polygon(pts, Color(c, a * 0.42 * fade))
+			# the tubes themselves, just inside the sills and under the bumpers: a thin bright line
+			var tube := Color(c.lerp(Color.WHITE, 0.45), 0.5 + 0.45 * dark)
+			var tx := hl.x * 0.78
+			draw_rect(Rect2(-tx, -hl.y - 1.0, tx * 2.0, 1.0), tube)
+			draw_rect(Rect2(-tx, hl.y, tx * 2.0, 1.0), tube)
+			draw_rect(Rect2(-hl.x - 1.0, -hl.y * 0.6, 1.0, hl.y * 1.2), tube)
+			draw_rect(Rect2(hl.x, -hl.y * 0.6, 1.0, hl.y * 1.2), tube)
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			return
 		var bl := view.blink_left and CarView.blink_on()
@@ -374,15 +410,40 @@ func _front_wheels(off: Vector2, z: int) -> void:
 		var ya := (rt * lerpf(1.0, cos(_steer_vis), swing) - fwd * sin(_steer_vis) * swing) * flip
 		draw_set_transform_matrix(Transform2D(xa, ya, centre))
 		draw_texture_rect_region(art.wheel_tex, Rect2(-ws / 2.0, ws), src)
-		if z == art.wheel_n - 1: _tread(ws)
 
-## The tread rolling with the wheel: dark blocks spaced round the tyre, drawn where they'd show
-## from above (quick over the top, bunched at the front and back edges), so a moving wheel turns.
+## The tread over the front wheels' top slice, turned with the steering.
+func _front_treads(off: Vector2) -> void:
+	var ws := Vector2(art.wheel_size)
+	for i in art.wheel_spots.size():
+		var spot: Vector2 = art.wheel_spots[i]
+		var centre := spot.rotated(heading) + off
+		var fwd := Vector2.from_angle(heading)
+		var rt := Vector2(-fwd.y, fwd.x)
+		var swing := absf(fwd.dot(screen_up))
+		var xa := (fwd * cos(_steer_vis) + rt * sin(_steer_vis) * swing) * wheel_k
+		var ya := rt * lerpf(1.0, cos(_steer_vis), swing) - fwd * sin(_steer_vis) * swing
+		draw_set_transform_matrix(Transform2D(xa, ya, centre))
+		_tread(ws)
+
+## The tread rolling with the wheel. Seen from above, the tyre's top is the rolling pattern of
+## blocks and grooves coming over it: dark bands, spaced round the tyre, crowded toward the
+## front and back edges where the tread curves away and moving quickest across the top. The
+## bands step along with the wheel's turn, so a moving wheel reads as turning; fast, they
+## blur to an even grey streak the way a spinning tyre does.
+var _spin := 0.0                   # how fast the wheel's turning (rad/s), smoothed
+var _turn_was := 0.0
 func _tread(size: Vector2) -> void:
 	var r := size.x * 0.5
-	for i in 4:
-		var ph := wheel_turn + float(i) * TAU / 4.0
+	var blur := clampf((_spin - 18.0) / 30.0, 0.0, 1.0)
+	var bands := 6
+	for i in bands:
+		var ph := wheel_turn + float(i) * TAU / bands
 		var c := cos(ph)
-		if c < 0.12: continue
-		var x := sin(ph) * (r - 0.6)
-		draw_rect(Rect2(x - 0.5, -size.y / 2.0 + 0.5, 1.0, size.y - 1.0), Color(0.04, 0.04, 0.06, 0.42 * c))
+		if c < 0.05: continue
+		var x := sin(ph) * (r - 0.5)
+		var w := maxf(1.0, 1.6 * c)
+		var a := (0.55 - 0.3 * blur) * (0.5 + 0.5 * c)
+		draw_rect(Rect2(x - w / 2.0, -size.y / 2.0 + 0.5, w, size.y - 1.0), Color(0.03, 0.03, 0.05, a))
+	if blur > 0.0:
+		# the blur: the whole top goes an even dark grey, the blocks lost in it
+		draw_rect(Rect2(-r + 0.5, -size.y / 2.0 + 0.5, r * 2.0 - 1.0, size.y - 1.0), Color(0.16, 0.17, 0.19, 0.45 * blur))

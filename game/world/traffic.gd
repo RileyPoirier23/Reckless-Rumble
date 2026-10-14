@@ -626,6 +626,9 @@ func place_car(a: int, b: int, s: float, lane: float) -> TrafficCar:
 
 # ------------------------------------------------------------------ the frame
 
+const FAR_M := 150.0      # past this the traffic thinks every other frame
+var _frame := 0
+
 func step(dt: float, cam_m: Vector2) -> void:
 	clock += dt
 	if not enabled: return
@@ -652,7 +655,16 @@ func step(dt: float, cam_m: Vector2) -> void:
 		_spawn_t = 0.25
 		# well short (you've just come into town, or off the highway onto it): a few at a time
 		for k in (3 if cars.size() < want * 0.6 else 1): _spawn(cam_m)
-	for c in cars: c.drive(dt)
+	# the cars out past the edge of the screen drive every other frame, with both frames' time
+	# (half the thinking per frame; nobody can see the difference at that range)
+	_frame += 1
+	for c in cars:
+		if c.pos.distance_to(cam_m) > FAR_M and dt < 0.03:
+			if (c.get_instance_id() + _frame) % 2 == 1:
+				c.dt_owed += dt
+				continue
+		c.drive(dt + c.dt_owed)
+		c.dt_owed = 0.0
 
 ## Which way you're going, if you're going anywhere much (zero when you're stopped or crawling).
 func _heading_of_player() -> Vector2:

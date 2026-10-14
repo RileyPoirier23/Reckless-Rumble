@@ -112,7 +112,13 @@ var _perf_specs: Array = []
 var _perf_out: Array = []
 
 ## Pictures that have landed go up; the rest keep painting.
+var _side_key := ""                  # the side view the baker's drawing for the preview
 func _land_jobs() -> void:
+	if _side_key != "" and PreviewBake.me != null:
+		var t := PreviewBake.me.get_tex(_side_key)
+		if t != null:
+			preview = t
+			_side_key = ""
 	if _side_task >= 0 and WorkerThreadPool.is_task_completed(_side_task):
 		WorkerThreadPool.wait_for_task_completion(_side_task)
 		_side_task = -1
@@ -175,8 +181,56 @@ func open(save: Dictionary, the_shop := {}) -> void:
 	row = 0
 	_line = randi() % GUS.size()
 	_reset_trial()
+	_sort()
+	if PreviewBake.me != null: PreviewBake.me.prime(data.garage, order, pos_of(sel))
 	_opened_frame = Engine.get_process_frames()
 	visible = true
+
+## The lot in showroom order: by make, then model, then year (a lot with every car in the
+## catalogue is 499 long; one at a time was no way through it).
+var order: Array[int] = []
+func _sort() -> void:
+	order.clear()
+	var g: Array = data.garage
+	for i in g.size(): order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool:
+		var sa := _spec_of(String((g[a] as Dictionary).id))
+		var sb := _spec_of(String((g[b] as Dictionary).id))
+		var ka := "%s|%s|%04d|%05d" % [String(sa.get("make", "")), String(sa.get("model", "")), int(sa.get("year", 0)), a]
+		var kb := "%s|%s|%04d|%05d" % [String(sb.get("make", "")), String(sb.get("model", "")), int(sb.get("year", 0)), b]
+		return ka < kb)
+
+## Where a car sits in that order.
+func pos_of(i: int) -> int:
+	var k := order.find(i)
+	return k if k >= 0 else 0
+
+func _make_of(i: int) -> String:
+	return String(_spec_of(String((data.garage[i] as Dictionary).id)).get("make", ""))
+
+## The first car of the next (d = 1) or previous (-1) make in the order.
+func _jump_make(d: int) -> int:
+	if order.is_empty(): return sel
+	var p := pos_of(sel)
+	var here := _make_of(sel)
+	var n := order.size()
+	if d > 0:
+		for k in range(1, n + 1):
+			var q := (p + k) % n
+			if _make_of(order[q]) != here: return order[q]
+		return sel
+	# back: to the first car of the make before this one
+	var q := p
+	for k in range(1, n + 1):
+		q = (p - k + n) % n
+		if _make_of(order[q]) != here:
+			here = _make_of(order[q])
+			# then on back to that make's first car
+			while k < n and _make_of(order[(q - 1 + n) % n]) == here:
+				q = (q - 1 + n) % n
+				k += 1
+			return order[q]
+	return sel
 
 var _opened_frame := -1   # the press that opened the garage isn't also a press inside it
 
@@ -228,7 +282,7 @@ func _process(dt: float) -> void:
 	# flip the preview between the side and the top while you try things on
 	if tabs()[tab] == "LOOKS" and Input.is_action_just_pressed("horn"): top_view = not top_view
 	match tabs()[tab]:
-		"CARS": _cars_input(dx, go)
+		"CARS": _cars_input(dy, dx, go)
 		"UPGRADES": _upgrades_input(dy, dx, go)
 		"LOOKS": _looks_input(dy, dx, go)
 		"ROCKAUTTO.CA": _site_input(dy, dx, go)
@@ -258,9 +312,14 @@ func _tab(d: int) -> void:
 	scroll = 0
 	_reset_trial()
 
-func _cars_input(dx: int, go: bool) -> void:
+func _cars_input(dy: int, dx: int, go: bool) -> void:
+	if order.size() != (data.garage as Array).size(): _sort()
 	if dx != 0:
-		sel = (sel + dx + (data.garage as Array).size()) % (data.garage as Array).size()
+		var n := order.size()
+		sel = order[(pos_of(sel) + dx + n) % n]
+		_reset_trial()
+	elif dy != 0:
+		sel = _jump_make(dy)
 		_reset_trial()
 	if go:
 		picked.emit(sel)
@@ -545,7 +604,7 @@ func _draw() -> void:
 	var hint := ""
 	match ts[tab]:
 		BAY: hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: 1TON PUTS IT IN  {ui_cancel}: CLOSE"
-		"CARS": hint = "{leftright}: PICK  {use}: TAKE IT OUT  {horn}: GUS FIXES IT  {ui_cancel}: CLOSE"
+		"CARS": hint = "{leftright}: PICK  {updown}: MAKE  {use}: TAKE IT OUT  {horn}: GUS FIXES IT  {ui_cancel}: CLOSE"
 		"UPGRADES": hint = "{updown}: SLOT  {leftright}: PART  {ui_accept}: INSTALL  {ui_cancel}: CLOSE"
 		"LOOKS": hint = "{updown}: ROW  {leftright}: CHANGE  {ui_accept} ON PAY: PAY  {horn}: %s  {ui_cancel}: CLOSE" % ("SIDE VIEW" if top_view else "TOP VIEW")
 		"ROCKAUTTO.CA": hint = "{leftright}: CATEGORY  {updown}: PART  {ui_accept}: ORDER  {ui_cancel}: CLOSE"
@@ -589,13 +648,21 @@ func _preview_box() -> void:
 		preview = null
 		preview_top = null
 		preview_big = null
+		_side_key = ""
 		CarGen.design(spec)
 		var stock := dmg.is_empty()
 		for mk in looks:
 			if not mk in PixCars.COSMETIC_KEYS: stock = false
 		var authored: Image = PixCars.authored(PixCars.art_id(spec), Color(paint)) if stock else null
-		if authored != null:
+		var baked: ImageTexture = PreviewBake.me.get_tex(key) if PreviewBake.me != null else null
+		if baked != null:
+			preview = baked
+		elif authored != null:
 			preview = ImageTexture.create_from_image(authored)
+		elif PreviewBake.me != null:
+			# drawn ahead of time in the background (the baker), to the front of its queue
+			PreviewBake.me.want(key, spec, Color(paint), looks, dmg, true)
+			_side_key = key
 		else:
 			var the_spec := spec
 			var the_paint := Color(paint)
@@ -616,7 +683,20 @@ func _preview_box() -> void:
 		draw_arc(c, r.size.y * 0.28, 0.0, TAU, 48, Color("323234"), 1.0)
 		if preview_big == null and _big_job == null and not _big_args.is_empty():
 			_big_job = CarArt.build(_big_args[0], _big_args[1], _big_args[2], 5, _big_k, _big_args[3])
-		if preview_big != null: CarView.paint_stack(self, preview_big, c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5), Time.get_ticks_msec() / 2400.0)
+		if preview_big != null:
+			var h := Time.get_ticks_msec() / 2400.0
+			var at := c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5)
+			# the underglow kit, lit, so you can see what you're paying for
+			if preview_big.underglow.a > 0.0:
+				var ug := preview_big.underglow
+				var hl := Vector2(preview_big.length_px * 0.46, preview_big.width_px * 0.5)
+				draw_set_transform(at, h, Vector2.ONE)
+				for k in range(4, -1, -1):
+					var g := float(k + 1) * 1.8 * preview_big.k
+					var fade := pow(1.0 - float(k) / 5.0, 1.6)
+					draw_colored_polygon(CarView.GlowLayer._rounded(hl + Vector2(g * 0.9, g * 1.1), minf(g * 1.6 + 2.0, hl.y)), Color(ug, 0.3 * fade))
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			CarView.paint_stack(self, preview_big, at, h)
 		else: PixelFont.draw_centered(self, c.x, c.y - 3, "DRAWING IT UP...", ASH)
 	else:
 		if preview != null:
@@ -663,19 +743,32 @@ const CARS_SHOWN := 8                # rows of cars on the panel at once (it scr
 func _draw_cars() -> void:
 	var r := _panel()
 	var n := (data.garage as Array).size()
-	# a window of rows round the one picked: a lot with every car in the catalogue still fits
-	var first := clampi(sel - CARS_SHOWN / 2, 0, maxi(0, n - CARS_SHOWN))
+	if order.size() != n: _sort()
+	# the lot in showroom order, a window of rows round the pick (a lot with every car in the
+	# catalogue still fits), and the make up top: up and down skip a make at a time
+	var p := pos_of(sel)
+	var first := clampi(p - CARS_SHOWN / 2, 0, maxi(0, n - CARS_SHOWN))
 	var last := mini(n, first + CARS_SHOWN)
+	var make := _make_of(sel)
+	var of_make := 0
+	var at := 0
+	for q in n:
+		if _make_of(order[q]) == make:
+			of_make += 1
+			if q < p: at += 1
+	PixelFont.draw(self, Vector2(r.position.x + 10, r.position.y + 2), "%s  %d OF %d" % [make.to_upper(), at + 1, of_make], GOLD)
+	PixelFont.draw(self, Vector2(r.position.x + 10, r.position.y + 10), Hints.fmt("{updown}: NEXT MAKE   %d CARS IN THE LOT" % n), Color(ASH, 0.8))
 	if first > 0: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 2), "%d MORE ^" % first, ASH)
-	if last < n: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 10 + CARS_SHOWN * 30 - 6), "%d MORE v" % (n - last), ASH)
-	for i in range(first, last):
+	if last < n: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 22 + CARS_SHOWN * 30 - 6), "%d MORE v" % (n - last), ASH)
+	for q in range(first, last):
+		var i: int = order[q]
 		var car: Dictionary = data.garage[i]
 		var spec := _spec_of(String(car.id))
-		var y := r.position.y + 10 + (i - first) * 30
+		var y := r.position.y + 22 + (q - first) * 30
 		var on := i == sel
 		draw_rect(Rect2(r.position.x + 6, y - 3, r.size.x - 12, 26), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.03))
 		draw_rect(Rect2(r.position.x + 10, y + 2, 10, 10), Color(String(car.paint)))
-		PixelFont.draw(self, Vector2(r.position.x + 26, y + 1), ("%s %s" % [spec.make, spec.model]).to_upper(), GOLD if on else BONE)
+		PixelFont.draw(self, Vector2(r.position.x + 26, y + 1), ("%s %s '%s" % [spec.make, spec.model, str(int(spec.get("year", 0)) % 100).pad_zeros(2)]).to_upper(), GOLD if on else BONE)
 		var dmg := 0.0
 		for k in car.damage: dmg += float(car.damage[k])
 		var cond := "MINT" if dmg < 0.05 else ("DINGED" if dmg < 0.6 else ("BEAT UP" if dmg < 1.6 else "A WRECK"))
@@ -684,7 +777,7 @@ func _draw_cars() -> void:
 	var s := _base_spec()
 	var ls := BigFont.wrap(String(s.get("blurb", "")).to_upper(), 290, 1, false)
 	for k in mini(ls.size(), 6):
-		PixelFont.draw(self, Vector2(r.position.x + 10, r.position.y + 10 + n * 30 + 10 + k * 10), ls[k], Color(BONE, 0.8))
+		PixelFont.draw(self, Vector2(r.position.x + 10, r.position.y + 22 + mini(n, CARS_SHOWN) * 30 + 10 + k * 10), ls[k], Color(BONE, 0.8))
 	PixelFont.draw(self, Vector2(r.position.x + 10, r.end.y - 14), "%s - %s - %s" % [String(s.engine.name).to_upper(), s.get("drivetrain", "RWD"), String(s.tires.get("size", ""))], ASH)
 
 func _draw_upgrades() -> void:

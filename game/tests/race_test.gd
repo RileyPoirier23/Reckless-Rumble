@@ -52,8 +52,12 @@ func _fresh_car() -> void:
 	main.car.sim.set_wear({})
 	main._store_car()
 
+## Game seconds (the clock runs at 4x), and then two frames: what a part checks is set in
+## _process, and a short wait under a slow machine's physics catch-up could end between frames.
 func _wait(s: float) -> void:
 	await get_tree().create_timer(s, true, true, false).timeout
+	await get_tree().process_frame
+	await get_tree().process_frame
 
 func _start(route_i: int) -> StreetRace:
 	var j: JobRunner = main.jobs
@@ -597,7 +601,7 @@ func _meet() -> void:
 	check("meet: the votes come in", m.state == "results" and m.place >= 1 and m.place <= 7 and m.results.size() == 7, "%s, place %d" % [m.state, m.place])
 	check("meet: prize money for the podium", int(main.save.cash) == cash1 + m.paid and (m.paid > 0) == (m.place <= 3 or m.paid == CarMeet.PEOPLES), "place %d, $%d" % [m.place, m.paid])
 	check("meet: it goes in the book", int(main.save.get("meets", {}).get("count", 0)) == 1)
-	check("meet: the results card holds the car", main.car.locked and m.hud.pics.size() == 3)
+	check("meet: the results card holds the car", main.car.locked and m.hud.pics.size() == 3, "locked %s, %d pics" % [main.car.locked, m.hud.pics.size()])
 	m.leave()
 	await _wait(0.3)
 	check("meet: back in gear to leave", m.state == "leave" and not main.car.show_mode and main.car.sim.gear == 1, "%s gear %d" % [m.state, main.car.sim.gear])
@@ -615,10 +619,12 @@ func _auction() -> void:
 	await _wait(0.3)
 	check("auction: you're at the gate", a.at_gate())
 	a.start()
-	await _wait(0.2)
-	check("auction: lot 1 on the block", a.open() and a.live() and a.lot_i == 0 and a.bid == int(a.lots[0].open) and main.car.locked)
-	# nobody else wants this one
+	# nobody else wants this one (said before the floor gets a chance: a frame or two at 4x is
+	# long enough for an eager bidder's hand to go up, and the price with it)
 	for i in a.tops.size(): a.tops[i] = 0
+	await _wait(0.2)
+	check("auction: lot 1 on the block", a.open() and a.live() and a.lot_i == 0 and a.bid == int(a.lots[0].open) and main.car.locked,
+		"open %s live %s lot %d bid %d/%d locked %s" % [a.open(), a.live(), a.lot_i, a.bid, int(a.lots[0].open) if not a.lots.is_empty() else -1, main.car.locked])
 	var cars0 := (main.save.garage as Array).size()
 	var cash0 := int(main.save.cash)
 	var said := a.you_bid()
@@ -651,7 +657,7 @@ func _auction() -> void:
 	check("auction: Darrell bids, and it sells to him", String(a.done().get("1", "")) == "DARRELL", str(a.done()))
 	a.leave()
 	await _wait(0.2)
-	check("auction: walk away", not a.open() and not main.car.locked)
+	check("auction: walk away", not a.open() and not main.car.locked, "open %s locked %s" % [a.open(), main.car.locked])
 	main.save.garage.remove_at(cars0)
 	SaveGame.write(main.save)
 	done += 1

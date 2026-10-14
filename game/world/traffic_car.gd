@@ -276,6 +276,8 @@ func _tow(dt: float) -> void:
 
 var _pt := 0
 var _rule_t := 0.0
+var dt_owed := 0.0           # a frame it sat out (far from the camera): driven on the next
+
 func drive(dt: float) -> void:
 	_pt = Time.get_ticks_usec()
 	_tow(dt)

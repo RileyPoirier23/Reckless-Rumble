@@ -223,6 +223,16 @@ class Job:
 	var task := -1
 	func done() -> bool:
 		return task < 0 or WorkerThreadPool.is_task_completed(task)
+	## Done, and this frame hasn't landed one yet: making the textures is a few milliseconds
+	## each, and a street of new cars landing on one frame was a hitch. One a frame; the rest
+	## wait their turn (the old art, or nothing, shows meanwhile).
+	static var _land_frame := -1
+	func ready_to_land() -> bool:
+		if not done(): return false
+		var f := Engine.get_process_frames()
+		if f == _land_frame: return false
+		_land_frame = f
+		return true
 	## The finished art (waits for it if it isn't done yet). Main thread only.
 	func take() -> CarArt:
 		if task >= 0:

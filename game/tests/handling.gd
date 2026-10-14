@@ -50,7 +50,7 @@ static func worst_slide(spec: Dictionary, assist: int, m: String) -> float:
 		var s0: float = kb[2]
 		var turning_in := absf(st) > absf(s0) and (signf(st) == signf(s0) or is_zero_approx(s0))
 		kb[2] = move_toward(s0, st, DT * (3.5 if turning_in else 7.0))
-		var aided := PlayerCar.aids(c, float(kb[0]), float(kb[2]), 0.0, 99.0, false, 1.0)
+		var aided := PlayerCar.aids(c, float(kb[0]), float(kb[2]), 0.0, 99.0, false, 1.0, 0.0)
 		c.esc_off = bool(aided[2])
 		c.step(DT, float(aided[0]), float(kb[1]), float(aided[1]), 0.0)
 		if c.speed() > 5.0:

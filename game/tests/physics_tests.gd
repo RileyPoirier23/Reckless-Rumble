@@ -257,6 +257,34 @@ func _init() -> void:
 		donut[d] = [spin_rate, side]
 	check("RWD: donuts (it rotates hard with the rear out)", float(donut.RWD[0]) > 1.0 and float(donut.RWD[1]) > 1.5, "yaw %.2f rad/s, slide %.1f m/s" % [float(donut.RWD[0]), float(donut.RWD[1])])
 	check("FWD: no donuts (it ploughs wide)", float(donut.FWD[1]) < float(donut.RWD[1]) * 0.6, "slide %.1f vs RWD %.1f m/s" % [float(donut.FWD[1]), float(donut.RWD[1])])
+	# a drift you can hold (STREET, the drift helper on): a rear-driver at 60, the handbrake flicked
+	# into a corner, then the gas with the stick in the corner: the back stays out for the next two
+	# seconds, neither snapping straight nor swinging round, and it's still going somewhere
+	var held := {}
+	for mode in [CarSim.Assist.STREET, CarSim.Assist.ARCADE]:
+		var c4 := rolling(car("RWD"), 60.0)
+		c4.assist = mode
+		run(c4, 0.25, 0.0, 0.0, 0.6, 1.0)
+		var h0 := c4.heading
+		var lo := 9.0
+		var hi := 0.0
+		var dk := 0.0
+		for i in 120 * 2:
+			var beta := atan2(c4.vy, maxf(absf(c4.vx), 1.0))
+			dk = minf(1.0, dk + 1.0 / (120.0 * 0.15)) if (c4.drifting or absf(beta) > 0.2) else maxf(0.0, dk - 1.0 / (120.0 * 0.4))
+			var aided := PlayerCar.aids(c4, 0.8, 0.6, 0.0, 0.25 + i / 120.0, false, 0.5, dk)
+			c4.esc_off = dk > 0.5
+			c4.drift_assist = dk * (0.6 if mode == CarSim.Assist.STREET else 1.0)
+			c4.step(1.0 / 120.0, aided[0], 0.0, aided[1], 0.0)
+			if i > 60:
+				lo = minf(lo, absf(beta))
+				hi = maxf(hi, absf(beta))
+		held[mode] = [lo, hi, absf(c4.heading - h0), c4.speed()]
+	for mode in held:
+		var r: Array = held[mode]
+		check("%s: a drift holds its angle on the gas" % ("STREET" if mode == CarSim.Assist.STREET else "ARCADE"),
+			float(r[0]) > 0.18 and float(r[1]) < 1.15 and float(r[2]) < 5.5 and float(r[3]) > 7.0,
+			"slip angle %.2f..%.2f rad, turned %.2f rad, %.0f km/h at the end" % [float(r[0]), float(r[1]), float(r[2]), float(r[3]) * 3.6])
 	# all-wheel drift, on a built car (twice the torque): the same corner on the gas, a rear-biased
 	# centre diff slides, a front-biased one grips
 	var drift := {}

@@ -21,6 +21,8 @@ enum Assist { SIM, STREET, ARCADE }
 var spec: Dictionary
 var assist := Assist.SIM
 var esc_off := false                  # the stability control stands down (a donut, a slide on purpose)
+var drift_assist := 0.0               # 0..1: a committed slide is held at its angle instead of snapping straight or round (STREET some, ARCADE lots)
+var drifting := false                 # the back's out and it's going sideways (for the smoke, the skids, the score)
 var auto_gearbox := true
 var direct_steer := false             # a steering wheel: steer_in is the road wheels' angle over full lock
 
@@ -594,6 +596,19 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	vx += dvx * h
 	vy += dvy * h
 	yaw_rate += mz / iz * h
+	# a drift held: the car's own physics would either snap it straight or swing it right round.
+	# With the helper on, the yaw is eased toward the rate that keeps the slip angle where it is
+	# (the heading turning with the velocity), so the stick's counter-steer sets the angle and
+	# the gas keeps it there. Past a point the slide's bled off: no car drifts backwards.
+	var beta_now := atan2(vy, maxf(avx, 1.0))
+	drifting = avx > 4.0 and absf(beta_now) > 0.2
+	if drift_assist > 0.0 and avx > 4.0 and absf(beta_now) > 0.15:
+		var v2 := vx * vx + vy * vy
+		var yaw_hold := (vx * fy - vy * fx) / (m * v2)
+		yaw_rate = lerpf(yaw_rate, yaw_hold, minf(1.0, drift_assist * 4.0 * h))
+		var cap := lerpf(1.05, 0.85, drift_assist)
+		if absf(beta_now) > cap:
+			vy = lerpf(vy, signf(vy) * tan(cap) * avx, minf(1.0, 6.0 * h))
 	# stability control (STREET some, ARCADE lots; off on SIM, and off while you're doing a donut or
 	# a handbrake slide on purpose, see esc_off): a real car brakes one wheel to stop a spin. Here it
 	# pulls the yaw back toward what the steering's asking for and bleeds off the sideways slide,

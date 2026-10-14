@@ -59,6 +59,16 @@ func _run() -> void:
 			var t1 := Time.get_ticks_usec()
 			await get_tree().process_frame
 			print("GARAGE frame %.0f ms" % ((Time.get_ticks_usec() - t1) / 1000.0))
+		# browse: two makes down, one car right, then let the baker catch up
+		for act in ["ui_down", "ui_down", "ui_right"]:
+			Input.action_press(act)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			Input.action_release(act)
+			await get_tree().process_frame
+		var tw := Time.get_ticks_usec()
+		while main.garage.preview == null and (Time.get_ticks_usec() - tw) < 6e6: await get_tree().process_frame
+		print("GARAGE browsed to %s, preview after %.0f ms, baker busy %s" % [main.garage.preview_key.split("|")[0], (Time.get_ticks_usec() - tw) / 1000.0, PreviewBake.me.busy()])
 		if OS.get_environment("PERF_SHOT") != "":
 			await RenderingServer.frame_post_draw
 			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT"))
@@ -67,7 +77,9 @@ func _run() -> void:
 	for night in nights:
 		main.sky.time_h = 22.0 if night else 13.0
 		main._teleport(at, hd)
-		await _wait(1.5)
+		# PERF_GLOW=#rrggbb: an underglow kit on the car, to look at
+		if OS.get_environment("PERF_GLOW") != "" and main.car.view.art != null: main.car.view.art.underglow = Color(OS.get_environment("PERF_GLOW"))
+		await _wait(float(OS.get_environment("PERF_WAIT")) if OS.get_environment("PERF_WAIT") != "" else 1.5)
 		Input.action_press("throttle")
 		Prof.reset()
 		Prof.on = true
@@ -114,6 +126,9 @@ func _run() -> void:
 			draws += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 			prims += Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
 			objs += Performance.get_monitor(Performance.OBJECT_NODE_COUNT)
+		if OS.get_environment("PERF_SHOT") != "":
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT").replace(".png", "_%s.png" % ("night" if night else "day")))
 		Input.action_release("throttle")
 		Prof.on = false
 		print("PROF ", Prof.report(frames))

@@ -337,44 +337,68 @@ func _inputs(dt: float) -> Array:
 		_st_lag += (st - _st_lag) * (1.0 - exp(-dt / (0.06 + 0.45 * impaired)))
 		st = _st_lag * (1.0 + 0.35 * impaired) + sin(_drunk_t * 0.9) * 0.16 * impaired + sin(_drunk_t * 2.3 + 1.0) * 0.06 * impaired
 		th = clampf(th * (1.0 + 0.4 * impaired * sin(_drunk_t * 1.7)), 0.0, 1.0)
-	var aided := PlayerCar.aids(sim, th, st, hb, _hb_t, wheel, float(GameSettings.get_v("controls", "speed_steer")))
+	# a drift: once the back's out and you're on it (the gas, the handbrake just pulled, or a big
+	# angle), the car's committed for as long as it stays sideways; the aids change jobs
+	var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
+	var v := sim.speed()
+	if sim.drifting and (th > 0.3 or _hb_t < 1.0 or absf(beta) > 0.35): drift = minf(1.0, drift + dt / 0.15)
+	elif absf(beta) < 0.1 or v < 3.0: drift = maxf(0.0, drift - dt / 0.4)
+	var aided := PlayerCar.aids(sim, th, st, hb, _hb_t, wheel, float(GameSettings.get_v("controls", "speed_steer")), drift)
 	th = aided[0]
 	st = aided[1]
 	show_off = aided[2]
-	sim.esc_off = show_off
+	sim.esc_off = show_off or drift > 0.5 or bool(aided[3])
+	sim.drift_assist = 0.0 if sim.assist == CarSim.Assist.SIM else (drift * (0.6 if sim.assist == CarSim.Assist.STREET else 1.0))
 	return [th, br, st, hb]
+
+var drift := 0.0                  # 0..1: committed to a slide (the aids hold it instead of catching it)
 
 ## The driving aids (STREET and ARCADE): traction control, steering into a slide for you, and
 ## less lock at speed. Takes the gas, the steering and the handbrake as the player gave them, and
 ## gives back [gas, steering, showing off]. Showing off is a donut at a crawl or a slide off the
 ## handbrake: the aids step back for that, the way you'd switch traction control off.
 ## `speed_steer` is Settings > Controls > SPEED STEERING (how much less lock at speed).
-static func aids(sim: CarSim, th: float, st: float, hb: float, hb_t: float, wheel: bool, speed_steer: float) -> Array:
-	if sim.assist == CarSim.Assist.SIM: return [th, st, false]
+## `drift` (0..1) is how committed the car is to a slide: in a drift the traction control
+## stands down, the stability help turns into drift help (it counter-steers for you to hold the
+## angle: push the stick into the corner for more angle, away from it to straighten), and the
+## gas feeds the slide instead of being cut. Gives back [gas, steering, showing off, meaning it].
+## Meaning it is a drift you're asking for (hard lock and a lot of gas at speed in a
+## rear-driver): the aids let the back come out instead of catching it.
+static func aids(sim: CarSim, th: float, st: float, hb: float, hb_t: float, wheel: bool, speed_steer: float, drift := 0.0) -> Array:
+	if sim.assist == CarSim.Assist.SIM: return [th, st, false, false]
 	var v := sim.speed()
 	var street := sim.assist == CarSim.Assist.STREET
 	# (showing off: hard lock and gas at a crawl, or the handbrake pulled this last moment; the aids
 	# used to stay off for two seconds after any pull, and that read as the truck stuck sliding)
 	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb > 0.5 or hb_t < 0.6)
-	# traction control: back off the gas while the driven tires spin up
+	var rear_drive := String(sim.spec.get("drivetrain", "RWD")) != "FWD"
+	var meaning_it := rear_drive and absf(st) > 0.5 and th > 0.85 and v > 6.0
+	var holding := drift > 0.5
+	# traction control: back off the gas while the driven tires spin up (not when you mean it)
 	var spin := sim.drive_slip()
 	var tc_limit := 2.0 if street else 1.5
-	if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off:
+	if spin > tc_limit and v > 1.5 and hb < 0.1 and not show_off and not holding and not meaning_it:
 		th *= clampf(1.0 - (spin - tc_limit) * 0.35, 0.1 if street else 0.0, 1.0)
 	# and off the gas while the back's stepping out (stability control cuts the power too)
-	var slide := absf(atan2(sim.vy, maxf(absf(sim.vx), 1.0)))
-	if slide > 0.15 and v > 4.0 and hb < 0.1 and not show_off:
+	var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
+	var slide := absf(beta)
+	if slide > 0.15 and v > 4.0 and hb < 0.1 and not show_off and not holding and not meaning_it:
 		th *= clampf(1.0 - (slide - 0.15) * (2.5 if street else 4.0), 0.1, 1.0)
 	if not wheel:
 		# a wheel turns the road wheels one for one: no help that would move them without the rim.
-		# Stability: steer into a slide for you, and don't let the stick over-rotate at speed
-		var beta := atan2(sim.vy, maxf(absf(sim.vx), 1.0))
-		var help := 0.75 if street else 0.9
-		if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off:
-			st = clampf(st + beta * help * 1.6, -1.0, 1.0)
-		var at_speed := lerpf(1.0, 0.5 if street else 0.45, clampf(speed_steer, 0.0, 1.5))
-		st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
-	return [th, st, show_off]
+		if holding and v > 4.0:
+			# drift help: the wheels follow the slide (counter-steer), the stick leans on that
+			var k := lerpf(0.0, 1.0, drift)
+			var cs := clampf(beta * 1.15, -1.0, 1.0)
+			st = clampf(lerpf(st, cs + st * 0.5, k), -1.0, 1.0)
+		else:
+			# Stability: steer into a slide for you, and don't let the stick over-rotate at speed
+			var help := 0.75 if street else 0.9
+			if v > 4.0 and absf(beta) > 0.08 and hb < 0.1 and not show_off and not meaning_it:
+				st = clampf(st + beta * help * 1.6, -1.0, 1.0)
+			var at_speed := lerpf(1.0, 0.5 if street else 0.45, clampf(speed_steer, 0.0, 1.5))
+			st *= lerpf(1.0, at_speed, clampf(v / 35.0, 0.0, 1.0))
+	return [th, st, show_off, meaning_it]
 
 func _lights(dt: float, st: float) -> void:
 	# high beams: tap to switch, hold to flash (hands off while a menu's up; the lamps still work)

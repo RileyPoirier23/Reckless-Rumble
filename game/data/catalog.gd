@@ -437,6 +437,7 @@ static func _build_spec(e: Dictionary) -> Dictionary:
 		"idle_rpm": idle,
 		"redline_rpm": red,
 		"limiter_rpm": red + (200.0 if asp in ["D", "TD"] or electric else 300.0),
+		"layout": String(eng.get("layout", "")), "aspiration": asp, "electric": electric, "cc": int(eng.get("cc", 0)),
 		"inertia": snappedf(clampf((0.08 if electric else 0.12) + 0.04 * disp * (1.25 if asp in ["D", "TD"] else 1.0), 0.06, 0.5), 0.01),
 		"clutch_torque": snappedf(maxf(peak_t * 1.55, 60.0), 1.0),
 		"torque_curve": curve,
