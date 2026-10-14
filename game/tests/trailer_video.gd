@@ -58,10 +58,11 @@ func _run() -> void:
 	drive_in.queue_free()
 	await _wait(4.3)
 	# --- the story so far
-	await _story("party", 9.0, "THE STORY", "PORT RUMBLE, NEW BRUNSWICK, OCTOBER 2019. LEO COVINGTON IS 19, HIS DAD IS DEAD, AND HE'S DRUNK AT A PARTY WITH HIS DAD'S CAR KEYS.")
-	await _story("the_meet", 9.0, "THE STORY", "HE DRIVES IT THROUGH THE FAMILIA'S MEET. NOW HE OWES DOM TORTELLINI A CAR, AND HIS DAYS AT THE INSPECTION COUNTER PAY FOR IT.")
-	await _story("johnny", 8.0, "THE STORY", "THE NIGHTS ARE FOR THE ROAD: TOW CALLS, PIZZA, DRAG NIGHT, STREET RACES FOR PINK SLIPS AGAINST PEOPLE LIKE JOHNNY TRAM.")
-	await _story("frankie", 8.0, "THE STORY", "SIX YEARS, THREE ENDINGS, AND A KID NAMED FRANKIE WHO'S WATCHING WHAT KIND OF MAN LEO TURNS INTO.")
+	var only := OS.get_environment("TRAILER_ONLY")      # one road scene, for working on it
+	if only == "": await _story("party", 9.0, "THE STORY", "PORT RUMBLE, NEW BRUNSWICK, OCTOBER 2019. LEO COVINGTON IS 19, HIS DAD IS DEAD, AND HE'S DRUNK AT A PARTY WITH HIS DAD'S CAR KEYS.")
+	if only == "": await _story("the_meet", 9.0, "THE STORY", "HE DRIVES IT THROUGH THE FAMILIA'S MEET. NOW HE OWES DOM TORTELLINI A CAR, AND HIS DAYS AT THE INSPECTION COUNTER PAY FOR IT.")
+	if only == "": await _story("johnny", 8.0, "THE STORY", "THE NIGHTS ARE FOR THE ROAD: TOW CALLS, PIZZA, DRAG NIGHT, STREET RACES FOR PINK SLIPS AGAINST PEOPLE LIKE JOHNNY TRAM.")
+	if only == "": await _story("frankie", 8.0, "THE STORY", "SIX YEARS, THREE ENDINGS, AND A KID NAMED FRANKIE WHO'S WATCHING WHAT KIND OF MAN LEO TURNS INTO.")
 	# --- the road
 	StoryState.active = false
 	# every photo's already on the break room wall: no Employee of the Month cards in the way
@@ -72,6 +73,11 @@ func _run() -> void:
 	_watch_cards()
 	var d: Node = await _drive_ready()
 	print("trailer: the lot's ready, car ", d.car.spec.get("id", "?"))
+	# a fresh car (every run of this writes the save: a hurt engine from the last take would stay)
+	d.car.sim.reset_parts()
+	d.car.sim.set_wear({})
+	d.car.sim.engine_health = 1.0
+	d.car.sim.fuel_l = d.car.sim.tank_l
 	# Leo's Silvio, out of whatever lot the save has
 	for i in (d.save.garage as Array).size():
 		if String((d.save.garage[i] as Dictionary).id) == "silvio" and i != d.car_i:
@@ -81,12 +87,11 @@ func _run() -> void:
 	d.traffic.enabled = true
 	d.wildlife.enabled = false
 	d.police.enabled = false
-	await _burnout(d)
-	await _drift(d)
-	await _drag(d)
-	await _oneton(d)
-	await _pulled_over(d)
-	await _chase(d)
+	print("trailer: hold_car %s locked %s assist %d" % [d.hold_car, d.car.locked, d.car.sim.assist])
+	for sc in ["burnout", "drift", "drag", "oneton", "pulled_over", "chase"]:
+		if only != "" and only != sc: continue
+		await call("_" + sc, d)
+	if only != "": quit()
 	# --- where it's at
 	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE. 1TON'S HYDRAULICS.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.\nFULL LOGITECH WHEEL SUPPORT. CONTROLLER SUPPORT.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 10.0)
 	await _wait(10.5)
@@ -175,10 +180,19 @@ func _burnout(d: Node) -> void:
 	# gas as the rears spun up, so they're off for the show)
 	var was: int = d.car.sim.assist
 	d.car.sim.assist = CarSim.Assist.SIM
-	Input.action_press("brake")
-	await _frames(4)
+	# (the gas first: a brake pressed from a standstill is reverse on an automatic)
+	d.car.sim.gear = 1
+	# (warmed up: cold, the engine won't rev past the three thousands)
+	d.car.sim.coolant_c = 90.0
+	d.car.sim.oil_c = 95.0
 	Input.action_press("throttle")
-	await _wait(5.5)
+	await _frames(3)
+	Input.action_press("brake")
+	for k in 11:
+		await _wait(0.5)
+		var c: PlayerCar = d.car
+		print("trailer: burnout %.1fs th %.2f br %.2f dt %s gear %d rpm %.0f vx %.2f w %.1f slip %.1f locked %s hold %s eng %s" % [k * 0.5, c.throttle_in, Input.get_action_strength("brake"), c.sim.spec.get("drivetrain", "?"), c.sim.gear, c.sim.rpm, c.sim.vx, c.sim.w_wheel, float(c.sim.wheel_slip[2]), c.locked, d.hold_car, c.sim.clutch_locked])
+		print("   fuel %.1f shift %.2f clutch %.2f health %.2f power %.0f kW ct %.0f pads %.1f slam %.2f hb %.2f stalled %s blown %s" % [c.sim.fuel_l, c.sim.shift_timer, c.sim.clutch_cond, c.sim.engine_health, c.sim._power_w / 1000.0, float(c.sim.spec.engine.clutch_torque), c.sim.pads_mm, c.sim.slam_roll if "slam_roll" in c.sim else -1.0, Input.get_action_strength("handbrake"), c.sim.stalled, c.sim.engine_blown])
 	Input.action_release("brake")
 	await _wait(1.2)
 	_release_all()
