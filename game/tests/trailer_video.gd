@@ -490,7 +490,7 @@ class DriveIn extends Node2D:
 		CarView.night = 1.0
 		cam = Camera2D.new()
 		# a wide shot: the whole field, the screen small at the top of it
-		cam.position = Vector2(320, 215)
+		cam.position = Vector2(320, 250)
 		cam.zoom = Vector2(0.7, 0.7)
 		add_child(cam)
 		cam.make_current()
@@ -500,19 +500,27 @@ class DriveIn extends Node2D:
 		rng.seed = 506
 		var ids: Array = CarCatalog.ids()
 		var paints := [Color("3a3c44"), Color("4a3b36"), Color("2d3b55"), Color("5a5a58"), Color("4b2f2f"), Color("36483a"), Color("6a6258"), Color("2a2a30")]
-		for row in 4:
-			var y := 332.0 + row * 36.0
-			var n := 7 + row
+		# three rows, a car length and a half apart so nobody's on anybody's bumper; the back row
+		# (up by the screen) drawn smaller and dimmer, the front row full size: depth. Leo's
+		# Silvio is front and centre.
+		const ROWS := [[296.0, 0.78, 9, 84.0], [372.0, 0.9, 8, 100.0], [448.0, 1.0, 7, 116.0]]
+		for row in ROWS.size():
+			var y: float = ROWS[row][0]
+			var k_scale: float = ROWS[row][1]
+			var n: int = ROWS[row][2]
+			var gap: float = ROWS[row][3]
 			for k in n:
-				var x := 320.0 + (float(k) - float(n - 1) / 2.0) * (104.0 - row * 6.0) + rng.randf_range(-3.0, 3.0)
-				var leo := row == 0 and k == n / 2
+				var x := 320.0 + (float(k) - float(n - 1) / 2.0) * gap + rng.randf_range(-4.0, 4.0)
+				var leo := row == ROWS.size() - 1 and k == n / 2
 				var id: String = "silvio" if leo else String(ids[rng.randi() % ids.size()])
 				var spec := CarCatalog.spec(id)
 				if spec.is_empty(): continue
 				var v := CarView.new()
 				v.art = CarArt.build(spec, Color("c0392b") if leo else paints[rng.randi() % paints.size()], {}, rng.randi() % 9 + 1, CarArt.CAR_SCALE, {}).take()
-				v.heading = -PI / 2.0 + rng.randf_range(-0.05, 0.05)
+				v.heading = -PI / 2.0 + rng.randf_range(-0.04, 0.04)
 				v.position = Vector2(x, y)
+				v.scale = Vector2(k_scale, k_scale)
+				v.modulate = Color(1, 1, 1).darkened((1.0 - k_scale) * 1.2)
 				v.headlights = false
 				v.z_index = row
 				add_child(v)
@@ -546,7 +554,7 @@ class DriveIn extends Node2D:
 			u = u * u * (3.0 - 2.0 * u)
 			var z := lerpf(0.7, 2.0, u)
 			cam.zoom = Vector2(z, z)
-			cam.position = Vector2(320, 215).lerp(SCREEN.get_center(), u)
+			cam.position = Vector2(320, 250).lerp(SCREEN.get_center(), u)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -570,13 +578,13 @@ class DriveIn extends Node2D:
 			var gx := -400.0 + fmod(i * 37.0 + (i * i) % 23, 1440.0)
 			var gy := 222.0 + fmod(i * 53.0 + (i * 7) % 31, 380.0)
 			draw_rect(Rect2(gx, gy, 1, 2), Color("1d3a22"))
-		draw_rect(Rect2(-400, 300, 1440, 8), Color("2a2822"))
-		for row in 4:
-			draw_rect(Rect2(-400, 326 + row * 36, 1440, 10), Color("1b3320"))
+		draw_rect(Rect2(-400, 262, 1440, 8), Color("2a2822"))
+		for row in 3:
+			draw_rect(Rect2(-400, 290 + row * 76, 1440, 12), Color("1b3320"))
 		# the speaker posts
-		for row in 4:
+		for row in 3:
 			for k in 24:
-				var p := Vector2(-380 + k * 60 + row * 13, 336 + row * 36)
+				var p := Vector2(-380 + k * 60 + row * 13, 300 + row * 76)
 				draw_rect(Rect2(p, Vector2(2, 10)), Color("2a2a30"))
 				draw_rect(Rect2(p + Vector2(-2, -3), Vector2(6, 4)), Color("3a3a42"))
 		# the screen's tower and the screen, and its light on the lot
