@@ -51,6 +51,7 @@ func _run() -> void:
 	# --- the road
 	StoryState.active = false
 	LoadingScreen.go(self, "res://drive.tscn", "THE LOT")
+	_watch_cards()
 	var d: Node = await _drive_ready()
 	# Leo's Silvio, out of whatever lot the save has
 	for i in (d.save.garage as Array).size():
@@ -58,7 +59,6 @@ func _run() -> void:
 			d._on_garage_pick(i)
 			d = await _drive_ready()
 			break
-	_watch_cards(d)
 	d.traffic.enabled = true
 	d.wildlife.enabled = false
 	d.police.enabled = false
@@ -111,9 +111,10 @@ func _story(id: String, secs: float, tag: String, text: String) -> void:
 # ------------------------------------------------------------------ the road
 
 ## Employee of the Month cards come up when you stop: put them on the wall and carry on.
-func _watch_cards(d: Node) -> void:
-	while is_instance_valid(d) and current_scene == d:
-		if d.award_card.visible:
+func _watch_cards() -> void:
+	while true:
+		var s := current_scene
+		if s != null and _script_of(s).ends_with("drive.gd") and s.award_card != null and s.award_card.visible:
 			await _wait(0.6)
 			await _tap("ui_accept")
 		await process_frame
