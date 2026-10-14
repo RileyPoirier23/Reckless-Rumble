@@ -10,6 +10,22 @@ static var _cache := {}
 static func estimate(spec: Dictionary) -> Dictionary:
 	var key := JSON.stringify(spec).hash()
 	if _cache.has(key): return _cache[key]
+	var out := measure(spec)
+	_cache[key] = out
+	return out
+
+## The cached numbers for a spec, or {} when it hasn't been on the dyno yet.
+static func cached(spec: Dictionary) -> Dictionary:
+	return _cache.get(JSON.stringify(spec).hash(), {})
+
+## Keep numbers measured elsewhere (on a worker thread, say). The cache is only ever written
+## from the main thread.
+static func store(spec: Dictionary, out: Dictionary) -> void:
+	_cache[JSON.stringify(spec).hash()] = out
+
+## The run itself: a couple of thousand sim steps, so a good fraction of a second. Pure, so it
+## can run on a worker thread.
+static func measure(spec: Dictionary) -> Dictionary:
 	var c := CarSim.new(spec)
 	c.set_ambient(20.0)
 	c.cold_start()
@@ -52,5 +68,4 @@ static func estimate(spec: Dictionary) -> Dictionary:
 			if still > 3.0 and t > 12.0: break
 	var out := { "zero100": zero100, "quarter": quarter, "eighth": eighth, "eighth_kmh": eighth_kmh, "sixty": sixty,
 		"top_kmh": top * 3.6, "peaks": Parts.peaks(spec) }
-	_cache[key] = out
 	return out

@@ -32,6 +32,38 @@ func _run() -> void:
 		hd = deg_to_rad(float(sp[2])) if sp.size() > 2 else 0.0
 	var hide: Array = OS.get_environment("PERF_HIDE").split(",") if OS.get_environment("PERF_HIDE") != "" else []
 	var nights: Array = [false, true] if OS.get_environment("PERF_NIGHT") != "0" else [false]
+	# PERF_GARAGE=1: open the garage on the save as it is, time it, screenshot it, quit
+	if OS.get_environment("PERF_GARAGE") != "":
+		var t0 := Time.get_ticks_usec()
+		main.garage.open(main.save)
+		print("GARAGE open() %.0f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
+		t0 = Time.get_ticks_usec()
+		Prof.reset()
+		Prof.on = true
+		main.garage._preview_box()
+		print("GARAGE _preview_box() %.0f ms: %s" % [(Time.get_ticks_usec() - t0) / 1000.0, Prof.report(1)])
+		Prof.reset()
+		t0 = Time.get_ticks_usec()
+		main.garage._draw_cars()
+		print("GARAGE _draw_cars() %.0f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
+		t0 = Time.get_ticks_usec()
+		Prof.reset()
+		Prof.on = true
+		await get_tree().process_frame
+		print("GARAGE first frame %.0f ms: %s" % [(Time.get_ticks_usec() - t0) / 1000.0, Prof.report(12)])
+		Prof.reset()
+		t0 = Time.get_ticks_usec()
+		await get_tree().process_frame
+		print("GARAGE opened with %d cars in %.0f ms: %s" % [(main.save.garage as Array).size(), (Time.get_ticks_usec() - t0) / 1000.0, Prof.report(12)])
+		for i in 3:
+			var t1 := Time.get_ticks_usec()
+			await get_tree().process_frame
+			print("GARAGE frame %.0f ms" % ((Time.get_ticks_usec() - t1) / 1000.0))
+		if OS.get_environment("PERF_SHOT") != "":
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT"))
+		get_tree().quit()
+		return
 	for night in nights:
 		main.sky.time_h = 22.0 if night else 13.0
 		main._teleport(at, hd)

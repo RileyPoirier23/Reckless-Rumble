@@ -100,6 +100,70 @@ var preview_top: CarArt              # and how it'll look out on the road, from 
 var preview_big: CarArt              # the same, drawn twice the size, for the top view
 var top_view := false                # the preview shows the car from above, big, turning
 var preview_key := ""
+var _side_task := -1                 # the side view being painted on a worker thread
+var _side_img: Image
+var _top_job: CarArt.Job
+var _big_job: CarArt.Job
+var _big_k := 1.0
+var _big_args: Array = []
+var _perf_task := -1                 # the dyno runs (built car, stock car) on a worker thread
+var _perf_key := ""
+var _perf_specs: Array = []
+var _perf_out: Array = []
+
+## Pictures that have landed go up; the rest keep painting.
+func _land_jobs() -> void:
+	if _side_task >= 0 and WorkerThreadPool.is_task_completed(_side_task):
+		WorkerThreadPool.wait_for_task_completion(_side_task)
+		_side_task = -1
+		if _side_img != null: preview = ImageTexture.create_from_image(_side_img)
+	if _top_job != null and _top_job.done():
+		preview_top = _top_job.take()
+		_top_job = null
+	if _big_job != null and _big_job.done():
+		preview_big = _big_job.take()
+		_big_job = null
+	if _perf_task >= 0 and WorkerThreadPool.is_task_completed(_perf_task):
+		WorkerThreadPool.wait_for_task_completion(_perf_task)
+		_perf_task = -1
+		for i in _perf_specs.size(): Perf.store(_perf_specs[i], _perf_out[i])
+
+## The dyno numbers for the car as built and as it came, if they're in; otherwise start the
+## runs on a worker thread (two 40-second launches at 60 Hz: seconds on a slow machine) and
+## come back empty-handed.
+func _perf_pair(cur: Dictionary, spec: Dictionary) -> Array:
+	var pf := Perf.cached(cur)
+	var stock := Perf.cached(spec)
+	if not pf.is_empty() and not stock.is_empty(): return [pf, stock]
+	var key := "%s|%s" % [JSON.stringify(cur).hash(), JSON.stringify(spec).hash()]
+	if _perf_task < 0 and key != _perf_key:
+		_perf_key = key
+		_perf_specs = [cur.duplicate(true), spec.duplicate(true)]
+		_perf_out = [{}, {}]
+		var specs := _perf_specs
+		var out := _perf_out
+		_perf_task = WorkerThreadPool.add_task(func() -> void:
+			for i in specs.size(): out[i] = Perf.measure(specs[i]), false, "garage dyno")
+	return []
+
+## Wait for whatever's still painting (another car picked, the screen closing).
+func _settle_jobs() -> void:
+	if _side_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_side_task)
+		_side_task = -1
+	if _top_job != null:
+		_top_job.take()
+		_top_job = null
+	if _big_job != null:
+		_big_job.take()
+		_big_job = null
+	if _perf_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_perf_task)
+		_perf_task = -1
+		for i in _perf_specs.size(): Perf.store(_perf_specs[i], _perf_out[i])
+
+func _exit_tree() -> void:
+	_settle_jobs()
 var rng := RandomNumberGenerator.new()
 
 func open(save: Dictionary, the_shop := {}) -> void:
@@ -116,8 +180,14 @@ func open(save: Dictionary, the_shop := {}) -> void:
 func _car() -> Dictionary:
 	return data.garage[sel]
 
+## Specs by id, read once (the list and the stat bars asked the disk for them every frame).
+var _specs := {}
+func _spec_of(id: String) -> Dictionary:
+	if not _specs.has(id): _specs[id] = SaveGame.load_spec(id)
+	return _specs[id]
+
 func _base_spec() -> Dictionary:
-	return SaveGame.load_spec(String(_car().id))
+	return _spec_of(String(_car().id))
 
 func _spec_with(parts: Dictionary) -> Dictionary:
 	return Parts.apply(_base_spec(), parts)
@@ -502,15 +572,38 @@ func _preview_box() -> void:
 	var key := "%s|%s|%s|%s" % [_car().id, paint, JSON.stringify(looks), JSON.stringify(_car().damage)]
 	if key != preview_key:
 		preview_key = key
+		# the pictures are drawn on worker threads (a couple of seconds of painting on a slow
+		# machine, and it used to hold the whole screen while it happened): the panel says so
+		# until they land. The design and the catalogue are read on this thread first, so the
+		# worker only paints.
+		_settle_jobs()
 		var len := 250 if float(spec.get("length", 4.6)) < 5.5 else 270
 		looks.year = int(spec.get("year", 2000))
 		var dmg := {}
 		var d: Dictionary = _car().damage
 		if float(d.get("front", 0.0)) > 0.3: dmg.front = float(d.front) * 0.6
 		if float(d.get("rear", 0.0)) > 0.3: dmg.rear = float(d.rear) * 0.6
-		preview = ImageTexture.create_from_image(PixCars.showroom(spec, len, Color(paint), looks, dmg))
-		preview_top = CarArt.new(spec, Color(paint), _car().damage, 5, 1.0, looks)
+		preview = null
+		preview_top = null
 		preview_big = null
+		CarGen.design(spec)
+		var stock := dmg.is_empty()
+		for mk in looks:
+			if not mk in PixCars.COSMETIC_KEYS: stock = false
+		var authored: Image = PixCars.authored(PixCars.art_id(spec), Color(paint)) if stock else null
+		if authored != null:
+			preview = ImageTexture.create_from_image(authored)
+		else:
+			var the_spec := spec
+			var the_paint := Color(paint)
+			var the_looks := looks
+			_side_img = null
+			_side_task = WorkerThreadPool.add_task(func() -> void: _side_img = PixCars.image_of(the_spec, len, the_paint, the_looks, dmg), false, "garage side view")
+		_top_job = CarArt.build(spec, Color(paint), _car().damage, 5, 1.0, looks)
+		_big_job = null
+		_big_k = r.size.y * 0.8 / (float(spec.get("length", 4.5)) * CarArt.PX)
+		_big_args = [spec, Color(paint), _car().damage, looks]
+	_land_jobs()
 	if top:
 		# from above, big, turning slowly on the shop's turntable: the car about as long as the
 		# panel is tall
@@ -518,22 +611,29 @@ func _preview_box() -> void:
 		draw_circle(c, r.size.y * 0.43, Color("3a3a3c"))
 		draw_arc(c, r.size.y * 0.43, 0.0, TAU, 64, Color("5a5a58"), 2.0)
 		draw_arc(c, r.size.y * 0.28, 0.0, TAU, 48, Color("323234"), 1.0)
-		if preview_big == null:
-			var k := r.size.y * 0.8 / (float(spec.get("length", 4.5)) * CarArt.PX)
-			preview_big = CarArt.new(spec, Color(paint), _car().damage, 5, k, looks)
-		CarView.paint_stack(self, preview_big, c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5), Time.get_ticks_msec() / 2400.0)
+		if preview_big == null and _big_job == null and not _big_args.is_empty():
+			_big_job = CarArt.build(_big_args[0], _big_args[1], _big_args[2], 5, _big_k, _big_args[3])
+		if preview_big != null: CarView.paint_stack(self, preview_big, c + Vector2(0, preview_big.roof_z * CarView.STEP * 0.5), Time.get_ticks_msec() / 2400.0)
+		else: PixelFont.draw_centered(self, c.x, c.y - 3, "DRAWING IT UP...", ASH)
 	else:
-		var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
-		draw_texture(preview, pos)
+		if preview != null:
+			var pos := Vector2(r.get_center().x - preview.get_width() / 2.0, r.end.y - 22 - preview.get_height() + 8)
+			draw_texture(preview, pos)
+		else:
+			PixelFont.draw_centered(self, r.get_center().x, r.end.y - 70, "DRAWING IT UP...", ASH)
 		# from above, turning slowly on the shop floor's corner
-		CarView.paint_stack(self, preview_top, Vector2(r.end.x - 48, r.position.y + 50), Time.get_ticks_msec() / 2400.0)
+		if preview_top != null: CarView.paint_stack(self, preview_top, Vector2(r.end.x - 48, r.position.y + 50), Time.get_ticks_msec() / 2400.0)
 	var name := "%s %s '%s" % [String(spec.make).to_upper(), String(spec.model).to_upper(), str(int(spec.get("year", 0)) % 100).pad_zeros(2)]
 	PixelFont.draw(self, r.position + Vector2(6, 6), name, GOLD, 2)
 	# the numbers, under the car
 	var cur := OneTon.apply(Parts.apply(spec, shown), { "custom": _custom_shown() })
-	var pf := Perf.estimate(cur)
-	var stock := Perf.estimate(spec)
 	var y := r.end.y + 8.0
+	var pair := _perf_pair(cur, spec)
+	if pair.is_empty():
+		PixelFont.draw(self, Vector2(14, y + 24), "ON THE DYNO...", ASH)
+		return
+	var pf: Dictionary = pair[0]
+	var stock: Dictionary = pair[1]
 	_stat(y, "POWER", "%d HP" % int(pf.peaks.x), pf.peaks.x / 700.0, stock.peaks.x / 700.0)
 	_stat(y + 12, "TORQUE", "%d NM" % int(pf.peaks.y), pf.peaks.y / 900.0, stock.peaks.y / 900.0)
 	_stat(y + 24, "WEIGHT", "%d KG" % int(cur.mass), 1.0 - (float(cur.mass) - 700.0) / 2800.0, 1.0 - (float(spec.mass) - 700.0) / 2800.0)
@@ -567,7 +667,7 @@ func _draw_cars() -> void:
 	if last < n: PixelFont.draw(self, Vector2(r.end.x - 60, r.position.y + 10 + CARS_SHOWN * 30 - 6), "%d MORE v" % (n - last), ASH)
 	for i in range(first, last):
 		var car: Dictionary = data.garage[i]
-		var spec := SaveGame.load_spec(String(car.id))
+		var spec := _spec_of(String(car.id))
 		var y := r.position.y + 10 + (i - first) * 30
 		var on := i == sel
 		draw_rect(Rect2(r.position.x + 6, y - 3, r.size.x - 12, 26), Color(0.85, 0.64, 0.25, 0.2) if on else Color(1, 1, 1, 0.03))
