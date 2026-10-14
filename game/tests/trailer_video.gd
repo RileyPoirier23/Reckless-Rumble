@@ -65,11 +65,12 @@ func _run() -> void:
 	await _burnout(d)
 	await _drift(d)
 	await _drag(d)
+	await _oneton(d)
 	await _pulled_over(d)
 	await _chase(d)
 	# --- where it's at
-	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 9.0)
-	await _wait(9.5)
+	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE. 1TON'S HYDRAULICS.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.\nFULL LOGITECH WHEEL SUPPORT. CONTROLLER SUPPORT.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 10.0)
+	await _wait(10.5)
 	card.show_card("DRIVEBOSS", "IN DEVELOPMENT", "FOLLOW ALONG: @506CLICKS", 6.0)
 	await _wait(6.5)
 	quit()
@@ -165,7 +166,8 @@ func _drift(d: Node) -> void:
 	d.car.sim.gear = 2
 	d.car.sim.clutch_locked = true
 	await _wait(0.8)
-	_say("THE ROAD", "DRIFTS YOU CAN HOLD: A FLICK OF THE HANDBRAKE, THEN THE GAS. THE STICK SETS THE ANGLE, INTO THE CORNER FOR MORE, AWAY TO STRAIGHTEN.", 7.0, "bottom")
+	_say("THE ROAD", "DRIFTS YOU CAN HOLD: A FLICK OF THE HANDBRAKE, THEN THE GAS. THE STICK SETS THE ANGLE, INTO THE CORNER FOR MORE, AWAY TO STRAIGHTEN.", 5.0, "bottom")
+	_say("THE ROAD", "ON A CONTROLLER, THE KEYBOARD, OR A LOGITECH WHEEL (G29, G920, G923 AND THE REST): THE RIM TURNS THE ROAD WHEELS ONE FOR ONE, 900 DEGREES LOCK TO LOCK.", 5.0, "bottom")
 	Input.action_press("throttle")
 	await _wait(0.6)
 	Input.action_press("steer_right")
@@ -215,6 +217,34 @@ func _drag(d: Node) -> void:
 	if is_instance_valid(strip): await _tap("ui_cancel")
 	await _wait(0.8)
 	d.jobs.finish(false)
+	_release_all()
+
+## The Luchadooros' lot: a word with 1ton, then three pumps and the Silvio on its back wheels.
+func _oneton(d: Node) -> void:
+	d.sky.time_h = 22.6
+	d.sky.snap()
+	var lot = d.luchadooros
+	var crew: Dictionary = d.save.get("crew", {})
+	crew.met_oneton = true
+	d.save.crew = crew
+	d._teleport(Luchadooros.SPOT + Vector2(0, 7), -PI / 2.0)
+	d.car.sim.set_world_velocity(Vector2.ZERO)
+	await _wait(1.2)
+	_say("THE ROAD", "1TON AND THE LUCHADOOROS. HE RUNS THE BAYS. LA CALAVERA RUNS THE STREETS. EL PULPO RUNS HIS MOUTH. GET IN WITH THEM AND 1TON TAKES BAY THREE.", 7.0, "top")
+	await _tap("use")
+	await _wait(3.6)
+	if lot.open(): await _tap("ui_accept")
+	await _wait(2.2)
+	if lot.open(): await _tap("ui_cancel")
+	await _wait(0.6)
+	_say("THE ROAD", "HYDRAULICS AND DONKS, HIS LABOUR FREE (HIS MOTHER WOULD HEAR ABOUT IT). THREE PUMPS, AND THE BUTTON DUMPS THEM.", 7.0, "bottom")
+	d.car.hyd = 3
+	for k in 7:
+		Input.action_press("hydraulics")
+		await _wait(0.25)
+		Input.action_release("hydraulics")
+		await _wait(0.85)
+	await _wait(1.0)
 	_release_all()
 
 ## Doing 100 in a 50 past a patrol car on St George Blvd, and pulling over for it.
