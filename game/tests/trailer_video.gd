@@ -157,6 +157,10 @@ func _burnout(d: Node) -> void:
 	d.car.sim.auto_gearbox = true
 	await _wait(1.2)
 	_say("THE ROAD", "EVERY CAR DRIVES ON THE SAME TIRE, CLUTCH AND ENGINE PHYSICS. A REAR-DRIVER ON THE BRAKE AND THE GAS DOES THIS.", 6.0, "bottom")
+	# (the line lock wants the gas and the brake both hard down; the street aids would cut the
+	# gas as the rears spun up, so they're off for the show)
+	var was: int = d.car.sim.assist
+	d.car.sim.assist = CarSim.Assist.SIM
 	Input.action_press("brake")
 	await _frames(4)
 	Input.action_press("throttle")
@@ -164,6 +168,7 @@ func _burnout(d: Node) -> void:
 	Input.action_release("brake")
 	await _wait(1.2)
 	_release_all()
+	d.car.sim.assist = was
 	await _wait(0.8)
 
 ## On the runway at night: a flick of the handbrake into a turn, then the gas holds it sideways.
