@@ -489,20 +489,22 @@ class DriveIn extends Node2D:
 		CarView.screen_up = Vector2(0, -1)
 		CarView.night = 1.0
 		cam = Camera2D.new()
-		cam.position = Vector2(320, 180)
-		cam.zoom = Vector2.ONE
+		# a wide shot: the whole field, the screen small at the top of it
+		cam.position = Vector2(320, 215)
+		cam.zoom = Vector2(0.7, 0.7)
 		add_child(cam)
 		cam.make_current()
-		# the lot: four rows of cars, every one from the catalogue, dark paints, nosed at the screen
+		# the field: four rows of cars on the grass, well back from the screen, every one from the
+		# catalogue in dark paints, nosed at it
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 506
 		var ids: Array = CarCatalog.ids()
 		var paints := [Color("3a3c44"), Color("4a3b36"), Color("2d3b55"), Color("5a5a58"), Color("4b2f2f"), Color("36483a"), Color("6a6258"), Color("2a2a30")]
 		for row in 4:
-			var y := 232.0 + row * 34.0
+			var y := 332.0 + row * 36.0
 			var n := 7 + row
 			for k in n:
-				var x := 320.0 + (float(k) - float(n - 1) / 2.0) * (86.0 - row * 8.0) + rng.randf_range(-3.0, 3.0)
+				var x := 320.0 + (float(k) - float(n - 1) / 2.0) * (104.0 - row * 6.0) + rng.randf_range(-3.0, 3.0)
 				var leo := row == 0 and k == n / 2
 				var id: String = "silvio" if leo else String(ids[rng.randi() % ids.size()])
 				var spec := CarCatalog.spec(id)
@@ -542,9 +544,9 @@ class DriveIn extends Node2D:
 			push_t += dt
 			var u := clampf(push_t / PUSH_S, 0.0, 1.0)
 			u = u * u * (3.0 - 2.0 * u)
-			var z := lerpf(1.0, 2.0, u)
+			var z := lerpf(0.7, 2.0, u)
 			cam.zoom = Vector2(z, z)
-			cam.position = Vector2(320, 180).lerp(SCREEN.get_center(), u)
+			cam.position = Vector2(320, 215).lerp(SCREEN.get_center(), u)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -559,14 +561,22 @@ class DriveIn extends Node2D:
 		for i in 60:
 			var x := -400.0 + i * 24.0
 			draw_rect(Rect2(x, 190 + (i * 7) % 12, 14, 30), Color("0b100d"))
-		draw_rect(Rect2(-400, 220, 1440, 600), Color("17171b"))
-		# the humps the rows park on
+		# the field: mown grass, the stripes of the mower still in it, a gravel lane along the
+		# front, and the low humps the rows park on
+		draw_rect(Rect2(-400, 220, 1440, 600), Color("162a19"))
+		for i in 48:
+			if i % 2 == 0: draw_rect(Rect2(-400, 220 + i * 12, 1440, 12), Color(1, 1, 1, 0.025))
+		for i in 400:
+			var gx := -400.0 + fmod(i * 37.0 + (i * i) % 23, 1440.0)
+			var gy := 222.0 + fmod(i * 53.0 + (i * 7) % 31, 380.0)
+			draw_rect(Rect2(gx, gy, 1, 2), Color("1d3a22"))
+		draw_rect(Rect2(-400, 300, 1440, 8), Color("2a2822"))
 		for row in 4:
-			draw_rect(Rect2(-400, 226 + row * 34, 1440, 10), Color("1d1d22"))
+			draw_rect(Rect2(-400, 326 + row * 36, 1440, 10), Color("1b3320"))
 		# the speaker posts
 		for row in 4:
-			for k in 12:
-				var p := Vector2(-20 + k * 60 + row * 13, 236 + row * 34)
+			for k in 24:
+				var p := Vector2(-380 + k * 60 + row * 13, 336 + row * 36)
 				draw_rect(Rect2(p, Vector2(2, 10)), Color("2a2a30"))
 				draw_rect(Rect2(p + Vector2(-2, -3), Vector2(6, 4)), Color("3a3a42"))
 		# the screen's tower and the screen, and its light on the lot
@@ -611,8 +621,8 @@ class DriveIn extends Node2D:
 				glow.a = 0.05
 		if glow.a > 0.0:
 			# the screen lights the lot, fading down the rows
-			for row in 5:
-				var a := glow.a * (1.0 - float(row) / 5.0)
-				draw_rect(Rect2(s.position.x - 40 - row * 30, s.end.y + row * 34, s.size.x + 80 + row * 60, 34), Color(glow, a))
+			for row in 8:
+				var a := glow.a * (1.0 - float(row) / 8.0)
+				draw_rect(Rect2(s.position.x - 40 - row * 30, s.end.y + row * 30, s.size.x + 80 + row * 60, 30), Color(glow, a))
 		# the frame's edges
 		draw_rect(s, Color("0a0a0e"), false, 2.0)
