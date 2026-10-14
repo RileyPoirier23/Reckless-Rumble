@@ -50,9 +50,14 @@ func _run() -> void:
 	await _story("frankie", 8.0, "THE STORY", "SIX YEARS, THREE ENDINGS, AND A KID NAMED FRANKIE WHO'S WATCHING WHAT KIND OF MAN LEO TURNS INTO.")
 	# --- the road
 	StoryState.active = false
+	# every photo's already on the break room wall: no Employee of the Month cards in the way
+	Awards.ensure()
+	for a in Awards.LIST: Awards.won[String(a.id)] = { "at": 0, "n": Awards.won.size() }
+	print("trailer: to the lot")
 	LoadingScreen.go(self, "res://drive.tscn", "THE LOT")
 	_watch_cards()
 	var d: Node = await _drive_ready()
+	print("trailer: the lot's ready, car ", d.car.spec.get("id", "?"))
 	# Leo's Silvio, out of whatever lot the save has
 	for i in (d.save.garage as Array).size():
 		if String((d.save.garage[i] as Dictionary).id) == "silvio" and i != d.car_i:
@@ -120,9 +125,13 @@ func _watch_cards() -> void:
 		await process_frame
 
 func _drive_ready() -> Node:
+	var t := 0.0
 	while true:
 		var s := current_scene
-		if s != null and _script_of(s).ends_with("drive.gd") and s.car != null and not s.hold_car and s.world.missing_near(s.car.sim.pos, Vector2(60, 40)) == 0: return s
+		if s != null and _script_of(s).ends_with("drive.gd") and s.car != null:
+			t += 1.0 / 30.0
+			# (the loading card holds the car; past a point we go anyway)
+			if not s.hold_car or t > 12.0: return s
 		await process_frame
 	return null
 
@@ -139,6 +148,7 @@ func _release_all() -> void:
 
 ## In the lot at dusk: foot on the brake and the gas, and the rears go up in smoke.
 func _burnout(d: Node) -> void:
+	print("trailer: burnout")
 	d.sky.time_h = 20.3
 	d.sky.pick_weather("clear")
 	d.sky.forced = true
@@ -158,6 +168,7 @@ func _burnout(d: Node) -> void:
 
 ## On the runway at night: a flick of the handbrake into a turn, then the gas holds it sideways.
 func _drift(d: Node) -> void:
+	print("trailer: drift")
 	d.sky.time_h = 22.0
 	d.sky.snap()
 	var at := Vector2(DragStrip.RUNWAY.position.x + 40.0, DragStrip.RUNWAY.get_center().y)
@@ -189,6 +200,7 @@ func _drift(d: Node) -> void:
 
 ## Drag night on runway 7: sign in, stage, the tree, and go on the green.
 func _drag(d: Node) -> void:
+	print("trailer: drag")
 	d.sky.time_h = 22.3
 	d.sky.snap()
 	d.save.cash = maxi(int(d.save.cash), 5000)
@@ -222,6 +234,7 @@ func _drag(d: Node) -> void:
 
 ## The Luchadooros' lot: a word with 1ton, then three pumps and the Silvio on its back wheels.
 func _oneton(d: Node) -> void:
+	print("trailer: oneton")
 	d.sky.time_h = 22.6
 	d.sky.snap()
 	var lot = d.luchadooros
@@ -250,6 +263,7 @@ func _oneton(d: Node) -> void:
 
 ## Doing 100 in a 50 past a patrol car on St George Blvd, and pulling over for it.
 func _pulled_over(d: Node) -> void:
+	print("trailer: pulled_over")
 	d.sky.time_h = 14.5
 	d.sky.snap()
 	var p = d.police
@@ -292,6 +306,7 @@ func _pulled_over(d: Node) -> void:
 
 ## Floor it instead: a chase through town.
 func _chase(d: Node) -> void:
+	print("trailer: chase")
 	var p = d.police
 	d.save.heat = 30.0
 	var at := Vector2(5800, 1390) + Vector2(5.5, 2.5)
