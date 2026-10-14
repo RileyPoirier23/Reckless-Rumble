@@ -177,6 +177,11 @@ func pay(n: int) -> void:
 # ------------------------------------------------------------------ the frame
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('jobs_job_runner_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	queue_redraw()
 	if not active() or car() == null or car().dead: return
 	t += dt
@@ -505,7 +510,8 @@ func sign_in() -> bool:
 			drive.hud.post(why, 4.0)
 			return false
 	var fee := int(race_route.buy_in) if race_rival.is_empty() else 0
-	if int(drive.save.get("cash", 0)) < fee:
+	# (a pink slip race costs nothing: being in the hole after a ticket doesn't keep you out of it)
+	if fee > 0 and int(drive.save.get("cash", 0)) < fee:
 		drive.hud.post("MARCO: \"$%d. I DON'T DO IOUS. I'VE MET YOU.\"" % fee, 4.0)
 		return false
 	drive.save.cash = int(drive.save.cash) - fee

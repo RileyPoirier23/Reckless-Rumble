@@ -119,6 +119,11 @@ class Painter extends Node:
 			_mutex.unlock()
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('art_baker', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		if _out.is_empty(): return
 		_mutex.lock()
 		var batch := _out.slice(0, 8)           # a few a frame: making textures isn't free either

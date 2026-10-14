@@ -1,59 +1,151 @@
-## How smooth is it at speed? Drives a car flat out down a long road and records every frame's
-## time, and what the world built on the frames that ran long:
-##   godot --path game --rendering-driver opengl3 -s tests/perf_probe.gd -- [mps] [seconds]
-extends SceneTree
+## Frame-time probe, in the drive scene: xvfb-run godot --path game -- --perf-probe
+## Drives through downtown (day, then night) and prints frame, process, physics and draw-call
+## numbers. PERF_OFF=traffic,lights,parked,furniture,wild,incidents,veg turns systems off;
+## PERF_AT=x,y,heading_deg picks the spot; PERF_SECS the run length.
+extends Node
 
 var main: Node
-var frames: Array = []
-var built: Array = []
 
-func _initialize() -> void:
-	main = load("res://drive.tscn").instantiate()
-	root.add_child(main)
+func _ready() -> void:
+	main.hud.show_help = false
 	_run()
 
 func _wait(s: float) -> void:
-	await create_timer(s, true, false, true).timeout
+	await get_tree().create_timer(s, true, false, true).timeout
 
 func _run() -> void:
-	await _wait(2.0)
-	var a := OS.get_cmdline_user_args()
-	var mps := float(a[0]) if a.size() > 0 else 45.0
-	var secs := float(a[1]) if a.size() > 1 else 20.0
-	# down Route 112 and on, following the road (no trees in the way: what's measured is the
-	# world streaming past, not a crash)
-	var path: PackedVector2Array = main.world.map.route(Vector2(3150, 1600), Vector2(3150, 120))
-	var at: Vector2 = path[0]
-	main._teleport(at, (path[1] - path[0]).angle())
-	main.world.warm(at, Vector2(80, 50))
-	await _wait(3.0)                     # (past the loading: what's measured is the driving)
-	var t := 0.0
-	var s := 0.0
-	var last := Time.get_ticks_usec()
-	while t < secs:
-		await process_frame
-		var now := Time.get_ticks_usec()
-		var ms := (now - last) / 1000.0
-		last = now
-		t += ms / 1000.0
-		s += mps * minf(ms / 1000.0, 0.1)
-		var p := _along(path, s)
-		var q := _along(path, s + 3.0)
-		main.car.sim.pos = p
-		main.car.sim.heading = (q - p).angle()
-		main.car.sim.vx = mps
-		main.car.sim.vy = 0.0
-		main.car.sim.yaw_rate = 0.0
-		frames.append(ms)
-	frames.sort()
-	var n := frames.size()
-	var over := frames.filter(func(x): return x > 25.0).size()
-	print("frames %d  median %.1f ms  p95 %.1f  p99 %.1f  max %.1f  over 25 ms: %d" % [n, frames[n / 2], frames[int(n * 0.95)], frames[int(n * 0.99)], frames[n - 1], over])
-	quit()
+	main.sky.set_season("summer")
+	main.sky.pick_weather("clear")
+	main.sky.forced = true
+	var off: Array = OS.get_environment("PERF_OFF").split(",") if OS.get_environment("PERF_OFF") != "" else []
+	if "traffic" in off: main.traffic.enabled = false
+	if "parked" in off: main.parked.visible = false
+	if "lights" in off: main.lights.visible = false
+	if "furniture" in off and main.get("furniture"): main.furniture.visible = false
+	if "wild" in off and main.get("wildlife"): main.wildlife.visible = false
+	var secs := float(OS.get_environment("PERF_SECS")) if OS.get_environment("PERF_SECS") != "" else 12.0
+	var at := Vector2(6310, 1495)
+	var hd := PI
+	if OS.get_environment("PERF_AT") != "":
+		var sp := OS.get_environment("PERF_AT").split(",")
+		at = Vector2(float(sp[0]), float(sp[1]))
+		hd = deg_to_rad(float(sp[2])) if sp.size() > 2 else 0.0
+	var hide: Array = OS.get_environment("PERF_HIDE").split(",") if OS.get_environment("PERF_HIDE") != "" else []
+	var nights: Array = [false, true] if OS.get_environment("PERF_NIGHT") != "0" else [false]
+	# PERF_GARAGE=1: open the garage on the save as it is, time it, screenshot it, quit
+	if OS.get_environment("PERF_GARAGE") != "":
+		var t0 := Time.get_ticks_usec()
+		main.garage.open(main.save)
+		print("GARAGE open() %.0f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
+		t0 = Time.get_ticks_usec()
+		Prof.reset()
+		Prof.on = true
+		main.garage._preview_box()
+		print("GARAGE _preview_box() %.0f ms: %s" % [(Time.get_ticks_usec() - t0) / 1000.0, Prof.report(1)])
+		Prof.reset()
+		t0 = Time.get_ticks_usec()
+		main.garage._draw_cars()
+		print("GARAGE _draw_cars() %.0f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
+		t0 = Time.get_ticks_usec()
+		Prof.reset()
+		Prof.on = true
+		await get_tree().process_frame
+		print("GARAGE first frame %.0f ms: %s" % [(Time.get_ticks_usec() - t0) / 1000.0, Prof.report(12)])
+		Prof.reset()
+		t0 = Time.get_ticks_usec()
+		await get_tree().process_frame
+		print("GARAGE opened with %d cars in %.0f ms: %s" % [(main.save.garage as Array).size(), (Time.get_ticks_usec() - t0) / 1000.0, Prof.report(12)])
+		for i in 3:
+			var t1 := Time.get_ticks_usec()
+			await get_tree().process_frame
+			print("GARAGE frame %.0f ms" % ((Time.get_ticks_usec() - t1) / 1000.0))
+		if OS.get_environment("PERF_SHOT") != "":
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT"))
+		get_tree().quit()
+		return
+	for night in nights:
+		main.sky.time_h = 22.0 if night else 13.0
+		main._teleport(at, hd)
+		await _wait(1.5)
+		Input.action_press("throttle")
+		Prof.reset()
+		Prof.on = true
+		var frames := 0
+		var t0 := Time.get_ticks_usec()
+		var worst := 0.0
+		var proc := 0.0
+		var phys := 0.0
+		var draws := 0.0
+		var prims := 0.0
+		var objs := 0.0
+		var last := Time.get_ticks_usec()
+		var prev := {}
+		var slow := 0
+		var hist := {}
+		var samples := []
+		var psamples := []
+		var phsamples := []
+		while (Time.get_ticks_usec() - t0) / 1e6 < secs:
+			await get_tree().process_frame
+			_hide(hide)
+			var now := Time.get_ticks_usec()
+			var ms := (now - last) / 1000.0
+			last = now
+			frames += 1
+			worst = maxf(worst, ms)
+			hist[int(ms / 5.0)] = int(hist.get(int(ms / 5.0), 0)) + 1
+			samples.append(ms)
+			if ms > 50.0 and slow < 12:
+				slow += 1
+				var top: Array = []
+				for k in Prof.acc:
+					var d: int = int(Prof.acc[k]) - int(prev.get(k, 0))
+					if d > 2000: top.append([d, k])
+				top.sort_custom(func(x, y): return x[0] > y[0])
+				var names: Array = []
+				for t in top.slice(0, 5): names.append("%s %.1f" % [t[1], t[0] / 1000.0])
+				print("SLOW %.0f ms at %.1fs, %.0f km/h: %s | nodes %d" % [ms, (now - t0) / 1e6, main.car.sim.speed() * 3.6, ", ".join(names), Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
+			prev = Prof.acc.duplicate()
+			psamples.append(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
+			phsamples.append(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
+			proc += Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+			phys += Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+			draws += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+			prims += Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
+			objs += Performance.get_monitor(Performance.OBJECT_NODE_COUNT)
+		Input.action_release("throttle")
+		Prof.on = false
+		print("PROF ", Prof.report(frames))
+		var n := maxf(1.0, float(frames))
+		samples.sort()
+		psamples.sort()
+		phsamples.sort()
+		var med := int(samples.size() / 2)
+		var p90 := int(samples.size() * 0.9)
+		print("PERF %s: %d frames in %.1fs = %.1f fps | frame med %.1f p90 %.1f worst %.1f ms | process med %.1f p90 %.1f | physics med %.1f p90 %.1f | draw calls %d, prims %dk, nodes %d | speed %.0f km/h" % [
+			"night" if night else "day", frames, secs, frames / secs, samples[med], samples[p90], worst, psamples[med], psamples[p90], phsamples[med], phsamples[p90], int(draws / n), int(prims / n / 1000.0), int(objs / n), main.car.sim.speed() * 3.6])
+	get_tree().quit()
 
-func _along(path: PackedVector2Array, d: float) -> Vector2:
-	for i in path.size() - 1:
-		var L := path[i].distance_to(path[i + 1])
-		if d <= L: return path[i].lerp(path[i + 1], d / maxf(L, 0.01))
-		d -= L
-	return path[path.size() - 1]
+## PERF_HIDE: world layer kinds (ground, water, base, decor, road, marks, rail, weather, canopy),
+## buildings, windows, furniture, parked, cars, lights, hud, yards: hidden, to see what they cost.
+func _hide(kinds: Array) -> void:
+	if kinds.is_empty(): return
+	for k in main.world.chunks:
+		var ch = main.world.chunks[k]
+		for kind in ch.layers:
+			if kind in kinds: ch.layers[kind].visible = false
+		for n in ch.get_children():
+			if n is BuildingNode:
+				if "buildings" in kinds: n.visible = false
+				if "windows" in kinds: n.windows.visible = false
+			elif n is Yards and "yards" in kinds: n.visible = false
+	if "furniture" in kinds: main.furniture.visible = false
+	if "lights" in kinds: main.lights.visible = false
+	if "hud" in kinds:
+		main.hud.visible = false
+		main.dash.visible = false
+		main.gps.visible = false
+	for n in main.ysort.get_children():
+		if n is ParkedCar and "parked" in kinds: n.visible = false
+		elif n is TrafficCar and "cars" in kinds: n.visible = false

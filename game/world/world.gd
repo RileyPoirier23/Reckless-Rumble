@@ -91,6 +91,40 @@ func setup(the_sky: WorldSky, the_ysort: Node2D) -> void:
 		cs.position = (r.position + r.size / 2.0) * PX
 		walls.add_child(cs)
 
+## A bridge rail's solid span: the deck runs a few metres past the water each end, and where that
+## end sits in the junction with the next street the rail stops short of it (an invisible rail
+## end in the road was a wall you hit turning onto the bridge). [] when nothing's left.
+static func rail_span(map: MapData, a: Vector2, b: Vector2, bridge_name: String) -> Array:
+	var on_other := func(p: Vector2) -> bool:
+		var rd := map.road_at(p, 0.6)
+		return not rd.is_empty() and String(rd.road.name) != bridge_name
+	var L := a.distance_to(b)
+	var d := (b - a) / maxf(L, 0.001)
+	var s0 := 0.0
+	while s0 < L and on_other.call(a + d * s0): s0 += 1.0
+	var s1 := L
+	while s1 > s0 and on_other.call(a + d * s1): s1 -= 1.0
+	if s1 - s0 < 2.0: return []
+	return [a + d * s0, a + d * s1]
+
+## The part of segment a-b inside r ([] when none).
+static func clip_to_rect(a: Vector2, b: Vector2, r: Rect2) -> Array:
+	var t0 := 0.0
+	var t1 := 1.0
+	var d := b - a
+	for axis in 2:
+		var lo: float = r.position[axis]
+		var hi: float = r.end[axis]
+		if absf(d[axis]) < 0.0001:
+			if a[axis] < lo or a[axis] > hi: return []
+			continue
+		var ta := (lo - a[axis]) / d[axis]
+		var tb := (hi - a[axis]) / d[axis]
+		t0 = maxf(t0, minf(ta, tb))
+		t1 = minf(t1, maxf(ta, tb))
+	if t1 - t0 <= 0.0: return []
+	return [a + d * t0, a + d * t1]
+
 static func ck(m: Vector2) -> Vector2i:
 	return Vector2i(floori(m.x / CHUNK), floori(m.y / CHUNK))
 
@@ -222,6 +256,20 @@ func _bucket() -> void:
 # ------------------------------------------------------------------ streaming
 
 ## Keep the chunks around the view alive; make a few new ones per frame, nearest first.
+## Chunks a view this size at this spot would want but hasn't got.
+func missing_near(center_m: Vector2, half_m: Vector2) -> int:
+	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 1.4)
+	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 1.4)
+	var n := 0
+	for y in range(c0.y, c1.y + 1):
+		for x in range(c0.x, c1.x + 1):
+			if not chunks.has(Vector2i(x, y)): n += 1
+	return n
+
+## Chunks inside this rect (metres) stay built however far the view moves: a mission's route,
+## built under the loading card, isn't thrown away and rebuilt mid-chase. Rect2() keeps nothing.
+var keep_rect := Rect2()
+
 func update_view(center_m: Vector2, half_m: Vector2) -> void:
 	var c0 := ck(center_m - half_m - Vector2(CHUNK, CHUNK) * 1.4)
 	var c1 := ck(center_m + half_m + Vector2(CHUNK, CHUNK) * 1.4)
@@ -238,6 +286,7 @@ func update_view(center_m: Vector2, half_m: Vector2) -> void:
 	# drop the ones well out of view
 	for k in chunks.keys():
 		if k.x < c0.x - 2 or k.x > c1.x + 2 or k.y < c0.y - 2 or k.y > c1.y + 2:
+			if keep_rect.has_area() and keep_rect.intersects(Rect2(Vector2(k) * CHUNK, Vector2(CHUNK, CHUNK))): continue
 			chunks[k].release()
 			chunks.erase(k)
 	# the weather changed the road: redraw a couple of chunks a frame
@@ -492,10 +541,15 @@ class Chunk extends Node2D:
 			var dir: Vector2 = (br.b - br.a).normalized()
 			for side in [-1.0, 1.0]:
 				var off: Vector2 = dir.orthogonal() * side * (br.w / 2.0 + 0.6)
+				var span := World.rail_span(world.map, br.a + off, br.b + off, String(br.get("name", "")))
+				if span.is_empty(): continue
+				# (only this chunk's stretch of it: the deck crosses several, and each used to add the whole rail)
+				span = World.clip_to_rect(span[0], span[1], rect.grow(0.5))
+				if span.is_empty(): continue
 				var cs := CollisionShape2D.new()
 				var seg := SegmentShape2D.new()
-				seg.a = (br.a + off) * PX
-				seg.b = (br.b + off) * PX
+				seg.a = (span[0] as Vector2) * PX
+				seg.b = (span[1] as Vector2) * PX
 				cs.shape = seg
 				body.add_child(cs)
 
@@ -720,10 +774,16 @@ class Chunk extends Node2D:
 
 class Layer extends Node2D:
 	var chunk: Chunk
+	var tb := TriBatch.new()
 	var kind := ""
 	var needs_art := false            # drawn with a stand-in sprite: redraw when the real one's painted
 
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_layer_' + kind, _t0)
+
+	func _draw_timed() -> void:
 		var w := chunk.world
 		ArtBaker.stood_in = false
 		_draw_kind(w)
@@ -912,7 +972,7 @@ class Layer extends Node2D:
 			var e := minf(s + (dash if dash > 0.0 else 2.0), L)
 			var p := a + dir * s
 			if chunk.rect.grow(2.0).has_point(p) and not _other_road(w, p + o, ri):
-				draw_line((p + o) * PX, (a + dir * e + o) * PX, col, width)
+				tb.line((p + o) * PX, (a + dir * e + o) * PX, col, width)
 			s += dash * 2.0 if dash > 0.0 else 2.0
 
 	## The road's wear, the same every time you drive by: manhole covers down the middle of the city
@@ -941,14 +1001,14 @@ class Layer extends Node2D:
 				if city and roll < 0.3:
 					# a manhole cover in the lane, and a storm drain at the curb
 					var mp := p + n * rng.randf_range(-half * 0.5, half * 0.5)
-					draw_circle(mp * PX, 0.45 * PX, Color("2a2a2c"))
-					draw_arc(mp * PX, 0.45 * PX, 0.0, TAU, 12, Color("4a4a4c"), 1.0)
-					draw_line((mp - Vector2(0.25, 0)) * PX, (mp + Vector2(0.25, 0)) * PX, Color("3a3a3c"), 1.0)
+					tb.circle(mp * PX, 0.45 * PX, Color("2a2a2c"))
+					tb.ring(mp * PX, 0.45 * PX, Color("4a4a4c"), 1.0)
+					tb.line((mp - Vector2(0.25, 0)) * PX, (mp + Vector2(0.25, 0)) * PX, Color("3a3a3c"), 1.0)
 					var side := -1.0 if rng.randf() < 0.5 else 1.0
 					var dp := p + n * side * (half - 0.35)
 					var g0 := (dp - d * 0.4 - n * side * 0.2) * PX
-					draw_primitive(PackedVector2Array([g0, g0 + d * 0.8 * PX, g0 + (d * 0.8 + n * side * 0.4) * PX, g0 + n * side * 0.4 * PX]), PackedColorArray([Color("1e1e20"), Color("1e1e20"), Color("1e1e20"), Color("1e1e20")]), PackedVector2Array())
-					for k in 4: draw_line(g0 + d * (0.15 + k * 0.17) * PX, g0 + (d * (0.15 + k * 0.17) + n * side * 0.4) * PX, Color("4a4a4c"), 1.0)
+					tb.quad(g0, g0 + d * 0.8 * PX, g0 + (d * 0.8 + n * side * 0.4) * PX, g0 + n * side * 0.4 * PX, Color("1e1e20"))
+					for k in 4: tb.line(g0 + d * (0.15 + k * 0.17) * PX, g0 + (d * (0.15 + k * 0.17) + n * side * 0.4) * PX, Color("4a4a4c"), 1.0)
 				elif roll < 0.55:
 					# a tar patch, darker than the road round it
 					var pw := rng.randf_range(1.0, 2.6)
@@ -956,7 +1016,7 @@ class Layer extends Node2D:
 					var pc := p + n * rng.randf_range(-half * 0.7, half * 0.7)
 					var q0 := pc - d * pw / 2.0 - n * ph / 2.0
 					var col := Color(0.0, 0.0, 0.0, 0.18)
-					draw_primitive(PackedVector2Array([q0 * PX, (q0 + d * pw) * PX, (q0 + d * pw + n * ph) * PX, (q0 + n * ph) * PX]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+					tb.quad(q0 * PX, (q0 + d * pw) * PX, (q0 + d * pw + n * ph) * PX, (q0 + n * ph) * PX, col)
 				else:
 					# a crack wandering across a lane
 					var cp := p + n * rng.randf_range(-half * 0.8, half * 0.8)
@@ -966,7 +1026,7 @@ class Layer extends Node2D:
 						dir = dir.rotated(rng.randf_range(-0.7, 0.7))
 						cp += dir * rng.randf_range(0.4, 1.0)
 						pts.append(cp * PX)
-					draw_polyline(pts, Color(0.0, 0.0, 0.0, 0.32), 1.0)
+					tb.polyline(pts, Color(0.0, 0.0, 0.0, 0.32), 1.0)
 				x += rng.randf_range(10.0, 30.0) if rd.cls in ["rural", "gravel"] else rng.randf_range(14.0, 40.0)
 			# oil drips down the middle of each lane, where the engines sit
 			if rd.cls in ["street", "arterial", "rural"]:
@@ -976,10 +1036,12 @@ class Layer extends Node2D:
 					for lsg: float in [-1.0, 1.0]:
 						if rng.randf() < 0.5: continue
 						var op := a + d * (y + rng.randf_range(-1.0, 1.0)) + n * lsg * (lane_off + rng.randf_range(-0.3, 0.3))
-						draw_circle(op * PX, rng.randf_range(0.25, 0.6) * PX, Color(0, 0, 0, 0.1))
+						tb.circle(op * PX, rng.randf_range(0.25, 0.6) * PX, Color(0, 0, 0, 0.1))
 					y += rng.randf_range(6.0, 14.0)
 
+	## (the whole layer is one batch of triangles: a dash a draw call would be a thousand a frame)
 	func _marks(w: World) -> void:
+		tb.clear()
 		var snowy := clampf(w.sky.snow_cover * 1.5, 0.0, 0.85)
 		var yellow := Color("d8b23a").lerp(Color(0.9, 0.9, 0.95, 0.15), snowy)
 		var white := Color("d8d8d0").lerp(Color(0.9, 0.9, 0.95, 0.15), snowy)
@@ -993,8 +1055,8 @@ class Layer extends Node2D:
 					var a: Vector2 = rd.pts[si]
 					var b: Vector2 = rd.pts[si + 1]
 					var n := (b - a).normalized().orthogonal() * 2.0
-					_quad(PackedVector2Array([(a + n) * PX, (b + n) * PX, (b - n) * PX, (a - n) * PX]), w.ground_color(a, { "style": "rural" }))
-					draw_line(a * PX, b * PX, Color("b8bcc0"), 2.0)
+					tb.quad((a + n) * PX, (b + n) * PX, (b - n) * PX, (a - n) * PX, w.ground_color(a, { "style": "rural" }))
+					tb.line(a * PX, b * PX, Color("b8bcc0"), 2.0)
 					for sd in [-1.0, 1.0]:
 						_line(w, ri, si, sd * 2.3, yellow, 0.0, 2.0)
 						_line(w, ri, si, sd * 6.0, white, 3.0, 2.0)
@@ -1020,13 +1082,17 @@ class Layer extends Node2D:
 			var r: Rect2 = l.r
 			if l.kind == "runway":
 				for x in range(int(r.position.x) + 8, int(r.end.x) - 8, 14):
-					draw_rect(Rect2(Vector2(x, r.get_center().y - 0.3) * PX, Vector2(7, 0.6) * PX), white)
+					tb.rect(Rect2(Vector2(x, r.get_center().y - 0.3) * PX, Vector2(7, 0.6) * PX), white)
+				tb.flush(self)
 				PixelFont.draw(self, (r.position + Vector2(4, 6)) * PX, l.name, white, 6)
 				continue
 			for x in range(int(r.position.x) + 3, int(r.end.x) - 2, 3):
-				draw_rect(Rect2(Vector2(x, r.position.y + 1) * PX, Vector2(0.15, 5) * PX), white)
-				if r.size.y > 16: draw_rect(Rect2(Vector2(x, r.end.y - 6) * PX, Vector2(0.15, 5) * PX), white)
-			if l.name != "": PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.32), 2)
+				tb.rect(Rect2(Vector2(x, r.position.y + 1) * PX, Vector2(0.15, 5) * PX), white)
+				if r.size.y > 16: tb.rect(Rect2(Vector2(x, r.end.y - 6) * PX, Vector2(0.15, 5) * PX), white)
+			if l.name != "":
+				tb.flush(self)
+				PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.32), 2)
+		tb.flush(self)
 
 	func _rail(w: World) -> void:
 		var snowy := w.sky.snow_cover > 0.3

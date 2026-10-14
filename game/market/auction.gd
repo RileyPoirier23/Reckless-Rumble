@@ -113,6 +113,11 @@ func done() -> Dictionary:
 	return a.done
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('market_auction_process_115', _t0)
+
+func _process_timed(dt: float) -> void:
 	if not panel.visible:
 		if drive.car == null or StoryState.active or drive.garage.visible or not at_gate(): return
 		if not is_open():
@@ -266,6 +271,11 @@ class AuctionPanel extends Control:
 		if lines.size() > 4: lines = lines.slice(lines.size() - 4)
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('market_auction_process_268', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		if not visible: return
 		queue_redraw()
 		if Input.is_action_just_pressed("ui_cancel") or Input.is_action_just_pressed("use"):

@@ -40,6 +40,11 @@ func _ready() -> void:
 	_pb = get_stream_playback()
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('render_engine_audio_process', _t0)
+
+func _process_timed(_dt: float) -> void:
 	if sim == null or _pb == null: return
 	var n := _pb.get_frames_available()
 	if n <= 0: return

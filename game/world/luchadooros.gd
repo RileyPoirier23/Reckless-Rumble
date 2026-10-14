@@ -48,6 +48,11 @@ static func find_car(model: String, year: int) -> String:
 	return ""
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('world_luchadooros_process_50', _t0)
+
+func _process_timed(_dt: float) -> void:
 	if drive.car == null: return
 	_park(drive.car.sim.pos.distance_to(SPOT) < NEAR_M and not StoryState.active)
 	if panel.visible or StoryState.active or drive.garage.visible or drive.modal_open(): return
@@ -126,6 +131,11 @@ class LotPanel extends Control:
 		line_i = 0
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('world_luchadooros_process_128', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		if not visible: return
 		queue_redraw()
 		if Engine.get_process_frames() == _opened: return

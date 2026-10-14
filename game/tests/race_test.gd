@@ -30,7 +30,7 @@ func _ready() -> void:
 	var only := Array(OS.get_environment("RT_PARTS").split(",", false))
 	var parts: Array = [["race_ai", _race_ai, not police_only], ["race_win", _race_win, not police_only], ["police_ticket", _police_ticket, true],
 		["police_walk_off", _police_walk_off, true], ["police_warning", _police_warning, true], ["police_lose", _police_lose, true], ["police_impound", _police_impound, true], ["wildlife", _wildlife, true],
-		["pinks", _pinks, not police_only], ["ride", _ride, true], ["salvage", _salvage, true], ["meet", _meet, true], ["auction", _auction, true], ["calendar", _calendar, true]]
+		["pinks", _pinks, not police_only], ["ride", _ride, true], ["salvage", _salvage, true], ["meet", _meet, true], ["auction", _auction, true], ["calendar", _calendar, true], ["garage_door", _garage_door, true]]
 	var want := 0
 	for part: Array in parts:
 		if not bool(part[2]) or (not only.is_empty() and not only.has(String(part[0]))): continue
@@ -249,7 +249,8 @@ func _police_warning() -> void:
 	p.enabled = true
 	main.hold_car = false
 	var tries := 0
-	while tries < 4 and int(main.save.get("warnings", 0)) == warnings0:
+	# (a plain speeder's let off 55% of the time: eight goes before it counts as broken)
+	while tries < 8 and int(main.save.get("warnings", 0)) == warnings0:
 		tries += 1
 		main.save.heat = 0.0
 		var k := _cruiser_behind(30.0)
@@ -278,6 +279,10 @@ func _police_warning() -> void:
 		p.clear()
 	check("police: sorry officer, and sooner or later it's a warning instead of a ticket", int(main.save.get("warnings", 0)) == warnings0 + 1, "%d stops" % tries)
 	check("police: after a warning they've stood down and you can drive on", not p.chasing() and not p.writing())
+	# (however it went, the next part starts free: a stop still open left the pinks race with nobody in it)
+	p.clear()
+	main.car.locked = false
+	main.hold_car = false
 	done += 1
 
 ## A chase you get out of: far enough away, long enough, they lose you.
@@ -405,6 +410,7 @@ func _wildlife() -> void:
 func _pinks() -> void:
 	var j: JobRunner = main.jobs
 	main.save.street = { "races": 5, "wins": 5, "rep": 6, "pinks": 0 }
+	main.save.cash = maxi(int(main.save.cash), 1000)      # (the police parts can leave you in the hole)
 	main.sky.day = 4                    # a Friday
 	main.sky.time_h = 23.0
 	var cars0 := (main.save.garage as Array).size()
@@ -669,4 +675,27 @@ func _calendar() -> void:
 	check("calendar: so a Saturday is still a Saturday", Auction.is_day(main.sky.day))
 	main.save.erase("cal")
 	main.sky.set_season("fall")
+	done += 1
+
+## Pull up to Covington Auto's doors and press the key: the garage opens and stays open. The
+## press that opened it was once read again inside it, on the CARS tab, as "take it out", and
+## the garage closed in the same frame with the same car.
+func _garage_door() -> void:
+	var door: Rect2 = main.GARAGE_DOOR
+	main._teleport(door.get_center(), -PI / 2.0)
+	await _wait(0.3)
+	check("garage door: pulled up and stopped", door.has_point(main.car.sim.pos) and main.car.sim.speed() < 2.0)
+	Input.action_press("use")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	Input.action_release("use")
+	var open_now: bool = main.garage.visible
+	await _wait(0.3)
+	check("garage door: the key opens the garage and it stays open", open_now and main.garage.visible, "opened %s, still open %s" % [open_now, main.garage.visible])
+	Input.action_press("ui_cancel")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	Input.action_release("ui_cancel")
+	await _wait(0.3)
+	check("garage door: and closes on cancel", not main.garage.visible)
 	done += 1

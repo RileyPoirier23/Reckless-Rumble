@@ -1767,9 +1767,11 @@ static func ramp(paint: Color, finish: String) -> Dictionary:
 	var dark := clampf((0.32 - lum) / 0.32, 0.0, 1.0)
 	var pale := clampf((lum - 0.6) / 0.4, 0.0, 1.0)
 	var sky := Color(0.74, 0.81, 0.92)
-	var shade := cool.lerp(Color(0.3, 0.34, 0.46), pale)
+	# (white and cream go a touch darker in the seams and the shadow line, or at the size of the
+	# cars in the queue they're a pale blob)
+	var shade := cool.lerp(Color(0.24, 0.27, 0.38), pale)
 	var out := {
-		"deep": paint.lerp(shade, k[0]), "sh": paint.lerp(shade, k[1]), "mid": paint.lerp(shade, k[2]), "base": paint,
+		"deep": paint.lerp(shade, k[0] + 0.1 * pale), "sh": paint.lerp(shade, k[1]), "mid": paint.lerp(shade, k[2]), "base": paint,
 		"lt": paint.lerp(warm, k[4]).lerp(sky.darkened(0.5), dark * 0.32),
 		"hi": paint.lerp(warm, k[5]).lerp(sky.darkened(0.3), dark * 0.48),
 		"spec": paint.lerp(warm, k[6]).lerp(sky, dark * 0.6),

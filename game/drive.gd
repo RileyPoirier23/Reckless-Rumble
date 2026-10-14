@@ -14,6 +14,7 @@ var car: PlayerCar
 var cam: Camera2D
 var dark: CanvasModulate
 var lights: LightPool
+var loader: LoadOverlay           # the card over the road while a stretch of it is built
 var traffic: Traffic
 var furniture: RoadFurniture
 var parked: ParkedCars
@@ -134,6 +135,12 @@ func _ready() -> void:
 	flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	flash_rect.color = Color(1, 1, 1, 0)
 	layer.add_child(flash_rect)
+	var top := CanvasLayer.new()
+	top.name = "LoadLayer"
+	top.layer = 50
+	add_child(top)
+	loader = LoadOverlay.new()
+	top.add_child(loader)
 	hud = Hud.new()
 	hud.size = Vector2(640, 360)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -375,6 +382,14 @@ void fragment() {
 		var mt: Node = load("res://tests/mission_test.gd").new()
 		mt.main = self
 		add_child(mt)
+	elif OS.get_cmdline_user_args().has("--collide-audit"):
+		var ca: Node = load("res://tests/collide_audit.gd").new()
+		ca.main = self
+		add_child(ca)
+	elif OS.get_cmdline_user_args().has("--perf-probe"):
+		var pp: Node = load("res://tests/perf_probe.gd").new()
+		pp.main = self
+		add_child(pp)
 	elif OS.get_cmdline_user_args().has("--lights-shot"):
 		var ls: Node = load("res://tests/lights_shot.gd").new()
 		ls.main = self
@@ -456,7 +471,15 @@ func _start_mission(m: Dictionary) -> void:
 	mission = StoryMissions.MissionRunner.new()
 	add_child(mission)
 	mission.setup(self, m)
-	world.warm(m.start, Vector2(40, 25))
+	# the whole route is built and painted under the loading card, and stays built: no chunk
+	# coming in mid-chase, no stand-in trees popping into the real thing
+	var pts := PackedVector2Array([m.start])
+	var from: Vector2 = m.start
+	for o in m.objectives:
+		if o.has("to"):
+			pts.append_array(world.map.route_to(from, o.to))
+			from = o.to
+	settle(m.start, pts, String(m.get("title", "THE ROAD")))
 
 ## Story cars aren't from your garage: they're whatever the story puts you in.
 func _spawn_story_car(id: String, at: Vector2, heading: float) -> void:
@@ -546,6 +569,7 @@ func _after_death() -> void:
 	car.dead = false
 	car.respawn()
 	_teleport(car.start_pos, car.start_heading)
+	settle(car.start_pos, PackedVector2Array(), "BACK ON THE ROAD")
 	if car_i >= 0:
 		for k in save.garage[car_i].damage: save.garage[car_i].damage[k] = 0.0
 	hud.post("GUS TOWED WHAT WAS LEFT TO THE SHOP AND REBUILT IT. HE'S NOT TALKING TO YOU.", 6.0)
@@ -564,6 +588,7 @@ func _on_garage_pick(i: int) -> void:
 	_store_car()
 	_spawn_car(i, START, -PI / 2.0)
 	_teleport(START, -PI / 2.0)
+	settle(START, PackedVector2Array(), "THE LOT")
 	SaveGame.write(save)
 	var spec: Dictionary = car.spec
 	hud.post("%s %s. GUS: \"KEYS ARE IN IT.\"" % [String(spec.make).to_upper(), String(spec.model).to_upper()], 3.0)
@@ -951,12 +976,16 @@ func _apply_season(s: String, reset := true) -> void:
 	}
 	hud.notify(tips[s], "tip")
 
+var _pt := 0
+
 func _process(dt: float) -> void:
+	_pt = Time.get_ticks_usec()
 	if garage and garage.visible:
 		CarView.screen_up = Vector2(0, -1)      # the garage is drawn straight on
 		CarView.set_angle("overhead")
 		return
 	sky.step(dt)
+	_pt = Prof.lap('sky', _pt)
 	if sky.season != _season_seen:
 		if _season_seen != "": _apply_season(sky.season, false)
 		_season_seen = sky.season
@@ -972,6 +1001,7 @@ func _process(dt: float) -> void:
 	_burnout_tip(dt)
 	_burnout_count()
 	_awards(dt)
+	_pt = Prof.lap('hud_misc', _pt)
 	_turn_camera(dt)
 	cam.rotation = cam_rot
 	if car.impaired > 0.0:
@@ -1006,9 +1036,12 @@ func _process(dt: float) -> void:
 	var r := Vector2(320, 180 / CarView.squash).length() / cam.zoom.x
 	var half_px := Vector2(r, r)
 	traffic.step(dt, cam.global_position / PX)
+	_pt = Prof.lap('traffic', _pt)
 	if not car.on_traffic_hit.is_valid(): car.on_traffic_hit = func(o: TrafficCar, dv: float) -> void: incidents.reported(o, dv, true)
 	incidents.step(dt)
+	_pt = Prof.lap('incidents', _pt)
 	parked.step(dt, cam.global_position / PX)
+	_pt = Prof.lap('parked', _pt)
 	CarView.view_centre = cam.global_position
 	CarView.view_radius = r
 	# the GPS shows the police (flashing when they're after you) and whoever you're racing
@@ -1020,6 +1053,7 @@ func _process(dt: float) -> void:
 		for a in jobs.race.racers: bl.append([a.sim.pos, Color("d9a441")])
 	bl.append_array(incidents.blips())
 	gps.blips = bl
+	_pt = Prof.lap('blips', _pt)
 	# the nearest siren coming
 	var sir := INF
 	for k in police.cruisers:
@@ -1027,19 +1061,24 @@ func _process(dt: float) -> void:
 	sir = minf(sir, float(incidents.nearest_siren(car.sim.pos)[0]))
 	audio.siren = clampf(1.0 - sir / 260.0, 0.0, 1.0)
 	if not StoryState.active: _deliveries(dt)
+	if mission == null and world.keep_rect.has_area(): world.keep_rect = Rect2()
+	_pt = Prof.lap('deliveries', _pt)
 	_save_t -= dt
 	if _save_t <= 0.0 and not StoryState.active:
 		_save_t = 30.0
 		_store_car()
 		SaveGame.write(save)
 	_depth_sort(up)
+	_pt = Prof.lap('depth_sort', _pt)
 	sight.update_sight(dt, car.global_position, r)
+	_pt = Prof.lap('sight', _pt)
 	# the blinker relay clicks
 	var b_on := CarView.blink_on() and (car.view.blink_left or car.view.blink_right)
 	if b_on != _blink_was:
 		_blink_was = b_on
 		audio.tick = 1.0
 	world.update_view(cam.global_position / PX, half_px / PX)
+	_pt = Prof.lap('world_view', _pt)
 	# light: the sky colour, the lights, headlights, windows
 	dark.color = sky.ambient_color()
 	# the cars' lamps glow as it gets dark
@@ -1054,14 +1093,17 @@ func _process(dt: float) -> void:
 		_light_t = 0.12
 		lights.refresh(cam.global_position, half_px)
 	lights.animate(dt)
+	_pt = Prof.lap('lights', _pt)
 	dash.lit = night
 	dash.beacons = car.beacons
 	# the weather you can see
 	var wind := sky.wind_dir * sky.wind
 	_brush(dt)
+	_pt = Prof.lap('brush', _pt)
 	# the smoke drifts off downwind and rises up the screen
 	smoke_field.wind = wind * CarArt.PX * 0.5
 	smoke_field.step(dt, CarView.screen_up * 9.0)
+	_pt = Prof.lap('smoke', _pt)
 	var wx := GameSettings.weather_amount()
 	rain_fx.emitting = sky.rain > 0.08 and wx > 0.0
 	snow_fx.emitting = sky.snow > 0.08 and wx > 0.0
@@ -1097,6 +1139,7 @@ func _process(dt: float) -> void:
 	if car.sim.pos.distance_to(Vector2(5080, 800)) < 60.0 and car.throttle_in < 0.05 and car.sim.speed() < 6.0:
 		car.sim.set_world_velocity(car.sim.world_velocity() + Vector2(-0.6, -0.5).normalized() * 0.9 * dt)
 	_inputs()
+	_pt = Prof.lap("rest", _pt)
 
 ## Cars and buildings drawn back to front along the camera's view (y-sort, but for a camera
 ## that turns).
@@ -1196,6 +1239,51 @@ func _teleport(at: Vector2, heading: float) -> void:
 	cam.reset_smoothing()
 	world.warm(at, Vector2(40, 25))
 
+const SETTLE_HALF := Vector2(90, 60)     # metres each way: the screen and a bit, at the furthest zoom
+
+## Build and paint the road here (and along `route`, if given) under the loading card, holding
+## the car still until it's all in. Headless (the tests) it's done on the spot, no card.
+func settle(center: Vector2, route := PackedVector2Array(), title := "THE ROAD", tip := "") -> void:
+	var pts := PackedVector2Array([center])
+	var acc := 0.0
+	for i in range(1, route.size()):
+		acc += route[i - 1].distance_to(route[i])
+		if acc >= 60.0:
+			pts.append(route[i])
+			acc = 0.0
+	if route.size() > 1: pts.append(route[route.size() - 1])
+	var box := Rect2(center, Vector2.ZERO)
+	for p in pts: box = box.expand(p)
+	world.keep_rect = box.grow(SETTLE_HALF.x) if pts.size() > 1 else Rect2()
+	if DisplayServer.get_name() == "headless":
+		for p in pts: world.warm(p, SETTLE_HALF)
+		world.warm(center, SETTLE_HALF)
+		return
+	loader.open(title, tip)
+	hold_car = true
+	ArtBaker.sync_until = Engine.get_process_frames() + 900
+	var done := 0
+	for p in pts:
+		var guard := 0
+		while world.missing_near(p, SETTLE_HALF) > 0 and guard < 80:
+			world.update_view(p, SETTLE_HALF)
+			guard += 1
+			if guard % 3 == 0: await get_tree().process_frame
+		done += 1
+		loader.progress = float(done) / float(pts.size() + 1)
+		await get_tree().process_frame
+	# the painter's backlog (sprites still being drawn in the background), within reason
+	var t := 0.0
+	while ArtBaker.busy() and t < 2.0:
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	world.update_view(center, SETTLE_HALF)
+	ArtBaker.sync_until = -1
+	loader.progress = 1.0
+	await get_tree().process_frame
+	loader.visible = false
+	hold_car = false
+
 func _inputs() -> void:
 	if car: car.locked = job_board.visible or market.panel_open() or (jobs.strip != null and jobs.strip.state in ["signin", "slip"]) \
 		or (jobs.race != null and jobs.race.holding()) or police.writing() or hold_car or fuel.open() or salvage.open() or auction.open() or luchadooros.open() \
@@ -1279,6 +1367,11 @@ class Clouds extends Node2D:
 	func _ready() -> void:
 		tex = World.light_tex(Color(0, 0, 0))
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('drive_process', _t0)
+
+	func _process_timed(dt: float) -> void:
 		off += sky.wind_dir * (2.0 + sky.wind) * dt * CarArt.PX
 		queue_redraw()
 	func _draw() -> void:

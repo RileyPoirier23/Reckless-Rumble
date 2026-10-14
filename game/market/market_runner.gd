@@ -50,6 +50,11 @@ func cancel() -> void:
 	drive.clear_route()
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('market_market_runner_process_52', _t0)
+
+func _process_timed(dt: float) -> void:
 	queue_redraw()
 	if not active() or drive.car == null: return
 	t += dt
@@ -170,6 +175,11 @@ class MeetPanel extends Control:
 		return out
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('market_market_runner_process_172', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		if not visible: return
 		queue_redraw()
 		var its := items()

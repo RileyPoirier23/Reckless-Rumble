@@ -243,6 +243,11 @@ func holding() -> bool:
 	return state == "grid"
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('jobs_street_race_process_245', _t0)
+
+func _process_timed(dt: float) -> void:
 	queue_redraw()
 	if drive.car == null: return
 	t += dt
@@ -375,6 +380,11 @@ class RaceHud extends Control:
 	var race: StreetRace
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('jobs_street_race_process_377', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		queue_redraw()
 
 	func _draw() -> void:

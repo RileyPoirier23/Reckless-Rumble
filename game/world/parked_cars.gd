@@ -351,6 +351,11 @@ func clear() -> void:
 ## asphalt cut into the sidewalk with a painted tick at each end. All of it goes down in three
 ## calls (every bay's asphalt, every pad, every tick), not a few per bay.
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_parked', _t0)
+
+func _draw_timed() -> void:
 	var snow: float = drive.sky.snow_cover
 	var col := Color("8e8a82").lerp(Color("dfe3e8"), clampf(snow * 1.2, 0.0, 1.0))
 	var tint: Color = drive.world.asphalt_tint()

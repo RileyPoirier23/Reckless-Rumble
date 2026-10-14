@@ -84,6 +84,11 @@ func _signin() -> void:
 # ------------------------------------------------------------------ input
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('jobs_drag_strip_process', _t0)
+
+func _process_timed(dt: float) -> void:
 	t += dt
 	queue_redraw()
 	match state:

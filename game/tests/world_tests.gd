@@ -271,5 +271,25 @@ func _init() -> void:
 	check("gas pumps don't block sight", not pumps.blocks_sight() and bn.blocks_sight())
 	pumps.free()
 	bn.free()
+	_bridge_rails(MapData.get_map())
 	print("\n%d failed" % fails)
 	quit(1 if fails > 0 else 0)
+
+
+## No bridge rail lies in another road: the deck's few metres past the water stop short of the
+## junction with the next street.
+func _bridge_rails(map: MapData) -> void:
+	var bad: Array = []
+	for br in map.bridges:
+		var dir: Vector2 = (br.b - br.a).normalized()
+		for side in [-1.0, 1.0]:
+			var off: Vector2 = dir.orthogonal() * side * (br.w / 2.0 + 0.6)
+			var span := World.rail_span(map, br.a + off, br.b + off, String(br.get("name", "")))
+			if span.is_empty():
+				bad.append([br.name, side, "no rail left"])
+				continue
+			for f in [0.0, 0.1, 0.5, 0.9, 1.0]:
+				var p: Vector2 = (span[0] as Vector2).lerp(span[1], f)
+				var rd := map.road_at(p, 0.3)
+				if not rd.is_empty() and String(rd.road.name) != String(br.get("name", "")): bad.append([br.name, side, rd.road.name, "%.1f" % rd.dist])
+	check("no bridge rail stands in another road", bad.is_empty(), str(bad))

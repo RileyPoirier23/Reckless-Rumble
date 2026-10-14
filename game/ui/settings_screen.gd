@@ -112,7 +112,7 @@ func rows() -> Array:
 			out.append({ "kind": "toggle", "sec": "ui", "key": "scan_tool", "label": "SCAN TOOL", "desc": "THE DIAGNOSTIC COMPUTER UNDER THE DASH: FAULT CODES, THE TIRES, THE WARNING LIGHTS." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_mode", "label": "CAMERA", "opts": ["chase", "follow", "top_down"], "desc": "CHASE TURNS WITH THE CAR. FREE ROAM SWINGS ROUND BEHIND WHERE YOU'RE GOING (RIGHT STICK LOOKS ROUND). TOP DOWN KEEPS NORTH UP. Y (TRIANGLE) OR T FLIPS THROUGH THEM WHILE YOU DRIVE." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "camera_angle", "label": "CAMERA ANGLE", "opts": ["overhead", "angled", "low"], "desc": "STRAIGHT DOWN, TIPPED, OR DOWN LOW TO SEE THE SIDES OF THINGS. (THE Y KEY FLIPS THROUGH THEM TOO.)" })
-			out.append({ "kind": "choice", "sec": "ui", "key": "camera_zoom", "label": "CAMERA DISTANCE", "opts": [0.8, 0.9, 1.0, 1.1, 1.2], "desc": "FURTHER OUT SEES MORE ROAD; CLOSER IN SEES MORE CAR." })
+			out.append({ "kind": "choice", "sec": "ui", "key": "camera_zoom", "label": "CAMERA DISTANCE", "opts": [0.7, 0.8, 0.9, 1.0, 1.1, 1.2], "desc": "FURTHER OUT SEES MORE ROAD; CLOSER IN SEES MORE CAR." })
 			out.append({ "kind": "choice", "sec": "ui", "key": "clock", "label": "CLOCK", "opts": ["normal", "slow", "fast"], "desc": "HOW FAST A DAY GOES BY ON THE ROAD: AN HOUR, TWO HOURS, OR 24 MINUTES." })
 			out.append({ "kind": "toggle", "sec": "ui", "key": "controls_card", "label": "CONTROLS CARD AT START", "desc": "SHOW THE CONTROLS EVERY TIME YOU START DRIVING (F1 ANY TIME)." })
 			out.append({ "kind": "choice", "sec": "controls", "key": "prompts", "label": "BUTTON PROMPTS", "opts": ["auto", "keyboard", "xbox", "playstation"], "desc": "AUTO FOLLOWS WHATEVER YOU TOUCHED LAST." })

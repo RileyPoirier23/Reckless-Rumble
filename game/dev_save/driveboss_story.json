@@ -1,0 +1,30 @@
+{
+	"avatar": {
+		"age": 52,
+		"female": 0,
+		"name": "LEO",
+		"seed": 7
+	},
+	"cash": 48000,
+	"day": 140,
+	"debt": 0,
+	"flags": {
+		"aries_rules": true,
+		"fleet_no": true,
+		"frankie_safe": true,
+		"gift_dont": true,
+		"johnny_fair": true,
+		"karma_deeds": 24.0,
+		"keys_take": true,
+		"kid_home": true,
+		"mentor_dad": true,
+		"money_sign": true,
+		"pinks_return": true,
+		"sal_tremblay": true,
+		"tremblay_trust": true
+	},
+	"last_result": {
+
+	},
+	"step": 85
+}

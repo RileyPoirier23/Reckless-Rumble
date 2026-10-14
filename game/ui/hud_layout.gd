@@ -38,10 +38,10 @@ const OBJ_MAX_LINES := 4
 ## camera looks ahead, scaled by the zoom.
 const LOOK_BASE := 40.0
 const LOOK_GAIN := 0.14
-const LOOK_MAX := 50.0
-const ZOOM_REST := 1.55
-const ZOOM_FAST := 1.0
-const ZOOM_FULL_MS := 50.0
+const LOOK_MAX := 70.0
+const ZOOM_REST := 1.2        # (was 1.55: too close to see the crossing you're about to go through)
+const ZOOM_FAST := 0.8
+const ZOOM_FULL_MS := 45.0
 
 static func zoom_at(speed: float) -> float:
 	return lerpf(ZOOM_REST, ZOOM_FAST, clampf(speed / ZOOM_FULL_MS, 0.0, 1.0))

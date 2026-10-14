@@ -47,10 +47,43 @@ func setup_ai(car_spec: Dictionary, the_city: World, the_skids: Skids, the_hud: 
 	sim.coolant_c = 88.0
 	sim.oil_c = 95.0
 	for i in 4: sim.tires[i].temp = float(CarSim.COMPOUND[sim.compound].opt)
-	_brake_seen = brake_probe(car_spec)
+	_brake_seen = brake_known(car_spec)
+
+static var _probe_tasks: Array[int] = []
+static var _brake_cache := {}        # by spec: a second of sim per spawn was a hitch every time a cruiser rolled up
+
+## Every probe still running is waited for before the car goes (a task left behind at exit is
+## a crash on the way out).
+static func settle_probes() -> void:
+	for t in _probe_tasks: WorkerThreadPool.wait_for_task_completion(t)
+	_probe_tasks.clear()
+
+func _exit_tree() -> void:
+	settle_probes()
+	super()
+
+## The probe's answer for this spec: from the cache, or a fair guess while a worker thread runs
+## the probe (the answer lands on this car, and in the cache, a moment later).
+func brake_known(car_spec: Dictionary) -> float:
+	var key: String = "%s|%s|%s|%s" % [car_spec.get("id", ""), car_spec.get("make", ""), car_spec.get("model", ""), str(car_spec.get("mods", {}))]
+	if _brake_cache.has(key): return _brake_cache[key]
+	# (finished probes are collected here: a task has to be waited on once, even one that's done)
+	for i in range(_probe_tasks.size() - 1, -1, -1):
+		if WorkerThreadPool.is_task_completed(_probe_tasks[i]):
+			WorkerThreadPool.wait_for_task_completion(_probe_tasks[i])
+			_probe_tasks.remove_at(i)
+	var me: WeakRef = weakref(self)
+	_probe_tasks.append(WorkerThreadPool.add_task(func() -> void:
+		var v := brake_probe(car_spec)
+		(func() -> void:
+			_brake_cache[key] = v
+			var k = me.get_ref()
+			if k != null and is_instance_valid(k) and k._brake_seen == 7.0: k._brake_seen = v).call_deferred(), false, "brake probe"))
+	return 7.0
 
 ## How hard this car stops from 90 km/h on dry road with the pedal down (m/s²): a second of
 ## the real sim, so a heavy truck on drums doesn't plan its corners like a sports car.
+## (Pure: its own sim, nothing shared, so it can run on a worker thread.)
 static func brake_probe(car_spec: Dictionary) -> float:
 	var p := CarSim.new(car_spec)
 	p.assist = CarSim.Assist.STREET
@@ -311,6 +344,11 @@ class LightBar extends Node2D:
 	var t := 0.0
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('world_ai_car_process', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		queue_redraw()
 
 	func _draw() -> void:

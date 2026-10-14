@@ -125,6 +125,11 @@ func _ready() -> void:
 	add_child(_under)
 
 func _process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(dt)
+	Prof.lap('car_view_proc', _t0)
+
+func _process_timed(dt: float) -> void:
 	_steer_vis = move_toward(_steer_vis, clampf(steer, -0.7, 0.7), STEER_RATE * dt)
 	if _job != null and _job.done():
 		art = _job.take()
@@ -166,6 +171,11 @@ func slice_px(z: float) -> float:
 	return z * STEP * lift_k + lift
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_car', _t0)
+
+func _draw_timed() -> void:
 	if art == null or art.atlas == null: return
 	var sz := Vector2(art.size)
 	var half := sz / 2.0
@@ -235,6 +245,11 @@ func _lamp_slice(ci: CanvasItem, z: int, off: Vector2, half: Vector2, bl: bool, 
 class LampLayer extends Node2D:
 	var view: CarView
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_car_lamps', _t0)
+
+	func _draw_timed() -> void:
 		if view == null or view.art == null or view.art.lamp_tex.is_empty(): return
 		if not (view.braking or view.reversing or view.headlights or view.blink_left or view.blink_right or view.beacons or view.high_beams or view.light_bar): return
 		var half := Vector2(view.art.size) / 2.0
@@ -279,6 +294,11 @@ class GlowLayer extends Node2D:
 	var under := false
 
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_car_glows', _t0)
+
+	func _draw_timed() -> void:
 		if view == null or view.art == null: return
 		var art: CarArt = view.art
 		var fwd := Vector2(cos(view.heading), sin(view.heading))

@@ -58,6 +58,11 @@ func open() -> bool:
 	return panel.visible
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('world_fuel_stop_process_60', _t0)
+
+func _process_timed(_dt: float) -> void:
 	if panel.visible or drive.car == null or StoryState.active: return
 	var s := at_pumps()
 	if not s.is_empty():
@@ -116,6 +121,11 @@ class PumpPanel extends Control:
 		]
 
 	func _process(dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(dt)
+		Prof.lap('world_fuel_stop_process_118', _t0)
+
+	func _process_timed(dt: float) -> void:
 		if not visible: return
 		queue_redraw()
 		var sim: CarSim = stop.drive.car.sim

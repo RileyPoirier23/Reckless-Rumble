@@ -12,6 +12,10 @@ var hpx_base: float      # wall height (px) seen from straight overhead
 var hpx: float:          # ...and from where the camera is
 	get: return hpx_base * CarView.lift_k
 var windows: Node2D
+var _tb := TriBatch.new()       # the building's triangles, one command per redraw
+var _drawn_up := Vector2.ZERO
+var _drawn_k := 0.0
+var _drawn_night := false
 
 func setup(b: Dictionary) -> void:
 	data = b
@@ -102,8 +106,26 @@ func blocks_sight() -> bool:
 	return not String(data.get("kind", "")) in ["pumps", "tower"]
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('proc_building', _t0)
+
+## Redrawn when the camera turns or tilts (the walls lean with it), or when the lights come on;
+## a casino's neon cycles its colour. Otherwise the same commands stand from frame to frame.
+func _process_timed(_dt: float) -> void:
+	var neon: bool = String(data.kind) == "casino" and windows.visible
+	var up := lean_up()
+	if up == _drawn_up and CarView.lift_k == _drawn_k and windows.visible == _drawn_night and not neon: return
+	_drawn_up = up
+	_drawn_k = CarView.lift_k
+	_drawn_night = windows.visible
 	queue_redraw()
 	windows.queue_redraw()
+
+## The camera's up, in steps of a degree and a half: the walls lean with it, and redrawing every
+## building for every fraction of a degree while the chase camera swings is most of a frame.
+static func lean_up() -> Vector2:
+	return Vector2.from_angle(snappedf(CarView.screen_up.angle(), deg_to_rad(1.5)))
 
 ## The walls that face the camera: [a, b, outward normal] (a toward b along the footprint).
 func visible_walls() -> Array:
@@ -118,9 +140,14 @@ func visible_walls() -> Array:
 	return out
 
 func _quad(a: Vector2, b: Vector2, c: Vector2, d: Vector2, col: Color) -> void:
-	draw_primitive(PackedVector2Array([a, b, c, d]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+	_tb.quad(a, b, c, d, col)
 
 func _draw() -> void:
+	var _t0 := Time.get_ticks_usec()
+	_draw_timed()
+	Prof.lap('draw_building', _t0)
+
+func _draw_timed() -> void:
 	var c := colors()
 	var up := CarView.screen_up
 	var hv := up * hpx
@@ -130,12 +157,13 @@ func _draw() -> void:
 		var base := fp.get_center()
 		for i in 8:
 			var a := base + up * (i * 30.0)
-			draw_line(a, a + up * 28.0, c[0] if i % 2 == 0 else Color("c83a2a"), 4.0)
+			_tb.line(a, a + up * 28.0, c[0] if i % 2 == 0 else Color("c83a2a"), 4.0)
+		_tb.flush(self)
 		return
 	var st := style()
 	# shadow on the ground, cast away from the sun (low in the south-west sky)
 	var sh := Vector2(1, 0.6).normalized() * hpx_base * (0.6 if st.roof == "flat" else 0.85)
-	draw_colored_polygon(PackedVector2Array([cs[0] + sh, cs[1] + sh, cs[2] + sh, cs[3] + sh]), Color(0, 0, 0, 0.22))
+	_tb.fan(PackedVector2Array([cs[0] + sh, cs[1] + sh, cs[2] + sh, cs[3] + sh]), Color(0, 0, 0, 0.22))
 	# walls, shaded by which way they face, with what's on them
 	for w in visible_walls():
 		_wall(w[0], w[1], w[2], hv, c, st)
@@ -145,9 +173,10 @@ func _draw() -> void:
 		_: _flat_roof(c, st)
 	if data.kind == "church":
 		var top := fp.get_center() + hv + up * float(st.ridge) * CarView.lift_k
-		draw_colored_polygon(PackedVector2Array([top + up.orthogonal() * 10.0, top - up.orthogonal() * 10.0, top + up * 70.0]), c[2].lightened(0.1))
-		draw_line(top + up * 70.0, top + up * 92.0, Color("d8c870"), 2.0)
-		draw_line(top + up * 84.0 + up.orthogonal() * 6.0, top + up * 84.0 - up.orthogonal() * 6.0, Color("d8c870"), 2.0)
+		_tb.fan(PackedVector2Array([top + up.orthogonal() * 10.0, top - up.orthogonal() * 10.0, top + up * 70.0]), c[2].lightened(0.1))
+		_tb.line(top + up * 70.0, top + up * 92.0, Color("d8c870"), 2.0)
+		_tb.line(top + up * 84.0 + up.orthogonal() * 6.0, top + up * 84.0 - up.orthogonal() * 6.0, Color("d8c870"), 2.0)
+	_tb.flush(self)
 	_sign(false)
 
 const LIGHT := Vector2(-0.6, -0.8)      # where the daylight comes from (the north-west), for shading
@@ -208,7 +237,7 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 			return
 		"barn":
 			_quad(a.lerp(b, 0.35), a.lerp(b, 0.65), a.lerp(b, 0.65) + hv * 0.6, a.lerp(b, 0.35) + hv * 0.6, c[1])
-			for t: float in [0.35, 0.65]: draw_line(a.lerp(b, t), a.lerp(b, 0.5) + hv * 0.6 * (1.0 if t < 0.5 else 1.0), Color(1, 1, 1, 0.5), 1.0)
+			for t: float in [0.35, 0.65]: _tb.line(a.lerp(b, t), a.lerp(b, 0.5) + hv * 0.6 * (1.0 if t < 0.5 else 1.0), Color(1, 1, 1, 0.5), 1.0)
 			return
 		"pumps":
 			return
@@ -216,17 +245,17 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 		# lap siding: a line every few pixels, a shadow under each board
 		var y := 3.0
 		while y < H - 1.0:
-			draw_line(a + upn * y, b + upn * y, Color(0, 0, 0, 0.13), 1.0)
+			_tb.line(a + upn * y, b + upn * y, Color(0, 0, 0, 0.13), 1.0)
 			y += 3.0
 		# the foundation, and the corner boards
 		_quad(a, b, b + upn * 2.5, a + upn * 2.5, Color("5a5852") * _shade(n))
-		draw_line(a, a + hv, TRIM * 0.92, 1.5)
-		draw_line(b, b + hv, TRIM * 0.92, 1.5)
+		_tb.line(a, a + hv, TRIM * 0.92, 1.5)
+		_tb.line(b, b + hv, TRIM * 0.92, 1.5)
 	elif k in ["shop", "apts", "coffee", "garage"]:
 		# brick: courses and a lighter band at the top
 		var y2 := 4.0
 		while y2 < H - 3.0:
-			draw_line(a + upn * y2, b + upn * y2, Color(0, 0, 0, 0.08), 1.0)
+			_tb.line(a + upn * y2, b + upn * y2, Color(0, 0, 0, 0.08), 1.0)
 			y2 += 4.0
 		_quad(a + hv - upn * 3.0, b + hv - upn * 3.0, b + hv, a + hv, (c[0] as Color).lightened(0.18))
 	# the windows (the same places the night lights them, see window_slots)
@@ -239,7 +268,7 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 			_quad(p + upn * wh * 0.55, p + dir * ww * 0.5 + upn * wh * 0.55, p + dir * ww * 0.35 + upn * wh, p + upn * wh, Color(1, 1, 1, 0.08))
 			var m := 0.0
 			while m < ww:
-				draw_line(p + dir * m, p + dir * m + upn * wh, Color("8a8e92"), 1.0)
+				_tb.line(p + dir * m, p + dir * m + upn * wh, Color("8a8e92"), 1.0)
 				m += 12.0
 			if st.awning != null:
 				# a striped awning over the window, leaning out from the wall
@@ -258,42 +287,42 @@ func _wall(a: Vector2, b: Vector2, n: Vector2, hv: Vector2, c: Array, st: Dictio
 			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, dc)
 			var py := 0.0
 			while py < wh - 1.0:
-				draw_line(p + upn * py, p + dir * ww + upn * py, Color(0, 0, 0, 0.22), 1.0)
+				_tb.line(p + upn * py, p + dir * ww + upn * py, Color(0, 0, 0, 0.22), 1.0)
 				py += 4.0
 			var wy := wh * 0.72
 			var wx := 3.0
 			while wx + 7.0 < ww - 2.0:
 				_quad(p + dir * wx + upn * wy, p + dir * (wx + 7.0) + upn * wy, p + dir * (wx + 7.0) + upn * (wy + 6.0), p + dir * wx + upn * (wy + 6.0), Color("26323e"))
 				wx += 10.0
-			draw_line(p, p + upn * wh, TRIM, 1.5)
-			draw_line(p + dir * ww, p + dir * ww + upn * wh, TRIM, 1.5)
+			_tb.line(p, p + upn * wh, TRIM, 1.5)
+			_tb.line(p + dir * ww, p + dir * ww + upn * wh, TRIM, 1.5)
 			# the apron out front: a dark strip of oil-stained concrete
 			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 4.0, p - dir * 1.0 + n * 4.0, Color("4e4c4a"))
 			continue
 		if String(sl.kind) == "drivethru":
 			# the drive-thru: a sliding window, a ledge under it, the menu board and its little roof
 			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("26323e"))
-			draw_line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, Color("8a8e92"), 1.0)
-			draw_polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), Color("d8d4cc"), 1.0)
+			_tb.line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, Color("8a8e92"), 1.0)
+			_tb.polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), Color("d8d4cc"), 1.0)
 			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 2.5, p - dir * 1.0 + n * 2.5, Color("8a8884"))
 			var mb := p - dir * 40.0 + n * 14.0
 			_quad(mb, mb + dir * 22.0, mb + dir * 22.0 + upn * 28.0, mb + upn * 28.0, Color("2a1e1c"))
 			_quad(mb + dir * 2.0 + upn * 2.0, mb + dir * 20.0 + upn * 2.0, mb + dir * 20.0 + upn * 26.0, mb + dir * 2.0 + upn * 26.0, Color("f4ece0"))
-			draw_line(mb + dir * 4.0 + upn * 21.0, mb + dir * 18.0 + upn * 21.0, Color("8a2a22"), 2.0)
-			for row in 4: draw_line(mb + dir * 4.0 + upn * (16.0 - row * 3.5), mb + dir * (12.0 + float(row % 2) * 5.0) + upn * (16.0 - row * 3.5), Color("6a6058"), 1.0)
+			_tb.line(mb + dir * 4.0 + upn * 21.0, mb + dir * 18.0 + upn * 21.0, Color("8a2a22"), 2.0)
+			for row in 4: _tb.line(mb + dir * 4.0 + upn * (16.0 - row * 3.5), mb + dir * (12.0 + float(row % 2) * 5.0) + upn * (16.0 - row * 3.5), Color("6a6058"), 1.0)
 			continue
 		if String(sl.kind) == "door":
 			_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("4a2e22") if k != "shop" else Color("26323e"))
-			draw_line(p + upn * wh, p + dir * ww + upn * wh, TRIM, 1.0)
-			draw_rect(Rect2(p + dir * ww * 0.75 + upn * wh * 0.45, Vector2(1, 1)), Color("d8c870"))
+			_tb.line(p + upn * wh, p + dir * ww + upn * wh, TRIM, 1.0)
+			_tb.rect(Rect2(p + dir * ww * 0.75 + upn * wh * 0.45, Vector2(1, 1)), Color("d8c870"))
 			# the step
 			_quad(p - dir * 1.0, p + dir * (ww + 1.0), p + dir * (ww + 1.0) + n * 3.0, p - dir * 1.0 + n * 3.0, Color("8a8884"))
 			continue
 		# a window: glass, a glint, a white frame, shutters either side
 		_quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, Color("1e2a38"))
 		_quad(p + upn * wh * 0.6, p + dir * ww * 0.4 + upn * wh, p + dir * ww * 0.6 + upn * wh, p + upn * wh * 0.8, Color(0.75, 0.85, 1.0, 0.18))
-		draw_polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), TRIM if k in ["house", "farmhouse", "houses"] else Color("4a4e54"), 1.0)
-		draw_line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, TRIM * 0.85 if k in ["house", "farmhouse"] else Color("4a4e54"), 1.0)
+		_tb.polyline(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, p]), TRIM if k in ["house", "farmhouse", "houses"] else Color("4a4e54"), 1.0)
+		_tb.line(p + dir * ww * 0.5, p + dir * ww * 0.5 + upn * wh, TRIM * 0.85 if k in ["house", "farmhouse"] else Color("4a4e54"), 1.0)
 		if st.shutters != null:
 			var sc: Color = st.shutters
 			_quad(p - dir * 3.0, p - dir * 0.5, p - dir * 0.5 + upn * wh, p - dir * 3.0 + upn * wh, sc)
@@ -313,12 +342,12 @@ func _moon_edges(ci: CanvasItem) -> void:
 		var long_x := fp.size.x >= fp.size.y
 		var r0 := Vector2(R.position.x, cy.y) if long_x else Vector2(cy.x, R.position.y)
 		var r1 := Vector2(R.end.x, cy.y) if long_x else Vector2(cy.x, R.end.y)
-		ci.draw_line(_at(r0, hp + rh), _at(r1, hp + rh), Color(moon, 0.35), 1.0)
+		_tb.line(_at(r0, hp + rh), _at(r1, hp + rh), Color(moon, 0.35), 1.0)
 		var rc := [R.position, Vector2(R.end.x, R.position.y), R.end, Vector2(R.position.x, R.end.y), R.position]
-		for i in 4: ci.draw_line(_at(rc[i], hp), _at(rc[i + 1], hp), moon, 1.0)
+		for i in 4: _tb.line(_at(rc[i], hp), _at(rc[i + 1], hp), moon, 1.0)
 	else:
 		var cs := corners()
-		for i in 4: ci.draw_line(_at(cs[i], hp), _at(cs[(i + 1) % 4], hp), moon, 1.0)
+		for i in 4: _tb.line(_at(cs[i], hp), _at(cs[(i + 1) % 4], hp), moon, 1.0)
 
 ## Where the windows and doors go on a wall L px long and H px tall (all in px along the wall and up
 ## it): [{ x, z, w, h, kind: window / door / store }]. The day art and the night lights both use it,
@@ -417,12 +446,12 @@ func _gable_roof(st: Dictionary) -> void:
 		var mid := (ea + eb) / 2.0
 		var gc := wall * _shade(en)
 		gc.a = 1.0
-		draw_colored_polygon(PackedVector2Array([_at(ea, hp), _at(eb, hp), _at(mid, hp + rh)]), gc)
+		_tb.fan(PackedVector2Array([_at(ea, hp), _at(eb, hp), _at(mid, hp + rh)]), gc)
 		# a little vent up in the gable
-		draw_rect(Rect2(_at(mid, hp + rh * 0.45) - Vector2(2, 2), Vector2(4, 3)), Color(0, 0, 0, 0.35))
+		_tb.rect(Rect2(_at(mid, hp + rh * 0.45) - Vector2(2, 2), Vector2(4, 3)), Color(0, 0, 0, 0.35))
 	_slope(slopes[1], ridge, hp, rh, base, st)
 	# the ridge cap
-	draw_line(_at(ridge[0], hp + rh), _at(ridge[1], hp + rh), base.lightened(0.25), 2.0)
+	_tb.line(_at(ridge[0], hp + rh), _at(ridge[1], hp + rh), base.lightened(0.25), 2.0)
 	if st.chimney:
 		var t: float = st.chimney_at
 		var cp: Vector2 = (ridge[0] as Vector2).lerp(ridge[1], t) + (slopes[0].n as Vector2) * 3.0
@@ -438,13 +467,13 @@ func _slope(sl: Dictionary, ridge: Array, hp: float, rh: float, base: Color, st:
 	var eb := _at(e[1], hp)
 	var ra := _at(ridge[0], hp + rh)
 	var rb := _at(ridge[1], hp + rh)
-	draw_colored_polygon(PackedVector2Array([ea, eb, rb, ra]), col)
+	_tb.fan(PackedVector2Array([ea, eb, rb, ra]), col)
 	var rows := 7
 	for i in range(1, rows):
 		var t := float(i) / float(rows)
 		var la := ea.lerp(ra, t)
 		var lb := eb.lerp(rb, t)
-		draw_line(la, lb, col.darkened(0.22), 1.0)
+		_tb.line(la, lb, col.darkened(0.22), 1.0)
 		if not st.steel:
 			# the tabs: little gaps along each course, staggered row to row
 			var L := la.distance_to(lb)
@@ -452,7 +481,7 @@ func _slope(sl: Dictionary, ridge: Array, hp: float, rh: float, base: Color, st:
 			var x := 3.0 if i % 2 == 0 else 6.0
 			while x < L:
 				var q := la + d * x
-				draw_line(q, q + (ea.lerp(ra, float(i - 1) / float(rows)) - la) * 0.5, col.darkened(0.15), 1.0)
+				_tb.line(q, q + (ea.lerp(ra, float(i - 1) / float(rows)) - la) * 0.5, col.darkened(0.15), 1.0)
 				x += 6.0
 	if st.steel:
 		# ribs down the slope
@@ -460,10 +489,10 @@ func _slope(sl: Dictionary, ridge: Array, hp: float, rh: float, base: Color, st:
 		var k := 4.0
 		while k < L2:
 			var f := k / L2
-			draw_line(ea.lerp(eb, f), ra.lerp(rb, f), col.lightened(0.12), 1.0)
+			_tb.line(ea.lerp(eb, f), ra.lerp(rb, f), col.lightened(0.12), 1.0)
 			k += 4.0
 	# the eave's edge: a gutter
-	draw_line(ea, eb, col.darkened(0.45), 1.5)
+	_tb.line(ea, eb, col.darkened(0.45), 1.5)
 
 ## A box standing on the building (a chimney, a rooftop unit): its top and the sides that face the
 ## camera. `p` is its middle on the plan, w x d px, from z0 up to z1.
@@ -479,7 +508,7 @@ func _box(p: Vector2, w: float, d: float, z0: float, z1: float, col: Color) -> v
 		fc.a = 1.0
 		_quad(_at(a, z0), _at(b, z0), _at(b, z1), _at(a, z1), fc)
 	var tc := col.lightened(0.12)
-	draw_colored_polygon(PackedVector2Array([_at(c4[0], z1), _at(c4[1], z1), _at(c4[2], z1), _at(c4[3], z1)]), tc)
+	_tb.fan(PackedVector2Array([_at(c4[0], z1), _at(c4[1], z1), _at(c4[2], z1), _at(c4[3], z1)]), tc)
 
 ## A flat roof: the parapet round the edge with its shadow inside, the membrane's seams, and what
 ## stands on it (air handlers, vents, a hatch, skylights on the big stores).
@@ -488,26 +517,26 @@ func _flat_roof(c: Array, st: Dictionary) -> void:
 	var cs := corners()
 	var roof := PackedVector2Array([_at(cs[0], hp), _at(cs[1], hp), _at(cs[2], hp), _at(cs[3], hp)])
 	var base: Color = c[2]
-	draw_colored_polygon(roof, base)
+	_tb.fan(roof, base)
 	var k := String(data.kind)
 	if k == "pumps":
 		# the canopy: a pale underside lit from below at night, and a fascia band round it in the
 		# station's colours
 		var band := Color("c8322a") if hash(position) % 2 == 0 else Color("2a5ab0")
-		draw_polyline(roof + PackedVector2Array([roof[0]]), band, 4.0)
-		draw_polyline(roof + PackedVector2Array([roof[0]]), band.lightened(0.35), 1.0)
+		_tb.polyline(roof + PackedVector2Array([roof[0]]), band, 4.0)
+		_tb.polyline(roof + PackedVector2Array([roof[0]]), band.lightened(0.35), 1.0)
 		return
 	# the membrane's seams
 	var inner := fp.grow(-3.0)
 	if inner.size.x > 4.0 and inner.size.y > 4.0:
 		var x := inner.position.x + 14.0
 		while x < inner.end.x:
-			draw_line(_at(Vector2(x, inner.position.y), hp), _at(Vector2(x, inner.end.y), hp), base.lightened(0.06), 1.0)
+			_tb.line(_at(Vector2(x, inner.position.y), hp), _at(Vector2(x, inner.end.y), hp), base.lightened(0.06), 1.0)
 			x += 14.0
 		# the parapet: a lip round the edge, lit on the sunny side, shadow on the inside
 		var ic := [inner.position, Vector2(inner.end.x, inner.position.y), inner.end, Vector2(inner.position.x, inner.end.y)]
-		draw_polyline(PackedVector2Array([_at(ic[0], hp), _at(ic[1], hp), _at(ic[2], hp), _at(ic[3], hp), _at(ic[0], hp)]), base.darkened(0.3), 2.0)
-	draw_polyline(roof + PackedVector2Array([roof[0]]), base.lightened(0.25), 2.0)
+		_tb.polyline(PackedVector2Array([_at(ic[0], hp), _at(ic[1], hp), _at(ic[2], hp), _at(ic[3], hp), _at(ic[0], hp)]), base.darkened(0.3), 2.0)
+	_tb.polyline(roof + PackedVector2Array([roof[0]]), base.lightened(0.25), 2.0)
 	if k == "junk":
 		_junk_top(c)
 		return
@@ -520,8 +549,8 @@ func _flat_roof(c: Array, st: Dictionary) -> void:
 			var gy := fp.position.y + 16.0
 			while gy < fp.end.y - 16.0:
 				var r := Rect2(_at(Vector2(gx, gy), hp), Vector2(10, 6))
-				draw_rect(r, Color("8aa0b4"))
-				draw_rect(Rect2(r.position, Vector2(10, 2)), Color("c8d8e8"))
+				_tb.rect(r, Color("8aa0b4"))
+				_tb.rect(Rect2(r.position, Vector2(10, 2)), Color("c8d8e8"))
 				gy += 30.0
 			gx += 34.0
 	var units := mini(int(st.units) + int(fp.size.x * fp.size.y / 20000.0), 10)
@@ -531,10 +560,10 @@ func _flat_roof(c: Array, st: Dictionary) -> void:
 		var d := rng.randf_range(6.0, 10.0)
 		_box(p, w, d, hp, hp + 5.0 * CarView.lift_k, Color("8a8c90"))
 		# the fan on top
-		draw_circle(_at(p, hp + 5.0 * CarView.lift_k), minf(w, d) * 0.28, Color("4a4c50"))
+		_tb.circle(_at(p, hp + 5.0 * CarView.lift_k), minf(w, d) * 0.28, Color("4a4c50"))
 	for i in 2 + units / 2:
 		var vp := fp.position + Vector2(rng.randf_range(6.0, maxf(7.0, fp.size.x - 6.0)), rng.randf_range(6.0, maxf(7.0, fp.size.y - 6.0)))
-		draw_circle(_at(vp, hp + 1.0), 1.5, Color("2a2a2e"))
+		_tb.circle(_at(vp, hp + 1.0), 1.5, Color("2a2a2e"))
 
 func _junk_top(c: Array) -> void:
 	var rng := RandomNumberGenerator.new()
@@ -546,8 +575,8 @@ func _junk_top(c: Array) -> void:
 	while k + 30.0 < L:
 		var w := 26.0 + rng.randf() * 10.0
 		var cr := Rect2(fp.position + (Vector2(k, 4) if along else Vector2(4, k)) + hv, Vector2(w, fp.size.y - 8) if along else Vector2(fp.size.x - 8, w))
-		draw_rect(cr, CRUSHED[rng.randi() % CRUSHED.size()])
-		draw_rect(cr, Color("4a2c1a"), false, 2.0)
+		_tb.rect(cr, CRUSHED[rng.randi() % CRUSHED.size()])
+		_tb.rect_outline(cr, Color("4a2c1a"), 2.0)
 		k += w + 6.0
 
 const CRUSHED := [Color("7a2a24"), Color("2a4a6a"), Color("8a8a84"), Color("c8c0a8"), Color("3a5a3a"), Color("a86a2a"), Color("2a2a30")]
@@ -569,7 +598,7 @@ func _crushed(a: Vector2, b: Vector2, hv: Vector2) -> void:
 			var w := minf(18.0 + rng.randf() * 16.0, L - x)
 			var p := a + dir * x + upn * y
 			_quad(p, p + dir * w, p + dir * w + upn * (h - 1.0), p + upn * (h - 1.0), CRUSHED[rng.randi() % CRUSHED.size()].darkened(0.15))
-			if rng.randf() < 0.4: draw_line(p + upn * (h * 0.5), p + dir * minf(6.0, w) + upn * (h * 0.5), Color("d8d0c0", 0.5), 1.0)
+			if rng.randf() < 0.4: _tb.line(p + upn * (h * 0.5), p + dir * minf(6.0, w) + upn * (h * 0.5), Color("d8d0c0", 0.5), 1.0)
 			x += w + 2.0
 		y += h
 
@@ -600,6 +629,11 @@ func _sign(lit: bool, ci: CanvasItem = null) -> void:
 class Windows extends Node2D:
 	var building: BuildingNode
 	func _draw() -> void:
+		var _t0 := Time.get_ticks_usec()
+		_draw_timed()
+		Prof.lap('draw_windows', _t0)
+
+	func _draw_timed() -> void:
 		var kind: String = building.data.kind
 		if kind in ["tower", "pumps", "barn", "junk"]: return
 		var hv := CarView.screen_up * building.hpx
@@ -607,6 +641,7 @@ class Windows extends Node2D:
 		for w in building.visible_walls():
 			_lit_windows(w[0], w[1], hv, lit)
 		building._moon_edges(self)
+		building._tb.flush(self)
 		building._sign(true, self)
 
 	func _lit_windows(a: Vector2, b: Vector2, hv: Vector2, chance: float) -> void:
@@ -627,10 +662,10 @@ class Windows extends Node2D:
 			var col := Color("f2c86a") if rng.randf() < 0.75 else Color("9ad0f0")
 			if kind == "door":
 				# the porch light over the door, not the door itself
-				draw_circle(p + dir * ww * 0.5 + upn * (wh + 3.0), 1.5, Color("ffe0a0"))
+				building._tb.circle(p + dir * ww * 0.5 + upn * (wh + 3.0), 1.5, Color("ffe0a0"))
 				continue
 			if kind == "store": col = Color("f4e0b0")
-			draw_primitive(PackedVector2Array([p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh]), PackedColorArray([col, col, col, col]), PackedVector2Array())
+			building._tb.quad(p, p + dir * ww, p + dir * ww + upn * wh, p + upn * wh, col)
 			# the light it throws on the ground out front, fading away from the wall
 			var out := dir.orthogonal() * (26.0 if kind == "store" else 16.0)
 			var g0 := a + dir * float(sl.x)
@@ -638,4 +673,4 @@ class Windows extends Node2D:
 			var spread := dir * ww * 0.35
 			var lit := Color(col, 0.2 if kind == "store" else 0.13)
 			var none := Color(col, 0.0)
-			draw_primitive(PackedVector2Array([g0, g1, g1 + out + spread, g0 + out - spread]), PackedColorArray([lit, lit, none, none]), PackedVector2Array())
+			building._tb.quad_cols(g0, g1, g1 + out + spread, g0 + out - spread, lit, lit, none, none)

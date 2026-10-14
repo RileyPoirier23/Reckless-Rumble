@@ -274,7 +274,10 @@ func _tow(dt: float) -> void:
 	trailer.headlights = view.headlights if view else false
 	trailer.braking = view.braking if view else false
 
+var _pt := 0
+var _rule_t := 0.0
 func drive(dt: float) -> void:
+	_pt = Time.get_ticks_usec()
 	_tow(dt)
 	if state == "wrecked":
 		_wrecked(dt)
@@ -290,11 +293,13 @@ func drive(dt: float) -> void:
 		gone = true
 		return
 	var yielding := _siren_behind()
+	_pt = Prof.lap('tc_siren', _pt)
 	var A := map.g_pos[a]
 	var B := map.g_pos[b]
 	var L := A.distance_to(B)
 	var din0 := (B - A).normalized()
 	evade = maxf(_player_threat(din0), evade - dt * 0.8)
+	_pt = Prof.lap('tc_threat', _pt)
 	# move over for the siren (or out of your way), as far as the road goes (not up onto the sidewalk)
 	var lanes: Array = Traffic.LANE[road.cls]
 	var room := clampf(float(road.get("w", 9.0)) / 2.0 - float(lanes[mini(lane_i, lanes.size() - 1)]) - width / 2.0 - 0.2, 0.0, 1.6)
@@ -303,6 +308,7 @@ func drive(dt: float) -> void:
 	if c_next < 0:
 		c_next = c_after if c_after >= 0 and traffic.map.g_adj[b].any(func(e: Array) -> bool: return int(e[0]) == c_after) else traffic.next_node(a, b, self)
 		c_after = -1
+		_pt = Prof.lap('tc_next', _pt)
 		# a dead end out of sight: it's pulled into a driveway, as far as anybody can tell
 		if c_next == a and map.g_adj[b].size() == 1 and traffic.player and pos.distance_to(traffic.player.sim.pos) > Traffic.SPAWN_MIN * 0.8:
 			gone = true
@@ -313,9 +319,11 @@ func drive(dt: float) -> void:
 	var db := L - s
 	# --- steer at a point a little way along its path (pure pursuit), and stay in lane
 	var path := path_ahead(maxf(30.0, v * 3.0))
+	_pt = Prof.lap('tc_path', _pt)
 	_path = path
 	var look := clampf(2.5 + v * 0.35, 3.0, 12.0)
 	var target := along(path, look)
+	_pt = Prof.lap('tc_along', _pt)
 	var to_t := target - pos
 	var alpha := wrapf(to_t.angle() - heading, -PI, PI)
 	var curv := 2.0 * sin(alpha) / maxf(to_t.length(), 1.0)
@@ -350,12 +358,15 @@ func drive(dt: float) -> void:
 				v0 = minf(v0, sqrt(v_turn2 * v_turn2 + 2.0 * B_COMF * maxf(0.0, db + L2 - float(j2.get("radius", 0.0)))))
 			if not j2.is_empty() and (String(j2.control) == "allway" or String(j2.control) == "priority" and not j2.majors.has(int(traffic.edge_road(b, c_next).get("idx", -1)))):
 				v0 = minf(v0, 3.0 + sqrt(2.0 * B_COMF * maxf(0.0, db + L2 - traffic.stop_line(c_next, b))))
+				_pt = Prof.lap('tc_plan', _pt)
 	# --- what's ahead: the car in front, or a stop line it has to obey
 	var lead := traffic.leader(self, 60.0)
+	_pt = Prof.lap('tc_leader', _pt)
 	lead_obj = lead[2]
 	var gap: float = lead[0]
 	var v_lead: float = lead[1]
 	_lane_change(dt, road, din, db, gap, v_lead, v0)
+	_pt = Prof.lap('tc_lanechange', _pt)
 	# the horn: you cut in close in front of them, or you've been sat in their way a while
 	_honk_t = maxf(0.0, _honk_t - dt)
 	if lead_obj == traffic.player and _honk_t <= 0.0 and traffic.player != null:
@@ -367,7 +378,14 @@ func drive(dt: float) -> void:
 	if traffic.junctions.has(b) and not boxes.has(b) and (db < 50.0 or db < traffic.stop_line(b, a) + 25.0):
 		# (a bus waits with its nose at the line, not its middle out in the junction)
 		var stop_d := db - traffic.stop_line(b, a) - maxf(0.0, length * 0.5 - 3.0)
-		var rule := traffic.may_enter(self, b, a, c_next, stop_d)
+		# (sat still at the line, it asks again ten times a second, not every frame)
+		var rule: String
+		_rule_t += dt
+		if v < 0.5 and _rule_t < 0.1 and last_rule != "":
+			rule = last_rule
+		else:
+			_rule_t = 0.0
+			rule = traffic.may_enter(self, b, a, c_next, stop_d)
 		# too close and too quick to stop for it now (the light's just changed, the gap's just
 		# closed): it's committed, and whoever it's in the way of sees it in the box and waits
 		# (and one already over the line when the light changes is in the junction: it carries on;
@@ -389,6 +407,7 @@ func drive(dt: float) -> void:
 			# over the line on a go: it's crossing now, whatever the light does next
 			_enter_box(b)
 	# --- the Intelligent Driver Model
+	_pt = Prof.lap('tc_junction', _pt)
 	var dv := v - v_lead
 	var s_star := S0 + maxf(0.0, v * T_GAP + v * dv / (2.0 * sqrt(a_max * B_COMF)))
 	var free := 1.0 - pow(v / maxf(v0, 0.5), 4.0)
@@ -418,6 +437,7 @@ func drive(dt: float) -> void:
 		# turned round at a dead end and heading back into the junction it just crossed: that's a
 		# new crossing, with the rules and all
 		if boxes.has(b): _leave_box(b)
+		_pt = Prof.lap('tc_progress', _pt)
 	for n: int in boxes.keys():
 		var jx: Dictionary = traffic.junctions.get(n, {})
 		if n != b and pos.distance_to(map.g_pos[n]) > float(jx.get("clear", jx.get("radius", 6.0))) + 3.0 + maxf(0.0, length * 0.5 - 3.0): _leave_box(n)
@@ -486,7 +506,10 @@ func path_ahead(reach: float) -> PackedVector2Array:
 		var p1 := (p0 + p2) / 2.0
 		if absf(den) > 0.05:
 			var t := (p2 - p0).cross(dout) / den
-			p1 = p0 + din * t
+			# (the corner has to sit between the two ends: where the lane lines diverge, a shallow
+			# bend from a one-lane road onto a two-lane one, they meet behind the car or past the
+			# far end, and a curve bent back round that point sent the car round in circles)
+			if t > 0.0 and t < (p2 - p0).dot(din): p1 = p0 + din * t
 		var ahead := false
 		for k in range(1, 7):
 			var u := float(k) / 6.0

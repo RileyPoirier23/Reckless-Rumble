@@ -137,6 +137,11 @@ func open() -> bool:
 	return panel.visible
 
 func _process(_dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_process_timed(_dt)
+	Prof.lap('world_salvage_yard_process_139', _t0)
+
+func _process_timed(_dt: float) -> void:
 	if panel.visible or drive.car == null or StoryState.active or drive.garage.visible: return
 	if not at_yard(): return
 	if not is_open():
@@ -245,6 +250,11 @@ class YardPanel extends Control:
 		return yard.today().size() if tab == 0 else shelf().size()
 
 	func _process(_dt: float) -> void:
+		var _t0 := Time.get_ticks_usec()
+		_process_timed(_dt)
+		Prof.lap('world_salvage_yard_process_247', _t0)
+
+	func _process_timed(_dt: float) -> void:
 		if not visible: return
 		queue_redraw()
 		var n := rows()

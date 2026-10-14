@@ -353,7 +353,9 @@ static func aids(sim: CarSim, th: float, st: float, hb: float, hb_t: float, whee
 	if sim.assist == CarSim.Assist.SIM: return [th, st, false]
 	var v := sim.speed()
 	var street := sim.assist == CarSim.Assist.STREET
-	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb_t < 2.0)
+	# (showing off: hard lock and gas at a crawl, or the handbrake pulled this last moment; the aids
+	# used to stay off for two seconds after any pull, and that read as the truck stuck sliding)
+	var show_off := street and ((absf(st) > 0.85 and th > 0.6 and v < 9.0) or hb > 0.5 or hb_t < 0.6)
 	# traction control: back off the gas while the driven tires spin up
 	var spin := sim.drive_slip()
 	var tc_limit := 2.0 if street else 1.5
@@ -413,7 +415,30 @@ func set_beacons(on: bool) -> void:
 	beacons = on
 	if not quiet and hud: hud.notify("LIGHT BAR ON." if on else "LIGHT BAR OFF. JUST A TRUCK NOW.", "status", 1, 2.0)
 
+## Tests: every solid thing (not a car) the car ran into, as [pos, what, where, speed, who].
+static var log_hits := false
+static var hit_log: Array = []
+
+## What a collider is, by its scripts up the tree: "StaticBody2D<Chunk<World" is a tree trunk
+## or a bridge rail, "StaticBody2D<RoadFurniture" a pole, "BuildingNode<Chunk" a building.
+static func hit_name(o) -> String:
+	if o == null: return "nothing"
+	var chain := ""
+	var n = o
+	while n is Node and chain.length() < 90:
+		var sc = n.get_script()
+		var nm: String = sc.get_global_name() if sc != null and sc.get_global_name() != "" else n.get_class()
+		chain += ("<" if chain != "" else "") + nm
+		if nm in ["World", "Drive", "RoadFurniture", "BuildingNode", "ParkedCar", "Yards"]: break
+		n = n.get_parent()
+	return chain
+
 func _physics_process(dt: float) -> void:
+	var _t0 := Time.get_ticks_usec()
+	_physics_process_timed(dt)
+	Prof.lap('player_phys', _t0)
+
+func _physics_process_timed(dt: float) -> void:
 	if dead: return
 	# locked: ease to a stop and hold it there on the handbrake (the brake pedal past 0.3 at a
 	# standstill would find reverse)
@@ -450,6 +475,10 @@ func _physics_process(dt: float) -> void:
 		hit_frame = Engine.get_physics_frames()
 		var vn := -vw.dot(n)
 		var is_car := other is TrafficCar or other is PlayerCar or other is Wildlife.Animal
+		if log_hits:
+			var what := hit_name(other)
+			if other is TrafficCar: what = "TrafficCar %s v%.1f" % [(other as TrafficCar).state, (other as TrafficCar).v]
+			hit_log.append([sim.pos, what, col.get_position() / PX, vw.length(), name])
 		if is_car: vn = -(vw - other.velocity_vec()).dot(n)
 		if vn > 0.0:
 			var hit_dir := -n
