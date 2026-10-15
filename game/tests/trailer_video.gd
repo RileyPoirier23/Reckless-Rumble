@@ -223,6 +223,11 @@ func _cut(d: Node, car_id := "") -> void:
 	await fader.out(0.45)
 	_release_all()
 	d.hold_car = false
+	if d.death.visible or d.car.dead:               # (a wreck in the last take: back to the lot)
+		d.death.showing = false
+		d.death.visible = false
+		d._after_death()
+		await _wait(0.5)
 	if car_id != "" and String(d.car.spec.get("id", "")) != car_id:
 		for i in (d.save.garage as Array).size():
 			if String((d.save.garage[i] as Dictionary).id) == car_id:
@@ -497,10 +502,18 @@ func _winter(d: Node) -> void:
 	await _wait(0.3)
 	await _reveal("COVERDALE RD", "JANUARY")
 	_say("THE ROAD", "FOUR SEASONS AND THE WEATHER THAT COMES WITH THEM: WET LEAVES, FOG ON THE RIVER, SNOW, BLIZZARDS, FREEZING RAIN. SUMMER TIRES ARE HOCKEY PUCKS. GUS SELLS WINTERS.", 7.5, "top")
-	Input.action_press("throttle")
 	var t := 0.0
 	while t < 9.0:
-		_hold_heading(d, PI)
+		# easy on the snow: a third throttle, and the wheel eased toward the lane, not banged
+		var c: PlayerCar = d.car
+		var lane_y: float = d.world.map._coverdale_y(c.sim.pos.x) - 2.0
+		var want := PI - clampf((lane_y - c.sim.pos.y) * 0.08, -0.25, 0.25)
+		var err := wrapf(want - c.sim.heading, -PI, PI)
+		Input.action_release("steer_left")
+		Input.action_release("steer_right")
+		if err > 0.0: Input.action_press("steer_right", clampf(err * 3.0, 0.0, 0.6))
+		else: Input.action_press("steer_left", clampf(-err * 3.0, 0.0, 0.6))
+		Input.action_press("throttle", 0.35 if c.sim.speed() < 14.0 else 0.15)
 		await process_frame
 		t += 1.0 / 30.0
 	_release_all()
