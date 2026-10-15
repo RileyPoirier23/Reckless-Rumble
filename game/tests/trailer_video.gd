@@ -98,9 +98,12 @@ func _run() -> void:
 	# --- where it's at
 	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE. 1TON'S HYDRAULICS.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.\nFULL LOGITECH WHEEL SUPPORT. CONTROLLER SUPPORT.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 10.0)
 	fader.in_(0.3)
-	await _wait(10.5)
+	await _wait(9.4)
+	await fader.out(0.5)
 	card.show_card("DRIVEBOSS", "IN DEVELOPMENT", "FOLLOW ALONG: @506CLICKS", 6.0)
-	await _wait(6.5)
+	fader.in_(0.3)
+	await _wait(6.0)
+	await fader.out(0.5)
 	quit()
 
 # ------------------------------------------------------------------ the story
