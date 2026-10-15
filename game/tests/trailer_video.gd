@@ -76,7 +76,7 @@ func _run() -> void:
 	Awards.ensure()
 	for a in Awards.LIST: Awards.won[String(a.id)] = { "at": 0, "n": Awards.won.size() }
 	# --- the days
-	if only == "" or only == "counter": await _counter()
+	if only == "" or "counter" in only.split(","): await _counter()
 	if only == "counter": quit()
 	# --- the road
 	await fader.out(0.5)
@@ -90,8 +90,9 @@ func _run() -> void:
 	d.police.enabled = false
 	GameSettings.set_v("ui", "camera_zoom", 1.2)   # in close: more car, less road
 	d.zoom_mult = 1.2
+	if not "garage" in only.split(","): await _baker_off()
 	for sc in SCENES:
-		if only != "" and only != sc: continue
+		if only != "" and not sc in only.split(","): continue
 		await call("_" + sc, d)
 	await fader.out(0.6)
 	await _revive(d)
@@ -249,6 +250,16 @@ func _drive_ready() -> Node:
 		await process_frame
 	return null
 
+## The preview painter has the rest of the lot to do in the background: not while we film.
+func _baker_off() -> void:
+	if PreviewBake.me == null: return
+	PreviewBake.me._queue.clear()
+	PreviewBake.me._queued.clear()
+	var t := 0.0
+	while PreviewBake.me.busy() and t < 5.0:
+		await process_frame
+		t += 1.0 / 30.0
+
 ## Fade to black and, behind it, put Leo in another car out of the lot, fresh.
 func _cut(d: Node, car_id := "") -> void:
 	await fader.out(0.45)
@@ -342,6 +353,7 @@ func _garage(d: Node) -> void:
 	await _tap("ui_cancel")
 	await _wait(0.5)
 	d.hud.msgs.clear()
+	await _baker_off()
 	_say("THE ROAD", "ONE MAP: PORT RUMBLE OUT ROUTE 106 TO SALISBURY AND HAVELOCK. EVERY JOB, SHOP AND STRIP ON IT.", 4.5, "top")
 	d.map_screen.current_name = ""
 	d.map_screen.current_p = Vector2.INF
