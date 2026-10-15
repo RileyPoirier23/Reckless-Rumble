@@ -93,6 +93,7 @@ func _run() -> void:
 		if only != "" and only != sc: continue
 		await call("_" + sc, d)
 	await fader.out(0.6)
+	await _revive(d)
 	if only != "": quit()
 	# --- where it's at
 	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE. 1TON'S HYDRAULICS.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.\nFULL LOGITECH WHEEL SUPPORT. CONTROLLER SUPPORT.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 10.0)
@@ -223,11 +224,7 @@ func _cut(d: Node, car_id := "") -> void:
 	await fader.out(0.45)
 	_release_all()
 	d.hold_car = false
-	if d.death.visible or d.car.dead:               # (a wreck in the last take: back to the lot)
-		d.death.showing = false
-		d.death.visible = false
-		d._after_death()
-		await _wait(0.5)
+	await _revive(d)
 	if car_id != "" and String(d.car.spec.get("id", "")) != car_id:
 		for i in (d.save.garage as Array).size():
 			if String((d.save.garage[i] as Dictionary).id) == car_id:
@@ -244,6 +241,14 @@ func _cut(d: Node, car_id := "") -> void:
 	d.car.sim.oil_c = 95.0
 	d.car.sim.auto_gearbox = true
 	print("trailer: in the ", d.car.spec.get("id", "?"))
+
+## A wreck in the last take: back on its wheels behind the black.
+func _revive(d: Node) -> void:
+	if d.death.visible or d.car.dead:
+		d.death.showing = false
+		d.death.visible = false
+		d._after_death()
+		await _wait(0.5)
 
 ## The lights up on a set scene, its name in the corner.
 func _reveal(title: String, sub := "") -> void:
@@ -593,7 +598,7 @@ func _chase(d: Node) -> void:
 	_say("THE ROAD", "OR DON'T PULL OVER. THE HEAT CLIMBS, MORE CRUISERS COME, AND IT ENDS WITH YOU LOSING THEM OR THE CAR GOING TO THE IMPOUND.", 7.0, "top")
 	Input.action_press("throttle")
 	var t := 0.0
-	while t < 11.5:
+	while t < 9.0:
 		_hold_heading(d, 0.0)
 		await process_frame
 		t += 1.0 / 30.0
