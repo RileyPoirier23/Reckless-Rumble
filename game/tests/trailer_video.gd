@@ -8,7 +8,7 @@
 ## Then ffmpeg turns the AVI into an MP4 (see the README). TRAILER_ONLY=<scene> films one scene.
 extends SceneTree
 
-const SCENES := ["garage", "burnout", "drift", "drag", "oneton", "winter", "pulled_over", "chase"]
+const SCENES := ["garage", "burnout", "drift", "race", "drag", "oneton", "winter", "pulled_over", "chase"]
 
 var cap: Captions
 var card: Card
@@ -66,10 +66,9 @@ func _run() -> void:
 		drive_in.queue_free()
 		await _wait(3.6)
 		# --- the story so far
-		await _story("party", 9.0, "THE STORY", "PORT RUMBLE, NEW BRUNSWICK, OCTOBER 2019. LEO COVINGTON IS 19, HIS DAD IS DEAD, AND HE'S DRUNK AT A PARTY WITH HIS DAD'S CAR KEYS.")
-		await _story("the_meet", 9.0, "THE STORY", "HE DRIVES IT THROUGH THE FAMILIA'S MEET. NOW HE OWES DOM TORTELLINI A CAR, AND HIS DAYS AT THE INSPECTION COUNTER PAY FOR IT.")
-		await _story("johnny", 8.0, "THE STORY", "THE NIGHTS ARE FOR THE ROAD: TOW CALLS, PIZZA, DRAG NIGHT, STREET RACES FOR PINK SLIPS AGAINST PEOPLE LIKE JOHNNY TRAM.")
-		await _story("frankie", 8.0, "THE STORY", "SIX YEARS, THREE ENDINGS, AND A KID NAMED FRANKIE WHO'S WATCHING WHAT KIND OF MAN LEO TURNS INTO.")
+		await _story("party", 7.0, "THE STORY", "PORT RUMBLE, NB, 2019. LEO COVINGTON IS 19, HIS DAD IS DEAD, AND HE'S DRUNK AT A PARTY WITH HIS DAD'S CAR KEYS.")
+		await _story("the_meet", 7.0, "THE STORY", "HE DRIVES IT THROUGH THE FAMILIA'S MEET. NOW HE OWES DOM TORTELLINI A CAR. THE DAYS PAY FOR IT. THE NIGHTS ARE HIS.")
+		await _story("johnny", 6.0, "THE STORY", "SIX YEARS. THREE ENDINGS. A KID NAMED FRANKIE WATCHING WHAT KIND OF MAN LEO TURNS INTO.")
 	else:
 		drive_in.queue_free()
 	StoryState.active = false
@@ -89,11 +88,14 @@ func _run() -> void:
 	d.traffic.enabled = true
 	d.wildlife.enabled = false
 	d.police.enabled = false
+	GameSettings.set_v("ui", "camera_zoom", 1.2)   # in close: more car, less road
+	d.zoom_mult = 1.2
 	for sc in SCENES:
 		if only != "" and only != sc: continue
 		await call("_" + sc, d)
 	await fader.out(0.6)
 	await _revive(d)
+	GameSettings.set_v("ui", "camera_zoom", 1.0)
 	if only != "": quit()
 	# --- where it's at
 	card.show_card("WHERE IT'S AT", "499 CARS. A COUNTER, A GARAGE, A CITY.\nTOW, PIZZA, RIDES, DRAG NIGHT, STREET RACES, THE MEET, THE AUCTION.\nPOLICE, WEATHER, SEASONS, MOOSE. 1TON'S HYDRAULICS.\nTHE STORY: FIVE CHAPTERS, THREE ENDINGS.\nFULL LOGITECH WHEEL SUPPORT. CONTROLLER SUPPORT.", "STILL BUILDING: MORE MISSIONS, MORE TOWN, POLISH.", 10.0)
@@ -143,7 +145,8 @@ func _story(id: String, secs: float, tag: String, text: String) -> void:
 
 # ------------------------------------------------------------------ the days
 
-## A customer at the inspection counter: the papers, two things that get compared, the stamp.
+## The desk: a line honking in the lot, a clean customer stamped through, then one whose car
+## isn't in his name: the papers compared, the question, the stamp, the notebook.
 func _counter() -> void:
 	print("trailer: counter")
 	await fader.out(0.4)
@@ -157,32 +160,56 @@ func _counter() -> void:
 	sc.press()                                  # past the morning brief
 	sc.clock = 170.0
 	sc.tick(0.01)
-	sc.since = 40.0
+	var r = sc.rules
+	var bad: Dictionary = r.customer(10, "name_mismatch", { "plain": true })
+	var ok: Dictionary = r.customer(10, "clean", { "plain": true })
+	sc.waiting.append(bad)                      # the line in the lot
+	sc.waiting.push_front(ok)
+	sc.next_customer()
+	sc.since = 40.0                             # (long enough that the lot leans on the horn)
 	sc.next_honk = 0.0
 	sc.tick(0.01)
-	var cb: Dictionary = sc.rules.customer(10, "clean", { "plain": true })
-	sc.waiting.push_front(cb)
-	sc.next_customer()
 	sc.pad_cursor = true
 	sc.cur = Vector2(330, 190)
 	await _wait(0.3)
-	await _reveal("COVINGTON AUTO", "THE INSPECTION COUNTER")
-	_say("THE DAYS", "THE DAYS ARE THE COUNTER. REGISTRATION, LICENCE, THE BILL OF SALE, THE STICKER LOG. FIND WHAT DOESN'T MATCH, STAMP IT, AND THE LINE OUTSIDE KEEPS HONKING.", 8.0, "top")
-	await _wait(1.6)
+	await _reveal("COVINGTON AUTO", "THE DESK, 8 TO 6")
+	_say("THE DESK", "THE DAYS ARE THE DESK. EVERY CAR IN TOWN COMES THROUGH YOUR WINDOW: REGISTRATION, LICENCE, INSURANCE, THE VIN, THE STICKER LOG. THE LINE IN THE LOT LEANS ON THE HORN.", 8.0, "top")
+	await _wait(1.4)
 	sc.inspecting = true
-	var a: Dictionary = _field(sc, "reg", "owner")
-	var b: Dictionary = _field(sc, "licence", "name")
-	await _cursor_to(sc, a)
-	if not a.is_empty(): sc.pick(a)
-	await _wait(0.6)
-	await _cursor_to(sc, b)
-	if not b.is_empty(): sc.pick(b)
-	await _wait(2.0)
+	await _compare(sc, _field(sc, "reg", "owner"), _field(sc, "licence", "name"))
+	await _wait(1.4)
 	sc.inspecting = false
 	sc.verdict = {}
-	await _wait(0.6)
+	await _wait(0.4)
 	sc.stamp("APPROVED")
-	await _wait(2.2)
+	await _wait(2.4)
+	sc.press()                                  # the next one up from the lot
+	await _wait(1.2)
+	_say("THE DESK", "THIS ONE'S CAR ISN'T IN HIS NAME. CLICK THE TWO THINGS THAT DON'T MATCH, ASK HIM ABOUT IT, AND DECIDE: APPROVE, DENY, OR REPORT IT. EVERY STAMP HAS YOUR NAME ON IT, AND HACHEY AUDITS THE FILE.", 11.0, "top")
+	await _wait(1.0)
+	sc.inspecting = true
+	await _compare(sc, _field(sc, "reg", "owner"), _field(sc, "licence", "name"))
+	await _wait(1.8)
+	sc.inspecting = false
+	sc.verdict = {}
+	sc.ask("name_mismatch")
+	await _wait(3.2)
+	sc.stamp("DENIED")
+	await _wait(2.6)
+	sc.press()
+	await _wait(0.6)
+	sc.open_book("notebook")
+	await _wait(2.4)
+	sc.book = ""
+	await _wait(0.4)
+
+## Two fields picked one after the other, the hand going to each.
+func _compare(sc: Node, a: Dictionary, b: Dictionary) -> void:
+	await _cursor_to(sc, a)
+	if not a.is_empty(): sc.pick(a)
+	await _wait(0.5)
+	await _cursor_to(sc, b)
+	if not b.is_empty(): sc.pick(b)
 
 func _field(sc: Node, doc: String, key: String) -> Dictionary:
 	for f in sc.fields():
@@ -286,47 +313,46 @@ func _garage(d: Node) -> void:
 	d.garage.open(d.save)
 	await _wait(0.4)
 	await _reveal("COVINGTON AUTO", "THE GARAGE")
-	_say("THE ROAD", "THE GARAGE: 499 CARS SORTED BY MAKE, EVERY ONE DRAWN AHEAD OF TIME. LEFT AND RIGHT PICK A CAR, UP AND DOWN JUMP A MAKE.", 7.0, "top")
-	await _wait(1.4)
+	_say("THE ROAD", "499 CARS, SORTED BY MAKE. UPGRADES BY THE STAGE. PAINT, RIMS, TINT, UNDERGLOW, KITS. THE DYNO PROVES IT.", 7.0, "top")
+	await _wait(1.0)
 	for k in 3:
 		await _tap("ui_right")
-		await _wait(0.8)
-	for k in 3:
+		await _wait(0.7)
+	for k in 2:
 		await _tap("ui_down")
-		await _wait(0.9)
-	await _tap("shift_up")
-	await _wait(2.2)
-	_say("THE ROAD", "UPGRADES BY THE STAGE. LOOKS: PAINT, RIMS, TINT, UNDERGLOW, STRIPES, KITS. ROCKAUTTO.CA SHIPS THE PARTS, AND THE DYNO PROVES THEM.", 8.0, "top")
+		await _wait(0.8)
+	await _tap("shift_up")                      # UPGRADES
+	await _wait(1.6)
 	await _tap("shift_up")                      # LOOKS
-	await _wait(0.6)
+	await _wait(0.5)
 	for k in 12:                                # down to UNDERGLOW
 		await _tap("ui_down")
-		await _wait(0.1)
-	await _wait(0.4)
+		await _wait(0.08)
+	await _wait(0.3)
+	await _tap("ui_right")
+	await _wait(0.7)
 	await _tap("ui_right")
 	await _wait(0.8)
-	await _tap("ui_right")
-	await _wait(1.0)
 	await _tap("horn")                          # the turntable from above
-	await _wait(3.0)
-	await _tap("shift_up")                      # ROCKAUTTO.CA
-	await _wait(2.2)
-	await _tap("shift_up")                      # DYNO
 	await _wait(2.6)
+	await _tap("shift_up")                      # ROCKAUTTO.CA
+	await _wait(0.1)
+	await _tap("shift_up")                      # DYNO
+	await _wait(2.2)
 	await _tap("ui_cancel")
-	await _wait(0.6)
+	await _wait(0.5)
 	d.hud.msgs.clear()
-	_say("THE ROAD", "ONE MAP: PORT RUMBLE OUT ROUTE 106 TO SALISBURY AND HAVELOCK. EVERY JOB, SHOP AND STRIP ON IT, AND THE GPS ROUTES YOU THERE.", 6.0, "top")
+	_say("THE ROAD", "ONE MAP: PORT RUMBLE OUT ROUTE 106 TO SALISBURY AND HAVELOCK. EVERY JOB, SHOP AND STRIP ON IT.", 4.5, "top")
 	d.map_screen.current_name = ""
 	d.map_screen.current_p = Vector2.INF
 	d.map_screen.open()
-	await _wait(1.6)
+	await _wait(1.3)
+	await _tap("ui_tab_next")
+	await _wait(1.3)
 	await _tap("ui_tab_next")
 	await _wait(1.6)
-	await _tap("ui_tab_next")
-	await _wait(2.0)
 	d.map_screen.visible = false
-	await _wait(0.4)
+	await _wait(0.3)
 
 ## In the lot at dusk: foot on the brake and the gas, and the rears go up in smoke.
 func _burnout(d: Node) -> void:
@@ -425,6 +451,58 @@ func _hold_drift(d: Node, want: float, secs: float, lot: Rect2) -> void:
 		Input.action_press("throttle", clampf(0.85 - e * 3.0 - maxf(de, 0.0) * 0.35, 0.15, 1.0) if v > 6.0 else 1.0)
 		if k % 15 == 0: print("trailer: drift %.1fs pos %.0f,%.0f in %s v %.1f beta %.2f st %.2f drifting %s turned %.2f rpm %.0f dead %s" % [t, c.sim.pos.x, c.sim.pos.y, lot.has_point(c.sim.pos), v, beta, st, c.sim.drifting, wrapf(c.sim.heading - h0, -PI, PI), c.sim.rpm, c.dead])
 
+## Marco's street race round the Downtown Box: three locals, the grid, the lights, and the
+## corners, with the traffic still out. Driven by a scripted driver aiming up the route.
+func _race(d: Node) -> void:
+	print("trailer: race")
+	await _cut(d, "toyoda_supreem_twin_turbo_1995")
+	_sky(d, 23.2)
+	d.save.cash = maxi(int(d.save.cash), 5000)
+	var j = d.jobs
+	j.start("street")
+	j.race_route = StreetRace.ROUTES[1]
+	j.race_start = StreetRace.build_path(d.world.map, j.race_route)[0]
+	d._teleport(j.race_start, 0.0)
+	if not j.sign_in():
+		print("trailer: no race")
+		j.finish(false)
+		return
+	var race = j.race
+	d._teleport(j.race_start, race.track.dir_at(0.0).angle())
+	await _wait(0.3)
+	await _reveal("THE DOWNTOWN BOX", "ST GEORGE, KING, MAIN, LUTZ. TWO LAPS.")
+	_say("THE ROAD", "STREET RACES: MARCO, THREE LOCALS, A ROUTE THROUGH TOWN. EVERYONE PAYS IN. WINNER TAKES THE POT, LESS HIS TENTH. ENOUGH REP AND IT'S PINK SLIPS.", 7.0, "bottom")
+	var t := 0.0
+	while t < 6.0 and not race.racing():
+		await process_frame
+		t += 1.0 / 30.0
+	t = 0.0
+	var tr = race.track
+	while t < 20.0 and is_instance_valid(race) and race.state != "done":
+		await process_frame
+		t += 1.0 / 30.0
+		var c: PlayerCar = d.car
+		var v := c.sim.speed()
+		var aim: Vector2 = tr.point_at(tr.dist + 14.0 + v * 0.7)
+		var want := (aim - c.sim.pos).angle()
+		var err := wrapf(want - c.sim.heading, -PI, PI)
+		Input.action_release("steer_left")
+		Input.action_release("steer_right")
+		if err > 0.0: Input.action_press("steer_right", clampf(err * 2.2, 0.0, 1.0))
+		else: Input.action_press("steer_left", clampf(-err * 2.2, 0.0, 1.0))
+		var bend := absf(wrapf(tr.dir_at(tr.dist + 30.0).angle() - c.sim.heading, -PI, PI))
+		Input.action_release("brake")
+		if bend > 0.9 and v > 15.0:
+			Input.action_release("throttle")
+			Input.action_press("brake", 0.7)
+		else:
+			Input.action_press("throttle", 1.0 if absf(err) < 0.4 and bend < 0.6 else 0.5)
+		if int(t * 30.0) % 30 == 0: print("trailer: race %.0fs pos %.0f,%.0f v %.1f P%d dist %.0f" % [t, c.sim.pos.x, c.sim.pos.y, v, race.place(), tr.dist])
+	_release_all()
+	await _wait(0.4)
+	j.finish(false)
+	await _wait(0.3)
+
 ## Drag night on runway 7: sign in, stage, the tree, and go on the green.
 func _drag(d: Node) -> void:
 	print("trailer: drag")
@@ -511,7 +589,7 @@ func _winter(d: Node) -> void:
 	await _reveal("COVERDALE RD", "JANUARY")
 	_say("THE ROAD", "FOUR SEASONS AND THE WEATHER THAT COMES WITH THEM: WET LEAVES, FOG ON THE RIVER, SNOW, BLIZZARDS, FREEZING RAIN. SUMMER TIRES ARE HOCKEY PUCKS. GUS SELLS WINTERS.", 7.5, "top")
 	var t := 0.0
-	while t < 9.0:
+	while t < 7.5:
 		# easy on the snow: a third throttle, and the wheel eased toward the lane, not banged
 		var c: PlayerCar = d.car
 		var lane_y: float = d.world.map._coverdale_y(c.sim.pos.x) - 2.0
@@ -584,7 +662,7 @@ func _chase(d: Node) -> void:
 	_sky(d, 15.0)
 	var p = d.police
 	p.enabled = true
-	d.save.heat = 30.0
+	d.save.heat = 65.0
 	var at := Vector2(5800, 1390) + Vector2(5.5, 2.5)
 	d._teleport(at + Vector2(45, 0), 0.0)
 	var k = p.spawn_at(at, 0.0)
