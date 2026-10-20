@@ -1056,27 +1056,49 @@ func nearest_node(p: Vector2) -> int:
 static func _rect_point_toward(r: Rect2, p: Vector2) -> Vector2:
 	return Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y))
 
-## The GPS's way somewhere: along the roads to the bit of road nearest the place (coming at it
-## from whichever end is shorter, not on to the junction past it), then in to the place itself.
+## The GPS's way somewhere: from the bit of road you're on (not from whatever graph node happens
+## to be nearest, which can be round the corner or across the block), along the roads to the bit
+## of road nearest the place (each end coming at it from whichever side is shorter, not on to
+## the junction past it), then in to the place itself. Every leg but those last few into a lot
+## runs along a road's centreline, so a line drawn through the points stays on the road.
 func route_to(from: Vector2, to: Vector2) -> PackedVector2Array:
 	var rd := nearest_road(to, 150.0)
 	if rd.is_empty(): return route(from, to)
 	var rp: Vector2 = rd.point
-	var pts: PackedVector2Array = rd.road.pts
-	# the graph nodes either side of that point on its road
-	var best: PackedVector2Array = route(from, to)
+	var sd := nearest_road(from, 150.0)
+	var sp: Vector2 = sd.point if not sd.is_empty() else from
+	# the graph nodes either side of where you are, and either side of where you're going
+	var starts := []
+	if not sd.is_empty():
+		for dir in [-1, 1]:
+			var n := _end_node_toward(sd, dir)
+			if n >= 0: starts.append(n)
+	if starts.is_empty(): starts.append(nearest_node(from))
+	var ends := []
+	for dir in [-1, 1]:
+		var n := _end_node_toward(rd, dir)
+		if n >= 0: ends.append(n)
+	var best := PackedVector2Array()
 	var best_len := INF
-	for end in [_end_node_toward(rd, -1), _end_node_toward(rd, 1)]:
-		if end < 0: continue
-		var r := route(from, g_pos[end])
-		if r.is_empty(): continue
-		var length := 0.0
-		for i in r.size() - 1: length += r[i].distance_to(r[i + 1])
-		length += r[r.size() - 1].distance_to(rp)
-		if length < best_len:
-			best_len = length
-			best = r
-	if best.is_empty(): return best
+	# both on the same road: straight along it can be the way (no junction to turn round at)
+	if not sd.is_empty() and is_same(sd.road, rd.road):
+		best = _along_road(rd.road, sp, rp)
+		best_len = _path_len(best)
+	var tried := {}
+	for s in starts:
+		for e in ends:
+			if s < 0 or tried.has(Vector2i(s, e)): continue
+			tried[Vector2i(s, e)] = true
+			var r := route(g_pos[s], g_pos[e])
+			if r.is_empty(): continue
+			var length := sp.distance_to(r[0]) + _path_len(r) + r[r.size() - 1].distance_to(rp)
+			if length < best_len:
+				best_len = length
+				best = r
+				if sp.distance_to(r[0]) > 1.0: best.insert(0, sp)
+	if best.is_empty():
+		best = route(from, to)
+		if best.is_empty(): return best
 	var out := best.duplicate()
 	if out[out.size() - 1].distance_to(rp) > 2.0: out.append(rp)
 	# a place with its own lot: in by the lot's edge on the road side (where its driveway is)
@@ -1086,6 +1108,89 @@ func route_to(from: Vector2, to: Vector2) -> PackedVector2Array:
 		if gate.distance_to(rp) > 3.0 and gate.distance_to(to) > 3.0: out.append(gate)
 	if rp.distance_to(to) > 3.0: out.append(to)
 	return out
+
+static func _path_len(p: PackedVector2Array) -> float:
+	var L := 0.0
+	for i in p.size() - 1: L += p[i].distance_to(p[i + 1])
+	return L
+
+## The stretch of one road between two points on it, through its bends.
+func _along_road(road: Dictionary, a: Vector2, b: Vector2) -> PackedVector2Array:
+	var pts: PackedVector2Array = road.pts
+	var ia := _seg_of(pts, a)
+	var ib := _seg_of(pts, b)
+	var out := PackedVector2Array([a])
+	if ia < ib:
+		for i in range(ia + 1, ib + 1): out.append(pts[i])
+	elif ia > ib:
+		for i in range(ia, ib, -1): out.append(pts[i])
+	out.append(b)
+	return out
+
+## Which segment of a polyline a point is on (the nearest one).
+static func _seg_of(pts: PackedVector2Array, p: Vector2) -> int:
+	var best := 0
+	var bd := INF
+	for i in pts.size() - 1:
+		var d := seg_dist(p, pts[i], pts[i + 1])
+		if d < bd:
+			bd = d
+			best = i
+	return best
+
+## The road each leg of a route runs along (one per leg; {} for a leg off the roads, the last
+## bits in to a lot). The GPS draws each leg as wide as its road and no wider.
+func route_roads(path: PackedVector2Array) -> Array:
+	var out := []
+	for i in path.size() - 1: out.append(_leg_road(path[i], path[i + 1]))
+	return out
+
+func _leg_road(a: Vector2, b: Vector2) -> Dictionary:
+	var na: int = _g_key.get(Vector2i(roundi(a.x), roundi(a.y)), -1)
+	var nb: int = _g_key.get(Vector2i(roundi(b.x), roundi(b.y)), -1)
+	if na >= 0 and nb >= 0:
+		for e in g_adj[na]:
+			if e[0] == nb: return e[2]
+	# a leg that starts or ends between nodes (where you are, where you're going): the road whose
+	# centreline both ends are on
+	var rd := nearest_road(a.lerp(b, 0.5), 3.0)
+	if rd.is_empty(): return {}
+	var pts: PackedVector2Array = rd.road.pts
+	for p in [a, b]:
+		if seg_dist(p, pts[_seg_of(pts, p)], pts[_seg_of(pts, p) + 1]) > 1.5: return {}
+	return rd.road
+
+## Where a route turns: [[point index, -1 left / 1 right], ...]. Only where it can turn (a
+## junction, or where it leaves one road for another, or for the way in to a lot), so a country
+## road's bends and the corners of a road's own polyline aren't turns. The angle is taken a few
+## metres either side, so a junction cut a metre off a bend still reads as the turn it is.
+func route_turns(path: PackedVector2Array, roads_of := []) -> Array:
+	var legs: Array = roads_of if roads_of.size() == path.size() - 1 else route_roads(path)
+	var out := []
+	for i in range(1, path.size() - 1):
+		var n: int = _g_key.get(Vector2i(roundi(path[i].x), roundi(path[i].y)), -1)
+		var junction := false
+		if n >= 0:
+			var nbs := {}
+			for e in g_adj[n]: nbs[e[0]] = true
+			junction = nbs.size() >= 3
+		if not junction and (is_same(legs[i - 1], legs[i]) or (legs[i - 1].is_empty() and legs[i].is_empty())): continue
+		var d1 := (path[i] - _walk(path, i, -1, 8.0)).normalized()
+		var d2 := (_walk(path, i, 1, 8.0) - path[i]).normalized()
+		var turn := d1.angle_to(d2)
+		if absf(turn) > deg_to_rad(35.0): out.append([i, 1 if turn > 0.0 else -1])
+	return out
+
+## The point so many metres back (dir -1) or on (dir 1) along a path from point i.
+static func _walk(path: PackedVector2Array, i: int, dir: int, metres: float) -> Vector2:
+	var left := metres
+	var k := i
+	while k + dir >= 0 and k + dir < path.size():
+		var L := path[k].distance_to(path[k + dir])
+		if L >= left: return path[k].lerp(path[k + dir], left / maxf(L, 0.001))
+		left -= L
+		k += dir
+	return path[k]
 
 ## The graph node at one end of the stretch of road a nearest_road() hit is on (dir -1: back
 ## along the road, +1: on along it): the nearest node to the road's point that way.

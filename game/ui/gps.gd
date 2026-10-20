@@ -9,6 +9,10 @@ extends Control
 const PX := CarArt.PX
 const INK := Color("0b090d")
 const BONE := Color("f3ead2")
+## The roads' widths on the map, in pixels (whatever the zoom), and the route's: never wider
+## than the road it's on.
+const ROAD_PX := { "highway": 6.0, "arterial": 4.5, "street": 2.5, "rural": 3.5, "gravel": 2.0, "ramp": 2.5 }
+const ROUTE_PX := 3.0
 
 const PAL := {
 	"tomtum": {
@@ -33,7 +37,10 @@ var sky: WorldSky
 var route := PackedVector2Array()
 var dest_name := ""
 var screen: Rect2            # where the map goes, inside the bezel
-var _route_i := 0
+var _route_i := 0            # the leg of the route you're on
+var _at := Vector2.INF       # where you are along it: the nearest point of that leg
+var _legs: Array = []        # the road under each leg ({} for the bits off it, in to a lot)
+var _turns: Array = []       # [point index, -1 left / 1 right]: where it turns at a junction
 var blips: Array = []          # [metres, colour]: the police, the other racers
 var _clip: Control
 var _top: Control
@@ -64,12 +71,17 @@ func _process(_dt: float) -> void:
 	Prof.lap('ui_gps_process', _t0)
 
 func _process_timed(_dt: float) -> void:
+	# kept up even while the map isn't drawn (no signal), so the distances stay right
+	if route.size() > 1 and sim != null: _advance_route()
 	queue_redraw()
 
 func set_route(p: PackedVector2Array, name: String) -> void:
 	route = p
 	dest_name = name
 	_route_i = 0
+	_at = p[0] if p.size() > 0 else Vector2.INF
+	_legs = map.route_roads(p) if map != null and p.size() > 1 else []
+	_turns = map.route_turns(p, _legs) if map != null and p.size() > 2 else []
 
 func night() -> bool:
 	return sky != null and sky.daylight() < 0.45
@@ -142,7 +154,7 @@ func _map(ci: CanvasItem, r: Rect2, heading_up: bool, tilt: float, scale_px_per_
 		for cx in range(k0.x, k1.x + 1):
 			for e in map._road_index.get(Vector2i(cx, cy), []):
 				segs[Vector2i(e[0], e[1])] = true
-	var widths := { "highway": 6.0, "arterial": 4.5, "street": 2.5, "rural": 3.5, "gravel": 2.0, "ramp": 2.5 }
+	var widths := ROAD_PX
 	for pass_i in 3:
 		for s in segs:
 			var rd: Dictionary = map.roads[s.x]
@@ -153,14 +165,15 @@ func _map(ci: CanvasItem, r: Rect2, heading_up: bool, tilt: float, scale_px_per_
 			if pass_i == 0: ci.draw_line(a, b, P.edge, w + 2.0)
 			elif pass_i == 1 and not hwy: ci.draw_line(a, b, P.road, w)
 			elif pass_i == 2 and hwy: ci.draw_line(a, b, P.hwy, w)
-	# the route
+	# the route: from where you are on it, along the roads' own centrelines, each leg drawn the
+	# way its road is (flat ends meeting at the junction) and no wider than it, so it stays on it
 	if route.size() > 1:
-		_advance_route()
-		var pts := PackedVector2Array()
-		pts.append(toscreen.call(sim.pos))
-		for i in range(_route_i, route.size()):
-			pts.append(toscreen.call(route[i]))
-		ci.draw_polyline(pts, P.route, 3.0)
+		var pts := drawn()
+		for i in pts.size() - 1:
+			if MapData.seg_dist(sim.pos, pts[i], pts[i + 1]) > radius: continue
+			var leg: Dictionary = _legs[_route_i + i] if _route_i + i < _legs.size() else {}
+			var w: float = minf(float(widths[leg.cls]), ROUTE_PX) if not leg.is_empty() else 2.0
+			ci.draw_line(toscreen.call(pts[i]), toscreen.call(pts[i + 1]), P.route, w)
 		var end: Vector2 = toscreen.call(route[route.size() - 1])
 		if r.has_point(end):
 			ci.draw_rect(Rect2(end + Vector2(0, -10), Vector2(2, 10)), P.text)
@@ -179,37 +192,56 @@ func _arrow(ci: CanvasItem, c: Vector2, ang: float, col: Color) -> void:
 	ci.draw_colored_polygon(out, col)
 	ci.draw_polyline(out + PackedVector2Array([out[0]]), Color(1, 1, 1, 0.8), 1.0)
 
+## Where you are on the route: the nearest point of the next stretch of it (only on from the
+## leg you were on, so a road the route comes back along later doesn't pull you ahead). The line
+## starts there, beside the car, instead of cutting from the car to a point up the road.
 func _advance_route() -> void:
-	while _route_i < route.size() - 1 and route[_route_i].distance_to(sim.pos) < 25.0:
-		_route_i += 1
-	# skip ahead if the car is closer to a later point
+	_route_i = clampi(_route_i, 0, route.size() - 2)
 	var best := _route_i
-	var bd := route[_route_i].distance_to(sim.pos)
-	for i in range(_route_i, mini(route.size(), _route_i + 12)):
-		var d := route[i].distance_to(sim.pos)
-		if d < bd:
+	var bd := INF
+	var bq := route[_route_i]
+	var ahead := 0.0
+	for i in range(_route_i, route.size() - 1):
+		var q := Geometry2D.get_closest_point_to_segment(sim.pos, route[i], route[i + 1])
+		var d := q.distance_to(sim.pos)
+		if d < bd - 0.01:
 			bd = d
 			best = i
+			bq = q
+		ahead += route[i].distance_to(route[i + 1])
+		if ahead > 250.0 and i > _route_i: break
 	_route_i = best
+	_at = bq
+
+## What's drawn: from where you are on the route to its end ([] with no route).
+func drawn() -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if route.size() < 2: return out
+	out.append(_at if _at != Vector2.INF else route[0])
+	for i in range(_route_i + 1, route.size()): out.append(route[i])
+	return out
 
 func route_left() -> float:
 	if route.size() < 2: return 0.0
-	var d := sim.pos.distance_to(route[_route_i])
-	for i in range(_route_i, route.size() - 1): d += route[i].distance_to(route[i + 1])
+	var pts := drawn()
+	var d := 0.0
+	for i in pts.size() - 1: d += pts[i].distance_to(pts[i + 1])
 	return d
 
-## The next turn: [-1 left / 1 right / 0 straight, metres to it]
+## The next turn: [-1 left / 1 right / 0 straight, metres to it]. The turns are the route's
+## junctions (worked out once, in set_route), not every bend in the road.
 func next_turn() -> Array:
-	if route.size() < 3: return [0, 0.0]
-	var acc := sim.pos.distance_to(route[_route_i])
-	for i in range(maxi(1, _route_i), route.size() - 1):
-		var d1 := (route[i] - route[i - 1]).normalized()
-		var d2 := (route[i + 1] - route[i]).normalized()
-		var turn := d1.angle_to(d2)
-		if absf(turn) > deg_to_rad(35.0):
-			return [1 if turn > 0.0 else -1, acc]
-		acc += route[i].distance_to(route[i + 1])
-	return [0, acc]
+	if route.size() < 2: return [0, 0.0]
+	var at := _at if _at != Vector2.INF else route[0]
+	var k := _route_i + 1
+	var acc := at.distance_to(route[k])
+	for t in _turns:
+		if int(t[0]) < k: continue
+		while k < int(t[0]):
+			acc += route[k].distance_to(route[k + 1])
+			k += 1
+		return [int(t[1]), acc]
+	return [0, route_left()]
 
 func _street() -> String:
 	var rd := map.nearest_road(sim.pos, 25.0)

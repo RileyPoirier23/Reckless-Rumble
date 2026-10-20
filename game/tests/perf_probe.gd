@@ -1,7 +1,8 @@
 ## Frame-time probe, in the drive scene: xvfb-run godot --path game -- --perf-probe
 ## Drives through downtown (day, then night) and prints frame, process, physics and draw-call
 ## numbers. PERF_OFF=traffic,lights,parked,furniture,wild,incidents,veg turns systems off;
-## PERF_AT=x,y,heading_deg picks the spot; PERF_SECS the run length.
+## PERF_AT=x,y,heading_deg picks the spot; PERF_SECS the run length. PERF_GPS=x,y[,style] routes
+## the GPS there from the spot (and PERF_SHOT then screenshots the drive, the GPS on it).
 extends Node
 
 var main: Node
@@ -79,6 +80,11 @@ func _run() -> void:
 		main._teleport(at, hd)
 		# PERF_GLOW=#rrggbb: an underglow kit on the car, to look at
 		if OS.get_environment("PERF_GLOW") != "" and main.car.view.art != null: main.car.view.art.underglow = Color(OS.get_environment("PERF_GLOW"))
+		# PERF_GPS=x,y[,style]: the GPS routed to a spot, to look at the line
+		if OS.get_environment("PERF_GPS") != "":
+			var gp := OS.get_environment("PERF_GPS").split(",")
+			if gp.size() > 2: main.gps.style = gp[2]
+			main.gps.set_route(main.world.map.route_to(at, Vector2(float(gp[0]), float(gp[1]))), "PERF")
 		await _wait(float(OS.get_environment("PERF_WAIT")) if OS.get_environment("PERF_WAIT") != "" else 1.5)
 		Input.action_press("throttle")
 		Prof.reset()

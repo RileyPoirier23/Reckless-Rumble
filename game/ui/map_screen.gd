@@ -54,6 +54,7 @@ var current_p := Vector2.INF
 var zoom := 0
 var scroll := 0
 var _route := PackedVector2Array()     # the way to the picked place, for the preview
+var _route_legs: Array = []            # the road under each leg of it ({} off the roads)
 var _route_for := -1
 var _pin := Vector2.INF
 var _opened := -1
@@ -180,13 +181,11 @@ func _seen(p: Vector2) -> bool:
 	return area.grow(-2).has_point(p)
 
 func _line(a: Vector2, b: Vector2, col: Color, w: float) -> void:
-	# only what's inside the map's frame (a cheap clip: both ends in, or skip it)
-	var pa := _to(a)
-	var pb := _to(b)
-	if not (area.has_point(pa) or area.has_point(pb)): return
-	pa = pa.clamp(area.position, area.end)
-	pb = pb.clamp(area.position, area.end)
-	draw_line(pa, pb, col, w)
+	# only the part inside the map's frame (cut at the edge, not squashed onto it: squashing
+	# bent a line that ran off the edge, so the route and its road went different ways there)
+	var c := World.clip_to_rect(_to(a), _to(b), area)
+	if c.is_empty(): return
+	draw_line(c[0], c[1], col, w)
 
 ## A name on the map, unless it would land on one already there (the first one in wins). Backed
 ## so it reads over the roads.
@@ -257,9 +256,15 @@ func _draw() -> void:
 	# the way to the picked place
 	if not dests.is_empty():
 		if _route_for != sel:
-			_route = map.route(sim.pos, dests[sel].p)
+			# the same way the GPS will take (from the road you're on, in to the place)
+			_route = map.route_to(sim.pos, dests[sel].p)
+			_route_legs = map.route_roads(_route)
 			_route_for = sel
-		for i in _route.size() - 1: _line(_route[i], _route[i + 1], Color(BLUE, 0.95), 3.0 if zoom > 0 else 2.0)
+		# each leg along its road, no wider than the road's drawn there
+		for i in _route.size() - 1:
+			var leg: Dictionary = _route_legs[i] if i < _route_legs.size() else {}
+			var w := minf(_road_w(String(leg.cls)), 3.0 if zoom > 0 else 2.0) if not leg.is_empty() else (2.0 if zoom > 0 else 1.0)
+			_line(_route[i], _route[i + 1], Color(BLUE, 0.95), w)
 	# the places: a marker each, coloured by what's there; the picked one's named on the map
 	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0)
 	for i in dests.size():
