@@ -297,7 +297,11 @@ class AuctionPanel extends Control:
 			var e := CarCatalog.entry(String(l.car))
 			var spec := CarCatalog.spec(String(l.car))
 			if pic == null:
-				pic = ImageTexture.create_from_image(PixCars.showroom(spec, 150, Color(String(l.paint)), { "year": int(l.year) }))
+				# (the showroom file is a 256 px canvas: cut to the car, and a long one shrinks to its column)
+				var img := PixCars.showroom(spec, 150, Color(String(l.paint)), { "year": int(l.year) })
+				img = img.get_region(img.get_used_rect().grow(1).intersection(Rect2i(Vector2i.ZERO, img.get_size())))
+				if img.get_width() > 176: img.resize(176, int(img.get_height() * 176.0 / img.get_width()), Image.INTERPOLATE_NEAREST)
+				pic = ImageTexture.create_from_image(img)
 			draw_texture(pic, Vector2(r.position.x + 12, r.position.y + 102 - pic.get_height()))
 			var x := r.position.x + 200
 			PixelFont.draw(self, Vector2(x, r.position.y + 34), "LOT %d OF %d" % [auction.lot_i + 1, auction.lots.size()], ASH)
