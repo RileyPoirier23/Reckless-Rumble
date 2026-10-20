@@ -1,0 +1,1 @@
+boxtruck|2019|6.70|fleet|["cutaway", "ambulance", "dually"]|1.250|6.70|2.30|1.72|{}|0000

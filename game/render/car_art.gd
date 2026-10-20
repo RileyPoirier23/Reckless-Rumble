@@ -206,6 +206,8 @@ func _init(spec: Dictionary, paint: Color, damage = 0.0, seed := 1, scale := 1.0
 	else:
 		design = CarGen.design(spec)
 		_key = _plan_key(spec, _mods, dmg, scale)
+		# a stock, undamaged car with slices of its own in art/vehicles/runtime is drawn from them
+		if runtime_on and is_stock(spec, design, _mods, dmg, scale): _stack_id = _stack_dir_of(PixCars.art_id(spec), _key)
 	if not later:
 		compute()
 		finish()
@@ -265,14 +267,318 @@ func compute() -> void:
 	roof_w = maxf(4.0, p.gr * 2.0)
 	var ug: Variant = _mods.get("underglow", "")
 	if ug is Color or (ug is String and String(ug) != ""): underglow = CarGen._col(ug, Color.TRANSPARENT)
+	if _stack_id != "":
+		var st := _stack_load(_stack_id)
+		# (slices drawn on another canvas than this car's plan would sit off its wheels and its
+		# collision box, and a stripe, a vinyl roof or a two-tone in a paint whose lightness picks
+		# other colours for them than the factory grey's would be wrong: the painter draws those)
+		var lum := _paint.get_luminance()
+		if st != null and st.sx == p.sx and st.sy == p.sy and (not st.lightness or (lum > AUTHORED_LUM.x and lum < AUTHORED_LUM.y)):
+			_from_stack(st)
+			return
 	_Painter.new(self, p, _paint, _mods, _seed).run()
 
 ## The textures, from what compute() painted. Main thread.
 func finish() -> void:
 	atlas = ImageTexture.create_from_image(_imgs.atlas)
+	if _stack != null:
+		# every car drawn from one stack shares its lamps and its wheel (they don't take the paint)
+		if _stack.tex.is_empty():
+			for kk: String in ["brake", "rev", "head", "bl", "br", "beacon", "bar"]: _stack.tex[kk] = ImageTexture.create_from_image(_imgs[kk])
+			_stack.tex.wheel = ImageTexture.create_from_image(_imgs.wheel)
+		for kk: String in ["brake", "rev", "head", "bl", "br", "beacon", "bar"]: lamp_tex[kk] = _stack.tex[kk]
+		wheel_tex = _stack.tex.wheel
+		_imgs = {}
+		return
 	for kk: String in ["brake", "rev", "head", "bl", "br", "beacon", "bar"]: lamp_tex[kk] = ImageTexture.create_from_image(_imgs[kk])
 	wheel_tex = ImageTexture.create_from_image(_imgs.wheel)
 	_imgs = {}
+
+# ------------------------------------------------------------------ authored stacks
+
+## Slices of its own win over the painter when the car is stock and undamaged:
+## art/vehicles/runtime/<art id>/ holds body_00.png .. (one per slice, front +x, every slice the
+## same canvas as the painter's plan), masks/mask_paint.png (which pixels take the paint, and
+## which of its values), the lit lamps (masks/mask_head.png and the rest) and the front wheel's
+## stack (wheel_00.png ..). tools/export_runtime.gd writes them from the painter; an artist can
+## paint over any of them and the game draws theirs. Mods, damage, wear, other scales and
+## trailers still go through the painter. See art/vehicles/RUNTIME.md.
+static var runtime_dir := "res://art/vehicles/runtime/"
+static var runtime_on := true                  # off: the painter draws every car (the exporter, the tests)
+const LAMP_FILES := { "brake": "brake", "rev": "reverse", "head": "head", "bl": "signal_left", "br": "signal_right",
+	"beacon": "beacon", "bar": "lightbar" }
+const LAMP_KINDS := ["brake", "rev", "head", "bl", "br", "beacon", "bar"]   # lamp_spots' kind numbers, in order
+## How light a paint can be (its luminance) and still take a stack with masks/mask_lightness.png
+## in it: the painter's stripe goes dark over 0.55 and a two-tone's second colour turns cream
+## under 0.7, and factory grey (0.556) is between them; vinyl roofs (0.3) and the black floating
+## roof (0.2) turn lower still.
+const AUTHORED_LUM := Vector2(0.55, 0.7)
+static var _stack_dirs := {}                   # art id -> [its folder ("" when it has no slices), the plan key it was drawn for]
+static var _stacks := {}                       # folder -> Stack (null: there, but not usable)
+static var _stack_lock := Mutex.new()
+static var _ops: Array = []
+
+var authored := false                          # drawn from an authored stack, not the painter
+var _stack_id := ""                            # the folder this car's stack is read from ("" the painter)
+var _stack: Stack
+
+## A stack read off disk: the slices in the atlas' layout, which of its pixels take the paint
+## and how, the lamps, the wheel. Kept while the game keeps drawing that model.
+class Stack:
+	var dir := ""
+	var sx := 0
+	var sy := 0
+	var n := 0
+	var body := PackedInt32Array()     # every slice side by side, abgr like the painter's buffer
+	var paint_at := PackedInt32Array() # where the paint goes (index into body)
+	var paint_code := PackedInt32Array() # and which ramp value and op: value * 256 + op
+	var codes := PackedInt32Array()    # the codes it uses, once each
+	var lamps := {}                    # lamp kind -> Image of slices lamp_z0 .. lamp_z0 + lamp_n - 1
+	var lamp_z0 := 0
+	var lamp_n := 1
+	var spots: Array = []              # lamp_spots, worked out once from the lamps
+	var beacons := false
+	var lightness := false             # it has pixels coloured by the paint's lightness (mask_lightness.png)
+	var wheel: Image
+	var wheel_n := 0
+	var wheel_size := Vector2i.ZERO
+	var tex := {}                      # the shared lamp and wheel textures (main thread)
+
+## Stock and undamaged, the way PixCars.showroom() means it: nothing in the mods but the
+## cosmetic keys (the year only if it's the car's own), no dents, no rust, at the game's scale.
+static func is_stock(spec: Dictionary, d: Dictionary, mods: Dictionary, damage: Dictionary, scale: float) -> bool:
+	if absf(scale - CAR_SCALE) > 0.0001 or String(spec.get("body", "")) == "trailer": return false
+	for mk: String in mods:
+		if not mk in PixCars.COSMETIC_KEYS: return false
+	if mods.has("year") and int(mods.year) != int(d.get("year", 0)): return false
+	for zk: String in damage:
+		if float(damage[zk]) > 0.0: return false
+	# (the traffic rusts its old cars out in the country: that's wear, the painter's job)
+	return float((d.get("art", {}) as Dictionary).get("rust", 0.0)) <= 0.0
+
+## The folder an art id's stack is in, or "" when there's no body_00.png there, or when the
+## exporter drew it for another shape than this car's plan (plan.txt: a spec with the same name
+## but other art cues or sizes, the fire engine's box-truck twin). Looked up once per id, so a
+## car without one costs a dictionary lookup.
+static func _stack_dir_of(id: String, key: String) -> String:
+	if id == "": return ""
+	_stack_lock.lock()
+	var have: Variant = _stack_dirs.get(id)
+	_stack_lock.unlock()
+	if have == null:
+		var dir := runtime_dir.path_join(id)
+		var first := dir.path_join("body_00.png")
+		var found := dir if FileAccess.file_exists(first) or ResourceLoader.exists(first) else ""
+		var drawn_for := ""
+		if found != "" and FileAccess.file_exists(dir.path_join("plan.txt")):
+			drawn_for = FileAccess.get_file_as_string(dir.path_join("plan.txt")).strip_edges()
+		have = [found, drawn_for]
+		_stack_lock.lock()
+		_stack_dirs[id] = have
+		_stack_lock.unlock()
+	var pair: Array = have
+	if String(pair[1]) != "" and String(pair[1]) != key: return ""
+	return String(pair[0])
+
+## Forget every stack read so far (after runtime_dir changes, or new slices are dropped in).
+static func clear_stacks() -> void:
+	_stack_lock.lock()
+	_stack_dirs.clear()
+	_stacks.clear()
+	_stack_lock.unlock()
+
+## How a paint pixel's colour is made from its ramp value, as the painter makes it: darker on a
+## pop-up's panel, a pillar, a sill (toward the trim), a shut line or a bolted-on part; then
+## darker again where a top's rim drops away; then a hidden fill or a riser; then toward the ink
+## where it meets the road (from the painter's 8-bit flank cache, or not). A paint mask's green
+## names one of these; 0 is the ramp value as it is.
+static func paint_ops() -> Array:
+	_stack_lock.lock()
+	if _ops.is_empty():
+		for base: Array in [[], [["d", 0.38]], [["d", 0.08]], [["t", 0.5]], [["d", 0.45]], [["d", 0.15]], [["d", 0.25]]]:
+			for rim: Array in [[], [["d", 0.42]], [["d", 0.2]]]:
+				for fill: Array in [[], [["d", 0.3]], [["d", 0.12]]]:
+					for ground: Array in [[], [["i", 0.65]], [["q", 0.0], ["i", 0.65]]]:
+						_ops.append(base + rim + fill + ground)
+	_stack_lock.unlock()
+	return _ops
+
+## A ramp value through one of paint_ops().
+static func paint_op(c: Color, op: Array) -> Color:
+	for step: Array in op:
+		match String(step[0]):
+			"d": c = c.darkened(float(step[1]))
+			"t": c = c.lerp(TRIM, float(step[1]))
+			"i": c = c.lerp(INK, float(step[1]))
+			"q": c = Color.hex(c.to_rgba32())
+	return c
+
+## The paint's seven values, deep shadow to specular (the painter's ramp for a stock car).
+static func paint_ramp(paint: Color) -> Array[Color]:
+	var r := CarGen.ramp(paint, "gloss")
+	var out: Array[Color] = []
+	for kk: String in ["deep", "sh", "mid", "base", "lt", "hi", "spec"]: out.append(r[kk])
+	return out
+
+## A colour as the painter's buffer holds it (abgr, a signed 32-bit int).
+static func abgr(c: Color) -> int:
+	var v := c.to_abgr32()
+	return v - 0x100000000 if v >= 0x80000000 else v
+
+## An image in the folder: the PNG itself when it's on disk (the editor, the tests, slices just
+## dropped in), else the imported texture (an exported game). Null when it isn't there.
+static func _image_at(path: String) -> Image:
+	var img: Image = null
+	if FileAccess.file_exists(path):
+		img = Image.new()
+		if img.load_png_from_buffer(FileAccess.get_file_as_bytes(path)) != OK: img = null
+	elif ResourceLoader.exists(path):
+		var t := load(path) as Texture2D
+		if t != null: img = t.get_image()
+	if img != null:
+		if img.is_compressed(): img.decompress()
+		img.convert(Image.FORMAT_RGBA8)
+	return img
+
+## The stack in a folder (read once, cached), or null when it isn't usable.
+static func _stack_load(dir: String) -> Stack:
+	_stack_lock.lock()
+	var known := _stacks.has(dir)
+	var have: Stack = _stacks.get(dir)
+	_stack_lock.unlock()
+	if known: return have
+	var st := _stack_read(dir)
+	_stack_lock.lock()
+	# (a stack and its lamps are a megabyte or so: a town's worth of models, not the catalogue)
+	if _stacks.size() > 96: _stacks.clear()
+	_stacks[dir] = st
+	_stack_lock.unlock()
+	return st
+
+static func _stack_read(dir: String) -> Stack:
+	var st := Stack.new()
+	st.dir = dir
+	var slices: Array[Image] = []
+	while true:
+		var img := _image_at(dir.path_join("body_%02d.png" % slices.size()))
+		if img == null: break
+		if not slices.is_empty() and img.get_size() != slices[0].get_size():
+			push_warning("%s: body_%02d.png is %s, body_00.png %s: drawn by the painter" % [dir, slices.size(), img.get_size(), slices[0].get_size()])
+			return null
+		slices.append(img)
+	if slices.is_empty(): return null
+	st.n = slices.size()
+	st.sx = slices[0].get_width()
+	st.sy = slices[0].get_height()
+	var aw := st.sx * st.n
+	var atl := Image.create(aw, st.sy, false, Image.FORMAT_RGBA8)
+	for z in st.n: atl.blit_rect(slices[z], Rect2i(Vector2i.ZERO, slices[z].get_size()), Vector2i(z * st.sx, 0))
+	st.body = atl.get_data().to_int32_array()
+	# the paint: red the ramp value (0 deep .. 6 specular, as 0 .. 255), green the op
+	var mask := _image_at(dir.path_join("masks/mask_paint.png"))
+	if mask != null and mask.get_size() == atl.get_size():
+		var md := mask.get_data()
+		var nops := paint_ops().size()
+		var seen := {}
+		for i in st.body.size():
+			if md[i * 4 + 3] < 128 or st.body[i] == 0: continue
+			var v := clampi(roundi(float(md[i * 4]) * 6.0 / 255.0), 0, 6)
+			var op := int(md[i * 4 + 1])
+			if op >= nops: op = 0
+			var code := v * 256 + op
+			st.paint_at.append(i)
+			st.paint_code.append(code)
+			if not seen.has(code):
+				seen[code] = true
+				st.codes.append(code)
+	elif mask != null:
+		push_warning("%s: mask_paint.png is %s, the slices make %s: no paint" % [dir, mask.get_size(), atl.get_size()])
+	var shift := _image_at(dir.path_join("masks/mask_lightness.png"))
+	st.lightness = shift != null and shift.get_used_rect().size.x > 0
+	# the lamps: the slices between the lowest and the highest lit pixel of any of them
+	var strips := {}
+	var z0 := st.n
+	var z1 := -1
+	for kk: String in LAMP_KINDS:
+		var img := _image_at(dir.path_join("masks/mask_%s.png" % LAMP_FILES[kk]))
+		if img == null or img.get_size() != atl.get_size(): img = Image.create(aw, st.sy, false, Image.FORMAT_RGBA8)
+		strips[kk] = img
+		var used := img.get_used_rect()
+		if used.size.x <= 0: continue
+		z0 = mini(z0, used.position.x / st.sx)
+		z1 = maxi(z1, (used.end.x - 1) / st.sx)
+	if z1 < 0:
+		z0 = 0
+		z1 = 0
+	st.lamp_z0 = z0
+	st.lamp_n = z1 - z0 + 1
+	var acc := {}
+	var order: Array = []
+	for kind in LAMP_KINDS.size():
+		var kk: String = LAMP_KINDS[kind]
+		var full: Image = strips[kk]
+		st.lamps[kk] = full.get_region(Rect2i(z0 * st.sx, 0, st.lamp_n * st.sx, st.sy))
+		var data := full.get_data()
+		var ur := full.get_used_rect()
+		for y in range(ur.position.y, ur.end.y):
+			for xa in range(ur.position.x, ur.end.x):
+				var at := (y * aw + xa) * 4
+				if data[at + 3] == 0: continue
+				if kind == 5: st.beacons = true
+				# where each lamp is, for its glow, the way the painter keeps them: each side, the
+				# front and the back apart
+				var x := xa % st.sx
+				var key := (kind << 2) | (0 if float(y) < st.sy / 2.0 else 2) | (0 if x < st.sx / 2 else 1)
+				if not acc.has(key):
+					acc[key] = [0.0, 0.0, 0.0, 0, Color(0, 0, 0, 0)]
+					order.append(key)
+				var a: Array = acc[key]
+				a[0] = float(a[0]) + float(x)
+				a[1] = float(a[1]) + float(y)
+				a[2] = float(a[2]) + float(xa / st.sx)
+				a[3] = int(a[3]) + 1
+				a[4] = (a[4] as Color) + Color8(data[at], data[at + 1], data[at + 2], data[at + 3])
+	for key: int in order:
+		var a2: Array = acc[key]
+		var cnt := float(a2[3])
+		st.spots.append([key >> 2, Vector3(float(a2[0]) / cnt + 0.5 - st.sx / 2.0, float(a2[1]) / cnt + 0.5 - st.sy / 2.0, float(a2[2]) / cnt), (a2[4] as Color) / cnt, int(cnt)])
+	# the front wheel's stack: its own slices, wheel_00.png ..
+	var wheels: Array[Image] = []
+	while true:
+		var w := _image_at(dir.path_join("wheel_%02d.png" % wheels.size()))
+		if w == null: break
+		if not wheels.is_empty() and w.get_size() != wheels[0].get_size(): break
+		wheels.append(w)
+	if wheels.is_empty():
+		push_warning("%s: no wheel_00.png: drawn by the painter" % dir)
+		return null
+	st.wheel_n = wheels.size()
+	st.wheel_size = wheels[0].get_size()
+	st.wheel = Image.create(st.wheel_size.x * st.wheel_n, st.wheel_size.y, false, Image.FORMAT_RGBA8)
+	for z in st.wheel_n: st.wheel.blit_rect(wheels[z], Rect2i(Vector2i.ZERO, st.wheel_size), Vector2i(z * st.wheel_size.x, 0))
+	return st
+
+## This car from its stack, in its paint: what the painter would have left for finish().
+func _from_stack(st: Stack) -> void:
+	_stack = st
+	authored = true
+	n = st.n
+	var ramp := paint_ramp(_paint)
+	var ops := paint_ops()
+	var table := {}
+	for code: int in st.codes: table[code] = abgr(paint_op(ramp[code >> 8], ops[code & 255]))
+	var buf := st.body.duplicate()
+	for k in st.paint_at.size(): buf[st.paint_at[k]] = table[st.paint_code[k]]
+	_imgs = {}
+	_imgs.atlas = Image.create_from_data(st.sx * st.n, st.sy, false, Image.FORMAT_RGBA8, buf.to_byte_array())
+	for kk: String in LAMP_KINDS: _imgs[kk] = st.lamps[kk]
+	_imgs.wheel = st.wheel
+	lamp_z0 = st.lamp_z0
+	lamp_n = st.lamp_n
+	lamp_spots = st.spots.duplicate(true)
+	has_beacons = st.beacons
+	wheel_n = st.wheel_n
+	wheel_size = st.wheel_size
 
 ## A semi's trailer has no side profile of its own: a box on tandem axles at the back, its nose
 ## over the fifth wheel. Its design in the same shape CarGen's are, so the rest of the recipe
