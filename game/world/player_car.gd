@@ -320,7 +320,7 @@ var show_off := false             # doing a donut or a handbrake slide on purpos
 ## The driver's inputs, plus the help a modern car gives you on STREET (traction control and
 ## a little stability control). SIM gives you none; ARCADE gives you more.
 func _inputs(dt: float) -> Array:
-	var ins := Controls.drive_inputs(dt, float(spec.get("steer_lock", 0.55)))
+	var ins := Controls.drive_inputs(dt, float(spec.get("steer_lock", 0.55)), sim.speed())
 	var th: float = ins[0]
 	var br: float = ins[1]
 	var st: float = ins[2]

@@ -40,19 +40,22 @@ func clear() -> void:
 ## One draw command a width, not one a mark: thousands of marks (a long burnout, then a drive)
 ## used to be thousands of commands, and past the renderer's budget for a frame it crashed.
 func _draw() -> void:
-	var by_w := {}                    # width -> [points, colours]
+	# (packed arrays copy on assignment: each group's arrays are built in locals and put back)
+	var pts_by_w := {}                # width -> points (pairs)
+	var cols_by_w := {}               # width -> a colour a segment
 	for i in alphas.size():
 		var c := colors[i]
 		c.a = alphas[i]
 		var w: float = widths[i] if i < widths.size() else 3.0
-		if not by_w.has(w): by_w[w] = [PackedVector2Array(), PackedColorArray()]
-		var b: Array = by_w[w]
-		(b[0] as PackedVector2Array).append(segs[i * 2])
-		(b[0] as PackedVector2Array).append(segs[i * 2 + 1])
-		(b[1] as PackedColorArray).append(c)
-	for w in by_w:
-		var b: Array = by_w[w]
-		draw_multiline_colors(b[0], b[1], float(w))
+		var pts: PackedVector2Array = pts_by_w.get(w, PackedVector2Array())
+		var cs: PackedColorArray = cols_by_w.get(w, PackedColorArray())
+		pts.append(segs[i * 2])
+		pts.append(segs[i * 2 + 1])
+		cs.append(c)
+		pts_by_w[w] = pts
+		cols_by_w[w] = cs
+	for w in pts_by_w:
+		draw_multiline_colors(pts_by_w[w], cols_by_w[w], float(w))
 
 ## What a tire leaves rolling over soft ground: [colour, strength, width px], or [] on the hard stuff.
 static func rut(surface: String, snow_cover: float) -> Array:

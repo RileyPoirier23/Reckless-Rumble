@@ -10,7 +10,7 @@ static var data := {}
 static var _loaded := false
 
 const DEFAULTS := {
-	"controls": { "transmission": "auto", "pad_deadzone": 0.14, "pad_curve": 1.7, "speed_steer": 1.0,
+	"controls": { "transmission": "auto", "pad_deadzone": 0.14, "pad_curve": 1.7, "speed_steer": 1.0, "steer_feel": "normal",
 		"trigger_deadzone": 0.06, "kb_ramp": true, "vibration": 1.0, "prompts": "auto", "clutch": "auto" },
 	# action -> [[kind, code, value, device], ...] where kind is key, joybtn or joyaxis; absent = defaults
 	"bindings": {},

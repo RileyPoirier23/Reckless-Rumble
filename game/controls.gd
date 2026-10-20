@@ -250,7 +250,7 @@ static func label(en: Array) -> String:
 ## Gas, brake, steering, handbrake and clutch for the car this frame: from the wheel if one's set
 ## up, otherwise from the pad or the keyboard. On the keyboard the pedals and the steering ease in
 ## (keys are all or nothing), and back out quicker.
-static func drive_inputs(dt: float, steer_lock := 0.55) -> Array:
+static func drive_inputs(dt: float, steer_lock := 0.55, speed_ms := 0.0) -> Array:
 	if Wheel.active(): return Wheel.inputs(steer_lock)
 	var th := trigger("throttle")
 	var br := trigger("brake")
@@ -262,7 +262,10 @@ static func drive_inputs(dt: float, steer_lock := 0.55) -> Array:
 		_kb[1] = move_toward(float(_kb[1]), br, dt * (6.0 if br > float(_kb[1]) else 12.0))
 		var s0 := float(_kb[2])
 		var turning_in := absf(st) > absf(s0) and (signf(st) == signf(s0) or is_zero_approx(s0))
-		_kb[2] = move_toward(s0, st, dt * (3.5 if turning_in else 7.0))
+		# (a tap at 100 km/h is a nudge, not a lane change: the lock winds on slower at speed)
+		var feel := String(GameSettings.get_v("controls", "steer_feel"))
+		var rate_in := lerpf(3.5, 1.4, clampf(speed_ms / 35.0, 0.0, 1.0)) * (0.75 if feel == "relaxed" else (1.35 if feel == "sharp" else 1.0))
+		_kb[2] = move_toward(s0, st, dt * (rate_in if turning_in else 8.0))
 		return [_kb[0], _kb[1], _kb[2], hb, cl]
 	_kb = [th, br, st]
 	return [th, br, st, hb, cl]

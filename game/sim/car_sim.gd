@@ -613,7 +613,7 @@ func _substep(h: float, throttle: float, brake: float, handbrake: float) -> void
 	# a handbrake slide on purpose, see esc_off): a real car brakes one wheel to stop a spin. Here it
 	# pulls the yaw back toward what the steering's asking for and bleeds off the sideways slide,
 	# harder the further the back's stepped out
-	var esc := 0.0 if esc_off or assist == Assist.SIM else (1.0 if assist == Assist.ARCADE else 0.6)
+	var esc := 0.0 if esc_off or assist == Assist.SIM else (1.0 if assist == Assist.ARCADE else 0.72)
 	if esc > 0.0 and avx > 4.0:
 		var want := vx * tan(steer) / L
 		var beta := atan2(vy, avx)

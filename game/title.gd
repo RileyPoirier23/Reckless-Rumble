@@ -179,6 +179,6 @@ func _draw() -> void:
 	var ls := Hud.wrap_lines(String(ITEMS[sel][1]), 146)
 	for k in mini(ls.size(), 2):
 		PixelFont.draw(self, DESC.position + Vector2(6, 5 + k * 9), ls[k], ASH)
-	PixelFont.draw(self, Vector2(8, 350), "PROTOTYPE 0.2", ASH)
+	PixelFont.draw(self, Vector2(8, 350), "IN DEVELOPMENT 0.3  506 CLICKS", ASH)
 	var hint := Hints.fmt("{updown}: PICK  {ui_accept}: GO")
 	PixelFont.draw(self, Vector2(632 - PixelFont.width(hint), 350), hint, ASH)

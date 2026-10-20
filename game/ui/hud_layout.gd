@@ -36,12 +36,12 @@ const OBJ_MAX_LINES := 4
 
 ## The camera, as drive.gd frames the car: the car sits below the screen's middle by how far the
 ## camera looks ahead, scaled by the zoom.
-const LOOK_BASE := 40.0
-const LOOK_GAIN := 0.14
-const LOOK_MAX := 70.0
-const ZOOM_REST := 1.2        # (was 1.55: too close to see the crossing you're about to go through)
-const ZOOM_FAST := 0.8
-const ZOOM_FULL_MS := 45.0
+const LOOK_BASE := 44.0
+const LOOK_GAIN := 0.2
+const LOOK_MAX := 96.0
+const ZOOM_REST := 1.05       # (was 1.55, then 1.2: you want to see the crossing, the car coming, the turn)
+const ZOOM_FAST := 0.62
+const ZOOM_FULL_MS := 40.0
 
 static func zoom_at(speed: float) -> float:
 	return lerpf(ZOOM_REST, ZOOM_FAST, clampf(speed / ZOOM_FULL_MS, 0.0, 1.0))
