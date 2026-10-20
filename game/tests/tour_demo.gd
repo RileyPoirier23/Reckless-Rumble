@@ -37,12 +37,14 @@ func _run() -> void:
 		seen[key] = true
 		picks.append(b)
 	# TOUR_MAP=1: the big map at every zoom, from downtown, instead of the building tour
+	# (TOUR_MAP_PICK=n: with the n-th place on its list picked, the way there shown)
 	if OS.get_environment("TOUR_MAP") != "":
 		main._teleport(Vector2(5900, 1480), -PI / 2.0)
 		main.hold_car = true
 		await _wait(1.0)
 		main.map_screen.open()
 		main.map_screen.visible = true
+		if OS.get_environment("TOUR_MAP_PICK") != "": main.map_screen._pick(int(OS.get_environment("TOUR_MAP_PICK")))
 		for z in 3:
 			main.map_screen.zoom = z
 			main.map_screen.queue_redraw()
