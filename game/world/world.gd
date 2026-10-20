@@ -63,6 +63,7 @@ var _b_river := {}
 var _b_rail := {}
 var _b_bridge := {}
 var _b_cross := {}
+var _b_over := {}
 
 func _init() -> void:
 	map = MapData.get_map()
@@ -212,11 +213,14 @@ func _geometry() -> void:
 		for k in n:
 			var t := float(k) / n
 			var c := A.lerp(B, t)
-			var hw := lerpf(map.river_hw[i], map.river_hw[i + 1], t) + map.noise.get_noise_2d(c.x * 3.0, c.y * 3.0) * 4.0
+			var base := lerpf(map.river_hw[i], map.river_hw[i + 1], t)
+			var rag := MapData.river_rag(base)
+			var hw := base + map.noise.get_noise_2d(c.x * 3.0, c.y * 3.0) * 4.0 * rag
+			var mud := MapData.river_mud(base)
 			river_l.append(c + nrm * hw)
 			river_r.append(c - nrm * hw)
-			mud_l.append(c + nrm * (hw + 10.0 + map.noise.get_noise_2d(c.x * 7.0, c.y) * 3.0))
-			mud_r.append(c - nrm * (hw + 10.0 + map.noise.get_noise_2d(c.x, c.y * 7.0) * 3.0))
+			mud_l.append(c + nrm * (hw + mud + map.noise.get_noise_2d(c.x * 7.0, c.y) * 3.0 * rag))
+			mud_r.append(c - nrm * (hw + mud + map.noise.get_noise_2d(c.x, c.y * 7.0) * 3.0 * rag))
 
 func _add(b: Dictionary, k: Vector2i, v) -> void:
 	if not b.has(k): b[k] = []
@@ -252,6 +256,17 @@ func _bucket() -> void:
 	for br in map.bridges:
 		_bucket_rect(_b_bridge, Rect2(br.a, Vector2.ZERO).expand(br.b).grow(br.w), br)
 	for c in map.crossings: _add(_b_cross, ck(c.p), c)
+	for o in map.overpasses:
+		var poly := MapData.deck_poly(o, 2.0)
+		var r := Rect2(poly[0], Vector2.ZERO)
+		for q in poly: r = r.expand(q)
+		_bucket_rect(_b_over, r, o)
+
+## Under an overpass's deck (the highway's lines and median don't show through it).
+func under_deck(p: Vector2) -> bool:
+	for o in _b_over.get(ck(p), []):
+		if Geometry2D.is_point_in_polygon(p, MapData.deck_poly(o)): return true
+	return false
 
 # ------------------------------------------------------------------ streaming
 
@@ -971,7 +986,7 @@ class Layer extends Node2D:
 		while s < L:
 			var e := minf(s + (dash if dash > 0.0 else 2.0), L)
 			var p := a + dir * s
-			if chunk.rect.grow(2.0).has_point(p) and not _other_road(w, p + o, ri):
+			if chunk.rect.grow(2.0).has_point(p) and not _other_road(w, p + o, ri) and not (rd.limited and w.under_deck(p + o)):
 				tb.line((p + o) * PX, (a + dir * e + o) * PX, col, width)
 			s += dash * 2.0 if dash > 0.0 else 2.0
 
@@ -1055,27 +1070,21 @@ class Layer extends Node2D:
 					var a: Vector2 = rd.pts[si]
 					var b: Vector2 = rd.pts[si + 1]
 					var n := (b - a).normalized().orthogonal() * 2.0
-					tb.quad((a + n) * PX, (b + n) * PX, (b - n) * PX, (a - n) * PX, w.ground_color(a, { "style": "rural" }))
-					tb.line(a * PX, b * PX, Color("b8bcc0"), 2.0)
+					var mc := w.ground_color(a, { "style": "rural" })
+					for piece in _clear_of_decks(w, ri, si):
+						var pa: Vector2 = piece[0]
+						var pb: Vector2 = piece[1]
+						tb.quad((pa + n) * PX, (pb + n) * PX, (pb - n) * PX, (pa - n) * PX, mc)
+						tb.line(pa * PX, pb * PX, Color("b8bcc0"), 2.0)
 					for sd in [-1.0, 1.0]:
 						_line(w, ri, si, sd * 2.3, yellow, 0.0, 2.0)
 						_line(w, ri, si, sd * 6.0, white, 3.0, 2.0)
 						_line(w, ri, si, sd * 9.8, white, 0.0, 2.0)
-				"arterial":
-					_line(w, ri, si, -0.25, yellow, 0.0, 2.0)
-					_line(w, ri, si, 0.25, yellow, 0.0, 2.0)
-					_line(w, ri, si, -4.0, white, 3.0, 2.0)
-					_line(w, ri, si, 4.0, white, 3.0, 2.0)
-				"street":
-					_line(w, ri, si, 0.0, yellow, 0.0, 1.5)
-				"rural":
-					_line(w, ri, si, 0.0, yellow, 3.0, 2.0)
-					_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
-					_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
-				"ramp":
-					_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
-					_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
+				_:
+					_lines_of(w, ri, si, yellow, white)
 		_wear(w)
+		tb.flush(self)
+		_decks(w, yellow, white)
 		# parking stalls
 		for l in w._b_lot.get(chunk.key, []):
 			if not l.lines: continue
@@ -1093,6 +1102,96 @@ class Layer extends Node2D:
 				tb.flush(self)
 				PixelFont.draw(self, (r.position + Vector2(4, r.size.y / 2.0 - 1)) * PX, l.name, Color(white, 0.32), 2)
 		tb.flush(self)
+
+	## A road's lines (all but the highway's, which draws its own round its median).
+	func _lines_of(w: World, ri: int, si: int, yellow: Color, white: Color) -> void:
+		var rd: Dictionary = w.map.roads[ri]
+		match rd.cls:
+			"arterial":
+				_line(w, ri, si, -0.25, yellow, 0.0, 2.0)
+				_line(w, ri, si, 0.25, yellow, 0.0, 2.0)
+				_line(w, ri, si, -4.0, white, 3.0, 2.0)
+				_line(w, ri, si, 4.0, white, 3.0, 2.0)
+			"street":
+				_line(w, ri, si, 0.0, yellow, 0.0, 1.5)
+			"rural":
+				_line(w, ri, si, 0.0, yellow, 3.0, 2.0)
+				_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
+				_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
+			"ramp":
+				_line(w, ri, si, -(float(rd.w) / 2.0 - 0.4), white, 0.0, 1.5)
+				_line(w, ri, si, float(rd.w) / 2.0 - 0.4, white, 0.0, 1.5)
+
+	## The stretches of a highway segment that aren't under an overpass: [[a, b], ...].
+	func _clear_of_decks(w: World, ri: int, si: int) -> Array:
+		var rd: Dictionary = w.map.roads[ri]
+		var a: Vector2 = rd.pts[si]
+		var b: Vector2 = rd.pts[si + 1]
+		var L := a.distance_to(b)
+		var dir := (b - a) / maxf(L, 0.001)
+		var cuts: Array = []
+		for o in w.map.overpasses:
+			if int(o.hri) != ri or int(o.hsi) != si: continue
+			var od: Vector2 = ((o.b as Vector2) - (o.a as Vector2)).normalized()
+			var half := (float(o.w) / 2.0 + 0.8) / maxf(absf(od.cross(dir)), 0.3)
+			var s0 := ((o.p as Vector2) - a).dot(dir)
+			cuts.append([s0 - half, s0 + half])
+		cuts.sort_custom(func(u, v): return u[0] < v[0])
+		var out: Array = []
+		var at := 0.0
+		for c in cuts:
+			if c[0] > at: out.append([a + dir * at, a + dir * minf(c[0], L)])
+			at = maxf(at, c[1])
+		if at < L: out.append([a + dir * at, b])
+		return out
+
+	## The overpasses: the road's deck over the highway (its own surface and lines, a concrete
+	## parapet each side and its shadow on the lanes below), clipped to this chunk so the
+	## chunks either side of it agree.
+	func _decks(w: World, yellow: Color, white: Color) -> void:
+		var box := chunk.rect.grow(0.5)
+		var cpoly := PackedVector2Array([box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)])
+		var tint := w.asphalt_tint()
+		var snow := clampf(w.sky.snow_cover * 1.3, 0, 1)
+		for o in w._b_over.get(chunk.key, []):
+			var rd: Dictionary = w.map.roads[int(o.ri)]
+			var deck := MapData.deck_poly(o)
+			# (the shadow falls off the deck's southern side, a strip as long as the deck)
+			var along := ((o.b as Vector2) - (o.a as Vector2)).normalized()
+			var sn := along.orthogonal() * (1.0 if along.orthogonal().y > 0.0 else -1.0)
+			var e0: Vector2 = (o.a as Vector2) + along * 2.0 + sn * (float(o.w) / 2.0 + 0.8)
+			var e1: Vector2 = (o.b as Vector2) - along * 2.0 + sn * (float(o.w) / 2.0 + 0.8)
+			var shadow := PackedVector2Array([e0, e1, e1 + sn * 2.4, e0 + sn * 2.4])
+			for part in Geometry2D.intersect_polygons(shadow, cpoly): _poly(part, Color(0, 0, 0, 0.3), null)
+			for part in Geometry2D.intersect_polygons(deck, cpoly): _poly(part, Color("a8a49c").lerp(Color("e6eaf0"), snow), null)
+			var road := MapData.deck_poly(o, -0.8)
+			for part in Geometry2D.intersect_polygons(road, cpoly):
+				if rd.cls == "gravel": _poly(part, Color("9a8e78").lerp(Color("e6eaf0"), snow), null)
+				else: _poly(part, tint, w.asphalt)
+			# the parapets: a lit top, a dark outer face
+			var a: Vector2 = o.a
+			var b: Vector2 = o.b
+			var n := (b - a).normalized().orthogonal()
+			for sd in [-1.0, 1.0]:
+				var off: Vector2 = n * sd * (float(o.w) / 2.0 + 0.5)
+				var cl := World.clip_to_rect(a + off, b + off, box)
+				if cl.is_empty(): continue
+				tb.line((cl[0] as Vector2) * PX, (cl[1] as Vector2) * PX, Color("d4d0c8"), 3.0)
+				tb.line((cl[0] + n * sd * 0.35) * PX, (cl[1] + n * sd * 0.35) * PX, Color(0, 0, 0, 0.4), 1.0)
+			_lines_of(w, int(o.ri), int(o.si), yellow, white)
+			tb.flush(self)
+
+	## A filled polygon, textured with the asphalt (in world space, like the roads) when given it.
+	func _poly(pts: PackedVector2Array, col: Color, tex: Texture2D) -> void:
+		if pts.size() < 3: return
+		var px := PackedVector2Array()
+		for q in pts: px.append(q * PX)
+		if tex == null:
+			draw_colored_polygon(px, col)
+			return
+		var uvs := PackedVector2Array()
+		for q in px: uvs.append(q / 64.0)
+		draw_colored_polygon(px, col, uvs, tex)
 
 	func _rail(w: World) -> void:
 		var snowy := w.sky.snow_cover > 0.3

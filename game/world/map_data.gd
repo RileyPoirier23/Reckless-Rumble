@@ -46,6 +46,7 @@ var river_hw: PackedFloat32Array
 var rail_pts: PackedVector2Array
 var crossings: Array = []       # rail level crossings: { p, road }
 var bridges: Array = []         # { a, b, w } road decks over the river
+var overpasses: Array = []      # { p, a, b, ri, si, hri, hsi, w }: a road carried over the highway
 var interchanges: Array[Vector2] = []
 var junctions: Array = []       # where roads meet: { p, r (the kerb radius), arms: [{ d, hw }] }
 var _junc_index := {}
@@ -80,10 +81,12 @@ func build() -> void:
 	_city_grids()
 	_villages()
 	_landmarks()
+	_off_the_edge()
 	_index_roads()
 	_gas_off_roads()
 	_wild_signs()
 	_find_bridges_and_crossings()
+	_overpasses()
 	_buildings()
 	_salvage()
 	_impound()
@@ -96,11 +99,12 @@ func build() -> void:
 # ------------------------------------------------------------------ geography
 
 func _river() -> void:
-	# the Petitcodiac: a creek at Havelock's edge, wide and brown by the time it bends at Port Rumble
+	# the Petitcodiac: a brook out of the fields east of Havelock (it narrows to nothing, it doesn't
+	# start at full width in the grass), wide and brown by the time it bends at Port Rumble
 	var p := [Vector2(2700, 2330), Vector2(3050, 2265), Vector2(3420, 2225), Vector2(3800, 2120), Vector2(4300, 2010),
 		Vector2(4800, 1890), Vector2(5300, 1765), Vector2(5650, 1690), Vector2(5950, 1650), Vector2(6250, 1625),
 		Vector2(6550, 1680), Vector2(6800, 1850), Vector2(7050, 2080)]
-	var w := [10.0, 14.0, 18.0, 26.0, 34.0, 42.0, 55.0, 70.0, 75.0, 80.0, 95.0, 120.0, 150.0]
+	var w := [0.5, 14.0, 18.0, 26.0, 34.0, 42.0, 55.0, 70.0, 75.0, 80.0, 95.0, 120.0, 150.0]
 	river_pts = PackedVector2Array(p)
 	river_hw = PackedFloat32Array(w)
 
@@ -127,10 +131,73 @@ func _wiggle(pts: PackedVector2Array, amp: float) -> PackedVector2Array:
 		for k in n:
 			var t := float(k) / n
 			var q := a.lerp(b, t)
-			var off := noise.get_noise_2d(q.x * 0.6, q.y * 0.6) * amp * sin(PI * t)
+			var off := noise.get_noise_2d(q.x * 0.6, q.y * 0.6) * amp * sin(PI * t) * _straight_by_highway(q)
 			out.append(q + nrm * off)
 	out.append(pts[pts.size() - 1])
 	return out
+
+## The points of a corner at b (coming from a, going on to c) rounded off to radius r: a road
+## that turns hard (a hairpin) curves round it instead of folding at a point.
+func _bend(a: Vector2, b: Vector2, c: Vector2, r: float) -> Array:
+	var d1 := (b - a).normalized()
+	var d2 := (c - b).normalized()
+	var turn := d1.angle_to(d2)
+	var t := r * tan(absf(turn) / 2.0)
+	var p0 := b - d1 * t
+	var centre := p0 - d1.orthogonal() * r * signf(turn)     # (orthogonal() turns the other way from angle_to)
+	var a0 := (p0 - centre).angle()
+	var out := []
+	var steps := maxi(2, int(ceilf(absf(turn) * r / 3.0)))     # (a point every 3 m: it reads as a curve, to the signs too)
+	for k in steps + 1:
+		out.append(centre + Vector2.from_angle(a0 + turn * float(k) / steps) * r)
+	return out
+
+## The roads (and the rail) that reach the edge of the map run on past it, so from the road the
+## world doesn't stop at a line in the grass: the asphalt carries on out of sight beyond the wall.
+## The graph stops at the edge (see _graph), so nothing drives out there.
+const RUN_OUT := 240.0
+func _off_the_edge() -> void:
+	for r in roads:
+		var pts: PackedVector2Array = r.pts
+		if pts.size() < 2: continue
+		if _on_edge(pts[pts.size() - 1]): pts = _run_out(pts)
+		if _on_edge(pts[0]):
+			pts.reverse()
+			pts = _run_out(pts)
+			pts.reverse()
+		r.pts = pts
+	if _on_edge(rail_pts[rail_pts.size() - 1]): rail_pts = _run_out(rail_pts)
+	if _on_edge(rail_pts[0]):
+		rail_pts.reverse()
+		rail_pts = _run_out(rail_pts)
+		rail_pts.reverse()
+
+func _on_edge(p: Vector2) -> bool:
+	var B := BOUNDS
+	return p.x <= B.position.x + 1.0 or p.y <= B.position.y + 1.0 or p.x >= B.end.x - 1.0 or p.y >= B.end.y - 1.0
+
+## On past the last point the way the road was going (taken over its last 80 m, so a wiggle's
+## last little jog doesn't send it off sideways).
+func _run_out(pts: PackedVector2Array) -> PackedVector2Array:
+	var end := pts[pts.size() - 1]
+	var back := pts[0]
+	for i in range(pts.size() - 2, -1, -1):
+		back = pts[i]
+		if back.distance_to(end) >= 80.0: break
+	var dir := (end - back).normalized()
+	var out := pts.duplicate()
+	for k in range(1, 7): out.append(end + dir * RUN_OUT * k / 6.0)
+	return out
+
+## A country road runs straight where it goes over the highway (a bridge doesn't wiggle): no
+## wiggle within 25 m of it, all of it again 85 m out.
+func _straight_by_highway(q: Vector2) -> float:
+	var d := INF
+	for r in roads:
+		if not r.limited: continue
+		var pts: PackedVector2Array = r.pts
+		for i in pts.size() - 1: d = minf(d, seg_dist(q, pts[i], pts[i + 1]))
+	return clampf((d - 25.0) / 60.0, 0.0, 1.0)
 
 func _highways() -> void:
 	# Route 2, the Trans-Canada: north of the city, then down to Salisbury and on to Petitcodiac
@@ -143,7 +210,8 @@ func _highways() -> void:
 	add_road("CHAMPLAIN ST", "street", [Vector2(6360, 1060), Vector2(6360, 1200)], "dieppe")
 	# Mountain Road: downtown up to Magnet Hill
 	add_road("MOUNTAIN RD", "arterial", [Vector2(5900, 1390), Vector2(5780, 1250), Vector2(5700, 1180), Vector2(5650, 1140), Vector2(5590, 1115),
-		Vector2(5530, 1070), Vector2(5400, 1020), Vector2(5330, 950), Vector2(5250, 990), Vector2(5180, 860)])     # the S-bend, then the hairpin
+		Vector2(5530, 1070), Vector2(5400, 1020)] + _bend(Vector2(5400, 1020), Vector2(5330, 950), Vector2(5250, 990), 40.0)
+		+ _bend(Vector2(5330, 950), Vector2(5250, 990), Vector2(5180, 860), 40.0) + [Vector2(5180, 860)])     # the S-bend, then the hairpin
 	# Route 106: Main St through downtown, then Salisbury Rd out along the river
 	add_road("MAIN ST", "arterial", [Vector2(7000, 1395), Vector2(6800, 1420), Vector2(6500, 1462), Vector2(6250, 1505), Vector2(6000, 1548),
 		Vector2(5700, 1592)], "")
@@ -170,7 +238,9 @@ func _highways() -> void:
 	add_road("LUTES MOUNTAIN RD", "rural", [Vector2(4650, 1790), Vector2(4550, 1450), Vector2(4300, 1150), Vector2(4250, 700), Vector2(4300, 0)], "", false, 26.0)
 	add_road("IRISHTOWN RD", "rural", [Vector2(5590, 1115), Vector2(5650, 700), Vector2(5700, 300), Vector2(5750, 0)], "", false, 22.0)
 	add_road("BOUNDARY CREEK RD", "gravel", [Vector2(4075, 1935), Vector2(4000, 1700), Vector2(4100, 1520), Vector2(4550, 1450)], "", false, 18.0)
-	add_road("BERRY MILLS RD", "gravel", [Vector2(5000, 1730), Vector2(4900, 1350), Vector2(4700, 1000)], "", false, 25.0)
+	# (under the Trans-Canada, not onto it: a gravel road has no business meeting a highway at
+	# grade, so it runs on up to Magnet Hill Rd, and the last of that is the zoo's drive)
+	add_road("BERRY MILLS RD", "gravel", [Vector2(5000, 1730), Vector2(4900, 1350), Vector2(4830, 1050), Vector2(4950, 900), Vector2(5100, 820)], "", false, 25.0)
 	add_road("SCOTCH SETTLEMENT RD", "gravel", [Vector2(2400, 2390), Vector2(2300, 2000), Vector2(2150, 1600), Vector2(1900, 1420), Vector2(1500, 1400), Vector2(750, 1500)], "", false, 30.0)
 	add_road("PARKINDALE RD", "gravel", [Vector2(1900, 2470), Vector2(2000, 2900), Vector2(2100, 3300)], "", false, 28.0)
 
@@ -263,7 +333,7 @@ func _villages() -> void:
 	add_road("SCHOOL ST", "street", [Vector2(700, 2810), Vector2(910, 2810)], "havelock")
 	add_road("FAIRWAY LN", "street", [Vector2(700, 2700), Vector2(700, 2810)], "havelock")
 	add_road("MILL LN", "street", [Vector2(910, 2700), Vector2(910, 2810)], "havelock")
-	add_road("AIRFIELD RD", "gravel", [Vector2(803, 2640), Vector2(700, 2610), Vector2(620, 2610)], "havelock")
+	add_road("AIRFIELD RD", "gravel", [Vector2(803, 2640), Vector2(730, 2622), Vector2(680, 2610)], "havelock")     # (into the apron, not down the strip)
 	add_road("QUARRY RD", "gravel", [Vector2(815, 2985), Vector2(950, 2975), Vector2(1020, 2960)], "", false, 10.0)
 	grid_cells.append({ "r": Rect2(700, 2700, 210, 110), "style": "village", "zone": "havelock", "reserved": false })
 
@@ -290,7 +360,7 @@ func _landmarks() -> void:
 	_tims(Vector2(3350, 2125), "salisbury")
 	# Magnet Hill: the hill where cars roll uphill, the casino, the zoo
 	add_road("MAGNET HILL RD", "street", [Vector2(5180, 860), Vector2(5100, 820), Vector2(5040, 770), Vector2(5000, 720)], "magnet")
-	add_road("CASINO DR", "street", [Vector2(5180, 860), Vector2(5220, 780), Vector2(5300, 770)], "magnet")
+	add_road("CASINO DR", "street", [Vector2(5180, 860), Vector2(5205, 810), Vector2(5240, 784), Vector2(5290, 760)], "magnet")     # (a sweep up to the lot, and into it)
 	lots.append({ "r": Rect2(5270, 700, 110, 64), "kind": "asphalt", "name": "", "lines": true })
 	buildings.append({ "r": Rect2(5290, 660, 80, 38), "h": 16.0, "kind": "casino", "name": "CASINO RUMBLE", "zone": "magnet" })
 	for i in 5: lights.append({ "p": Vector2(5280 + i * 22, 700), "type": "casino", "seed": i })
@@ -331,8 +401,11 @@ func _landmarks() -> void:
 		lights.append({ "p": tp, "type": "aviation", "seed": i })
 		buildings.append({ "r": Rect2(tp - Vector2(2, 2), Vector2(4, 4)), "h": 40.0, "kind": "tower", "name": "", "zone": "" })
 	# Havelock
-	lots.append({ "r": Rect2(520, 2590, 280, 22), "kind": "runway", "name": "HAVELOCK", "lines": false })
-	landmarks.append({ "name": "HAVELOCK AIRFIELD", "p": Vector2(640, 2600), "dest": true })
+	# the strip sits back from Canaan Rd (its end used to butt into the road), with a gravel apron
+	# beside it where Airfield Rd comes in
+	lots.append({ "r": Rect2(430, 2572, 280, 22), "kind": "runway", "name": "HAVELOCK", "lines": false })
+	lots.append({ "r": Rect2(600, 2594, 90, 26), "kind": "gravel", "name": "", "lines": false })
+	landmarks.append({ "name": "HAVELOCK AIRFIELD", "p": Vector2(640, 2606), "dest": true })
 	lots.append({ "r": Rect2(1000, 2900, 200, 130), "kind": "gravel", "name": "", "lines": false })
 	buildings.append({ "r": Rect2(1150, 2910, 40, 26), "h": 14.0, "kind": "plant", "name": "LIME", "zone": "" })
 	lights.append({ "p": Vector2(1140, 2940), "type": "sodium", "seed": 9 })
@@ -423,16 +496,50 @@ func _driveways() -> void:
 			if ground_at(from.lerp(rd.point, k / 8.0)) == "grass": grass = true
 		if not grass: continue
 		_driveway(from, rd.point)
+	_tower_track()
 
-func _driveway(from: Vector2, to: Vector2) -> void:
+func _driveway(from: Vector2, to: Vector2, kind := "asphalt", w := 5.0) -> void:
 	var gap := from.distance_to(to)
 	var steps := maxi(1, int(ceilf(gap / 1.5)))
 	for i in steps + 1:
 		var q := from.lerp(to, float(i) / float(steps))
-		var sq := Rect2(q - Vector2(2.5, 2.5), Vector2(5, 5))
+		var sq := Rect2(q - Vector2(w, w) / 2.0, Vector2(w, w))
 		if _in_building(q): continue
 		_reserve(sq)
-		lots.append({ "r": sq, "kind": "asphalt", "name": "", "lines": false })
+		lots.append({ "r": sq, "kind": kind, "name": "", "lines": false })
+
+## The nearest point on a polyline.
+static func _nearest_on(pts: PackedVector2Array, p: Vector2) -> Vector2:
+	var best := pts[0]
+	var bd := INF
+	for i in pts.size() - 1:
+		var a := pts[i]
+		var ab := pts[i + 1] - a
+		var q := a + ab * clampf((p - a).dot(ab) / maxf(ab.length_squared(), 0.001), 0.0, 1.0)
+		if q.distance_to(p) < bd:
+			bd = q.distance_to(p)
+			best = q
+	return best
+
+## A lane from a door to the road can't ford the river, cross the tracks or run through a house.
+func _lane_clear(from: Vector2, to: Vector2) -> bool:
+	for k in range(1, 10):
+		var q := from.lerp(to, k / 10.0)
+		if river_at(q) > 0 or rail_near(q, 4.0) or _in_building(q): return false
+	return true
+
+## The Lutes Mountain towers: a gravel track in from Lutes Mountain Rd and on from mast to mast.
+func _tower_track() -> void:
+	var towers := buildings.filter(func(b): return String(b.kind) == "tower")
+	if towers.is_empty(): return
+	var rd: Array = roads.filter(func(r): return String(r.name) == "LUTES MOUNTAIN RD")
+	if rd.is_empty(): return
+	var prev: Vector2 = (towers[0].r as Rect2).get_center()
+	_driveway(_nearest_on(rd[0].pts, prev), prev, "gravel", 4.0)
+	for t in towers.slice(1):
+		var c: Vector2 = (t.r as Rect2).get_center()
+		_driveway(prev, c, "gravel", 4.0)
+		prev = c
 
 func _gas(r: Rect2, name: String, zone: String, dest := "") -> void:
 	_reserve(r)
@@ -648,11 +755,20 @@ func river_at(m: Vector2) -> int:
 		var b := river_pts[si + 1]
 		var ab := b - a
 		var t := clampf((m - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
-		var hw := lerpf(river_hw[si], river_hw[si + 1], t) + noise.get_noise_2d(m.x * 3.0, m.y * 3.0) * 4.0
+		var base := lerpf(river_hw[si], river_hw[si + 1], t)
+		var hw := base + noise.get_noise_2d(m.x * 3.0, m.y * 3.0) * 4.0 * river_rag(base)
 		var d := m.distance_to(a + ab * t)
 		if d < hw: return 1
-		if d < hw + 10.0: best = 2
+		if d < hw + river_mud(base): best = 2
 	return best
+
+## How ragged the banks are, and how wide the mud: a brook at the source has neither, so the
+## river narrows away to nothing up there instead of ending in a square of mud.
+static func river_rag(hw: float) -> float:
+	return clampf(hw / 8.0, 0.0, 1.0)
+
+static func river_mud(hw: float) -> float:
+	return 10.0 * clampf(hw / 10.0, 0.1, 1.0)
 
 func lot_at(m: Vector2) -> Dictionary:
 	for l in lots:
@@ -709,6 +825,41 @@ func _find_bridges_and_crossings() -> void:
 				if x != null and not r.limited:
 					crossings.append({ "p": x, "dir": (b - a).normalized(), "w": r.w, "road": r.name })
 
+## Where a road crosses the highway away from an interchange it goes over it on a bridge (the
+## graph doesn't join them there either): the deck runs from shoulder to shoulder and a bit, so
+## the world can draw the road on top and the highway's lines and median under it.
+func _overpasses() -> void:
+	for hri in roads.size():
+		var h: Dictionary = roads[hri]
+		if not h.limited: continue
+		var reach: float = float(h.w) / 2.0 + float(CLS[h.cls].shoulder) + 3.0
+		for ri in roads.size():
+			var r: Dictionary = roads[ri]
+			if r.limited: continue
+			for hsi in (h.pts as PackedVector2Array).size() - 1:
+				var c: Vector2 = h.pts[hsi]
+				var d: Vector2 = h.pts[hsi + 1]
+				for si in (r.pts as PackedVector2Array).size() - 1:
+					var a: Vector2 = r.pts[si]
+					var b: Vector2 = r.pts[si + 1]
+					var x = seg_intersect(a, b, c, d)
+					if x == null: continue
+					var near := false
+					for ip in interchanges:
+						if ip.distance_to(x) < 60.0: near = true
+					if near: continue
+					var dir := (b - a).normalized()
+					var sn := absf(dir.cross((d - c).normalized()))
+					var span := reach / maxf(sn, 0.3)
+					overpasses.append({ "p": x, "a": x - dir * span, "b": x + dir * span, "ri": ri, "si": si, "hri": hri, "hsi": hsi, "w": float(r.w) })
+
+## The deck of an overpass as a polygon (the road's width and its parapets).
+static func deck_poly(o: Dictionary, grow := 0.0) -> PackedVector2Array:
+	var a: Vector2 = o.a
+	var b: Vector2 = o.b
+	var n := (b - a).normalized().orthogonal() * (float(o.w) / 2.0 + 0.8 + grow)
+	return PackedVector2Array([a + n, b + n, b - n, a - n])
+
 func _clear_of_roads(r: Rect2, margin: float) -> bool:
 	var pts := [r.position, r.end, Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.position.y), r.get_center(),
 		(r.position + r.get_center()) / 2.0, (r.end + r.get_center()) / 2.0]
@@ -755,13 +906,17 @@ func _buildings() -> void:
 			var side := 1.0 if rng.randf() < 0.5 else -1.0
 			var base: Vector2 = a + dir.orthogonal() * side * (rd.w / 2.0 + 16.0 + rng.randf() * 10.0)
 			var house := Rect2(base - Vector2(6, 5), Vector2(12, 10))
-			if _clear_of_roads(house, 4.0):
+			# (and a lane out to the road it's on: a farm with no way to it is a house dropped in a field)
+			var gate := _nearest_on(pts, base)
+			var door := _rect_point_toward(house, gate)
+			if _clear_of_roads(house, 4.0) and _lane_clear(door, gate):
 				buildings.append({ "r": house, "h": 7.0, "kind": "farmhouse", "name": "", "zone": "" })
 				lights.append({ "p": base + Vector2(0, 7), "type": "porch", "seed": rng.randi() })
 				var barn := Rect2(base + dir * (18.0 + rng.randf() * 8.0) + dir.orthogonal() * side * 10.0 - Vector2(9, 7), Vector2(18, 14))
 				if _clear_of_roads(barn, 4.0):
 					buildings.append({ "r": barn, "h": 9.0, "kind": "barn", "name": "", "zone": "" })
 					lights.append({ "p": barn.get_center() + Vector2(0, 9), "type": "mercury", "seed": rng.randi() })
+				_driveway(door, gate, "gravel", 4.0)
 
 func _fill_downtown(r: Rect2, zone: String, rng: RandomNumberGenerator) -> void:
 	var x := r.position.x
@@ -995,6 +1150,9 @@ func _graph() -> void:
 				ci += 1
 		var prev := -1
 		for p in seq:
+			if not BOUNDS.grow(0.5).has_point(p):     # (the run-out past the edge of the map: drawn, not driven)
+				prev = -1
+				continue
 			var n := _node(p)
 			if prev >= 0 and prev != n: _link(prev, n, r)     # (a junction cut right on a point: no road to itself)
 			prev = n
