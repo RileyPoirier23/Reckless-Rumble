@@ -91,8 +91,9 @@ func _analog90() -> void:
 	var max_rpm := 8000.0
 	_gauge(Vector2(48, 306), 38, sim.rpm / max_rpm, face, ink, needle, 8, ["0", "1", "2", "3", "4", "5", "6", "7", "8"], _redline() / max_rpm)
 	_gauge(Vector2(174, 306), 38, _kmh() / 240.0, face, ink, needle, 12, ["0", "", "40", "", "80", "", "120", "", "160", "", "200", "", "240"])
-	PixelFont.draw_centered(self, 48, 320, "X1000 RPM", Color(ink, 0.7))
-	PixelFont.draw_centered(self, 174, 320, "KM/H", Color(ink, 0.7))
+	# under the 0 and the top mark, not on them
+	PixelFont.draw_centered(self, 48, 330, "X1000 RPM", Color(ink, 0.7))
+	PixelFont.draw_centered(self, 174, 330, "KM/H", Color(ink, 0.7))
 	# the boost gauge and the middle stack
 	_gauge(Vector2(111, 282), 15, sim.boost, face, ink, needle, 4, [], 2.0, 200.0)
 	PixelFont.draw_centered(self, 111, 290, "BOOST", Color(ink, 0.6))

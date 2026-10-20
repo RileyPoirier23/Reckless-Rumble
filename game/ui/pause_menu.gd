@@ -20,8 +20,13 @@ const DESCS := {
 	"QUIT TO TITLE": "THE GAME'S SAVED FIRST.",
 	"SET UP THE WHEEL": "A WHEEL'S PLUGGED IN. TWENTY SECONDS: TURN IT, PRESS THE PEDALS, AND IT DRIVES.",
 }
-const PANEL := Rect2(200, 52, 240, 184)
-const CARD := Rect2(150, 40, 340, 270)
+const PANEL := Rect2(170, 88, 300, 172)
+const CARD := Rect2(40, 30, 560, 294)
+const ITEM_H := 16.0
+const CARD_KEY_X := 250.0          # the controls card's keyboard column, from the card's left
+const CARD_PAD_X := 410.0          # and its controller column
+const CARD_TOP := 34.0             # where its rows start
+const CARD_PITCH := 12.0
 
 var sel := 0
 var card := false              # the controls card is up
@@ -125,6 +130,14 @@ static func card_lines() -> Array:
 	Hints.pad = was
 	return out
 
+## Item i's box on the panel.
+static func item_rect(i: int) -> Rect2:
+	return Rect2(PANEL.position.x + 8, PANEL.position.y + 16 + i * ITEM_H, PANEL.size.x - 16, ITEM_H - 2)
+
+## Where the line under the items (and the description under it) starts.
+static func desc_y() -> float:
+	return PANEL.end.y - 30
+
 func _draw() -> void:
 	if not visible or settings.visible or wall.visible: return
 	draw_rect(Rect2(0, 0, 640, 360), Color(0, 0, 0, 0.6))
@@ -134,46 +147,57 @@ func _draw() -> void:
 	if card:
 		_draw_card()
 		return
-	draw_rect(PANEL, Color(0.05, 0.05, 0.07, 0.95))
-	draw_rect(PANEL, Color(GOLD, 0.7), false, 1.0)
-	PixelFont.draw_centered(self, PANEL.get_center().x, PANEL.position.y + 8, "PAUSED", GOLD, 2)
+	UiKit.panel(self, PANEL, "PAUSED")
 	var its := items()
 	var pick := mini(sel, its.size() - 1)
 	for i in its.size():
-		var y := PANEL.position.y + 34 + i * 16
+		var r := item_rect(i)
 		var on := i == pick
-		if on: draw_rect(Rect2(PANEL.position.x + 10, y - 3, PANEL.size.x - 20, 13), Color(0.85, 0.64, 0.25, 0.18))
-		PixelFont.draw_centered(self, PANEL.get_center().x, y, String(its[i]), GOLD if on else BONE)
-	var ls := Hud.wrap_lines(String(DESCS[its[pick]]), 56)
+		if on: UiKit.select(self, r)
+		if on: PixelFont.draw(self, r.position + Vector2(7, 3), "▶", GOLD, 2)
+		PixelFont.draw(self, r.position + Vector2(18, 3), String(its[i]), GOLD if on else BONE, 2)
+	draw_rect(Rect2(PANEL.position.x + UiKit.PAD, desc_y() - 6, PANEL.size.x - 2 * UiKit.PAD, 1), UiKit.RULE)
+	var ls := UiKit.wrap(String(DESCS[its[pick]]), PANEL.size.x - 2 * UiKit.PAD)
 	for k in mini(ls.size(), 2):
-		PixelFont.draw_centered(self, PANEL.get_center().x, PANEL.end.y - 24 + k * 9, ls[k], ASH)
-	PixelFont.draw_centered(self, 320, 340, Hints.fmt("{updown}: PICK  {ui_accept}: SELECT  {pause}: RESUME"), ASH)
+		PixelFont.draw(self, Vector2(PANEL.position.x + UiKit.PAD, desc_y() + k * UiKit.LINE_H), ls[k], Color(BONE, 0.75), 2)
+	UiKit.hints(self, 320, 344, Hints.fmt("{updown}: PICK  {ui_accept}: SELECT  {pause}: RESUME"))
+
+## A HOW IT WORKS page's lines, wrapped to the card.
+static func guide_lines(page: int) -> Array[String]:
+	return HowItWorks.lines(page, CARD.size.x - 2 * UiKit.PAD - 4)
 
 func _draw_guide() -> void:
-	draw_rect(CARD, Color(0.05, 0.05, 0.07, 0.96))
-	draw_rect(CARD, Color(GOLD, 0.7), false, 1.0)
-	PixelFont.draw(self, CARD.position + Vector2(10, 8), "HOW IT WORKS", GOLD, 2)
+	UiKit.panel(self, CARD, "HOW IT WORKS")
 	var n := HowItWorks.PAGES.size()
+	# the pages as pips at the top right, this one lit
+	for k in n:
+		var pr := Rect2(CARD.end.x - UiKit.PAD - (n - k) * 10 + 4, CARD.position.y + 21, 6, 6)
+		if k == guide: draw_rect(pr, GOLD)
+		else: draw_rect(pr, Color(1, 1, 1, 0.25), false, 1.0)
 	var pg := "%d / %d" % [guide + 1, n]
-	PixelFont.draw(self, Vector2(CARD.end.x - 10 - PixelFont.width(pg), CARD.position.y + 12), pg, ASH)
-	PixelFont.draw(self, CARD.position + Vector2(10, 30), String(HowItWorks.PAGES[guide][0]), BONE)
-	var y := CARD.position.y + 44
-	for ln in HowItWorks.lines(guide, 80):
-		if y > CARD.end.y - 22: break
-		PixelFont.draw(self, Vector2(CARD.position.x + 10, y), ln, BONE if ln != "" else ASH)
-		y += 9 if ln != "" else 4
-	PixelFont.draw_centered(self, CARD.get_center().x, CARD.end.y - 14, Hints.fmt("{leftright}: TURN THE PAGE  {ui_cancel}: BACK"), ASH)
+	PixelFont.draw(self, Vector2(CARD.end.x - UiKit.PAD - n * 10 - 6 - PixelFont.width(pg, 2), CARD.position.y + 19), pg, ASH, 2)
+	UiKit.title(self, CARD.position + Vector2(UiKit.PAD, 16), String(HowItWorks.PAGES[guide][0]))
+	draw_rect(Rect2(CARD.position.x + UiKit.PAD, CARD.position.y + 38, CARD.size.x - 2 * UiKit.PAD, 1), UiKit.RULE)
+	var y := CARD.position.y + 46
+	for ln in guide_lines(guide):
+		if y > CARD.end.y - 12: break
+		PixelFont.draw(self, Vector2(CARD.position.x + UiKit.PAD + 2, y), ln, BONE, 2)
+		y += UiKit.LINE_H if ln != "" else 6
+	UiKit.hints(self, 320, 336, Hints.fmt("{leftright}: TURN THE PAGE  {ui_cancel}: BACK"))
 
 func _draw_card() -> void:
-	draw_rect(CARD, Color(0.05, 0.05, 0.07, 0.96))
-	draw_rect(CARD, Color(GOLD, 0.7), false, 1.0)
-	PixelFont.draw(self, CARD.position + Vector2(10, 8), "CONTROLS", GOLD, 2)
-	PixelFont.draw(self, CARD.position + Vector2(170, 12), "KEYBOARD", ASH)
-	PixelFont.draw(self, CARD.position + Vector2(260, 12), "CONTROLLER", ASH)
+	UiKit.panel(self, CARD, "CONTROLS")
+	PixelFont.draw(self, CARD.position + Vector2(CARD_KEY_X, 14), "KEYBOARD", ASH, 2)
+	PixelFont.draw(self, CARD.position + Vector2(CARD_PAD_X, 14), "CONTROLLER", ASH, 2)
+	draw_rect(Rect2(CARD.position.x + UiKit.PAD, CARD.position.y + 26, CARD.size.x - 2 * UiKit.PAD, 1), UiKit.RULE)
 	var ls := card_lines()
 	for i in ls.size():
-		var y := CARD.position.y + 28 + i * 12
-		PixelFont.draw(self, Vector2(CARD.position.x + 10, y), String(ls[i][0]), BONE)
-		PixelFont.draw(self, Vector2(CARD.position.x + 170, y), String(ls[i][1]).substr(0, 21), BONE)
-		PixelFont.draw(self, Vector2(CARD.position.x + 260, y), String(ls[i][2]).substr(0, 19), BONE)
-	PixelFont.draw_centered(self, 320, 340, Hints.fmt("{ui_cancel}: BACK"), ASH)
+		var y := CARD.position.y + CARD_TOP + i * CARD_PITCH
+		if i % 2 == 1: draw_rect(Rect2(CARD.position.x + 4, y - 2, CARD.size.x - 8, CARD_PITCH), Color(1, 1, 1, 0.025))
+		PixelFont.draw(self, Vector2(CARD.position.x + UiKit.PAD + 2, y), String(ls[i][0]), BONE, 2)
+		for c in 2:
+			var txt := String(ls[i][1 + c])
+			var x := CARD.position.x + (CARD_KEY_X if c == 0 else CARD_PAD_X)
+			var w := (CARD_PAD_X - CARD_KEY_X - 10) if c == 0 else (CARD.size.x - CARD_PAD_X - UiKit.PAD)
+			PixelFont.draw(self, Vector2(x, y), UiKit.fit(txt, w), ASH if txt == "-" else GOLD.lightened(0.25), 2)
+	UiKit.hints(self, 320, 336, Hints.fmt("{ui_cancel}: BACK  CHANGE THEM IN SETTINGS"))

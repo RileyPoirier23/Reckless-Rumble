@@ -97,10 +97,7 @@ func _draw() -> void:
 	# the caption, in the same box the cutscenes use
 	var by := 238.0
 	var bh := 24.0 + lines.size() * 18.0 + 14.0
-	draw_rect(Rect2(8, by, 624, bh), Color(0.04, 0.035, 0.05, 0.94 * a))
-	draw_rect(Rect2(8, by, 624, bh), Color(1, 1, 1, 0.14 * a), false, 1.0)
-	draw_rect(Rect2(16, by - 6, PixelFont.width("CAUSE OF DEATH", 2) + 12, 14), Color(GOLD.darkened(0.55), 0.95 * a))
-	PixelFont.draw(self, Vector2(22, by - 3), "CAUSE OF DEATH", Color(GOLD.lightened(0.2), a), 2)
+	UiKit.panel(self, Rect2(8, by, 624, bh), "CAUSE OF DEATH", GOLD, a)
 	var shown := mini(caption.length(), int(maxf(0.0, t - 0.6) * 70.0))
 	var left := shown
 	for k in lines.size():
@@ -111,11 +108,12 @@ func _draw() -> void:
 	# the numbers, like the HUD would show them
 	var stats := "IMPACT %d KM/H   HIT %s" % [int(info.get("speed_kmh", 0.0)), WHAT.get(String(info.get("cause", "")), "SOMETHING")]
 	if String(info.get("place", "")) != "": stats += "   " + String(info.place)
-	PixelFont.draw(self, Vector2(18, by + bh - 12), stats, Color(ASH, a))
+	var prompt := Hints.fmt("{ui_accept}: CONTINUE")
+	var pw := UiKit.hints_width(prompt)
+	PixelFont.draw(self, Vector2(18, by + bh - 13), UiKit.fit(stats, 624 - 18 - pw - 20), Color(ASH, a), 2)
 	if t > 1.4:
-		var pa := 0.5 + 0.5 * sin(t * 4.0)
-		var prompt := Hints.fmt("{ui_accept} CONTINUE >")
-		PixelFont.draw(self, Vector2(624 - PixelFont.width(prompt), by + bh - 12), prompt, Color(GOLD, pa * a))
+		var pa := 0.6 + 0.4 * sin(t * 4.0)
+		UiKit.hints(self, 622 - pw / 2.0, by + bh - 13, prompt, pa * a)
 
 # ====================================================================== the picture
 
