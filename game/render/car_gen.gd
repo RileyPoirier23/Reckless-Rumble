@@ -31,6 +31,9 @@ const CHROME: Array[Color] = [Color("3c434c"), Color("7a848f"), Color("b9c3cd"),
 ## Windshield rake (degrees back from upright) by decade, 1950s to 2010s.
 const RAKE: Array[float] = [33.0, 40.0, 50.0, 56.0, 60.0, 62.0, 63.0]
 
+## The least side glass (m, belt to roof liner) a car is drawn with, so it reads as glass at the
+## showroom's 26 px a metre and in the garage.
+const MIN_DLO := 0.26
 const DEFAULT_LEN := { "coupe": 4.5, "hatch": 4.1, "sedan": 4.8, "wagon": 4.8, "muscle": 4.9, "pickup": 5.4, "tow": 6.6,
 	"suv": 4.8, "van": 5.1, "minivan": 4.9, "kei": 3.6, "bubble": 3.9, "roadster": 4.0, "sports": 4.4, "wedge": 4.3,
 	"offroad": 4.2, "boxtruck": 6.8, "trike": 3.3, "bus": 12.0, "semi": 6.6 }
@@ -972,6 +975,22 @@ static func _dna(f: Dictionary) -> Dictionary:
 	var at_wheel := clampf((1.0 - float(d.wf)) / maxf(0.05, 1.0 - cowl_f), 0.0, 1.0)
 	var hood_at_wheel := lerpf(float(g.hood_h), cowl_m, at_wheel)
 	if hood_at_wheel < arch_top + 0.04: g.hood_h = float(g.hood_h) + arch_top + 0.04 - hood_at_wheel
+	# and the side glass keeps a height you can read: big wheels lift the hood, the hood lifts
+	# the belt, and on a low car that left a slit under the roof (a modern mid-engine car came
+	# out a visor). The kick gives way first, then the cowl's rise; past that the roof goes up,
+	# which is the truth too (a car on 20s stands 1.2 m, not the 1.08 the rule guessed).
+	if not fam in ["pickup", "boxtruck", "van"] and g.rear != "open" and not g.tub and not icon.has("top"):
+		var room := H - float(g.rt) - float(g.crown) * 0.3 - (float(g.hood_h) + float(g.cowl_rise) + float(g.belt_up) + maxf(0.0, float(g.kick)))
+		if room < MIN_DLO:
+			var give := minf(maxf(0.0, float(g.kick)), MIN_DLO - room)
+			g.kick = float(g.kick) - give
+			room += give
+			give = minf(maxf(0.0, float(g.cowl_rise) - 0.08), MIN_DLO - room)
+			g.cowl_rise = float(g.cowl_rise) - give
+			room += give
+			if room < MIN_DLO and not icon.has("H"):
+				H += MIN_DLO - room
+				d.h = H / L
 	# a sixties compact sits its cabin square over the wheelbase, not pushed back like a coupe's
 	if g.centre:
 		var cab_mid := (1.0 - float(g.cowl_d) / L + (float(g.tail_x) + float(g.deck)) / L) * 0.5
@@ -1059,6 +1078,7 @@ static func _dna(f: Dictionary) -> Dictionary:
 	if d.dna.has("sixlight"): d.sixlight = d.dna.sixlight
 	if icon.has("sixlight"): d.sixlight = icon.sixlight
 	d.wrap = year >= 1954 and year <= 1960 and String(f.make) in US_MAKES and fam in ["sedan", "coupe", "wagon"] and not icon.has("top")
+	if d.rear != "open" and not d.tub: _keep_glass(d, L)
 	_glass_and_doors(d, g, L, r)
 	_details(d, f, fam, era, r)
 	for k in icon:
@@ -1105,6 +1125,24 @@ static func _hand_drawn(d: Dictionary, top: Array, g: Dictionary, L: float) -> v
 	d.top_pts = pts
 	d.belt_f = float(d.cowl_h) + float(g.belt_up) / L
 	d.belt_r = float(d.belt_f) + float(g.kick) / L
+
+## A roof keeps its line (a drawn one above all), so a slit of side glass under it is the
+## belt's fault: drop the kick, then the belt (no lower than the cowl, where the windshield
+## starts), until there's MIN_DLO of glass under the roof's average height over the cabin (a
+## bowed roof falls away fore and aft, and the glass follows it down).
+static func _keep_glass(d: Dictionary, L: float) -> void:
+	var top := top_line(smooth(profile(d), 240.0))
+	var x0 := float(d.roof_r)
+	var x1 := float(d.roof_f)
+	var roof := 0.0
+	for k in 9: roof += top_at(top, lerpf(x0, x1, (float(k) + 0.5) / 9.0)) / 9.0
+	var short := MIN_DLO / L - (roof - float(d.rt) - float(d.belt_r))
+	if short <= 0.0: return
+	var k := minf(maxf(0.0, float(d.belt_r) - float(d.belt_f)), short)
+	d.belt_r = float(d.belt_r) - k
+	var drop := minf(short - k, maxf(0.0, float(d.belt_f) - float(d.cowl_h)))
+	d.belt_f = float(d.belt_f) - drop
+	d.belt_r = float(d.belt_r) - drop
 
 ## The side glass (the daylight opening), the pillars on it and the door shut lines.
 static func _glass_and_doors(d: Dictionary, g: Dictionary, L: float, r: RandomNumberGenerator) -> void:
@@ -2073,7 +2111,7 @@ class _Car:
 			var ac: Vector2 = wv[3]
 			var ra := arch_r * (1.06 if wv[0] == "rear" and d.art.has("dually") else 1.0)
 			var from := int(ac.y - ra) - 2
-			if skirted(wv): from = int(sill) + 1
+			if skirted(wv): from = int(skirt_y(wv)) + 1
 			for yy in range(maxi(0, from), hgt):
 				var row := yy * w
 				for xx in range(maxi(0, int(ac.x - ra * 1.1) - 2), mini(w, int(ac.x + ra * 1.1) + 3)):
@@ -2096,6 +2134,12 @@ class _Car:
 	## A front wheel out in the open, ahead of the body, under a cycle fender.
 	func cycled(wv: Array) -> bool:
 		return d.get("cycle", false) and wv[0] == "front"
+
+	## Where a fender skirt's bottom edge runs: at the sill, but never so low the tyre hides
+	## behind it (a skirt down to the sill read as a car with no back wheel at showroom size);
+	## from just under the hub down, the tyre and the bottom of the hubcap always show.
+	func skirt_y(wv: Array) -> float:
+		return minf(sill, float(wv[2]) + r_tire * 0.12)
 
 	func skirted(wv: Array) -> bool:
 		return d.skirt and d.flare == "none" and String(mods.get("fenders", "stock")) != "flared" and wv[0] == "rear" and not mods.has("rim") and String(dmg.get("flat", "")) != "rear" and String(dmg.get("wheel_off", "")) != "rear"
@@ -2882,8 +2926,11 @@ class _Car:
 						p.px(sx2 + k, yy, c)
 				p.vline(sx2 + sw2, sy2, sh2, CarGen.INK)
 			"portholes_roof":
-				var phx := int(X(float(d.dlo_r))) - int(lf * 0.035)
+				# in the middle of the C-pillar, between the backlight and the side glass: behind
+				# the glass on a short hardtop it was out over the deck, floating in the air
+				var phx := int((X(float(d.roof_r)) + X(float(d.dlo_rt))) * 0.5)
 				var phy := int(Y(float(d.glass_top))) + int(lf * 0.025)
+				while phx < int(X(float(d.dlo_rt))) and not on_paint(phx, phy): phx += 1
 				p.disc(phx, phy, maxf(1.5, lf * 0.012), CarGen.GLASS)
 				p.ring(phx, phy, maxf(1.5, lf * 0.012) + 0.6, CarGen.CHROME[2])
 			"portholes":
@@ -4798,8 +4845,8 @@ class _Car:
 						var c := tmp.img.get_pixel(xx, yy)
 						var tx := cx - size / 2 + xx
 						var ty := cy - size / 2 + yy
-						if c.a > 0.0 and not body_at(tx, ty) and float(ty) > sill: p.px(tx, ty, c)
-				_skirt(wv[3])
+						if c.a > 0.0 and not body_at(tx, ty) and float(ty) > skirt_y(wv): p.px(tx, ty, c)
+				_skirt(wv)
 				continue
 			if wv[0] == "rear" and d.art.has("dually"): wm.dually = true
 			else: wm.erase("dually")
@@ -5010,9 +5057,10 @@ class _Car:
 			p.line(int(cx + r0 * 0.5), int(cy - r0 * 0.85), int(cx), int(cy), CarGen.TRIM)
 
 	## A fender skirt over the rear wheel: the body carries on over the top half of it.
-	func _skirt(ac: Vector2) -> void:
+	func _skirt(wv: Array) -> void:
+		var ac: Vector2 = wv[3]
 		var ra := arch_r
-		var bottom := int(sill)
+		var bottom := int(skirt_y(wv))
 		p.hline(int(ac.x - ra) - 1, bottom + 1, int(ra * 2.0) + 3, CarGen.INK)
 		# the skirt's edge: a shut line round the arch, and a chrome lip along the bottom
 		for k in 40:
