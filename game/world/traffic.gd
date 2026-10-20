@@ -626,7 +626,8 @@ func place_car(a: int, b: int, s: float, lane: float) -> TrafficCar:
 
 # ------------------------------------------------------------------ the frame
 
-const FAR_M := 150.0      # past this the traffic thinks every other frame
+const NEAR_M := 70.0      # past this (just off the screen at the widest zoom) the traffic thinks every other frame
+const FAR_M := 150.0      # past this, every third
 var _frame := 0
 
 func step(dt: float, cam_m: Vector2) -> void:
@@ -655,12 +656,16 @@ func step(dt: float, cam_m: Vector2) -> void:
 		_spawn_t = 0.25
 		# well short (you've just come into town, or off the highway onto it): a few at a time
 		for k in (3 if cars.size() < want * 0.6 else 1): _spawn(cam_m)
-	# the cars out past the edge of the screen drive every other frame, with both frames' time
-	# (half the thinking per frame; nobody can see the difference at that range)
+	# the cars out past the edge of the screen drive every other frame, the far ones every third,
+	# with the skipped frames' time (a third of the thinking a frame; nobody can see the
+	# difference at that range, and the few seconds of a step stay well under what the braking
+	# model copes with). Only when the frames are quick: a slow frame already carries enough time
 	_frame += 1
 	for c in cars:
-		if c.pos.distance_to(cam_m) > FAR_M and dt < 0.03:
-			if (c.get_instance_id() + _frame) % 2 == 1:
+		if dt < 0.03:
+			var d := c.pos.distance_to(cam_m)
+			var every := 3 if d > FAR_M else (2 if d > NEAR_M else 1)
+			if every > 1 and (c.get_instance_id() + _frame) % every != 0:
 				c.dt_owed += dt
 				continue
 		c.drive(dt + c.dt_owed)
