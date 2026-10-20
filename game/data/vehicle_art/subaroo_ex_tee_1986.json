@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "subaroo_ex_tee_1986",
+	"car_id": "subaroo_ex_tee_1986",
+	"display": {
+		"make": "Subaroo",
+		"model": "Ex-Tee",
+		"trim": "",
+		"year": 1986
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "wedge",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "coupe_compact",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 4.5,
+		"width": 1.69,
+		"wheelbase": 2.47,
+		"track": 1.44
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/subaroo_ex_tee_1986.png",
+		"runtime_dir": "res://art/vehicles/runtime/subaroo_ex_tee_1986",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.316,
+		"rear_axle_m": -1.154,
+		"rear_axles_m": [
+			-1.154
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.44,
+		"wheel_radius_m": 0.318,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.863,
+				"y_m": -0.658,
+				"slice": 7.59
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.794,
+				"y_m": -0.731,
+				"slice": 7.53
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.708,
+				"y_m": -0.625,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.958,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.863,
+				"y_m": 0.658,
+				"slice": 7.59
+			},
+			{
+				"kind": "head",
+				"x_m": 1.958,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.794,
+				"y_m": 0.731,
+				"slice": 7.53
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.708,
+				"y_m": 0.625,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s oddball wedge on the coupe_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. A wedge with a steering wheel shaped like a jet yoke and a digital dash that cost more than the engine.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

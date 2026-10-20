@@ -1,0 +1,241 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "lotis_eleese_2005",
+	"car_id": "lotis_eleese_2005",
+	"display": {
+		"make": "Lotis",
+		"model": "Eleese",
+		"trim": "",
+		"year": 2005
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sports_midengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 3.79,
+		"width": 1.72,
+		"wheelbase": 2.3,
+		"track": 1.47
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/lotis_eleese_2005.png",
+		"runtime_dir": "res://art/vehicles/runtime/lotis_eleese_2005",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.108,
+		"rear_axle_m": -1.167,
+		"rear_axles_m": [
+			-1.167
+		],
+		"front_bumper_m": 1.875,
+		"rear_bumper_m": -1.875,
+		"track_m": 1.47,
+		"wheel_radius_m": 0.294,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.693,
+				"y_m": -0.63,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.653,
+				"y_m": -0.687,
+				"slice": 6.58
+			},
+			{
+				"kind": "head",
+				"x_m": 1.417,
+				"y_m": -0.663,
+				"slice": 5.92
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.792,
+				"y_m": -0.75,
+				"slice": 4.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.833,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.693,
+				"y_m": 0.63,
+				"slice": 6.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.833,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.653,
+				"y_m": 0.688,
+				"slice": 6.58
+			},
+			{
+				"kind": "head",
+				"x_m": 1.417,
+				"y_m": 0.663,
+				"slice": 5.92
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.792,
+				"y_m": 0.75,
+				"slice": 4.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s sports roadster on the sports_midengine archetype; original badges, grille and lamp graphics, no real logos or liveries. No power steering, no carpet, no mercy. Getting in requires yoga.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

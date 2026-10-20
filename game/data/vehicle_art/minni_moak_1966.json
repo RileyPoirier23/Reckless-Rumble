@@ -1,0 +1,234 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "minni_moak_1966",
+	"car_id": "minni_moak_1966",
+	"display": {
+		"make": "Minni",
+		"model": "Moak",
+		"trim": "",
+		"year": 1966
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "offroad",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "offroad_short",
+		"archetype_exceptions": [],
+		"quota_class": "offroad"
+	},
+	"dimensions_m": {
+		"length": 3.05,
+		"width": 1.3,
+		"wheelbase": 2.03,
+		"track": 1.11
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/minni_moak_1966.png",
+		"runtime_dir": "res://art/vehicles/runtime/minni_moak_1966",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.057,
+		"rear_axle_m": -0.995,
+		"rear_axles_m": [
+			-0.995
+		],
+		"front_bumper_m": 1.542,
+		"rear_bumper_m": -1.542,
+		"track_m": 1.11,
+		"wheel_radius_m": 0.3,
+		"roof_z_slice": 15,
+		"procedural_slices": 16,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.408,
+				"y_m": -0.567,
+				"slice": 8.8
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.385,
+				"y_m": -0.594,
+				"slice": 8.88
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.417,
+				"y_m": -0.667,
+				"slice": 7.5
+			},
+			{
+				"kind": "head",
+				"x_m": 1.378,
+				"y_m": -0.529,
+				"slice": 8.62
+			},
+			{
+				"kind": "head",
+				"x_m": 1.378,
+				"y_m": 0.529,
+				"slice": 8.62
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.408,
+				"y_m": 0.567,
+				"slice": 8.8
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.385,
+				"y_m": 0.594,
+				"slice": 8.88
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.417,
+				"y_m": 0.667,
+				"slice": 7.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s oddball offroad on the offroad_short archetype; original badges, grille and lamp graphics, no real logos or liveries. A beach buggy that's basically a tray with an engine. Sunburn is a feature.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

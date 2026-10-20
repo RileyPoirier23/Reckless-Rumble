@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "nissun_sentruh_1995",
+	"car_id": "nissun_sentruh_1995",
+	"display": {
+		"make": "Nissun",
+		"model": "Sentruh",
+		"trim": "",
+		"year": 1995
+	},
+	"classification": {
+		"class": "economy",
+		"body": "sedan",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "compact_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 4.32,
+		"width": 1.69,
+		"wheelbase": 2.54,
+		"track": 1.44
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/nissun_sentruh_1995.png",
+		"runtime_dir": "res://art/vehicles/runtime/nissun_sentruh_1995",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.238,
+		"rear_axle_m": -1.31,
+		"rear_axles_m": [
+			-1.31
+		],
+		"front_bumper_m": 2.167,
+		"rear_bumper_m": -2.167,
+		"track_m": 1.44,
+		"wheel_radius_m": 0.303,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.955,
+				"y_m": -0.518,
+				"slice": 7.75
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.022,
+				"y_m": -0.6,
+				"slice": 7.53
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.313,
+				"y_m": -0.729,
+				"slice": 3.5
+			},
+			{
+				"kind": "head",
+				"x_m": 2.028,
+				"y_m": -0.556,
+				"slice": 5.33
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.955,
+				"y_m": 0.518,
+				"slice": 7.75
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.022,
+				"y_m": 0.6,
+				"slice": 7.53
+			},
+			{
+				"kind": "head",
+				"x_m": 2.028,
+				"y_m": 0.556,
+				"slice": 5.33
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.313,
+				"y_m": 0.729,
+				"slice": 3.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s economy sedan on the compact_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. Point A to point B with zero drama. Point C is the scrapyard, twenty years later.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

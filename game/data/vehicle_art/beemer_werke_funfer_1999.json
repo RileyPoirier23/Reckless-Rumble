@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "beemer_werke_funfer_1999",
+	"car_id": "beemer_werke_funfer_1999",
+	"display": {
+		"make": "Beemer-Werke",
+		"model": "Funfer",
+		"trim": "",
+		"year": 1999
+	},
+	"classification": {
+		"class": "euro",
+		"body": "sedan",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sedan_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.78,
+		"width": 1.8,
+		"wheelbase": 2.83,
+		"track": 1.54
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/beemer_werke_funfer_1999.png",
+		"runtime_dir": "res://art/vehicles/runtime/beemer_werke_funfer_1999",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.522,
+		"rear_axle_m": -1.29,
+		"rear_axles_m": [
+			-1.29
+		],
+		"front_bumper_m": 2.375,
+		"rear_bumper_m": -2.375,
+		"track_m": 1.54,
+		"wheel_radius_m": 0.332,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 0.95,
+				"y_m": -0.9,
+				"slice": 5.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.182,
+				"y_m": -0.557,
+				"slice": 7.54
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.256,
+				"y_m": -0.673,
+				"slice": 7.21
+			},
+			{
+				"kind": "head",
+				"x_m": 2.194,
+				"y_m": -0.606,
+				"slice": 5.56
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.182,
+				"y_m": 0.557,
+				"slice": 7.54
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.256,
+				"y_m": 0.673,
+				"slice": 7.21
+			},
+			{
+				"kind": "head",
+				"x_m": 2.194,
+				"y_m": 0.606,
+				"slice": 5.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.95,
+				"y_m": 0.9,
+				"slice": 5.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s euro sedan on the sedan_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Drives beautifully until the cooling system fails. It's failing right now. Can you hear it?",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "jagwire_ess_typo_2001",
+	"car_id": "jagwire_ess_typo_2001",
+	"display": {
+		"make": "Jagwire",
+		"model": "Ess-Typo",
+		"trim": "",
+		"year": 2001
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "sedan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sedan_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 4.88,
+		"width": 1.82,
+		"wheelbase": 2.91,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/jagwire_ess_typo_2001.png",
+		"runtime_dir": "res://art/vehicles/runtime/jagwire_ess_typo_2001",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.585,
+		"rear_axle_m": -1.347,
+		"rear_axles_m": [
+			-1.347
+		],
+		"front_bumper_m": 2.458,
+		"rear_bumper_m": -2.458,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.336,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.219,
+				"y_m": -0.906,
+				"slice": 5.25
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.199,
+				"y_m": -0.563,
+				"slice": 7.57
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.304,
+				"y_m": -0.649,
+				"slice": 7.29
+			},
+			{
+				"kind": "head",
+				"x_m": 2.283,
+				"y_m": -0.608,
+				"slice": 6.2
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.199,
+				"y_m": 0.563,
+				"slice": 7.57
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.304,
+				"y_m": 0.649,
+				"slice": 7.29
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.283,
+				"y_m": 0.608,
+				"slice": 6.2
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.219,
+				"y_m": 0.906,
+				"slice": 5.25
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s luxury sedan on the sedan_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. A retro face built to look old. It succeeded beyond its wildest dreams. It now feels very old.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

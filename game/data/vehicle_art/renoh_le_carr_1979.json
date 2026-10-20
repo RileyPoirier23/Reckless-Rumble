@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "renoh_le_carr_1979",
+	"car_id": "renoh_le_carr_1979",
+	"display": {
+		"make": "Renoh",
+		"model": "Le Carr",
+		"trim": "",
+		"year": 1979
+	},
+	"classification": {
+		"class": "economy",
+		"body": "hatch",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "micro_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 3.5,
+		"width": 1.53,
+		"wheelbase": 2.4,
+		"track": 1.31
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/renoh_le_carr_1979.png",
+		"runtime_dir": "res://art/vehicles/runtime/renoh_le_carr_1979",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.134,
+		"rear_axle_m": -1.266,
+		"rear_axles_m": [
+			-1.266
+		],
+		"front_bumper_m": 1.75,
+		"rear_bumper_m": -1.75,
+		"track_m": 1.31,
+		"wheel_radius_m": 0.307,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.657,
+				"y_m": -0.532,
+				"slice": 7.28
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.646,
+				"y_m": -0.569,
+				"slice": 7.67
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.065,
+				"y_m": -0.696,
+				"slice": 4.86
+			},
+			{
+				"kind": "head",
+				"x_m": 1.56,
+				"y_m": -0.551,
+				"slice": 5.67
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.708,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.657,
+				"y_m": 0.532,
+				"slice": 7.28
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.646,
+				"y_m": 0.569,
+				"slice": 7.67
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.708,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.56,
+				"y_m": 0.551,
+				"slice": 5.67
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.065,
+				"y_m": 0.696,
+				"slice": 4.86
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s economy hatch on the micro_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. The badge on the door says it's French for the car, in case there was any doubt.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

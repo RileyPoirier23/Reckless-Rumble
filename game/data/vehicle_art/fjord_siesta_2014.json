@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_siesta_2014",
+	"car_id": "fjord_siesta_2014",
+	"display": {
+		"make": "Fjord",
+		"model": "Siesta",
+		"trim": "",
+		"year": 2014
+	},
+	"classification": {
+		"class": "economy",
+		"body": "hatch",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "compact_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 4.07,
+		"width": 1.72,
+		"wheelbase": 2.49,
+		"track": 1.47
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_siesta_2014.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_siesta_2014",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.154,
+		"rear_axle_m": -1.344,
+		"rear_axles_m": [
+			-1.344
+		],
+		"front_bumper_m": 2.042,
+		"rear_bumper_m": -2.042,
+		"track_m": 1.47,
+		"wheel_radius_m": 0.319,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.204,
+				"y_m": -0.921,
+				"slice": 6.56
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.933,
+				"y_m": -0.515,
+				"slice": 8.14
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.952,
+				"y_m": -0.573,
+				"slice": 8.05
+			},
+			{
+				"kind": "head",
+				"x_m": 1.833,
+				"y_m": -0.638,
+				"slice": 7.12
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.0,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.933,
+				"y_m": 0.515,
+				"slice": 8.14
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.952,
+				"y_m": 0.573,
+				"slice": 8.05
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.0,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.833,
+				"y_m": 0.638,
+				"slice": 7.12
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.5,
+				"y_m": 0.842,
+				"slice": 6.4
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s economy hatch on the compact_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. Nap-sized. The dual-clutch gearbox likes a little lie-down at every stop sign too.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

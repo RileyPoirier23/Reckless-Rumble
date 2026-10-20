@@ -1,0 +1,234 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "messershmidt_kabine_1956",
+	"car_id": "messershmidt_kabine_1956",
+	"display": {
+		"make": "Messershmidt",
+		"model": "Kabine",
+		"trim": "",
+		"year": 1956
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "bubble",
+		"era": "1950s",
+		"era_band": "1950-1969",
+		"archetype": "micro_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 2.82,
+		"width": 1.22,
+		"wheelbase": 2.03,
+		"track": 1.04
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/messershmidt_kabine_1956.png",
+		"runtime_dir": "res://art/vehicles/runtime/messershmidt_kabine_1956",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.02,
+		"rear_axle_m": -1.02,
+		"rear_axles_m": [
+			-1.02
+		],
+		"front_bumper_m": 1.417,
+		"rear_bumper_m": -1.417,
+		"track_m": 1.04,
+		"wheel_radius_m": 0.24,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 0.946,
+				"y_m": -0.518,
+				"slice": 4.71
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.222,
+				"y_m": -0.243,
+				"slice": 6.33
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.208,
+				"y_m": -0.275,
+				"slice": 6.8
+			},
+			{
+				"kind": "head",
+				"x_m": 1.167,
+				"y_m": -0.389,
+				"slice": 5.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.222,
+				"y_m": 0.243,
+				"slice": 6.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.208,
+				"y_m": 0.275,
+				"slice": 6.8
+			},
+			{
+				"kind": "head",
+				"x_m": 1.167,
+				"y_m": 0.389,
+				"slice": 5.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.946,
+				"y_m": 0.518,
+				"slice": 4.71
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1950s oddball bubble on the micro_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. A fighter-plane canopy on a scooter. Your passenger sits right behind you, commenting.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

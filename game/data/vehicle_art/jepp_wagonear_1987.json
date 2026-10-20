@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "jepp_wagonear_1987",
+	"car_id": "jepp_wagonear_1987",
+	"display": {
+		"make": "Jepp",
+		"model": "Wagonear",
+		"trim": "",
+		"year": 1987
+	},
+	"classification": {
+		"class": "suv",
+		"body": "suv",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "suv_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.7,
+		"width": 1.9,
+		"wheelbase": 2.76,
+		"track": 1.62
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/jepp_wagonear_1987.png",
+		"runtime_dir": "res://art/vehicles/runtime/jepp_wagonear_1987",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.467,
+		"rear_axle_m": -1.274,
+		"rear_axles_m": [
+			-1.274
+		],
+		"front_bumper_m": 2.333,
+		"rear_bumper_m": -2.333,
+		"track_m": 1.62,
+		"wheel_radius_m": 0.36,
+		"roof_z_slice": 17,
+		"procedural_slices": 20,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.261,
+				"y_m": -0.831,
+				"slice": 10.42
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.253,
+				"y_m": -0.864,
+				"slice": 10.67
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.257,
+				"y_m": -0.951,
+				"slice": 7.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.267,
+				"y_m": -0.694,
+				"slice": 7.82
+			},
+			{
+				"kind": "head",
+				"x_m": 2.267,
+				"y_m": 0.694,
+				"slice": 7.82
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.261,
+				"y_m": 0.831,
+				"slice": 10.42
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.253,
+				"y_m": 0.864,
+				"slice": 10.67
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.257,
+				"y_m": 0.951,
+				"slice": 7.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s suv suv on the suv_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. The original luxury four-by-four: wood on the sides, a V8 up front and rust in the middle.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

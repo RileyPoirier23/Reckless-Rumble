@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "mazduh_az_won_1993",
+	"car_id": "mazduh_az_won_1993",
+	"display": {
+		"make": "Mazduh",
+		"model": "Az-Won",
+		"trim": "",
+		"year": 1993
+	},
+	"classification": {
+		"class": "kei",
+		"body": "wedge",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_midengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 3.3,
+		"width": 1.4,
+		"wheelbase": 2.24,
+		"track": 1.2
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/mazduh_az_won_1993.png",
+		"runtime_dir": "res://art/vehicles/runtime/mazduh_az_won_1993",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.11,
+		"rear_axle_m": -1.152,
+		"rear_axles_m": [
+			-1.152
+		],
+		"front_bumper_m": 1.667,
+		"rear_bumper_m": -1.667,
+		"track_m": 1.2,
+		"wheel_radius_m": 0.278,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.38,
+				"y_m": -0.477,
+				"slice": 7.56
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.477,
+				"y_m": -0.579,
+				"slice": 7.44
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 0.958,
+				"y_m": -0.583,
+				"slice": 4.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.292,
+				"y_m": -0.458,
+				"slice": 4.25
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.542,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.38,
+				"y_m": 0.477,
+				"slice": 7.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.477,
+				"y_m": 0.579,
+				"slice": 7.44
+			},
+			{
+				"kind": "head",
+				"x_m": 1.292,
+				"y_m": 0.458,
+				"slice": 4.25
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.542,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.958,
+				"y_m": 0.583,
+				"slice": 4.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s kei wedge on the sports_midengine archetype; original badges, grille and lamp graphics, no real logos or liveries. Gull-wing doors on a car the size of a shopping cart, with a turbo three. Glorious nonsense.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

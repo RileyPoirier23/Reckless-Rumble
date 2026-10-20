@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "cadillak_el_dorkado_1976",
+	"car_id": "cadillak_el_dorkado_1976",
+	"display": {
+		"make": "Cadillak",
+		"model": "El Dorkado",
+		"trim": "",
+		"year": 1976
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "coupe",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 5.83,
+		"width": 2.03,
+		"wheelbase": 3.3,
+		"track": 1.74
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/cadillak_el_dorkado_1976.png",
+		"runtime_dir": "res://art/vehicles/runtime/cadillak_el_dorkado_1976",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.651,
+		"rear_axle_m": -1.651,
+		"rear_axles_m": [
+			-1.651
+		],
+		"front_bumper_m": 2.917,
+		"rear_bumper_m": -2.917,
+		"track_m": 1.74,
+		"wheel_radius_m": 0.366,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.814,
+				"y_m": -0.723,
+				"slice": 7.74
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.801,
+				"y_m": -0.753,
+				"slice": 7.89
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.854,
+				"y_m": -0.937,
+				"slice": 4.75
+			},
+			{
+				"kind": "head",
+				"x_m": 2.852,
+				"y_m": -0.69,
+				"slice": 6.39
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.875,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.814,
+				"y_m": 0.723,
+				"slice": 7.74
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.801,
+				"y_m": 0.753,
+				"slice": 7.89
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.875,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.852,
+				"y_m": 0.69,
+				"slice": 6.39
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.854,
+				"y_m": 0.938,
+				"slice": 4.75
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s luxury coupe on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. Eight point two litres, one hundred ninety horsepower. The other horses went into the cupholders.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

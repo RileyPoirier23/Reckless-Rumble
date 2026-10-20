@@ -1,0 +1,249 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "jepp_compost_2011",
+	"car_id": "jepp_compost_2011",
+	"display": {
+		"make": "Jepp",
+		"model": "Compost",
+		"trim": "",
+		"year": 2011
+	},
+	"classification": {
+		"class": "crossover",
+		"body": "suv",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "crossover_compact",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.45,
+		"width": 1.81,
+		"wheelbase": 2.63,
+		"track": 1.55
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/jepp_compost_2011.png",
+		"runtime_dir": "res://art/vehicles/runtime/jepp_compost_2011",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.125,
+		"rear_axle_m": -1.486,
+		"rear_axles_m": [
+			-1.486
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.55,
+		"wheel_radius_m": 0.371,
+		"roof_z_slice": 16,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.512,
+				"y_m": -0.863,
+				"slice": 7.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.047,
+				"y_m": -0.616,
+				"slice": 8.63
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.063,
+				"y_m": -0.708,
+				"slice": 8.36
+			},
+			{
+				"kind": "head",
+				"x_m": 2.105,
+				"y_m": -0.621,
+				"slice": 7.47
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.047,
+				"y_m": 0.616,
+				"slice": 8.63
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.063,
+				"y_m": 0.708,
+				"slice": 8.36
+			},
+			{
+				"kind": "head",
+				"x_m": 2.105,
+				"y_m": 0.621,
+				"slice": 7.47
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.512,
+				"y_m": 0.863,
+				"slice": 7.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s crossover suv on the crossover_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. It points north, technically. It also points at the dealership a lot.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

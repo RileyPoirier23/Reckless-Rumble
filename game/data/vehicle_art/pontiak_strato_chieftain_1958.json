@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_strato_chieftain_1958",
+	"car_id": "pontiak_strato_chieftain_1958",
+	"display": {
+		"make": "Pontiak",
+		"model": "Strato Chieftain",
+		"trim": "",
+		"year": 1958
+	},
+	"classification": {
+		"class": "classic",
+		"body": "sedan",
+		"era": "1950s",
+		"era_band": "1950-1969",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 5.3,
+		"width": 2.0,
+		"wheelbase": 3.0,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_strato_chieftain_1958.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_strato_chieftain_1958",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.648,
+		"rear_axle_m": -1.371,
+		"rear_axles_m": [
+			-1.371
+		],
+		"front_bumper_m": 2.667,
+		"rear_bumper_m": -2.667,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.363,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.573,
+				"y_m": -0.728,
+				"slice": 7.69
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.55,
+				"y_m": -0.812,
+				"slice": 8.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.677,
+				"y_m": -0.948,
+				"slice": 5.13
+			},
+			{
+				"kind": "head",
+				"x_m": 2.371,
+				"y_m": -0.708,
+				"slice": 6.57
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.573,
+				"y_m": 0.728,
+				"slice": 7.69
+			},
+			{
+				"kind": "head",
+				"x_m": 2.371,
+				"y_m": 0.708,
+				"slice": 6.57
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.55,
+				"y_m": 0.813,
+				"slice": 8.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.677,
+				"y_m": 0.948,
+				"slice": 5.13
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1950s classic sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Canadian-built from one brand's bones with another brand's face. A dual citizen with chrome.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

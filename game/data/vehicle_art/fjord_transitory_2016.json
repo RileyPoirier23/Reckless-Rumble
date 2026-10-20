@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_transitory_2016",
+	"car_id": "fjord_transitory_2016",
+	"display": {
+		"make": "Fjord",
+		"model": "Transitory",
+		"trim": "",
+		"year": 2016
+	},
+	"classification": {
+		"class": "van",
+		"body": "van",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "van_cargo",
+		"archetype_exceptions": [],
+		"quota_class": "van_minivan"
+	},
+	"dimensions_m": {
+		"length": 5.98,
+		"width": 2.47,
+		"wheelbase": 3.3,
+		"track": 2.11
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_transitory_2016.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_transitory_2016",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.978,
+		"rear_axle_m": -1.332,
+		"rear_axles_m": [
+			-1.332
+		],
+		"front_bumper_m": 3.0,
+		"rear_bumper_m": -3.0,
+		"track_m": 2.11,
+		"wheel_radius_m": 0.378,
+		"roof_z_slice": 24,
+		"procedural_slices": 25,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.921,
+				"y_m": -1.079,
+				"slice": 12.15
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.921,
+				"y_m": -1.079,
+				"slice": 12.15
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.592,
+				"y_m": -1.183,
+				"slice": 8.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.868,
+				"y_m": -0.924,
+				"slice": 8.97
+			},
+			{
+				"kind": "head",
+				"x_m": 2.868,
+				"y_m": 0.924,
+				"slice": 8.97
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.921,
+				"y_m": 1.079,
+				"slice": 12.15
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.921,
+				"y_m": 1.079,
+				"slice": 12.15
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.592,
+				"y_m": 1.183,
+				"slice": 8.1
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s van van on the van_cargo archetype; original badges, grille and lamp graphics, no real logos or liveries. High roof: you can stand up in the back, and you will, because the seat is broken.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

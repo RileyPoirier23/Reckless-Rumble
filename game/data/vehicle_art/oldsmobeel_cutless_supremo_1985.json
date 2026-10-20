@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "oldsmobeel_cutless_supremo_1985",
+	"car_id": "oldsmobeel_cutless_supremo_1985",
+	"display": {
+		"make": "Oldsmobeel",
+		"model": "Cutless Supremo",
+		"trim": "",
+		"year": 1985
+	},
+	"classification": {
+		"class": "sedan",
+		"body": "coupe",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 5.1,
+		"width": 1.82,
+		"wheelbase": 2.74,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/oldsmobeel_cutless_supremo_1985.png",
+		"runtime_dir": "res://art/vehicles/runtime/oldsmobeel_cutless_supremo_1985",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.507,
+		"rear_axle_m": -1.224,
+		"rear_axles_m": [
+			-1.224
+		],
+		"front_bumper_m": 2.542,
+		"rear_bumper_m": -2.542,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.328,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.441,
+				"y_m": -0.674,
+				"slice": 7.41
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.426,
+				"y_m": -0.727,
+				"slice": 7.61
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.233,
+				"y_m": -0.858,
+				"slice": 5.2
+			},
+			{
+				"kind": "head",
+				"x_m": 2.462,
+				"y_m": -0.655,
+				"slice": 5.91
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.5,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.441,
+				"y_m": 0.674,
+				"slice": 7.41
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.5,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.426,
+				"y_m": 0.727,
+				"slice": 7.61
+			},
+			{
+				"kind": "head",
+				"x_m": 2.462,
+				"y_m": 0.655,
+				"slice": 5.91
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.233,
+				"y_m": 0.858,
+				"slice": 5.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s sedan coupe on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. The most popular car in the country at one point. Specifically, in your grandparents' garage.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

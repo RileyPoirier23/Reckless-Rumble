@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "toyoda_corolly_1988",
+	"car_id": "toyoda_corolly_1988",
+	"display": {
+		"make": "Toyoda",
+		"model": "Corolly",
+		"trim": "",
+		"year": 1988
+	},
+	"classification": {
+		"class": "economy",
+		"body": "sedan",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "compact_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 4.2,
+		"width": 1.66,
+		"wheelbase": 2.43,
+		"track": 1.42
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/toyoda_corolly_1988.png",
+		"runtime_dir": "res://art/vehicles/runtime/toyoda_corolly_1988",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.17,
+		"rear_axle_m": -1.241,
+		"rear_axles_m": [
+			-1.241
+		],
+		"front_bumper_m": 2.083,
+		"rear_bumper_m": -2.083,
+		"track_m": 1.42,
+		"wheel_radius_m": 0.294,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.912,
+				"y_m": -0.591,
+				"slice": 7.93
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.94,
+				"y_m": -0.671,
+				"slice": 7.94
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.208,
+				"y_m": -0.792,
+				"slice": 5.5
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": -0.589,
+				"slice": 6.13
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.912,
+				"y_m": 0.591,
+				"slice": 7.93
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.94,
+				"y_m": 0.671,
+				"slice": 7.94
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": 0.589,
+				"slice": 6.13
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.208,
+				"y_m": 0.792,
+				"slice": 5.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s economy sedan on the compact_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. Will not die. Has been tried.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "hummor_aitch_won_1996",
+	"car_id": "hummor_aitch_won_1996",
+	"display": {
+		"make": "Hummor",
+		"model": "Aitch-Won",
+		"trim": "",
+		"year": 1996
+	},
+	"classification": {
+		"class": "offroad",
+		"body": "offroad",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "suv_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "offroad"
+	},
+	"dimensions_m": {
+		"length": 4.7,
+		"width": 2.2,
+		"wheelbase": 3.3,
+		"track": 1.88
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/hummor_aitch_won_1996.png",
+		"runtime_dir": "res://art/vehicles/runtime/hummor_aitch_won_1996",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.68,
+		"rear_axle_m": -1.597,
+		"rear_axles_m": [
+			-1.597
+		],
+		"front_bumper_m": 2.333,
+		"rear_bumper_m": -2.333,
+		"track_m": 1.88,
+		"wheel_radius_m": 0.522,
+		"roof_z_slice": 18,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.203,
+				"y_m": -0.964,
+				"slice": 13.06
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.19,
+				"y_m": -0.988,
+				"slice": 13.14
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.447,
+				"y_m": -1.064,
+				"slice": 10.07
+			},
+			{
+				"kind": "head",
+				"x_m": 2.244,
+				"y_m": -0.833,
+				"slice": 10.27
+			},
+			{
+				"kind": "head",
+				"x_m": 2.244,
+				"y_m": 0.833,
+				"slice": 10.27
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.203,
+				"y_m": 0.964,
+				"slice": 13.06
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.19,
+				"y_m": 0.988,
+				"slice": 13.14
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.447,
+				"y_m": 1.064,
+				"slice": 10.07
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s offroad offroad on the suv_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Military grade. Fits in a parking spot the way an elephant fits in a phone booth.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

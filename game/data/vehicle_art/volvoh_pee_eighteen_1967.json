@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "volvoh_pee_eighteen_1967",
+	"car_id": "volvoh_pee_eighteen_1967",
+	"display": {
+		"make": "Volvoh",
+		"model": "Pee-Eighteen",
+		"trim": "",
+		"year": 1967
+	},
+	"classification": {
+		"class": "coupe",
+		"body": "coupe",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "coupe_compact",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 4.35,
+		"width": 1.7,
+		"wheelbase": 2.45,
+		"track": 1.45
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/volvoh_pee_eighteen_1967.png",
+		"runtime_dir": "res://art/vehicles/runtime/volvoh_pee_eighteen_1967",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.334,
+		"rear_axle_m": -1.107,
+		"rear_axles_m": [
+			-1.107
+		],
+		"front_bumper_m": 2.167,
+		"rear_bumper_m": -2.167,
+		"track_m": 1.45,
+		"wheel_radius_m": 0.338,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.067,
+				"y_m": -0.629,
+				"slice": 7.48
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.048,
+				"y_m": -0.685,
+				"slice": 7.79
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.792,
+				"y_m": -0.792,
+				"slice": 5.67
+			},
+			{
+				"kind": "head",
+				"x_m": 1.842,
+				"y_m": -0.588,
+				"slice": 6.45
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.067,
+				"y_m": 0.629,
+				"slice": 7.48
+			},
+			{
+				"kind": "head",
+				"x_m": 1.842,
+				"y_m": 0.588,
+				"slice": 6.45
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.048,
+				"y_m": 0.685,
+				"slice": 7.79
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.792,
+				"y_m": 0.792,
+				"slice": 5.67
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s coupe coupe on the coupe_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. One of these holds the record for the most kilometres ever driven. This one hasn't helped.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

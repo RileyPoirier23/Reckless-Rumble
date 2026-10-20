@@ -1,0 +1,271 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_e_fiddy_ambulanz_2014",
+	"car_id": "fjord_e_fiddy_ambulanz_2014",
+	"display": {
+		"make": "Fjord",
+		"model": "E-Fiddy Ambulanz",
+		"trim": "",
+		"year": 2014
+	},
+	"classification": {
+		"class": "fleet",
+		"body": "boxtruck",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [
+			"box_body"
+		],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 6.9,
+		"width": 2.4,
+		"wheelbase": 4.0,
+		"track": 1.87
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_e_fiddy_ambulanz_2014.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_e_fiddy_ambulanz_2014",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.586,
+		"rear_axle_m": -1.423,
+		"rear_axles_m": [
+			-1.423
+		],
+		"front_bumper_m": 3.458,
+		"rear_bumper_m": -3.458,
+		"track_m": 1.87,
+		"wheel_radius_m": 0.457,
+		"roof_z_slice": 22,
+		"procedural_slices": 32,
+		"exhaust_side": "hidden",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -3.237,
+				"y_m": -1.029,
+				"slice": 9.05
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.161,
+				"y_m": -1.113,
+				"slice": 9.07
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.721,
+				"y_m": -1.203,
+				"slice": 8.41
+			},
+			{
+				"kind": "head",
+				"x_m": 3.256,
+				"y_m": -0.964,
+				"slice": 9.05
+			},
+			{
+				"kind": "beacon",
+				"x_m": -3.292,
+				"y_m": -0.958,
+				"slice": 30.0
+			},
+			{
+				"kind": "beacon",
+				"x_m": 0.667,
+				"y_m": -0.741,
+				"slice": 30.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.417,
+				"y_m": -0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "beacon",
+				"x_m": 0.667,
+				"y_m": 0.741,
+				"slice": 30.0
+			},
+			{
+				"kind": "head",
+				"x_m": 3.256,
+				"y_m": 0.964,
+				"slice": 9.05
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.237,
+				"y_m": 1.029,
+				"slice": 9.05
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.417,
+				"y_m": 0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "beacon",
+				"x_m": -3.292,
+				"y_m": 0.958,
+				"slice": 30.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.161,
+				"y_m": 1.113,
+				"slice": 9.07
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.721,
+				"y_m": 1.203,
+				"slice": 8.41
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s fleet boxtruck on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. A stretcher in the back, lights on every corner, and a paramedic who would like you to slow down.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

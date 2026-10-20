@@ -1,0 +1,230 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "austen_healthy_frog_eyed_spryte_1959",
+	"car_id": "austen_healthy_frog_eyed_spryte_1959",
+	"display": {
+		"make": "Austen-Healthy",
+		"model": "Frog-Eyed Spryte",
+		"trim": "",
+		"year": 1959
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "1950s",
+		"era_band": "1950-1969",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 3.49,
+		"width": 1.35,
+		"wheelbase": 2.03,
+		"track": 1.15
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/austen_healthy_frog_eyed_spryte_1959.png",
+		"runtime_dir": "res://art/vehicles/runtime/austen_healthy_frog_eyed_spryte_1959",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.091,
+		"rear_axle_m": -0.945,
+		"rear_axles_m": [
+			-0.945
+		],
+		"front_bumper_m": 1.75,
+		"rear_bumper_m": -1.75,
+		"track_m": 1.15,
+		"wheel_radius_m": 0.292,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "head",
+				"x_m": 1.39,
+				"y_m": -0.481,
+				"slice": 5.73
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.542,
+				"y_m": -0.583,
+				"slice": 4.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.665,
+				"y_m": -0.224,
+				"slice": 7.05
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.65,
+				"y_m": -0.233,
+				"slice": 7.7
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.665,
+				"y_m": 0.224,
+				"slice": 7.05
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.65,
+				"y_m": 0.233,
+				"slice": 7.7
+			},
+			{
+				"kind": "head",
+				"x_m": 1.39,
+				"y_m": 0.481,
+				"slice": 5.73
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.542,
+				"y_m": 0.583,
+				"slice": 4.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1950s sports roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. Headlights on top of the hood like a frog's eyes. The trunk doesn't open. The doors barely matter.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

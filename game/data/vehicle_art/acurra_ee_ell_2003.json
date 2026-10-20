@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "acurra_ee_ell_2003",
+	"car_id": "acurra_ee_ell_2003",
+	"display": {
+		"make": "Acurra",
+		"model": "Ee-Ell",
+		"trim": "",
+		"year": 2003
+	},
+	"classification": {
+		"class": "compact",
+		"body": "sedan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.45,
+		"width": 1.72,
+		"wheelbase": 2.62,
+		"track": 1.47
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/acurra_ee_ell_2003.png",
+		"runtime_dir": "res://art/vehicles/runtime/acurra_ee_ell_2003",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.264,
+		"rear_axle_m": -1.337,
+		"rear_axles_m": [
+			-1.337
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.47,
+		"wheel_radius_m": 0.331,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.094,
+				"y_m": -0.906,
+				"slice": 5.88
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.009,
+				"y_m": -0.629,
+				"slice": 7.95
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.036,
+				"y_m": -0.722,
+				"slice": 7.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.02,
+				"y_m": -0.641,
+				"slice": 6.33
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.009,
+				"y_m": 0.629,
+				"slice": 7.95
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.036,
+				"y_m": 0.722,
+				"slice": 7.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.02,
+				"y_m": 0.641,
+				"slice": 6.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.094,
+				"y_m": 0.906,
+				"slice": 5.88
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s compact sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Made in Ontario, sold only in Canada: basically a Civil with leather and a smug badge.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

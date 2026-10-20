@@ -1,0 +1,249 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "volvoh_ex_see_ninety_2016",
+	"car_id": "volvoh_ex_see_ninety_2016",
+	"display": {
+		"make": "Volvoh",
+		"model": "Ex-See-Ninety",
+		"trim": "",
+		"year": 2016
+	},
+	"classification": {
+		"class": "crossover",
+		"body": "suv",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "suv_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.95,
+		"width": 2.01,
+		"wheelbase": 2.98,
+		"track": 1.72
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/volvoh_ex_see_ninety_2016.png",
+		"runtime_dir": "res://art/vehicles/runtime/volvoh_ex_see_ninety_2016",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.284,
+		"rear_axle_m": -1.676,
+		"rear_axles_m": [
+			-1.676
+		],
+		"front_bumper_m": 2.458,
+		"rear_bumper_m": -2.458,
+		"track_m": 1.72,
+		"wheel_radius_m": 0.413,
+		"roof_z_slice": 16,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.685,
+				"y_m": -0.946,
+				"slice": 6.71
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.333,
+				"y_m": -0.691,
+				"slice": 8.46
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.331,
+				"y_m": -0.808,
+				"slice": 8.03
+			},
+			{
+				"kind": "head",
+				"x_m": 2.232,
+				"y_m": -0.665,
+				"slice": 8.04
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.417,
+				"y_m": -0.458,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.333,
+				"y_m": 0.691,
+				"slice": 8.46
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.417,
+				"y_m": 0.458,
+				"slice": 6.5
+			},
+			{
+				"kind": "head",
+				"x_m": 2.232,
+				"y_m": 0.665,
+				"slice": 8.04
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.331,
+				"y_m": 0.808,
+				"slice": 8.03
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.685,
+				"y_m": 0.946,
+				"slice": 6.71
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s crossover suv on the suv_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. A Scandinavian living room on wheels: driftwood trim, a wool blanket, and a crash score to brag about.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

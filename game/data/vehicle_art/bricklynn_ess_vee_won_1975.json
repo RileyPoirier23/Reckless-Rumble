@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "bricklynn_ess_vee_won_1975",
+	"car_id": "bricklynn_ess_vee_won_1975",
+	"display": {
+		"make": "Bricklynn",
+		"model": "Ess-Vee Won",
+		"trim": "",
+		"year": 1975
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "wedge",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "coupe_compact",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 4.5,
+		"width": 1.8,
+		"wheelbase": 2.44,
+		"track": 1.54
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/bricklynn_ess_vee_won_1975.png",
+		"runtime_dir": "res://art/vehicles/runtime/bricklynn_ess_vee_won_1975",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.302,
+		"rear_axle_m": -1.137,
+		"rear_axles_m": [
+			-1.137
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.54,
+		"wheel_radius_m": 0.35,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.999,
+				"y_m": -0.704,
+				"slice": 7.56
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.948,
+				"y_m": -0.742,
+				"slice": 7.72
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.813,
+				"y_m": -0.687,
+				"slice": 5.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": -0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.958,
+				"y_m": -0.5,
+				"slice": 7.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.999,
+				"y_m": 0.704,
+				"slice": 7.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.948,
+				"y_m": 0.742,
+				"slice": 7.72
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": 0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.958,
+				"y_m": 0.5,
+				"slice": 7.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.813,
+				"y_m": 0.688,
+				"slice": 5.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s oddball wedge on the coupe_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Built in Saint John. Gull-wing doors that need a pump, acrylic panels in safety colours, and a government cheque.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

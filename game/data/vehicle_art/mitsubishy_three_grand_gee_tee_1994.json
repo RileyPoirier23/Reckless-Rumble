@@ -1,0 +1,245 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "mitsubishy_three_grand_gee_tee_1994",
+	"car_id": "mitsubishy_three_grand_gee_tee_1994",
+	"display": {
+		"make": "Mitsubishy",
+		"model": "Three-Grand Gee-Tee",
+		"trim": "",
+		"year": 1994
+	},
+	"classification": {
+		"class": "sports",
+		"body": "sports",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.58,
+		"width": 1.84,
+		"wheelbase": 2.47,
+		"track": 1.57
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/mitsubishy_three_grand_gee_tee_1994.png",
+		"runtime_dir": "res://art/vehicles/runtime/mitsubishy_three_grand_gee_tee_1994",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.341,
+		"rear_axle_m": -1.13,
+		"rear_axles_m": [
+			-1.13
+		],
+		"front_bumper_m": 2.292,
+		"rear_bumper_m": -2.292,
+		"track_m": 1.57,
+		"wheel_radius_m": 0.345,
+		"roof_z_slice": 12,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.071,
+				"y_m": -0.593,
+				"slice": 7.35
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.12,
+				"y_m": -0.685,
+				"slice": 7.11
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.933,
+				"y_m": -0.808,
+				"slice": 4.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": -0.625,
+				"slice": 7.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.25,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.071,
+				"y_m": 0.593,
+				"slice": 7.35
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.25,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.12,
+				"y_m": 0.685,
+				"slice": 7.11
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": 0.625,
+				"slice": 7.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.933,
+				"y_m": 0.808,
+				"slice": 4.8
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s sports sports on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. All-wheel steer, active aero, an adjustable exhaust, and nine pages of things that are broken.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

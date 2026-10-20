@@ -1,0 +1,234 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_f_one_fiddy_wrecker_2008",
+	"car_id": "tow",
+	"display": {
+		"make": "Fjord",
+		"model": "F-One-Fiddy Wrecker",
+		"trim": "",
+		"year": 2008
+	},
+	"classification": {
+		"class": "work_truck",
+		"body": "tow",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 6.6,
+		"width": 2.05,
+		"wheelbase": 3.96,
+		"track": 1.72
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_f_one_fiddy_wrecker_2008.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_f_one_fiddy_wrecker_2008",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.159,
+		"rear_axle_m": -1.791,
+		"rear_axles_m": [
+			-1.791
+		],
+		"front_bumper_m": 3.292,
+		"rear_bumper_m": -3.292,
+		"track_m": 1.72,
+		"wheel_radius_m": 0.482,
+		"roof_z_slice": 19,
+		"procedural_slices": 20,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.661,
+				"y_m": -1.042,
+				"slice": 10.73
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.222,
+				"y_m": -0.875,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.208,
+				"y_m": -0.917,
+				"slice": 11.0
+			},
+			{
+				"kind": "head",
+				"x_m": 3.233,
+				"y_m": -0.792,
+				"slice": 11.8
+			},
+			{
+				"kind": "head",
+				"x_m": 3.233,
+				"y_m": 0.792,
+				"slice": 11.8
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.222,
+				"y_m": 0.875,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.208,
+				"y_m": 0.917,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.661,
+				"y_m": 1.042,
+				"slice": 10.73
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s work truck tow on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. Toby's tow truck. A 5.4 V8, a boom, a light bar and a heater that only does one temperature: Sahara.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

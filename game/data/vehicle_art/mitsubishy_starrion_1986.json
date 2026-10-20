@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "mitsubishy_starrion_1986",
+	"car_id": "mitsubishy_starrion_1986",
+	"display": {
+		"make": "Mitsubishy",
+		"model": "Starrion",
+		"trim": "",
+		"year": 1986
+	},
+	"classification": {
+		"class": "sports",
+		"body": "coupe",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.4,
+		"width": 1.74,
+		"wheelbase": 2.44,
+		"track": 1.49
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/mitsubishy_starrion_1986.png",
+		"runtime_dir": "res://art/vehicles/runtime/mitsubishy_starrion_1986",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.343,
+		"rear_axle_m": -1.107,
+		"rear_axles_m": [
+			-1.107
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.49,
+		"wheel_radius_m": 0.325,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.942,
+				"y_m": -0.66,
+				"slice": 7.55
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.948,
+				"y_m": -0.74,
+				"slice": 7.42
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.844,
+				"y_m": -0.865,
+				"slice": 5.63
+			},
+			{
+				"kind": "head",
+				"x_m": 1.917,
+				"y_m": -0.667,
+				"slice": 6.75
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.942,
+				"y_m": 0.66,
+				"slice": 7.55
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.948,
+				"y_m": 0.74,
+				"slice": 7.42
+			},
+			{
+				"kind": "head",
+				"x_m": 1.917,
+				"y_m": 0.667,
+				"slice": 6.75
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.844,
+				"y_m": 0.865,
+				"slice": 5.63
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s sports coupe on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. Named for a stallion, mispronounced into legend. The turbo lag came from 1986.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

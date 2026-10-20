@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "saabb_ninety_sicks_1967",
+	"car_id": "saabb_ninety_sicks_1967",
+	"display": {
+		"make": "Saabb",
+		"model": "Ninety-Sicks",
+		"trim": "",
+		"year": 1967
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "bubble",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "compact_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 4.2,
+		"width": 1.58,
+		"wheelbase": 2.5,
+		"track": 1.35
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/saabb_ninety_sicks_1967.png",
+		"runtime_dir": "res://art/vehicles/runtime/saabb_ninety_sicks_1967",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.24,
+		"rear_axle_m": -1.24,
+		"rear_axles_m": [
+			-1.24
+		],
+		"front_bumper_m": 2.083,
+		"rear_bumper_m": -2.083,
+		"track_m": 1.35,
+		"wheel_radius_m": 0.315,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.812,
+				"y_m": -0.472,
+				"slice": 6.08
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.792,
+				"y_m": -0.5,
+				"slice": 6.1
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.063,
+				"y_m": -0.708,
+				"slice": 4.75
+			},
+			{
+				"kind": "head",
+				"x_m": 1.903,
+				"y_m": -0.403,
+				"slice": 5.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.812,
+				"y_m": 0.472,
+				"slice": 6.08
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.792,
+				"y_m": 0.5,
+				"slice": 6.1
+			},
+			{
+				"kind": "head",
+				"x_m": 1.903,
+				"y_m": 0.403,
+				"slice": 5.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.063,
+				"y_m": 0.708,
+				"slice": 4.75
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s oddball bubble on the compact_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. A two-stroke three that sounds like a chainsaw and wants oil in the gas tank. Freewheel for fun.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

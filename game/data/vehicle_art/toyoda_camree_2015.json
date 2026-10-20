@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "toyoda_camree_2015",
+	"car_id": "toyoda_camree_2015",
+	"display": {
+		"make": "Toyoda",
+		"model": "Camree",
+		"trim": "",
+		"year": 2015
+	},
+	"classification": {
+		"class": "sedan",
+		"body": "sedan",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "sedan_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.85,
+		"width": 1.82,
+		"wheelbase": 2.78,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/toyoda_camree_2015.png",
+		"runtime_dir": "res://art/vehicles/runtime/toyoda_camree_2015",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.344,
+		"rear_axle_m": -1.427,
+		"rear_axles_m": [
+			-1.427
+		],
+		"front_bumper_m": 2.417,
+		"rear_bumper_m": -2.417,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.354,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.412,
+				"y_m": -0.921,
+				"slice": 6.56
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.26,
+				"y_m": -0.546,
+				"slice": 8.36
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.319,
+				"y_m": -0.622,
+				"slice": 8.25
+			},
+			{
+				"kind": "head",
+				"x_m": 2.109,
+				"y_m": -0.63,
+				"slice": 7.25
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": -0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.26,
+				"y_m": 0.546,
+				"slice": 8.36
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.319,
+				"y_m": 0.622,
+				"slice": 8.25
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": 0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "head",
+				"x_m": 2.109,
+				"y_m": 0.63,
+				"slice": 7.25
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.775,
+				"y_m": 0.842,
+				"slice": 6.4
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s sedan sedan on the sedan_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Air conditioning that could freeze a lake and a radio that only knows easy listening.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

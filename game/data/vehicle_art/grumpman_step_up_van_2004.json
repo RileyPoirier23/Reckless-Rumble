@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "grumpman_step_up_van_2004",
+	"car_id": "grumpman_step_up_van_2004",
+	"display": {
+		"make": "Grumpman",
+		"model": "Step-Up Van",
+		"trim": "",
+		"year": 2004
+	},
+	"classification": {
+		"class": "fleet",
+		"body": "boxtruck",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [
+			"box_body"
+		],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 7.3,
+		"width": 2.4,
+		"wheelbase": 4.3,
+		"track": 2.02
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/grumpman_step_up_van_2004.png",
+		"runtime_dir": "res://art/vehicles/runtime/grumpman_step_up_van_2004",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.763,
+		"rear_axle_m": -1.557,
+		"rear_axles_m": [
+			-1.557
+		],
+		"front_bumper_m": 3.667,
+		"rear_bumper_m": -3.667,
+		"track_m": 2.02,
+		"wheel_radius_m": 0.442,
+		"roof_z_slice": 29,
+		"procedural_slices": 31,
+		"exhaust_side": "hidden",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -3.611,
+				"y_m": -1.0,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.604,
+				"y_m": -1.083,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 3.385,
+				"y_m": -1.193,
+				"slice": 8.94
+			},
+			{
+				"kind": "head",
+				"x_m": 3.557,
+				"y_m": -0.917,
+				"slice": 9.95
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.625,
+				"y_m": -0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "head",
+				"x_m": 3.557,
+				"y_m": 0.917,
+				"slice": 9.95
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.611,
+				"y_m": 1.0,
+				"slice": 9.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.625,
+				"y_m": 0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.604,
+				"y_m": 1.083,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 3.385,
+				"y_m": 1.193,
+				"slice": 8.94
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s fleet boxtruck on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. The parcel van: a sliding door that never closes and a driver who leaves the slip anyway.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

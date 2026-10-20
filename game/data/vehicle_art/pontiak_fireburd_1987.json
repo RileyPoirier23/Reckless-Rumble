@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_fireburd_1987",
+	"car_id": "pontiak_fireburd_1987",
+	"display": {
+		"make": "Pontiak",
+		"model": "Fireburd",
+		"trim": "",
+		"year": 1987
+	},
+	"classification": {
+		"class": "pony",
+		"body": "coupe",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 4.85,
+		"width": 1.84,
+		"wheelbase": 2.56,
+		"track": 1.57
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_fireburd_1987.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_fireburd_1987",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.413,
+		"rear_axle_m": -1.138,
+		"rear_axles_m": [
+			-1.138
+		],
+		"front_bumper_m": 2.417,
+		"rear_bumper_m": -2.417,
+		"track_m": 1.57,
+		"wheel_radius_m": 0.327,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.164,
+				"y_m": -0.66,
+				"slice": 7.87
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.168,
+				"y_m": -0.733,
+				"slice": 7.85
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.673,
+				"y_m": -0.708,
+				"slice": 4.86
+			},
+			{
+				"kind": "head",
+				"x_m": 2.125,
+				"y_m": -0.5,
+				"slice": 6.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.164,
+				"y_m": 0.66,
+				"slice": 7.87
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.168,
+				"y_m": 0.733,
+				"slice": 7.85
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.125,
+				"y_m": 0.5,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.673,
+				"y_m": 0.708,
+				"slice": 4.86
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s pony coupe on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. Pop-up lights, T-tops, and a talking dashboard that only ever says 'door ajar.'",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

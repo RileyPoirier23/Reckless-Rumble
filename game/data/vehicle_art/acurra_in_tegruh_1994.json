@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "acurra_in_tegruh_1994",
+	"car_id": "acurra_in_tegruh_1994",
+	"display": {
+		"make": "Acurra",
+		"model": "In-Tegruh",
+		"trim": "",
+		"year": 1994
+	},
+	"classification": {
+		"class": "jdm",
+		"body": "coupe",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.38,
+		"width": 1.71,
+		"wheelbase": 2.57,
+		"track": 1.46
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/acurra_in_tegruh_1994.png",
+		"runtime_dir": "res://art/vehicles/runtime/acurra_in_tegruh_1994",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.296,
+		"rear_axle_m": -1.296,
+		"rear_axles_m": [
+			-1.296
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.46,
+		"wheel_radius_m": 0.331,
+		"roof_z_slice": 12,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.061,
+				"y_m": -0.558,
+				"slice": 7.63
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.095,
+				"y_m": -0.673,
+				"slice": 7.36
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.125,
+				"y_m": -0.75,
+				"slice": 3.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.117,
+				"y_m": -0.525,
+				"slice": 5.2
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.061,
+				"y_m": 0.558,
+				"slice": 7.63
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.095,
+				"y_m": 0.673,
+				"slice": 7.36
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.117,
+				"y_m": 0.525,
+				"slice": 5.2
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.125,
+				"y_m": 0.75,
+				"slice": 3.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s jdm coupe on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. The one everybody tries to steal. The one with the wing is already gone.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

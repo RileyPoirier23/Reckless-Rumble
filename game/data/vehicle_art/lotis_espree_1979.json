@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "lotis_espree_1979",
+	"car_id": "lotis_espree_1979",
+	"display": {
+		"make": "Lotis",
+		"model": "Espree",
+		"trim": "",
+		"year": 1979
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "wedge",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "exotic_wedge",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 4.19,
+		"width": 1.86,
+		"wheelbase": 2.44,
+		"track": 1.59
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/lotis_espree_1979.png",
+		"runtime_dir": "res://art/vehicles/runtime/lotis_espree_1979",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.178,
+		"rear_axle_m": -1.248,
+		"rear_axles_m": [
+			-1.248
+		],
+		"front_bumper_m": 2.083,
+		"rear_bumper_m": -2.083,
+		"track_m": 1.59,
+		"wheel_radius_m": 0.332,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.831,
+				"y_m": -0.704,
+				"slice": 7.29
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.776,
+				"y_m": -0.734,
+				"slice": 7.44
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.075,
+				"y_m": -0.742,
+				"slice": 5.2
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.792,
+				"y_m": -0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.792,
+				"y_m": 0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.831,
+				"y_m": 0.704,
+				"slice": 7.29
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.776,
+				"y_m": 0.734,
+				"slice": 7.44
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.075,
+				"y_m": 0.742,
+				"slice": 5.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s exotic wedge on the exotic_wedge archetype; original badges, grille and lamp graphics, no real logos or liveries. Once turned into a submarine in a spy movie. It leaks like one now.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

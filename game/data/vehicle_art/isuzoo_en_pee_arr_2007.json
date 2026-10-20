@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "isuzoo_en_pee_arr_2007",
+	"car_id": "isuzoo_en_pee_arr_2007",
+	"display": {
+		"make": "Isuzoo",
+		"model": "En-Pee-Arr",
+		"trim": "",
+		"year": 2007
+	},
+	"classification": {
+		"class": "work_truck",
+		"body": "boxtruck",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [
+			"box_body"
+		],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 6.3,
+		"width": 2.0,
+		"wheelbase": 3.4,
+		"track": 1.68
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/isuzoo_en_pee_arr_2007.png",
+		"runtime_dir": "res://art/vehicles/runtime/isuzoo_en_pee_arr_2007",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.584,
+		"rear_axle_m": -0.834,
+		"rear_axles_m": [
+			-0.834
+		],
+		"front_bumper_m": 3.167,
+		"rear_bumper_m": -3.167,
+		"track_m": 1.68,
+		"wheel_radius_m": 0.442,
+		"roof_z_slice": 22,
+		"procedural_slices": 31,
+		"exhaust_side": "hidden",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -3.108,
+				"y_m": -0.792,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.097,
+				"y_m": -0.875,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.965,
+				"y_m": -0.958,
+				"slice": 9.92
+			},
+			{
+				"kind": "head",
+				"x_m": 3.097,
+				"y_m": -0.75,
+				"slice": 10.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.125,
+				"y_m": -0.625,
+				"slice": 8.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.108,
+				"y_m": 0.792,
+				"slice": 9.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -3.125,
+				"y_m": 0.625,
+				"slice": 8.5
+			},
+			{
+				"kind": "head",
+				"x_m": 3.097,
+				"y_m": 0.75,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.097,
+				"y_m": 0.875,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.965,
+				"y_m": 0.958,
+				"slice": 9.92
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s work truck boxtruck on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. The cabover box truck every landscaper and caterer in the city bought on the same day.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

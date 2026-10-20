@@ -1,0 +1,249 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "hyundie_too_sawn_2017",
+	"car_id": "hyundie_too_sawn_2017",
+	"display": {
+		"make": "Hyundie",
+		"model": "Too-Sawn",
+		"trim": "",
+		"year": 2017
+	},
+	"classification": {
+		"class": "crossover",
+		"body": "suv",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "crossover_compact",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.48,
+		"width": 1.85,
+		"wheelbase": 2.67,
+		"track": 1.58
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/hyundie_too_sawn_2017.png",
+		"runtime_dir": "res://art/vehicles/runtime/hyundie_too_sawn_2017",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.159,
+		"rear_axle_m": -1.522,
+		"rear_axles_m": [
+			-1.522
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.58,
+		"wheel_radius_m": 0.378,
+		"roof_z_slice": 16,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.417,
+				"y_m": -0.869,
+				"slice": 6.79
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.096,
+				"y_m": -0.623,
+				"slice": 8.65
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.1,
+				"y_m": -0.716,
+				"slice": 8.5
+			},
+			{
+				"kind": "head",
+				"x_m": 1.925,
+				"y_m": -0.667,
+				"slice": 8.11
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": -0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.096,
+				"y_m": 0.623,
+				"slice": 8.65
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": 0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.1,
+				"y_m": 0.716,
+				"slice": 8.5
+			},
+			{
+				"kind": "head",
+				"x_m": 1.925,
+				"y_m": 0.667,
+				"slice": 8.11
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.417,
+				"y_m": 0.869,
+				"slice": 6.79
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s crossover suv on the crossover_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Named after a city in the desert, sold in a province full of snow.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

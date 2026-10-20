@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_country_square_1978",
+	"car_id": "fjord_country_square_1978",
+	"display": {
+		"make": "Fjord",
+		"model": "Country Square",
+		"trim": "",
+		"year": 1978
+	},
+	"classification": {
+		"class": "wagon",
+		"body": "wagon",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "wagon_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "wagon"
+	},
+	"dimensions_m": {
+		"length": 5.79,
+		"width": 2.0,
+		"wheelbase": 3.1,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_country_square_1978.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_country_square_1978",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.806,
+		"rear_axle_m": -1.272,
+		"rear_axles_m": [
+			-1.272
+		],
+		"front_bumper_m": 2.875,
+		"rear_bumper_m": -2.875,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.374,
+		"roof_z_slice": 14,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.787,
+				"y_m": -0.824,
+				"slice": 8.83
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.774,
+				"y_m": -0.857,
+				"slice": 8.93
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.813,
+				"y_m": -0.937,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.811,
+				"y_m": -0.7,
+				"slice": 6.58
+			},
+			{
+				"kind": "head",
+				"x_m": 2.811,
+				"y_m": 0.7,
+				"slice": 6.58
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.787,
+				"y_m": 0.824,
+				"slice": 8.83
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.774,
+				"y_m": 0.857,
+				"slice": 8.93
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.813,
+				"y_m": 0.938,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s wagon wagon on the wagon_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Seats nine, eight if one of them is Uncle Gord. Fake wood, real rust.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

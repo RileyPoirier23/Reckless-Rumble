@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "subaroo_forestur_2015",
+	"car_id": "subaroo_forestur_2015",
+	"display": {
+		"make": "Subaroo",
+		"model": "Forestur",
+		"trim": "",
+		"year": 2015
+	},
+	"classification": {
+		"class": "crossover",
+		"body": "suv",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "crossover_compact",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.6,
+		"width": 1.8,
+		"wheelbase": 2.64,
+		"track": 1.54
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/subaroo_forestur_2015.png",
+		"runtime_dir": "res://art/vehicles/runtime/subaroo_forestur_2015",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.12,
+		"rear_axle_m": -1.511,
+		"rear_axles_m": [
+			-1.511
+		],
+		"front_bumper_m": 2.292,
+		"rear_bumper_m": -2.292,
+		"track_m": 1.54,
+		"wheel_radius_m": 0.385,
+		"roof_z_slice": 16,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.628,
+				"y_m": -0.864,
+				"slice": 7.4
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.168,
+				"y_m": -0.608,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.159,
+				"y_m": -0.711,
+				"slice": 8.91
+			},
+			{
+				"kind": "head",
+				"x_m": 2.092,
+				"y_m": -0.633,
+				"slice": 8.63
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.25,
+				"y_m": -0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.168,
+				"y_m": 0.608,
+				"slice": 9.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.25,
+				"y_m": 0.375,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.159,
+				"y_m": 0.711,
+				"slice": 8.91
+			},
+			{
+				"kind": "head",
+				"x_m": 2.092,
+				"y_m": 0.633,
+				"slice": 8.63
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.826,
+				"y_m": 0.826,
+				"slice": 6.92
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s crossover suv on the crossover_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. A box with a windshield the size of a picture window. The dog's favourite car.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

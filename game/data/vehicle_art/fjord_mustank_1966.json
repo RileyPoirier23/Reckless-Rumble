@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_mustank_1966",
+	"car_id": "fjord_mustank_1966",
+	"display": {
+		"make": "Fjord",
+		"model": "Mustank",
+		"trim": "",
+		"year": 1966
+	},
+	"classification": {
+		"class": "pony",
+		"body": "coupe",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 4.61,
+		"width": 1.73,
+		"wheelbase": 2.74,
+		"track": 1.48
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_mustank_1966.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_mustank_1966",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.474,
+		"rear_axle_m": -1.251,
+		"rear_axles_m": [
+			-1.251
+		],
+		"front_bumper_m": 2.292,
+		"rear_bumper_m": -2.292,
+		"track_m": 1.48,
+		"wheel_radius_m": 0.353,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 2.0,
+				"y_m": -0.903,
+				"slice": 5.67
+			},
+			{
+				"kind": "head",
+				"x_m": 2.094,
+				"y_m": -0.677,
+				"slice": 6.69
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.221,
+				"y_m": -0.397,
+				"slice": 7.16
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.208,
+				"y_m": -0.436,
+				"slice": 7.64
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.221,
+				"y_m": 0.397,
+				"slice": 7.16
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.208,
+				"y_m": 0.436,
+				"slice": 7.64
+			},
+			{
+				"kind": "head",
+				"x_m": 2.094,
+				"y_m": 0.677,
+				"slice": 6.69
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.0,
+				"y_m": 0.903,
+				"slice": 5.67
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s pony coupe on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. The original pony. Every seller swears it's the one from the movie.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

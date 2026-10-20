@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "grumpman_ell_ell_vee_1995",
+	"car_id": "grumpman_ell_ell_vee_1995",
+	"display": {
+		"make": "Grumpman",
+		"model": "Ell-Ell-Vee",
+		"trim": "",
+		"year": 1995
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "van",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "van_passenger",
+		"archetype_exceptions": [],
+		"quota_class": "van_minivan"
+	},
+	"dimensions_m": {
+		"length": 4.4,
+		"width": 1.98,
+		"wheelbase": 2.67,
+		"track": 1.69
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/grumpman_ell_ell_vee_1995.png",
+		"runtime_dir": "res://art/vehicles/runtime/grumpman_ell_ell_vee_1995",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.548,
+		"rear_axle_m": -1.132,
+		"rear_axles_m": [
+			-1.132
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.69,
+		"wheel_radius_m": 0.33,
+		"roof_z_slice": 20,
+		"procedural_slices": 21,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.14,
+				"y_m": -0.836,
+				"slice": 10.42
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.133,
+				"y_m": -0.869,
+				"slice": 10.67
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.465,
+				"y_m": -0.958,
+				"slice": 7.17
+			},
+			{
+				"kind": "head",
+				"x_m": 2.13,
+				"y_m": -0.759,
+				"slice": 7.67
+			},
+			{
+				"kind": "head",
+				"x_m": 2.13,
+				"y_m": 0.759,
+				"slice": 7.67
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.14,
+				"y_m": 0.836,
+				"slice": 10.42
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.133,
+				"y_m": 0.869,
+				"slice": 10.67
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.465,
+				"y_m": 0.958,
+				"slice": 7.17
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s oddball van on the van_passenger archetype; original badges, grille and lamp graphics, no real logos or liveries. Right-hand drive, a sliding door, no air conditioning. Delivers bills and catches fire with equal enthusiasm.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

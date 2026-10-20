@@ -1,0 +1,245 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_fireburd_trans_ammo_1979",
+	"car_id": "pontiak_fireburd_trans_ammo_1979",
+	"display": {
+		"make": "Pontiak",
+		"model": "Fireburd Trans-Ammo",
+		"trim": "",
+		"year": 1979
+	},
+	"classification": {
+		"class": "muscle",
+		"body": "muscle",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 5.0,
+		"width": 1.86,
+		"wheelbase": 2.74,
+		"track": 1.59
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_fireburd_trans_ammo_1979.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_fireburd_trans_ammo_1979",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.506,
+		"rear_axle_m": -1.234,
+		"rear_axles_m": [
+			-1.234
+		],
+		"front_bumper_m": 2.5,
+		"rear_bumper_m": -2.5,
+		"track_m": 1.59,
+		"wheel_radius_m": 0.339,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.349,
+				"y_m": -0.687,
+				"slice": 7.59
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.304,
+				"y_m": -0.744,
+				"slice": 7.95
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.565,
+				"y_m": -0.732,
+				"slice": 5.43
+			},
+			{
+				"kind": "head",
+				"x_m": 2.139,
+				"y_m": -0.514,
+				"slice": 5.83
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": -0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.139,
+				"y_m": 0.514,
+				"slice": 5.83
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.349,
+				"y_m": 0.688,
+				"slice": 7.59
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": 0.5,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.304,
+				"y_m": 0.744,
+				"slice": 7.95
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.565,
+				"y_m": 0.732,
+				"slice": 5.43
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s muscle muscle on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. A screaming chicken on the hood and a sheriff in the mirror. East bound and down.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

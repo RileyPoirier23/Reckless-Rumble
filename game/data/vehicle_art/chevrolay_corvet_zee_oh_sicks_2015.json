@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "chevrolay_corvet_zee_oh_sicks_2015",
+	"car_id": "chevrolay_corvet_zee_oh_sicks_2015",
+	"display": {
+		"make": "Chevrolay",
+		"model": "Corvet Zee-Oh-Sicks",
+		"trim": "",
+		"year": 2015
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "sports",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 4.5,
+		"width": 1.97,
+		"wheelbase": 2.71,
+		"track": 1.68
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/chevrolay_corvet_zee_oh_sicks_2015.png",
+		"runtime_dir": "res://art/vehicles/runtime/chevrolay_corvet_zee_oh_sicks_2015",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.444,
+		"rear_axle_m": -1.266,
+		"rear_axles_m": [
+			-1.266
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.68,
+		"wheel_radius_m": 0.35,
+		"roof_z_slice": 12,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.027,
+				"y_m": -0.678,
+				"slice": 7.78
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.053,
+				"y_m": -0.75,
+				"slice": 7.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.097,
+				"y_m": -0.644,
+				"slice": 5.22
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.167,
+				"y_m": -0.75,
+				"slice": 4.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.027,
+				"y_m": 0.678,
+				"slice": 7.78
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.053,
+				"y_m": 0.75,
+				"slice": 7.8
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.208,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.097,
+				"y_m": 0.644,
+				"slice": 5.22
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.167,
+				"y_m": 0.75,
+				"slice": 4.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s exotic sports on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. Six hundred fifty horsepower and a cupholder. A whole continent, condensed.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

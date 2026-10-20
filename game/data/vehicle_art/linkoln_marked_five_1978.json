@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "linkoln_marked_five_1978",
+	"car_id": "linkoln_marked_five_1978",
+	"display": {
+		"make": "Linkoln",
+		"model": "Marked Five",
+		"trim": "",
+		"year": 1978
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "coupe",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 5.9,
+		"width": 2.03,
+		"wheelbase": 3.08,
+		"track": 1.74
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/linkoln_marked_five_1978.png",
+		"runtime_dir": "res://art/vehicles/runtime/linkoln_marked_five_1978",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.714,
+		"rear_axle_m": -1.375,
+		"rear_axles_m": [
+			-1.375
+		],
+		"front_bumper_m": 2.958,
+		"rear_bumper_m": -2.958,
+		"track_m": 1.74,
+		"wheel_radius_m": 0.361,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.848,
+				"y_m": -0.72,
+				"slice": 7.36
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.837,
+				"y_m": -0.743,
+				"slice": 7.5
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.65,
+				"y_m": -0.942,
+				"slice": 5.2
+			},
+			{
+				"kind": "head",
+				"x_m": 2.634,
+				"y_m": -0.697,
+				"slice": 6.52
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.917,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.848,
+				"y_m": 0.72,
+				"slice": 7.36
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.837,
+				"y_m": 0.743,
+				"slice": 7.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.917,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.634,
+				"y_m": 0.697,
+				"slice": 6.52
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.65,
+				"y_m": 0.942,
+				"slice": 5.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s luxury coupe on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. Opera windows, a vinyl roof and a hood longer than some people's driveways.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "nissun_leef_2013",
+	"car_id": "nissun_leef_2013",
+	"display": {
+		"make": "Nissun",
+		"model": "Leef",
+		"trim": "",
+		"year": 2013
+	},
+	"classification": {
+		"class": "compact",
+		"body": "hatch",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "hatch_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "hatchback"
+	},
+	"dimensions_m": {
+		"length": 4.45,
+		"width": 1.77,
+		"wheelbase": 2.7,
+		"track": 1.51
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/nissun_leef_2013.png",
+		"runtime_dir": "res://art/vehicles/runtime/nissun_leef_2013",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.236,
+		"rear_axle_m": -1.444,
+		"rear_axles_m": [
+			-1.444
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.51,
+		"wheel_radius_m": 0.352,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.435,
+				"y_m": -0.894,
+				"slice": 6.56
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.083,
+				"y_m": -0.599,
+				"slice": 8.03
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.083,
+				"y_m": -0.698,
+				"slice": 7.88
+			},
+			{
+				"kind": "head",
+				"x_m": 1.831,
+				"y_m": -0.685,
+				"slice": 7.75
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.083,
+				"y_m": 0.599,
+				"slice": 8.03
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.083,
+				"y_m": 0.698,
+				"slice": 7.88
+			},
+			{
+				"kind": "head",
+				"x_m": 1.831,
+				"y_m": 0.685,
+				"slice": 7.75
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.694,
+				"y_m": 0.833,
+				"slice": 6.17
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s compact hatch on the hatch_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. Silent, slow and never far from a plug. The battery's memory is worse than Grandpa's.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

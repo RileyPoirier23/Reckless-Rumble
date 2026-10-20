@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "chevrolay_impaler_1977",
+	"car_id": "chevrolay_impaler_1977",
+	"display": {
+		"make": "Chevrolay",
+		"model": "Impaler",
+		"trim": "",
+		"year": 1977
+	},
+	"classification": {
+		"class": "sedan",
+		"body": "sedan",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 5.4,
+		"width": 1.95,
+		"wheelbase": 2.95,
+		"track": 1.67
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/chevrolay_impaler_1977.png",
+		"runtime_dir": "res://art/vehicles/runtime/chevrolay_impaler_1977",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.627,
+		"rear_axle_m": -1.332,
+		"rear_axles_m": [
+			-1.332
+		],
+		"front_bumper_m": 2.708,
+		"rear_bumper_m": -2.708,
+		"track_m": 1.67,
+		"wheel_radius_m": 0.362,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.611,
+				"y_m": -0.729,
+				"slice": 7.64
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.593,
+				"y_m": -0.765,
+				"slice": 7.88
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.65,
+				"y_m": -0.942,
+				"slice": 5.2
+			},
+			{
+				"kind": "head",
+				"x_m": 2.645,
+				"y_m": -0.7,
+				"slice": 7.05
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.667,
+				"y_m": -0.583,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.611,
+				"y_m": 0.729,
+				"slice": 7.64
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.593,
+				"y_m": 0.765,
+				"slice": 7.88
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.667,
+				"y_m": 0.583,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.645,
+				"y_m": 0.7,
+				"slice": 7.05
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.65,
+				"y_m": 0.942,
+				"slice": 5.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s sedan sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. The first downsized one. Still bigger than your apartment.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}
