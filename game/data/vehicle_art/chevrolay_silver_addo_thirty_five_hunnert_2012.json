@@ -1,0 +1,237 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "chevrolay_silver_addo_thirty_five_hunnert_2012",
+	"car_id": "chevrolay_silver_addo_thirty_five_hunnert_2012",
+	"display": {
+		"make": "Chevrolay",
+		"model": "Silver-Addo Thirty-Five Hunnert",
+		"trim": "",
+		"year": 2012
+	},
+	"classification": {
+		"class": "hd_pickup",
+		"body": "pickup",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "pickup_heavy",
+		"archetype_exceptions": [],
+		"quota_class": "pickup"
+	},
+	"dimensions_m": {
+		"length": 6.6,
+		"width": 2.03,
+		"wheelbase": 4.3,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/chevrolay_silver_addo_thirty_five_hunnert_2012.png",
+		"runtime_dir": "res://art/vehicles/runtime/chevrolay_silver_addo_thirty_five_hunnert_2012",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.305,
+		"rear_axle_m": -1.984,
+		"rear_axles_m": [
+			-1.984
+		],
+		"front_bumper_m": 3.292,
+		"rear_bumper_m": -3.292,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.503,
+		"roof_z_slice": 20,
+		"procedural_slices": 21,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -3.217,
+				"y_m": -0.842,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.208,
+				"y_m": -0.875,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.144,
+				"y_m": -0.958,
+				"slice": 11.18
+			},
+			{
+				"kind": "head",
+				"x_m": 3.233,
+				"y_m": -0.75,
+				"slice": 12.4
+			},
+			{
+				"kind": "head",
+				"x_m": 3.233,
+				"y_m": 0.75,
+				"slice": 12.4
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.217,
+				"y_m": 0.842,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.208,
+				"y_m": 0.875,
+				"slice": 11.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.144,
+				"y_m": 0.958,
+				"slice": 11.18
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock",
+			"tonneau",
+			"rollbar",
+			"rollbar_lights"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s hd pickup pickup on the pickup_heavy archetype; original badges, grille and lamp graphics, no real logos or liveries. The diesel that pulls a house. Pulled one, in fact, out of Salisbury, in 2016.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

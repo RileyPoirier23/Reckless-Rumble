@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "toyoda_land_crusher_2010",
+	"car_id": "toyoda_land_crusher_2010",
+	"display": {
+		"make": "Toyoda",
+		"model": "Land Crusher",
+		"trim": "",
+		"year": 2010
+	},
+	"classification": {
+		"class": "suv",
+		"body": "suv",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "suv_midsize",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 4.95,
+		"width": 1.97,
+		"wheelbase": 2.85,
+		"track": 1.68
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/toyoda_land_crusher_2010.png",
+		"runtime_dir": "res://art/vehicles/runtime/toyoda_land_crusher_2010",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.52,
+		"rear_axle_m": -1.311,
+		"rear_axles_m": [
+			-1.311
+		],
+		"front_bumper_m": 2.458,
+		"rear_bumper_m": -2.458,
+		"track_m": 1.68,
+		"wheel_radius_m": 0.399,
+		"roof_z_slice": 17,
+		"procedural_slices": 20,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.423,
+				"y_m": -0.978,
+				"slice": 9.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.385,
+				"y_m": -0.837,
+				"slice": 10.73
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.375,
+				"y_m": -0.875,
+				"slice": 10.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.4,
+				"y_m": -0.75,
+				"slice": 9.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.4,
+				"y_m": 0.75,
+				"slice": 9.8
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.385,
+				"y_m": 0.837,
+				"slice": 10.73
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.375,
+				"y_m": 0.875,
+				"slice": 10.8
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.423,
+				"y_m": 0.978,
+				"slice": 9.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s suv suv on the suv_midsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Will survive the apocalypse. Will also be stolen during it.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "nissun_three_hundred_zed_x_1990",
+	"car_id": "nissun_three_hundred_zed_x_1990",
+	"display": {
+		"make": "Nissun",
+		"model": "Three Hundred Zed-X",
+		"trim": "",
+		"year": 1990
+	},
+	"classification": {
+		"class": "sports",
+		"body": "sports",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.53,
+		"width": 1.8,
+		"wheelbase": 2.45,
+		"track": 1.54
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/nissun_three_hundred_zed_x_1990.png",
+		"runtime_dir": "res://art/vehicles/runtime/nissun_three_hundred_zed_x_1990",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.32,
+		"rear_axle_m": -1.113,
+		"rear_axles_m": [
+			-1.113
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.54,
+		"wheel_radius_m": 0.342,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.027,
+				"y_m": -0.588,
+				"slice": 7.76
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.0,
+				"y_m": -0.692,
+				"slice": 7.8
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.958,
+				"y_m": -0.833,
+				"slice": 4.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.139,
+				"y_m": -0.542,
+				"slice": 6.17
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.027,
+				"y_m": 0.588,
+				"slice": 7.76
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.0,
+				"y_m": 0.692,
+				"slice": 7.8
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.139,
+				"y_m": 0.542,
+				"slice": 6.17
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.958,
+				"y_m": 0.833,
+				"slice": 4.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s sports sports on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A supercar in a cardigan. The engine bay is so full you change the spark plugs by prayer.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

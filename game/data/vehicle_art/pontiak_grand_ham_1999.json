@@ -1,0 +1,250 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_grand_ham_1999",
+	"car_id": "pontiak_grand_ham_1999",
+	"display": {
+		"make": "Pontiak",
+		"model": "Grand Ham",
+		"trim": "",
+		"year": 1999
+	},
+	"classification": {
+		"class": "compact",
+		"body": "sedan",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [
+			"length_outside_range"
+		],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.73,
+		"width": 1.79,
+		"wheelbase": 2.68,
+		"track": 1.53
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_grand_ham_1999.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_grand_ham_1999",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.304,
+		"rear_axle_m": -1.387,
+		"rear_axles_m": [
+			-1.387
+		],
+		"front_bumper_m": 2.375,
+		"rear_bumper_m": -2.375,
+		"track_m": 1.53,
+		"wheel_radius_m": 0.33,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 0.963,
+				"y_m": -0.903,
+				"slice": 5.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.193,
+				"y_m": -0.55,
+				"slice": 7.59
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.25,
+				"y_m": -0.708,
+				"slice": 6.73
+			},
+			{
+				"kind": "head",
+				"x_m": 2.25,
+				"y_m": -0.604,
+				"slice": 5.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.193,
+				"y_m": 0.55,
+				"slice": 7.59
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.25,
+				"y_m": 0.604,
+				"slice": 5.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.25,
+				"y_m": 0.708,
+				"slice": 6.73
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.963,
+				"y_m": 0.903,
+				"slice": 5.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s compact sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. More plastic cladding than a dollar store. The intake gaskets are a subscription.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

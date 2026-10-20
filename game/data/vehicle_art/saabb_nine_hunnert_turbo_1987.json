@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "saabb_nine_hunnert_turbo_1987",
+	"car_id": "saabb_nine_hunnert_turbo_1987",
+	"display": {
+		"make": "Saabb",
+		"model": "Nine-Hunnert Turbo",
+		"trim": "",
+		"year": 1987
+	},
+	"classification": {
+		"class": "euro",
+		"body": "hatch",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "hatch_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "hatchback"
+	},
+	"dimensions_m": {
+		"length": 4.69,
+		"width": 1.69,
+		"wheelbase": 2.52,
+		"track": 1.44
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/saabb_nine_hunnert_turbo_1987.png",
+		"runtime_dir": "res://art/vehicles/runtime/saabb_nine_hunnert_turbo_1987",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.124,
+		"rear_axle_m": -1.383,
+		"rear_axles_m": [
+			-1.383
+		],
+		"front_bumper_m": 2.333,
+		"rear_bumper_m": -2.333,
+		"track_m": 1.44,
+		"wheel_radius_m": 0.322,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.224,
+				"y_m": -0.581,
+				"slice": 7.43
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.208,
+				"y_m": -0.717,
+				"slice": 6.9
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.236,
+				"y_m": -0.764,
+				"slice": 4.33
+			},
+			{
+				"kind": "head",
+				"x_m": 2.223,
+				"y_m": -0.58,
+				"slice": 5.82
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.224,
+				"y_m": 0.581,
+				"slice": 7.43
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.292,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.223,
+				"y_m": 0.58,
+				"slice": 5.82
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.208,
+				"y_m": 0.717,
+				"slice": 6.9
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.236,
+				"y_m": 0.764,
+				"slice": 4.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s euro hatch on the hatch_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. The ignition key is between the seats. Aircraft engineers did that, and you will never find out why.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

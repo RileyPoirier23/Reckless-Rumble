@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "subaroo_outbak_2012",
+	"car_id": "subaroo_outbak_2012",
+	"display": {
+		"make": "Subaroo",
+		"model": "Outbak",
+		"trim": "",
+		"year": 2012
+	},
+	"classification": {
+		"class": "wagon",
+		"body": "wagon",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "wagon_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "wagon"
+	},
+	"dimensions_m": {
+		"length": 4.78,
+		"width": 1.82,
+		"wheelbase": 2.75,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/subaroo_outbak_2012.png",
+		"runtime_dir": "res://art/vehicles/runtime/subaroo_outbak_2012",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.568,
+		"rear_axle_m": -1.165,
+		"rear_axles_m": [
+			-1.165
+		],
+		"front_bumper_m": 2.375,
+		"rear_bumper_m": -2.375,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.353,
+		"roof_z_slice": 14,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.5,
+				"y_m": -0.845,
+				"slice": 5.45
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.272,
+				"y_m": -0.731,
+				"slice": 8.08
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.245,
+				"y_m": -0.796,
+				"slice": 8.33
+			},
+			{
+				"kind": "head",
+				"x_m": 2.108,
+				"y_m": -0.608,
+				"slice": 7.13
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.333,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.108,
+				"y_m": 0.608,
+				"slice": 7.13
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.272,
+				"y_m": 0.731,
+				"slice": 8.08
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.333,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.245,
+				"y_m": 0.796,
+				"slice": 8.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.5,
+				"y_m": 0.845,
+				"slice": 5.45
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s wagon wagon on the wagon_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. A kayak on the roof, a dog in the back, a national park sticker on the tailgate. Every single one.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

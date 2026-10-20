@@ -1,0 +1,237 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "hondo_ridgelyne_2017",
+	"car_id": "hondo_ridgelyne_2017",
+	"display": {
+		"make": "Hondo",
+		"model": "Ridgelyne",
+		"trim": "",
+		"year": 2017
+	},
+	"classification": {
+		"class": "pickup",
+		"body": "pickup",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "pickup_half_ton",
+		"archetype_exceptions": [],
+		"quota_class": "pickup"
+	},
+	"dimensions_m": {
+		"length": 5.33,
+		"width": 2.0,
+		"wheelbase": 3.18,
+		"track": 1.68
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/hondo_ridgelyne_2017.png",
+		"runtime_dir": "res://art/vehicles/runtime/hondo_ridgelyne_2017",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.742,
+		"rear_axle_m": -1.44,
+		"rear_axles_m": [
+			-1.44
+		],
+		"front_bumper_m": 2.667,
+		"rear_bumper_m": -2.667,
+		"track_m": 1.68,
+		"wheel_radius_m": 0.44,
+		"roof_z_slice": 18,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.592,
+				"y_m": -0.842,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.583,
+				"y_m": -0.875,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.259,
+				"y_m": -0.958,
+				"slice": 10.44
+			},
+			{
+				"kind": "head",
+				"x_m": 2.608,
+				"y_m": -0.75,
+				"slice": 11.8
+			},
+			{
+				"kind": "head",
+				"x_m": 2.608,
+				"y_m": 0.75,
+				"slice": 11.8
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.592,
+				"y_m": 0.842,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.583,
+				"y_m": 0.875,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.259,
+				"y_m": 0.958,
+				"slice": 10.44
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock",
+			"tonneau",
+			"rollbar",
+			"rollbar_lights"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s pickup pickup on the pickup_half_ton archetype; original badges, grille and lamp graphics, no real logos or liveries. A truck with a trunk in the bed. Real truck guys hate it. Real truck guys also borrow it to move.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

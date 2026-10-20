@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "lexis_ell_ess_four_hunnert_1990",
+	"car_id": "lexis_ell_ess_four_hunnert_1990",
+	"display": {
+		"make": "Lexis",
+		"model": "Ell-Ess Four-Hunnert",
+		"trim": "",
+		"year": 1990
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "sedan",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 5.0,
+		"width": 1.82,
+		"wheelbase": 2.81,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/lexis_ell_ess_four_hunnert_1990.png",
+		"runtime_dir": "res://art/vehicles/runtime/lexis_ell_ess_four_hunnert_1990",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.536,
+		"rear_axle_m": -1.273,
+		"rear_axles_m": [
+			-1.273
+		],
+		"front_bumper_m": 2.5,
+		"rear_bumper_m": -2.5,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.339,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.319,
+				"y_m": -0.59,
+				"slice": 7.89
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.365,
+				"y_m": -0.681,
+				"slice": 7.75
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.423,
+				"y_m": -0.851,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.375,
+				"y_m": -0.625,
+				"slice": 5.88
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": -0.417,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.319,
+				"y_m": 0.59,
+				"slice": 7.89
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": 0.417,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.365,
+				"y_m": 0.681,
+				"slice": 7.75
+			},
+			{
+				"kind": "head",
+				"x_m": 2.375,
+				"y_m": 0.625,
+				"slice": 5.88
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.423,
+				"y_m": 0.851,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s luxury sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Balanced a pyramid of champagne glasses on the engine at redline in the ads. Has never spilled a coffee since.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

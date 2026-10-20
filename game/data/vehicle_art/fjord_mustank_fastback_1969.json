@@ -1,0 +1,233 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_mustank_fastback_1969",
+	"car_id": "fjord_mustank_fastback_1969",
+	"display": {
+		"make": "Fjord",
+		"model": "Mustank Fastback",
+		"trim": "",
+		"year": 1969
+	},
+	"classification": {
+		"class": "muscle",
+		"body": "muscle",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 4.8,
+		"width": 1.82,
+		"wheelbase": 2.74,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_mustank_fastback_1969.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_mustank_fastback_1969",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.504,
+		"rear_axle_m": -1.255,
+		"rear_axles_m": [
+			-1.255
+		],
+		"front_bumper_m": 2.417,
+		"rear_bumper_m": -2.417,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.374,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.875,
+				"y_m": -0.892,
+				"slice": 6.8
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.3,
+				"y_m": -0.413,
+				"slice": 7.58
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.233,
+				"y_m": -0.483,
+				"slice": 8.29
+			},
+			{
+				"kind": "head",
+				"x_m": 2.347,
+				"y_m": -0.611,
+				"slice": 6.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.3,
+				"y_m": 0.413,
+				"slice": 7.58
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.233,
+				"y_m": 0.483,
+				"slice": 8.29
+			},
+			{
+				"kind": "head",
+				"x_m": 2.347,
+				"y_m": 0.611,
+				"slice": 6.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.875,
+				"y_m": 0.892,
+				"slice": 6.8
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s muscle muscle on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. The scoop is real. So is the fuel bill. So is the guy who wants to race you at every light.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

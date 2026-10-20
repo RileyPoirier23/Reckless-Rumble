@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "chequer_marathone_1978",
+	"car_id": "chequer_marathone_1978",
+	"display": {
+		"make": "Chequer",
+		"model": "Marathone",
+		"trim": "",
+		"year": 1978
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "sedan",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 5.2,
+		"width": 2.0,
+		"wheelbase": 3.07,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/chequer_marathone_1978.png",
+		"runtime_dir": "res://art/vehicles/runtime/chequer_marathone_1978",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.652,
+		"rear_axle_m": -1.398,
+		"rear_axles_m": [
+			-1.398
+		],
+		"front_bumper_m": 2.583,
+		"rear_bumper_m": -2.583,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.358,
+		"roof_z_slice": 15,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.48,
+				"y_m": -0.723,
+				"slice": 7.74
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.467,
+				"y_m": -0.753,
+				"slice": 7.89
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.781,
+				"y_m": -0.948,
+				"slice": 5.63
+			},
+			{
+				"kind": "head",
+				"x_m": 2.522,
+				"y_m": -0.688,
+				"slice": 7.48
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.542,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.48,
+				"y_m": 0.723,
+				"slice": 7.74
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.467,
+				"y_m": 0.753,
+				"slice": 7.89
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.542,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.522,
+				"y_m": 0.688,
+				"slice": 7.48
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.781,
+				"y_m": 0.948,
+				"slice": 5.63
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s oddball sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. A taxi built like a bank vault. The back seat is the size of a bachelor apartment.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

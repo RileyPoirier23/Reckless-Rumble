@@ -1,0 +1,237 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "linkoln_navigatrix_2005",
+	"car_id": "linkoln_navigatrix_2005",
+	"display": {
+		"make": "Linkoln",
+		"model": "Navigatrix",
+		"trim": "",
+		"year": 2005
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "suv",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "suv_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "suv_crossover"
+	},
+	"dimensions_m": {
+		"length": 5.23,
+		"width": 2.0,
+		"wheelbase": 3.02,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/linkoln_navigatrix_2005.png",
+		"runtime_dir": "res://art/vehicles/runtime/linkoln_navigatrix_2005",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.627,
+		"rear_axle_m": -1.405,
+		"rear_axles_m": [
+			-1.405
+		],
+		"front_bumper_m": 2.625,
+		"rear_bumper_m": -2.625,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.42,
+		"roof_z_slice": 18,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.59,
+				"y_m": -0.978,
+				"slice": 9.46
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.559,
+				"y_m": -0.835,
+				"slice": 11.07
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.552,
+				"y_m": -0.871,
+				"slice": 11.24
+			},
+			{
+				"kind": "head",
+				"x_m": 2.567,
+				"y_m": -0.75,
+				"slice": 10.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.567,
+				"y_m": 0.75,
+				"slice": 10.1
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.559,
+				"y_m": 0.835,
+				"slice": 11.07
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.552,
+				"y_m": 0.871,
+				"slice": 11.24
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.59,
+				"y_m": 0.978,
+				"slice": 9.46
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s luxury suv on the suv_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Power running boards that fold down to greet you, and fold up stuck in January.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

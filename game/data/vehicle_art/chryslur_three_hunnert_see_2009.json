@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "chryslur_three_hunnert_see_2009",
+	"car_id": "chryslur_three_hunnert_see_2009",
+	"display": {
+		"make": "Chryslur",
+		"model": "Three Hunnert See",
+		"trim": "",
+		"year": 2009
+	},
+	"classification": {
+		"class": "sedan",
+		"body": "sedan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 5.0,
+		"width": 1.88,
+		"wheelbase": 3.05,
+		"track": 1.61
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/chryslur_three_hunnert_see_2009.png",
+		"runtime_dir": "res://art/vehicles/runtime/chryslur_three_hunnert_see_2009",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.642,
+		"rear_axle_m": -1.408,
+		"rear_axles_m": [
+			-1.408
+		],
+		"front_bumper_m": 2.5,
+		"rear_bumper_m": -2.5,
+		"track_m": 1.61,
+		"wheel_radius_m": 0.344,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.231,
+				"y_m": -0.996,
+				"slice": 6.36
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.329,
+				"y_m": -0.559,
+				"slice": 8.63
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.379,
+				"y_m": -0.638,
+				"slice": 9.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.244,
+				"y_m": -0.682,
+				"slice": 7.21
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.329,
+				"y_m": 0.559,
+				"slice": 8.63
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.379,
+				"y_m": 0.638,
+				"slice": 9.1
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.458,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.244,
+				"y_m": 0.682,
+				"slice": 7.21
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.231,
+				"y_m": 0.996,
+				"slice": 6.36
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s sedan sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. A gangster-grille sedan with a bass line that rattles every piece of plastic in it.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

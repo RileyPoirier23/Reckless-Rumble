@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_montannuh_2001",
+	"car_id": "pontiak_montannuh_2001",
+	"display": {
+		"make": "Pontiak",
+		"model": "Montannuh",
+		"trim": "",
+		"year": 2001
+	},
+	"classification": {
+		"class": "minivan",
+		"body": "minivan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "minivan",
+		"archetype_exceptions": [],
+		"quota_class": "van_minivan"
+	},
+	"dimensions_m": {
+		"length": 5.1,
+		"width": 1.83,
+		"wheelbase": 3.0,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_montannuh_2001.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_montannuh_2001",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.495,
+		"rear_axle_m": -1.495,
+		"rear_axles_m": [
+			-1.495
+		],
+		"front_bumper_m": 2.542,
+		"rear_bumper_m": -2.542,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.349,
+		"roof_z_slice": 16,
+		"procedural_slices": 17,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.689,
+				"y_m": -0.898,
+				"slice": 6.09
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.462,
+				"y_m": -0.747,
+				"slice": 9.46
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.45,
+				"y_m": -0.783,
+				"slice": 9.6
+			},
+			{
+				"kind": "head",
+				"x_m": 2.397,
+				"y_m": -0.635,
+				"slice": 6.47
+			},
+			{
+				"kind": "head",
+				"x_m": 2.397,
+				"y_m": 0.635,
+				"slice": 6.47
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.462,
+				"y_m": 0.747,
+				"slice": 9.46
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.45,
+				"y_m": 0.783,
+				"slice": 9.6
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.689,
+				"y_m": 0.898,
+				"slice": 6.09
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s minivan minivan on the minivan archetype; original badges, grille and lamp graphics, no real logos or liveries. Called itself a sport van. The sport was intake-gasket replacement.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

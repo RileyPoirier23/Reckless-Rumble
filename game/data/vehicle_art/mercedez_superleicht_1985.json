@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "mercedez_superleicht_1985",
+	"car_id": "mercedez_superleicht_1985",
+	"display": {
+		"make": "Mercedez",
+		"model": "Superleicht",
+		"trim": "",
+		"year": 1985
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "roadster",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 4.39,
+		"width": 1.79,
+		"wheelbase": 2.46,
+		"track": 1.53
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/mercedez_superleicht_1985.png",
+		"runtime_dir": "res://art/vehicles/runtime/mercedez_superleicht_1985",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.354,
+		"rear_axle_m": -1.121,
+		"rear_axles_m": [
+			-1.121
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.53,
+		"wheel_radius_m": 0.331,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.114,
+				"y_m": -0.674,
+				"slice": 7.41
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.102,
+				"y_m": -0.727,
+				"slice": 7.61
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.933,
+				"y_m": -0.858,
+				"slice": 5.2
+			},
+			{
+				"kind": "head",
+				"x_m": 2.129,
+				"y_m": -0.655,
+				"slice": 5.91
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.114,
+				"y_m": 0.674,
+				"slice": 7.41
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.102,
+				"y_m": 0.727,
+				"slice": 7.61
+			},
+			{
+				"kind": "head",
+				"x_m": 2.129,
+				"y_m": 0.655,
+				"slice": 5.91
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.933,
+				"y_m": 0.858,
+				"slice": 5.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s luxury roadster on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. The rich divorcee's roadster, with a hardtop that two people can lift and one dog can sit on.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

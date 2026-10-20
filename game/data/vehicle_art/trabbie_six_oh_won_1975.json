@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "trabbie_six_oh_won_1975",
+	"car_id": "trabbie_six_oh_won_1975",
+	"display": {
+		"make": "Trabbie",
+		"model": "Six-Oh-Won",
+		"trim": "",
+		"year": 1975
+	},
+	"classification": {
+		"class": "oddball",
+		"body": "bubble",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "micro_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 3.56,
+		"width": 1.5,
+		"wheelbase": 2.02,
+		"track": 1.28
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/trabbie_six_oh_won_1975.png",
+		"runtime_dir": "res://art/vehicles/runtime/trabbie_six_oh_won_1975",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.017,
+		"rear_axle_m": -1.017,
+		"rear_axles_m": [
+			-1.017
+		],
+		"front_bumper_m": 1.792,
+		"rear_bumper_m": -1.792,
+		"track_m": 1.28,
+		"wheel_radius_m": 0.288,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.545,
+				"y_m": -0.383,
+				"slice": 6.27
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.521,
+				"y_m": -0.417,
+				"slice": 6.38
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 0.771,
+				"y_m": -0.708,
+				"slice": 5.25
+			},
+			{
+				"kind": "head",
+				"x_m": 1.694,
+				"y_m": -0.292,
+				"slice": 4.33
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.625,
+				"y_m": -0.25,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.545,
+				"y_m": 0.383,
+				"slice": 6.27
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.521,
+				"y_m": 0.417,
+				"slice": 6.38
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.625,
+				"y_m": 0.25,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.694,
+				"y_m": 0.292,
+				"slice": 4.33
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.771,
+				"y_m": 0.708,
+				"slice": 5.25
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s oddball bubble on the micro_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. A body of cotton-reinforced plastic and a two-stroke smoke trail. Ten-year waiting list not included.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

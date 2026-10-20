@@ -1,0 +1,250 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "oldsmobeel_alergo_2003",
+	"car_id": "oldsmobeel_alergo_2003",
+	"display": {
+		"make": "Oldsmobeel",
+		"model": "Alergo",
+		"trim": "",
+		"year": 2003
+	},
+	"classification": {
+		"class": "compact",
+		"body": "sedan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [
+			"length_outside_range"
+		],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.75,
+		"width": 1.78,
+		"wheelbase": 2.72,
+		"track": 1.52
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/oldsmobeel_alergo_2003.png",
+		"runtime_dir": "res://art/vehicles/runtime/oldsmobeel_alergo_2003",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.319,
+		"rear_axle_m": -1.401,
+		"rear_axles_m": [
+			-1.401
+		],
+		"front_bumper_m": 2.375,
+		"rear_bumper_m": -2.375,
+		"track_m": 1.52,
+		"wheel_radius_m": 0.339,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.135,
+				"y_m": -0.906,
+				"slice": 5.88
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.213,
+				"y_m": -0.452,
+				"slice": 8.45
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.282,
+				"y_m": -0.471,
+				"slice": 8.58
+			},
+			{
+				"kind": "head",
+				"x_m": 2.22,
+				"y_m": -0.601,
+				"slice": 6.64
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.333,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.213,
+				"y_m": 0.452,
+				"slice": 8.45
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.282,
+				"y_m": 0.471,
+				"slice": 8.58
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.333,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.22,
+				"y_m": 0.601,
+				"slice": 6.64
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.135,
+				"y_m": 0.906,
+				"slice": 5.88
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s compact sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. The last new model of a brand that ran out of new. It sneezes on cold mornings.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

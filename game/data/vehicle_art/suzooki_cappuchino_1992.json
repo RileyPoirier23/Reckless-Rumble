@@ -1,0 +1,243 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "suzooki_cappuchino_1992",
+	"car_id": "suzooki_cappuchino_1992",
+	"display": {
+		"make": "Suzooki",
+		"model": "Cappuchino",
+		"trim": "",
+		"year": 1992
+	},
+	"classification": {
+		"class": "kei",
+		"body": "roadster",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 3.3,
+		"width": 1.4,
+		"wheelbase": 2.06,
+		"track": 1.2
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/suzooki_cappuchino_1992.png",
+		"runtime_dir": "res://art/vehicles/runtime/suzooki_cappuchino_1992",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.103,
+		"rear_axle_m": -0.977,
+		"rear_axles_m": [
+			-0.977
+		],
+		"front_bumper_m": 1.667,
+		"rear_bumper_m": -1.667,
+		"track_m": 1.2,
+		"wheel_radius_m": 0.278,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.526,
+				"y_m": -0.495,
+				"slice": 6.63
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.5,
+				"y_m": -0.542,
+				"slice": 6.75
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.375,
+				"y_m": -0.667,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.394,
+				"y_m": -0.523,
+				"slice": 5.56
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.583,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.526,
+				"y_m": 0.495,
+				"slice": 6.63
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.5,
+				"y_m": 0.542,
+				"slice": 6.75
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.583,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.394,
+				"y_m": 0.523,
+				"slice": 5.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.375,
+				"y_m": 0.667,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s kei roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A kei roadster with a roof that packs into the trunk. The trunk then holds nothing.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

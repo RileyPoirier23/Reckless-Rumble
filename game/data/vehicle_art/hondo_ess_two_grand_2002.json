@@ -1,0 +1,243 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "hondo_ess_two_grand_2002",
+	"car_id": "hondo_ess_two_grand_2002",
+	"display": {
+		"make": "Hondo",
+		"model": "Ess-Two-Grand",
+		"trim": "",
+		"year": 2002
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.13,
+		"width": 1.75,
+		"wheelbase": 2.4,
+		"track": 1.5
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/hondo_ess_two_grand_2002.png",
+		"runtime_dir": "res://art/vehicles/runtime/hondo_ess_two_grand_2002",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.298,
+		"rear_axle_m": -1.123,
+		"rear_axles_m": [
+			-1.123
+		],
+		"front_bumper_m": 2.083,
+		"rear_bumper_m": -2.083,
+		"track_m": 1.5,
+		"wheel_radius_m": 0.332,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.857,
+				"y_m": -0.649,
+				"slice": 6.36
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.814,
+				"y_m": -0.693,
+				"slice": 6.45
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.758,
+				"y_m": -0.808,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.896,
+				"y_m": -0.639,
+				"slice": 6.08
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.857,
+				"y_m": 0.649,
+				"slice": 6.36
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.042,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.814,
+				"y_m": 0.693,
+				"slice": 6.45
+			},
+			{
+				"kind": "head",
+				"x_m": 1.896,
+				"y_m": 0.639,
+				"slice": 6.08
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.758,
+				"y_m": 0.808,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s sports roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A nine-thousand-rpm redline. Torque is something that happens to other people.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,243 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "beemer_werke_zee_dreier_1998",
+	"car_id": "beemer_werke_zee_dreier_1998",
+	"display": {
+		"make": "Beemer-Werke",
+		"model": "Zee-Dreier",
+		"trim": "",
+		"year": 1998
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.03,
+		"width": 1.69,
+		"wheelbase": 2.45,
+		"track": 1.44
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/beemer_werke_zee_dreier_1998.png",
+		"runtime_dir": "res://art/vehicles/runtime/beemer_werke_zee_dreier_1998",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.294,
+		"rear_axle_m": -1.137,
+		"rear_axles_m": [
+			-1.137
+		],
+		"front_bumper_m": 2.0,
+		"rear_bumper_m": -2.0,
+		"track_m": 1.44,
+		"wheel_radius_m": 0.31,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.726,
+				"y_m": -0.601,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.694,
+				"y_m": -0.625,
+				"slice": 6.58
+			},
+			{
+				"kind": "head",
+				"x_m": 1.653,
+				"y_m": -0.586,
+				"slice": 6.07
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.854,
+				"y_m": -0.708,
+				"slice": 4.25
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.958,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.726,
+				"y_m": 0.601,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.694,
+				"y_m": 0.625,
+				"slice": 6.58
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.958,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.653,
+				"y_m": 0.586,
+				"slice": 6.07
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.854,
+				"y_m": 0.708,
+				"slice": 4.25
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s sports roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A retro roadster driven by a secret agent once, and by a dentist every other time.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

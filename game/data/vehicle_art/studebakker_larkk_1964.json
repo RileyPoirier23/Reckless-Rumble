@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "studebakker_larkk_1964",
+	"car_id": "studebakker_larkk_1964",
+	"display": {
+		"make": "Studebakker",
+		"model": "Larkk",
+		"trim": "",
+		"year": 1964
+	},
+	"classification": {
+		"class": "compact",
+		"body": "sedan",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.6,
+		"width": 1.82,
+		"wheelbase": 2.76,
+		"track": 1.56
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/studebakker_larkk_1964.png",
+		"runtime_dir": "res://art/vehicles/runtime/studebakker_larkk_1964",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.485,
+		"rear_axle_m": -1.265,
+		"rear_axles_m": [
+			-1.265
+		],
+		"front_bumper_m": 2.292,
+		"rear_bumper_m": -2.292,
+		"track_m": 1.56,
+		"wheel_radius_m": 0.343,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.611,
+				"y_m": -0.861,
+				"slice": 4.83
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.224,
+				"y_m": -0.386,
+				"slice": 7.58
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.207,
+				"y_m": -0.451,
+				"slice": 8.22
+			},
+			{
+				"kind": "head",
+				"x_m": 2.194,
+				"y_m": -0.653,
+				"slice": 6.56
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.224,
+				"y_m": 0.386,
+				"slice": 7.58
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.207,
+				"y_m": 0.451,
+				"slice": 8.22
+			},
+			{
+				"kind": "head",
+				"x_m": 2.194,
+				"y_m": 0.653,
+				"slice": 6.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.611,
+				"y_m": 0.861,
+				"slice": 4.83
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s compact sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Built in Hamilton, Ontario, until the money ran out. The last one is in a museum. This one is in a field.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

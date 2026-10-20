@@ -1,0 +1,231 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "alfa_romio_duettoh_1967",
+	"car_id": "alfa_romio_duettoh_1967",
+	"display": {
+		"make": "Alfa Romio",
+		"model": "Duettoh",
+		"trim": "",
+		"year": 1967
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 4.25,
+		"width": 1.63,
+		"wheelbase": 2.25,
+		"track": 1.39
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/alfa_romio_duettoh_1967.png",
+		"runtime_dir": "res://art/vehicles/runtime/alfa_romio_duettoh_1967",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.225,
+		"rear_axle_m": -1.025,
+		"rear_axles_m": [
+			-1.025
+		],
+		"front_bumper_m": 2.125,
+		"rear_bumper_m": -2.125,
+		"track_m": 1.39,
+		"wheel_radius_m": 0.339,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.936,
+				"y_m": -0.532,
+				"slice": 6.88
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.91,
+				"y_m": -0.554,
+				"slice": 7.08
+			},
+			{
+				"kind": "head",
+				"x_m": 1.672,
+				"y_m": -0.581,
+				"slice": 6.4
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.889,
+				"y_m": -0.736,
+				"slice": 4.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.936,
+				"y_m": 0.532,
+				"slice": 6.88
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.91,
+				"y_m": 0.554,
+				"slice": 7.08
+			},
+			{
+				"kind": "head",
+				"x_m": 1.672,
+				"y_m": 0.581,
+				"slice": 6.4
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.889,
+				"y_m": 0.736,
+				"slice": 4.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s sports roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. The boat-tail roadster from a famous film with a famous ending. Rusts at the speed of a Sicilian sunset.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

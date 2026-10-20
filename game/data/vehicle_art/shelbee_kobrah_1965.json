@@ -1,0 +1,230 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "shelbee_kobrah_1965",
+	"car_id": "shelbee_kobrah_1965",
+	"display": {
+		"make": "Shelbee",
+		"model": "Kobrah",
+		"trim": "",
+		"year": 1965
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "roadster",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 3.96,
+		"width": 1.73,
+		"wheelbase": 2.29,
+		"track": 1.48
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/shelbee_kobrah_1965.png",
+		"runtime_dir": "res://art/vehicles/runtime/shelbee_kobrah_1965",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.241,
+		"rear_axle_m": -1.072,
+		"rear_axles_m": [
+			-1.072
+		],
+		"front_bumper_m": 2.0,
+		"rear_bumper_m": -2.0,
+		"track_m": 1.48,
+		"wheel_radius_m": 0.364,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "side_both",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.681,
+				"y_m": -0.755,
+				"slice": 5.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.81,
+				"y_m": -0.588,
+				"slice": 6.56
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.78,
+				"y_m": -0.625,
+				"slice": 6.71
+			},
+			{
+				"kind": "head",
+				"x_m": 1.665,
+				"y_m": -0.611,
+				"slice": 6.3
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.81,
+				"y_m": 0.588,
+				"slice": 6.56
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.78,
+				"y_m": 0.625,
+				"slice": 6.71
+			},
+			{
+				"kind": "head",
+				"x_m": 1.665,
+				"y_m": 0.611,
+				"slice": 6.3
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.681,
+				"y_m": 0.755,
+				"slice": 5.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s exotic roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A British roadster with an American heart transplant. The patient survived. The passengers, sometimes not.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

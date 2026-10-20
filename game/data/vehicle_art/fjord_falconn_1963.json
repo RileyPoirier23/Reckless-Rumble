@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_falconn_1963",
+	"car_id": "fjord_falconn_1963",
+	"display": {
+		"make": "Fjord",
+		"model": "Falconn",
+		"trim": "",
+		"year": 1963
+	},
+	"classification": {
+		"class": "compact",
+		"body": "sedan",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.6,
+		"width": 1.78,
+		"wheelbase": 2.78,
+		"track": 1.52
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_falconn_1963.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_falconn_1963",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.494,
+		"rear_axle_m": -1.276,
+		"rear_axles_m": [
+			-1.276
+		],
+		"front_bumper_m": 2.292,
+		"rear_bumper_m": -2.292,
+		"track_m": 1.52,
+		"wheel_radius_m": 0.338,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 2.222,
+				"y_m": -0.847,
+				"slice": 4.67
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.225,
+				"y_m": -0.396,
+				"slice": 7.62
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.208,
+				"y_m": -0.462,
+				"slice": 8.25
+			},
+			{
+				"kind": "head",
+				"x_m": 2.188,
+				"y_m": -0.646,
+				"slice": 6.5
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.225,
+				"y_m": 0.396,
+				"slice": 7.62
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.208,
+				"y_m": 0.462,
+				"slice": 8.25
+			},
+			{
+				"kind": "head",
+				"x_m": 2.188,
+				"y_m": 0.646,
+				"slice": 6.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.222,
+				"y_m": 0.847,
+				"slice": 4.67
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s compact sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. The sensible one. Three on the tree, and the tree has rust.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

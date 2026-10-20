@@ -1,0 +1,233 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_gt_fourty_ish_2005",
+	"car_id": "fjord_gt_fourty_ish_2005",
+	"display": {
+		"make": "Fjord",
+		"model": "GT-Fourty-ish",
+		"trim": "",
+		"year": 2005
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "wedge",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "exotic_wedge",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 4.64,
+		"width": 1.95,
+		"wheelbase": 2.71,
+		"track": 1.67
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_gt_fourty_ish_2005.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_gt_fourty_ish_2005",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.169,
+		"rear_axle_m": -1.557,
+		"rear_axles_m": [
+			-1.557
+		],
+		"front_bumper_m": 2.333,
+		"rear_bumper_m": -2.333,
+		"track_m": 1.67,
+		"wheel_radius_m": 0.32,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.492,
+				"y_m": -0.925,
+				"slice": 3.8
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.083,
+				"y_m": -0.621,
+				"slice": 7.8
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.215,
+				"y_m": -0.708,
+				"slice": 7.83
+			},
+			{
+				"kind": "head",
+				"x_m": 2.03,
+				"y_m": -0.661,
+				"slice": 5.14
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.083,
+				"y_m": 0.621,
+				"slice": 7.8
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.215,
+				"y_m": 0.708,
+				"slice": 7.83
+			},
+			{
+				"kind": "head",
+				"x_m": 2.03,
+				"y_m": 0.661,
+				"slice": 5.14
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.492,
+				"y_m": 0.925,
+				"slice": 3.8
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s exotic wedge on the exotic_wedge archetype; original badges, grille and lamp graphics, no real logos or liveries. Forty-four inches tall. You don't get in, you get installed.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,246 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "subaroo_imprezza_wrecks_2004",
+	"car_id": "subaroo_imprezza_wrecks_2004",
+	"display": {
+		"make": "Subaroo",
+		"model": "Imprezza Wrecks",
+		"trim": "",
+		"year": 2004
+	},
+	"classification": {
+		"class": "rally",
+		"body": "sedan",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.42,
+		"width": 1.74,
+		"wheelbase": 2.53,
+		"track": 1.49
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/subaroo_imprezza_wrecks_2004.png",
+		"runtime_dir": "res://art/vehicles/runtime/subaroo_imprezza_wrecks_2004",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.377,
+		"rear_axle_m": -1.151,
+		"rear_axles_m": [
+			-1.151
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.49,
+		"wheel_radius_m": 0.328,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 0.991,
+				"y_m": -0.912,
+				"slice": 5.89
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.953,
+				"y_m": -0.623,
+				"slice": 7.65
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.973,
+				"y_m": -0.725,
+				"slice": 7.4
+			},
+			{
+				"kind": "head",
+				"x_m": 1.942,
+				"y_m": -0.642,
+				"slice": 6.7
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.953,
+				"y_m": 0.623,
+				"slice": 7.65
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.973,
+				"y_m": 0.725,
+				"slice": 7.4
+			},
+			{
+				"kind": "head",
+				"x_m": 1.942,
+				"y_m": 0.642,
+				"slice": 6.7
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 0.991,
+				"y_m": 0.912,
+				"slice": 5.89
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s rally sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Gold wheels, a hood scoop, and a wing older than the tree it's parked under.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

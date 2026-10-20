@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_galaxee_500_1964",
+	"car_id": "fjord_galaxee_500_1964",
+	"display": {
+		"make": "Fjord",
+		"model": "Galaxee 500",
+		"trim": "",
+		"year": 1964
+	},
+	"classification": {
+		"class": "classic",
+		"body": "sedan",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 5.33,
+		"width": 2.02,
+		"wheelbase": 3.05,
+		"track": 1.73
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_galaxee_500_1964.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_galaxee_500_1964",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.663,
+		"rear_axle_m": -1.389,
+		"rear_axles_m": [
+			-1.389
+		],
+		"front_bumper_m": 2.667,
+		"rear_bumper_m": -2.667,
+		"track_m": 1.73,
+		"wheel_radius_m": 0.361,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.565,
+				"y_m": -0.946,
+				"slice": 5.57
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.6,
+				"y_m": -0.427,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.579,
+				"y_m": -0.517,
+				"slice": 8.15
+			},
+			{
+				"kind": "head",
+				"x_m": 2.388,
+				"y_m": -0.732,
+				"slice": 6.6
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.6,
+				"y_m": 0.427,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.579,
+				"y_m": 0.517,
+				"slice": 8.15
+			},
+			{
+				"kind": "head",
+				"x_m": 2.388,
+				"y_m": 0.732,
+				"slice": 6.6
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.565,
+				"y_m": 0.946,
+				"slice": 5.57
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s classic sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Five hundred of nothing in particular. Corners like a sofa going down a staircase.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

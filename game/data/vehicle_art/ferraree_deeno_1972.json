@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "ferraree_deeno_1972",
+	"car_id": "ferraree_deeno_1972",
+	"display": {
+		"make": "Ferraree",
+		"model": "Deeno",
+		"trim": "",
+		"year": 1972
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "sports",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "sports_midengine",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 4.23,
+		"width": 1.7,
+		"wheelbase": 2.34,
+		"track": 1.45
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/ferraree_deeno_1972.png",
+		"runtime_dir": "res://art/vehicles/runtime/ferraree_deeno_1972",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.138,
+		"rear_axle_m": -1.213,
+		"rear_axles_m": [
+			-1.213
+		],
+		"front_bumper_m": 2.125,
+		"rear_bumper_m": -2.125,
+		"track_m": 1.45,
+		"wheel_radius_m": 0.362,
+		"roof_z_slice": 10,
+		"procedural_slices": 11,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.968,
+				"y_m": -0.548,
+				"slice": 7.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.935,
+				"y_m": -0.588,
+				"slice": 7.22
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.262,
+				"y_m": -0.732,
+				"slice": 5.29
+			},
+			{
+				"kind": "head",
+				"x_m": 1.99,
+				"y_m": -0.49,
+				"slice": 6.13
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.968,
+				"y_m": 0.548,
+				"slice": 7.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.935,
+				"y_m": 0.588,
+				"slice": 7.22
+			},
+			{
+				"kind": "head",
+				"x_m": 1.99,
+				"y_m": 0.49,
+				"slice": 6.13
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.262,
+				"y_m": 0.732,
+				"slice": 5.29
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s exotic sports on the sports_midengine archetype; original badges, grille and lamp graphics, no real logos or liveries. Not allowed to wear the big badge at first: too few cylinders. It wore the shame beautifully.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,245 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "dodgy_challenjer_1970",
+	"car_id": "dodgy_challenjer_1970",
+	"display": {
+		"make": "Dodgy",
+		"model": "Challenjer",
+		"trim": "",
+		"year": 1970
+	},
+	"classification": {
+		"class": "muscle",
+		"body": "muscle",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 4.86,
+		"width": 1.95,
+		"wheelbase": 2.79,
+		"track": 1.67
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/dodgy_challenjer_1970.png",
+		"runtime_dir": "res://art/vehicles/runtime/dodgy_challenjer_1970",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.511,
+		"rear_axle_m": -1.264,
+		"rear_axles_m": [
+			-1.264
+		],
+		"front_bumper_m": 2.417,
+		"rear_bumper_m": -2.417,
+		"track_m": 1.67,
+		"wheel_radius_m": 0.369,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 2.018,
+				"y_m": -0.958,
+				"slice": 6.29
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.307,
+				"y_m": -0.454,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.256,
+				"y_m": -0.556,
+				"slice": 8.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.353,
+				"y_m": -0.7,
+				"slice": 6.58
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.307,
+				"y_m": 0.454,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.256,
+				"y_m": 0.556,
+				"slice": 8.1
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.375,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.353,
+				"y_m": 0.7,
+				"slice": 6.58
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.018,
+				"y_m": 0.958,
+				"slice": 6.29
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s muscle muscle on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. Shaker hood, pistol-grip shifter and a fuel gauge you can actually watch move.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

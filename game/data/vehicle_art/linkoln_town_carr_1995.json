@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "linkoln_town_carr_1995",
+	"car_id": "linkoln_town_carr_1995",
+	"display": {
+		"make": "Linkoln",
+		"model": "Town Carr",
+		"trim": "",
+		"year": 1995
+	},
+	"classification": {
+		"class": "luxury",
+		"body": "sedan",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "sedan_fullsize",
+		"archetype_exceptions": [],
+		"quota_class": "luxury"
+	},
+	"dimensions_m": {
+		"length": 5.56,
+		"width": 1.98,
+		"wheelbase": 2.98,
+		"track": 1.69
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/linkoln_town_carr_1995.png",
+		"runtime_dir": "res://art/vehicles/runtime/linkoln_town_carr_1995",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.652,
+		"rear_axle_m": -1.341,
+		"rear_axles_m": [
+			-1.341
+		],
+		"front_bumper_m": 2.792,
+		"rear_bumper_m": -2.792,
+		"track_m": 1.69,
+		"wheel_radius_m": 0.325,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.591,
+				"y_m": -0.642,
+				"slice": 7.88
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.646,
+				"y_m": -0.733,
+				"slice": 7.9
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.483,
+				"y_m": -0.908,
+				"slice": 4.2
+			},
+			{
+				"kind": "head",
+				"x_m": 2.642,
+				"y_m": -0.692,
+				"slice": 5.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.708,
+				"y_m": -0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.591,
+				"y_m": 0.642,
+				"slice": 7.88
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.646,
+				"y_m": 0.733,
+				"slice": 7.9
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.708,
+				"y_m": 0.542,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.642,
+				"y_m": 0.692,
+				"slice": 5.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.483,
+				"y_m": 0.908,
+				"slice": 4.2
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s luxury sedan on the sedan_fullsize archetype; original badges, grille and lamp graphics, no real logos or liveries. Grandpa's chariot, airport limo, funeral escort. It's seen everything, at forty-five kilometres an hour.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,234 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pontiak_g_t_whoa_1967",
+	"car_id": "pontiak_g_t_whoa_1967",
+	"display": {
+		"make": "Pontiak",
+		"model": "G.T.Whoa",
+		"trim": "",
+		"year": 1967
+	},
+	"classification": {
+		"class": "muscle",
+		"body": "muscle",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "muscle_longhood",
+		"archetype_exceptions": [],
+		"quota_class": "muscle"
+	},
+	"dimensions_m": {
+		"length": 5.1,
+		"width": 1.9,
+		"wheelbase": 2.92,
+		"track": 1.62
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pontiak_g_t_whoa_1967.png",
+		"runtime_dir": "res://art/vehicles/runtime/pontiak_g_t_whoa_1967",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.586,
+		"rear_axle_m": -1.325,
+		"rear_axles_m": [
+			-1.325
+		],
+		"front_bumper_m": 2.542,
+		"rear_bumper_m": -2.542,
+		"track_m": 1.62,
+		"wheel_radius_m": 0.37,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 2.107,
+				"y_m": -0.958,
+				"slice": 6.29
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.431,
+				"y_m": -0.454,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.378,
+				"y_m": -0.556,
+				"slice": 8.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.478,
+				"y_m": -0.7,
+				"slice": 6.74
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.431,
+				"y_m": 0.454,
+				"slice": 7.6
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.378,
+				"y_m": 0.556,
+				"slice": 8.1
+			},
+			{
+				"kind": "head",
+				"x_m": 2.478,
+				"y_m": 0.7,
+				"slice": 6.74
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.107,
+				"y_m": 0.958,
+				"slice": 6.29
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s muscle muscle on the muscle_longhood archetype; original badges, grille and lamp graphics, no real logos or liveries. The goat. It started all of this, and it's still not sorry.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

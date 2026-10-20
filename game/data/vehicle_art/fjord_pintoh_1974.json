@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_pintoh_1974",
+	"car_id": "fjord_pintoh_1974",
+	"display": {
+		"make": "Fjord",
+		"model": "Pintoh",
+		"trim": "",
+		"year": 1974
+	},
+	"classification": {
+		"class": "economy",
+		"body": "hatch",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "compact_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "compact_economy"
+	},
+	"dimensions_m": {
+		"length": 4.23,
+		"width": 1.75,
+		"wheelbase": 2.39,
+		"track": 1.5
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_pintoh_1974.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_pintoh_1974",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.238,
+		"rear_axle_m": -1.163,
+		"rear_axles_m": [
+			-1.163
+		],
+		"front_bumper_m": 2.125,
+		"rear_bumper_m": -2.125,
+		"track_m": 1.5,
+		"wheel_radius_m": 0.325,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -2.035,
+				"y_m": -0.684,
+				"slice": 7.29
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.019,
+				"y_m": -0.745,
+				"slice": 7.39
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.028,
+				"y_m": -0.847,
+				"slice": 4.33
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": -0.651,
+				"slice": 6.08
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.083,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.035,
+				"y_m": 0.684,
+				"slice": 7.29
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.083,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.0,
+				"y_m": 0.651,
+				"slice": 6.08
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.019,
+				"y_m": 0.745,
+				"slice": 7.39
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.028,
+				"y_m": 0.847,
+				"slice": 4.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s economy hatch on the compact_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. Rear-ending one is not recommended. Neither is being one.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

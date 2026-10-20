@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "toyoda_celliko_1978",
+	"car_id": "toyoda_celliko_1978",
+	"display": {
+		"make": "Toyoda",
+		"model": "Celliko",
+		"trim": "",
+		"year": 1978
+	},
+	"classification": {
+		"class": "coupe",
+		"body": "coupe",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "coupe_compact",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 4.4,
+		"width": 1.64,
+		"wheelbase": 2.5,
+		"track": 1.4
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/toyoda_celliko_1978.png",
+		"runtime_dir": "res://art/vehicles/runtime/toyoda_celliko_1978",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.369,
+		"rear_axle_m": -1.14,
+		"rear_axles_m": [
+			-1.14
+		],
+		"front_bumper_m": 2.208,
+		"rear_bumper_m": -2.208,
+		"track_m": 1.4,
+		"wheel_radius_m": 0.335,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.75,
+				"y_m": -0.812,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.101,
+				"y_m": -0.598,
+				"slice": 7.68
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.083,
+				"y_m": -0.625,
+				"slice": 8.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.141,
+				"y_m": -0.561,
+				"slice": 6.15
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.101,
+				"y_m": 0.598,
+				"slice": 7.68
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.083,
+				"y_m": 0.625,
+				"slice": 8.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.167,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.141,
+				"y_m": 0.561,
+				"slice": 6.15
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.75,
+				"y_m": 0.813,
+				"slice": 6.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s coupe coupe on the coupe_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. Liftback styling borrowed from a pony car, reliability borrowed from a refrigerator.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

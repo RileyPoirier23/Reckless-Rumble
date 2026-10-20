@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "ferraree_two_fifty_gee_tee_oh_no_1962",
+	"car_id": "ferraree_two_fifty_gee_tee_oh_no_1962",
+	"display": {
+		"make": "Ferraree",
+		"model": "Two-Fifty Gee-Tee-Oh-No",
+		"trim": "",
+		"year": 1962
+	},
+	"classification": {
+		"class": "exotic",
+		"body": "sports",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "coupe_gt",
+		"archetype_exceptions": [],
+		"quota_class": "super_exotic"
+	},
+	"dimensions_m": {
+		"length": 4.33,
+		"width": 1.6,
+		"wheelbase": 2.4,
+		"track": 1.37
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/ferraree_two_fifty_gee_tee_oh_no_1962.png",
+		"runtime_dir": "res://art/vehicles/runtime/ferraree_two_fifty_gee_tee_oh_no_1962",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.297,
+		"rear_axle_m": -1.104,
+		"rear_axles_m": [
+			-1.104
+		],
+		"front_bumper_m": 2.167,
+		"rear_bumper_m": -2.167,
+		"track_m": 1.37,
+		"wheel_radius_m": 0.361,
+		"roof_z_slice": 11,
+		"procedural_slices": 12,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "head",
+				"x_m": 1.747,
+				"y_m": -0.561,
+				"slice": 6.46
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.896,
+				"y_m": -0.687,
+				"slice": 5.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.042,
+				"y_m": -0.531,
+				"slice": 6.88
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.0,
+				"y_m": -0.604,
+				"slice": 7.25
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.042,
+				"y_m": 0.531,
+				"slice": 6.88
+			},
+			{
+				"kind": "head",
+				"x_m": 1.747,
+				"y_m": 0.561,
+				"slice": 6.46
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.0,
+				"y_m": 0.604,
+				"slice": 7.25
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.896,
+				"y_m": 0.688,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s exotic sports on the coupe_gt archetype; original badges, grille and lamp graphics, no real logos or liveries. Thirty-six were built. If you see one in traffic, you're dreaming, or very rich, or both.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

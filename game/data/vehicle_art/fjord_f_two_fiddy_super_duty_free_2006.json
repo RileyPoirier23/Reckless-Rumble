@@ -1,0 +1,237 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fjord_f_two_fiddy_super_duty_free_2006",
+	"car_id": "fjord_f_two_fiddy_super_duty_free_2006",
+	"display": {
+		"make": "Fjord",
+		"model": "F-Two-Fiddy Super Duty-Free",
+		"trim": "",
+		"year": 2006
+	},
+	"classification": {
+		"class": "hd_pickup",
+		"body": "pickup",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "pickup_heavy",
+		"archetype_exceptions": [],
+		"quota_class": "pickup"
+	},
+	"dimensions_m": {
+		"length": 6.2,
+		"width": 2.03,
+		"wheelbase": 4.0,
+		"track": 1.71
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fjord_f_two_fiddy_super_duty_free_2006.png",
+		"runtime_dir": "res://art/vehicles/runtime/fjord_f_two_fiddy_super_duty_free_2006",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 2.142,
+		"rear_axle_m": -1.836,
+		"rear_axles_m": [
+			-1.836
+		],
+		"front_bumper_m": 3.083,
+		"rear_bumper_m": -3.083,
+		"track_m": 1.71,
+		"wheel_radius_m": 0.454,
+		"roof_z_slice": 19,
+		"procedural_slices": 20,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -3.014,
+				"y_m": -0.819,
+				"slice": 10.17
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -3.0,
+				"y_m": -0.875,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.564,
+				"y_m": -0.958,
+				"slice": 10.0
+			},
+			{
+				"kind": "head",
+				"x_m": 3.025,
+				"y_m": -0.75,
+				"slice": 10.9
+			},
+			{
+				"kind": "head",
+				"x_m": 3.025,
+				"y_m": 0.75,
+				"slice": 10.9
+			},
+			{
+				"kind": "brake",
+				"x_m": -3.014,
+				"y_m": 0.819,
+				"slice": 10.17
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -3.0,
+				"y_m": 0.875,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.564,
+				"y_m": 0.958,
+				"slice": 10.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock",
+			"tonneau",
+			"rollbar",
+			"rollbar_lights"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s hd pickup pickup on the pickup_heavy archetype; original badges, grille and lamp graphics, no real logos or liveries. The six-litre diesel: famous for torque, infamous for head gaskets, never boring.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

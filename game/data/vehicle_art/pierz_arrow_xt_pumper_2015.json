@@ -1,0 +1,270 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "pierz_arrow_xt_pumper_2015",
+	"car_id": "fire",
+	"display": {
+		"make": "Pierz",
+		"model": "Arrow XT Pumper",
+		"trim": "",
+		"year": 2015
+	},
+	"classification": {
+		"class": "fleet",
+		"body": "boxtruck",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [
+			"box_body"
+		],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 9.4,
+		"width": 2.5,
+		"wheelbase": 5.2,
+		"track": 2.0
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/pierz_arrow_xt_pumper_2015.png",
+		"runtime_dir": "res://art/vehicles/runtime/pierz_arrow_xt_pumper_2015",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 3.194,
+		"rear_axle_m": -2.016,
+		"rear_axles_m": [
+			-2.016
+		],
+		"front_bumper_m": 4.708,
+		"rear_bumper_m": -4.708,
+		"track_m": 2.0,
+		"wheel_radius_m": 0.552,
+		"roof_z_slice": 29,
+		"procedural_slices": 31,
+		"exhaust_side": "hidden",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -4.653,
+				"y_m": -1.0,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -4.646,
+				"y_m": -1.083,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 4.464,
+				"y_m": -1.196,
+				"slice": 10.71
+			},
+			{
+				"kind": "beacon",
+				"x_m": -4.583,
+				"y_m": -0.958,
+				"slice": 27.0
+			},
+			{
+				"kind": "beacon",
+				"x_m": 4.333,
+				"y_m": -0.583,
+				"slice": 30.0
+			},
+			{
+				"kind": "head",
+				"x_m": 4.647,
+				"y_m": -0.891,
+				"slice": 10.33
+			},
+			{
+				"kind": "reverse",
+				"x_m": -4.667,
+				"y_m": -0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "beacon",
+				"x_m": 4.333,
+				"y_m": 0.583,
+				"slice": 30.0
+			},
+			{
+				"kind": "head",
+				"x_m": 4.647,
+				"y_m": 0.891,
+				"slice": 10.33
+			},
+			{
+				"kind": "brake",
+				"x_m": -4.653,
+				"y_m": 1.0,
+				"slice": 9.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -4.667,
+				"y_m": 0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "beacon",
+				"x_m": -4.583,
+				"y_m": 0.958,
+				"slice": 27.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -4.646,
+				"y_m": 1.083,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 4.464,
+				"y_m": 1.196,
+				"slice": 10.71
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s fleet boxtruck on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. Engine 3. Thirty-nine feet of pump, hose and ladder, and a diesel you can feel in your teeth from a block away.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

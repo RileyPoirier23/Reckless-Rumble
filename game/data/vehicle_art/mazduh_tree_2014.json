@@ -1,0 +1,236 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "mazduh_tree_2014",
+	"car_id": "mazduh_tree_2014",
+	"display": {
+		"make": "Mazduh",
+		"model": "Tree",
+		"trim": "",
+		"year": 2014
+	},
+	"classification": {
+		"class": "compact",
+		"body": "hatch",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "hatch_fwd",
+		"archetype_exceptions": [],
+		"quota_class": "hatchback"
+	},
+	"dimensions_m": {
+		"length": 4.46,
+		"width": 1.8,
+		"wheelbase": 2.7,
+		"track": 1.54
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/mazduh_tree_2014.png",
+		"runtime_dir": "res://art/vehicles/runtime/mazduh_tree_2014",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.256,
+		"rear_axle_m": -1.468,
+		"rear_axles_m": [
+			-1.468
+		],
+		"front_bumper_m": 2.25,
+		"rear_bumper_m": -2.25,
+		"track_m": 1.54,
+		"wheel_radius_m": 0.353,
+		"roof_z_slice": 14,
+		"procedural_slices": 15,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.406,
+				"y_m": -0.896,
+				"slice": 6.75
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.052,
+				"y_m": -0.582,
+				"slice": 8.32
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.12,
+				"y_m": -0.654,
+				"slice": 8.12
+			},
+			{
+				"kind": "head",
+				"x_m": 1.97,
+				"y_m": -0.661,
+				"slice": 7.18
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.052,
+				"y_m": 0.582,
+				"slice": 8.32
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.12,
+				"y_m": 0.654,
+				"slice": 8.12
+			},
+			{
+				"kind": "head",
+				"x_m": 1.97,
+				"y_m": 0.661,
+				"slice": 7.18
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.675,
+				"y_m": 0.825,
+				"slice": 6.4
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s compact hatch on the hatch_fwd archetype; original badges, grille and lamp graphics, no real logos or liveries. A sensible hatch with a grin. Say the model name in a Maritime accent and it's the number three.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

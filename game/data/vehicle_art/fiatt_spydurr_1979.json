@@ -1,0 +1,243 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "fiatt_spydurr_1979",
+	"car_id": "fiatt_spydurr_1979",
+	"display": {
+		"make": "Fiatt",
+		"model": "Spydurr",
+		"trim": "",
+		"year": 1979
+	},
+	"classification": {
+		"class": "sports",
+		"body": "roadster",
+		"era": "1970s",
+		"era_band": "1970-1979",
+		"archetype": "sports_frontengine",
+		"archetype_exceptions": [],
+		"quota_class": "sports"
+	},
+	"dimensions_m": {
+		"length": 3.97,
+		"width": 1.61,
+		"wheelbase": 2.28,
+		"track": 1.38
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/fiatt_spydurr_1979.png",
+		"runtime_dir": "res://art/vehicles/runtime/fiatt_spydurr_1979",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.234,
+		"rear_axle_m": -1.063,
+		"rear_axles_m": [
+			-1.063
+		],
+		"front_bumper_m": 2.0,
+		"rear_bumper_m": -2.0,
+		"track_m": 1.38,
+		"wheel_radius_m": 0.315,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.731,
+				"y_m": -0.565,
+				"slice": 6.83
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.708,
+				"y_m": -0.578,
+				"slice": 6.94
+			},
+			{
+				"kind": "head",
+				"x_m": 1.595,
+				"y_m": -0.58,
+				"slice": 5.82
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.792,
+				"y_m": -0.736,
+				"slice": 4.67
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.958,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.731,
+				"y_m": 0.565,
+				"slice": 6.83
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.708,
+				"y_m": 0.578,
+				"slice": 6.94
+			},
+			{
+				"kind": "reverse",
+				"x_m": -1.958,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 1.595,
+				"y_m": 0.58,
+				"slice": 5.82
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.792,
+				"y_m": 0.736,
+				"slice": 4.67
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"rack"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1970s sports roadster on the sports_frontengine archetype; original badges, grille and lamp graphics, no real logos or liveries. A pretty Italian roadster. Every piece of it rusts at its own speed, like an orchestra tuning up.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

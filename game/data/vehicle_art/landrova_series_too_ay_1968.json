@@ -1,0 +1,235 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "landrova_series_too_ay_1968",
+	"car_id": "landrova_series_too_ay_1968",
+	"display": {
+		"make": "Landrova",
+		"model": "Series Too-Ay",
+		"trim": "",
+		"year": 1968
+	},
+	"classification": {
+		"class": "offroad",
+		"body": "offroad",
+		"era": "1960s",
+		"era_band": "1950-1969",
+		"archetype": "offroad_short",
+		"archetype_exceptions": [],
+		"quota_class": "offroad"
+	},
+	"dimensions_m": {
+		"length": 3.62,
+		"width": 1.68,
+		"wheelbase": 2.24,
+		"track": 1.44
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/landrova_series_too_ay_1968.png",
+		"runtime_dir": "res://art/vehicles/runtime/landrova_series_too_ay_1968",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.15,
+		"rear_axle_m": -1.067,
+		"rear_axles_m": [
+			-1.067
+		],
+		"front_bumper_m": 1.792,
+		"rear_bumper_m": -1.792,
+		"track_m": 1.44,
+		"wheel_radius_m": 0.354,
+		"roof_z_slice": 17,
+		"procedural_slices": 18,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.714,
+				"y_m": -0.702,
+				"slice": 10.29
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -1.714,
+				"y_m": -0.702,
+				"slice": 10.29
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.729,
+				"y_m": -0.792,
+				"slice": 7.5
+			},
+			{
+				"kind": "head",
+				"x_m": 1.7,
+				"y_m": -0.625,
+				"slice": 9.13
+			},
+			{
+				"kind": "head",
+				"x_m": 1.7,
+				"y_m": 0.625,
+				"slice": 9.13
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.714,
+				"y_m": 0.702,
+				"slice": 10.29
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -1.714,
+				"y_m": 0.702,
+				"slice": 10.29
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.729,
+				"y_m": 0.792,
+				"slice": 7.5
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1960s offroad offroad on the offroad_short archetype; original badges, grille and lamp graphics, no real logos or liveries. Galvanized chassis, aluminium body, and oil leaks that mark the territory like a dog.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

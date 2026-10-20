@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "alfa_romio_milanese_1987",
+	"car_id": "alfa_romio_milanese_1987",
+	"display": {
+		"make": "Alfa Romio",
+		"model": "Milanese",
+		"trim": "",
+		"year": 1987
+	},
+	"classification": {
+		"class": "euro",
+		"body": "sedan",
+		"era": "1980s",
+		"era_band": "1980-1989",
+		"archetype": "sedan_compact",
+		"archetype_exceptions": [],
+		"quota_class": "sedan"
+	},
+	"dimensions_m": {
+		"length": 4.33,
+		"width": 1.63,
+		"wheelbase": 2.51,
+		"track": 1.39
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/alfa_romio_milanese_1987.png",
+		"runtime_dir": "res://art/vehicles/runtime/alfa_romio_milanese_1987",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.365,
+		"rear_axle_m": -1.147,
+		"rear_axles_m": [
+			-1.147
+		],
+		"front_bumper_m": 2.167,
+		"rear_bumper_m": -2.167,
+		"track_m": 1.39,
+		"wheel_radius_m": 0.318,
+		"roof_z_slice": 13,
+		"procedural_slices": 14,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.992,
+				"y_m": -0.594,
+				"slice": 7.97
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.024,
+				"y_m": -0.673,
+				"slice": 8.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.042,
+				"y_m": -0.792,
+				"slice": 5.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.076,
+				"y_m": -0.583,
+				"slice": 5.83
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": -0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.992,
+				"y_m": 0.594,
+				"slice": 7.97
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.024,
+				"y_m": 0.673,
+				"slice": 8.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": 0.458,
+				"slice": 6.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.076,
+				"y_m": 0.583,
+				"slice": 5.83
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 2.042,
+				"y_m": 0.792,
+				"slice": 5.0
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1980s euro sedan on the sedan_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. The V6 sings opera. The electrics sing tragic opera.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

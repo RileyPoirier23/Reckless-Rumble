@@ -1,0 +1,225 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "nissun_titann_2006",
+	"car_id": "nissun_titann_2006",
+	"display": {
+		"make": "Nissun",
+		"model": "Titann",
+		"trim": "",
+		"year": 2006
+	},
+	"classification": {
+		"class": "pickup",
+		"body": "pickup",
+		"era": "2000s",
+		"era_band": "2000-2009",
+		"archetype": "pickup_half_ton",
+		"archetype_exceptions": [],
+		"quota_class": "pickup"
+	},
+	"dimensions_m": {
+		"length": 5.7,
+		"width": 2.02,
+		"wheelbase": 3.55,
+		"track": 1.7
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/nissun_titann_2006.png",
+		"runtime_dir": "res://art/vehicles/runtime/nissun_titann_2006",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.914,
+		"rear_axle_m": -1.615,
+		"rear_axles_m": [
+			-1.615
+		],
+		"front_bumper_m": 2.833,
+		"rear_bumper_m": -2.833,
+		"track_m": 1.7,
+		"wheel_radius_m": 0.432,
+		"roof_z_slice": 18,
+		"procedural_slices": 19,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "signal_left",
+				"x_m": 1.875,
+				"y_m": -0.958,
+				"slice": 9.64
+			},
+			{
+				"kind": "head",
+				"x_m": 2.775,
+				"y_m": -0.75,
+				"slice": 10.6
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.792,
+				"y_m": -0.708,
+				"slice": 10.0
+			},
+			{
+				"kind": "head",
+				"x_m": 2.775,
+				"y_m": 0.75,
+				"slice": 10.6
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.792,
+				"y_m": 0.708,
+				"slice": 10.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.875,
+				"y_m": 0.958,
+				"slice": 9.64
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser",
+			"spare"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock",
+			"tonneau",
+			"rollbar",
+			"rollbar_lights"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2000s pickup pickup on the pickup_half_ton archetype; original badges, grille and lamp graphics, no real logos or liveries. A full-size truck from an unlikely country. Never quite invited to the party.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

@@ -1,0 +1,248 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "dodgy_shaddow_1992",
+	"car_id": "dodgy_shaddow_1992",
+	"display": {
+		"make": "Dodgy",
+		"model": "Shaddow",
+		"trim": "",
+		"year": 1992
+	},
+	"classification": {
+		"class": "economy",
+		"body": "coupe",
+		"era": "1990s",
+		"era_band": "1990-1999",
+		"archetype": "coupe_compact",
+		"archetype_exceptions": [],
+		"quota_class": "coupe"
+	},
+	"dimensions_m": {
+		"length": 4.37,
+		"width": 1.71,
+		"wheelbase": 2.46,
+		"track": 1.46
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/dodgy_shaddow_1992.png",
+		"runtime_dir": "res://art/vehicles/runtime/dodgy_shaddow_1992",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 1.22,
+		"rear_axle_m": -1.22,
+		"rear_axles_m": [
+			-1.22
+		],
+		"front_bumper_m": 2.167,
+		"rear_bumper_m": -2.167,
+		"track_m": 1.46,
+		"wheel_radius_m": 0.315,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
+		"exhaust_side": "rear_right",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -1.984,
+				"y_m": -0.576,
+				"slice": 7.59
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.024,
+				"y_m": -0.673,
+				"slice": 7.42
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.764,
+				"y_m": -0.792,
+				"slice": 4.33
+			},
+			{
+				"kind": "head",
+				"x_m": 1.927,
+				"y_m": -0.646,
+				"slice": 5.5
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": -0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "brake",
+				"x_m": -1.984,
+				"y_m": 0.576,
+				"slice": 7.59
+			},
+			{
+				"kind": "reverse",
+				"x_m": -2.125,
+				"y_m": 0.375,
+				"slice": 6.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.024,
+				"y_m": 0.673,
+				"slice": 7.42
+			},
+			{
+				"kind": "head",
+				"x_m": 1.927,
+				"y_m": 0.646,
+				"slice": 5.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 1.764,
+				"y_m": 0.792,
+				"slice": 4.33
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none",
+			"ducktail",
+			"wing",
+			"gt"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"steel",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 1990s economy coupe on the coupe_compact archetype; original badges, grille and lamp graphics, no real logos or liveries. A ghost of a car. It haunts the back row of every auction lot in the province.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}

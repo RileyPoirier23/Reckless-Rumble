@@ -1,0 +1,247 @@
+{
+	"schema_version": 1,
+	"vehicle_id": "internashnal_dura_snore_box_2015",
+	"car_id": "internashnal_dura_snore_box_2015",
+	"display": {
+		"make": "Internashnal",
+		"model": "Dura-Snore Box",
+		"trim": "",
+		"year": 2015
+	},
+	"classification": {
+		"class": "fleet",
+		"body": "boxtruck",
+		"era": "2010s",
+		"era_band": "2010-2019",
+		"archetype": "utility_tow",
+		"archetype_exceptions": [
+			"box_body"
+		],
+		"quota_class": "utility_service"
+	},
+	"dimensions_m": {
+		"length": 8.6,
+		"width": 2.5,
+		"wheelbase": 5.4,
+		"track": 2.1
+	},
+	"art": {
+		"showroom": "res://art/vehicles/showroom/internashnal_dura_snore_box_2015.png",
+		"runtime_dir": "res://art/vehicles/runtime/internashnal_dura_snore_box_2015",
+		"slice_count": 16,
+		"front_axis": "+x",
+		"pixels_per_metre": 12,
+		"showroom_size": [
+			256,
+			96
+		],
+		"showroom_baseline_y": 78,
+		"alpha_whitelist": []
+	},
+	"anchors": {
+		"front_axle_m": 3.334,
+		"rear_axle_m": -2.056,
+		"rear_axles_m": [
+			-2.056
+		],
+		"front_bumper_m": 4.292,
+		"rear_bumper_m": -4.292,
+		"track_m": 2.1,
+		"wheel_radius_m": 0.545,
+		"roof_z_slice": 22,
+		"procedural_slices": 32,
+		"exhaust_side": "hidden",
+		"lamps": [
+			{
+				"kind": "brake",
+				"x_m": -4.226,
+				"y_m": -1.018,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -4.217,
+				"y_m": -1.092,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 3.06,
+				"y_m": -1.194,
+				"slice": 8.83
+			},
+			{
+				"kind": "head",
+				"x_m": 4.088,
+				"y_m": -0.936,
+				"slice": 10.81
+			},
+			{
+				"kind": "reverse",
+				"x_m": -4.25,
+				"y_m": -0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "head",
+				"x_m": 4.088,
+				"y_m": 0.936,
+				"slice": 10.81
+			},
+			{
+				"kind": "brake",
+				"x_m": -4.226,
+				"y_m": 1.018,
+				"slice": 9.0
+			},
+			{
+				"kind": "reverse",
+				"x_m": -4.25,
+				"y_m": 0.792,
+				"slice": 8.5
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -4.217,
+				"y_m": 1.092,
+				"slice": 9.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": 3.06,
+				"y_m": 1.194,
+				"slice": 8.83
+			}
+		]
+	},
+	"slots": {
+		"front_bumper": [
+			"stock",
+			"lip",
+			"bash_bar"
+		],
+		"rear_bumper": [
+			"stock",
+			"diffuser"
+		],
+		"side_skirt": [
+			"stock",
+			"skirts"
+		],
+		"spoiler": [
+			"none"
+		],
+		"hood": [
+			"stock",
+			"vented",
+			"scoop",
+			"carbon"
+		],
+		"fenders": [
+			"stock",
+			"flared"
+		],
+		"lights": [
+			"stock",
+			"halo",
+			"smoked"
+		],
+		"exhaust": [
+			"single",
+			"dual",
+			"quad"
+		],
+		"roof": [
+			"stock",
+			"sunroof",
+			"ttops",
+			"vinyl",
+			"rack",
+			"lightbar"
+		],
+		"bed": [
+			"stock"
+		],
+		"wheel_family": [
+			"stock",
+			"mesh",
+			"fivespoke",
+			"tenspoke",
+			"multispoke",
+			"turbofan",
+			"deepdish",
+			"dish",
+			"hubcap",
+			"beadlock",
+			"wire",
+			"split",
+			"crossspoke",
+			"threepiece",
+			"blade",
+			"sixspoke",
+			"steelie",
+			"laced",
+			"donk"
+		],
+		"tire": [
+			"stock",
+			"lowpro",
+			"whitewall",
+			"letters",
+			"offroad",
+			"slicks"
+		],
+		"fitment": [
+			"stock",
+			"flush",
+			"poke",
+			"tucked",
+			"stance",
+			"stretch"
+		],
+		"stagger": [
+			"none",
+			"staggered"
+		],
+		"finish": [
+			"gloss",
+			"metallic",
+			"pearl",
+			"matte",
+			"chrome"
+		],
+		"livery": [
+			"none",
+			"slash",
+			"split",
+			"sponsor",
+			"flames"
+		],
+		"stripes": [
+			"none",
+			"racing",
+			"side",
+			"rally"
+		]
+	},
+	"masks": [
+		"paint",
+		"accent",
+		"trim",
+		"glass",
+		"decal"
+	],
+	"light_masks": [
+		"head",
+		"brake",
+		"reverse",
+		"signal_left",
+		"signal_right"
+	],
+	"review": {
+		"reference_notes": "Fictional parody: a 2010s fleet boxtruck on the utility_tow archetype; original badges, grille and lamp graphics, no real logos or liveries. Twenty-six feet of box with a liftgate and a schedule it has never once kept.",
+		"artist": "",
+		"reviewer": "",
+		"approved": false
+	}
+}
