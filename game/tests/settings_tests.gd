@@ -333,60 +333,76 @@ func _police() -> void:
 func _layout() -> void:
 	var sc := SettingsScreen.new()
 	var bad := ""
-	var tabs_end := 120.0
-	for t in SettingsScreen.TABS: tabs_end += PixelFont.width(t) + 14
-	check("the tabs fit across the top", tabs_end <= 624.0 - PixelFont.width("LB/RB: TABS") - 8, "%d" % int(tabs_end))
-	check("the rows stop above the description", SettingsScreen.row_rect(SettingsScreen.ROWS_VIS - 1).end.y <= SettingsScreen.DESC.position.y)
-	check("the column headings sit under the tabs", SettingsScreen.ROW_Y - 10 >= SettingsScreen.TAB_Y + 9 and SettingsScreen.row_rect(0).position.y >= SettingsScreen.ROW_Y - 10 + 6)
-	check("the description's four lines fit its box", 5 + 3 * 9 + 5 <= SettingsScreen.DESC.size.y and SettingsScreen.DESC.end.y < SettingsScreen.HINT_Y)
+	# everything on the settings screen is drawn at scale 2 (the 5x7 face): measure it that way
+	var trs := SettingsScreen.tab_rects()
+	var tabs_end: float = trs[trs.size() - 1].end.x
+	check("the tabs fit across the top", tabs_end <= 624.0 - UiKit.hints_width("LB/RB: TABS") - 8, "%d" % int(tabs_end))
+	check("the rows stop above the description", SettingsScreen.row_rect(SettingsScreen.ROWS_VIS - 1).end.y <= SettingsScreen.LIST.end.y - 1 and SettingsScreen.LIST.end.y + 8 <= SettingsScreen.DESC.position.y)
+	check("the column headings sit under the tabs", SettingsScreen.LIST.position.y >= SettingsScreen.TAB_Y + 15 and SettingsScreen.ROW_Y - 12 >= SettingsScreen.LIST.position.y + 6 and SettingsScreen.row_rect(0).position.y >= SettingsScreen.ROW_Y - 12 + 9)
+	check("the description's three lines fit its box", 12 + 3 * UiKit.LINE_H + 1 <= SettingsScreen.DESC.size.y and SettingsScreen.DESC.end.y < SettingsScreen.HINT_Y - 1)
+	var desc_w := SettingsScreen.DESC.size.x - 2 * UiKit.PAD
 	for ti in SettingsScreen.TABS.size():
 		sc.tab = ti
 		var rs := sc.rows()
 		for r in rs:
-			var lw := SettingsScreen.LABEL_X + PixelFont.width(String(r.label))
-			var desc := Hud.wrap_lines(String(r.get("desc", "")), 148)
-			if desc.size() > 4: bad += "%s: description runs over; " % r.label
+			var lw := SettingsScreen.LABEL_X + PixelFont.width(String(r.label), 2)
+			if UiKit.wrap(String(r.get("desc", "")), desc_w).size() > 3: bad += "%s: description runs over; " % r.label
 			match String(r.kind):
 				"bind":
 					var x := SettingsScreen.PAD_COL if r.get("pad_only", false) else SettingsScreen.KEY_COL
-					if lw + 6 > x: bad += "%s: label hits the buttons; " % r.label
+					if lw + 6 > x - 4: bad += "%s: label hits the buttons; " % r.label
 				"choice":
+					if lw + 8 > SettingsScreen.VAL_X: bad += "%s: label hits the value; " % r.label
 					for o in r.opts:
 						GameSettings.set_v(String(r.sec), String(r.key), o)
-						var v := "< " + sc.value_text(r) + " >"
-						if lw + 8 > SettingsScreen.VALUE_R - PixelFont.width(v): bad += "%s=%s collides; " % [r.label, v]
+						# the value sits between the arrows, uncut
+						if PixelFont.width(sc.value_text(r), 2) > SettingsScreen.VALUE_R - SettingsScreen.VAL_X - 20: bad += "%s=%s is cut; " % [r.label, sc.value_text(r)]
 					GameSettings.reset(String(r.sec))
 					GameSettings.set_v("difficulty", "preset", "normal")
 				"live":
 					if lw + 6 > SettingsScreen.KEY_COL: bad += "%s: label hits the readout; " % r.label
+				"slider":
+					if lw + 8 > SettingsScreen.VAL_X: bad += "%s: label hits the bar; " % r.label
+					for v in [float(r.min), float(r.max)]:
+						GameSettings.set_v(String(r.sec), String(r.key), v)
+						if SettingsScreen.VAL_X + SettingsScreen.SLIDER_W + 6 + PixelFont.width(sc.value_text(r), 2) > SettingsScreen.VALUE_R: bad += "%s's number hits its bar; " % r.label
+					GameSettings.reset(String(r.sec))
 				_:
-					var v := "< " + sc.value_text(r) + " >"
-					if lw + 8 > SettingsScreen.VALUE_R - PixelFont.width(v): bad += "%s collides; " % r.label
-	# a long wheel name
+					if lw + 8 > SettingsScreen.VAL_X: bad += "%s collides; " % r.label
+	# the wheel's live readout fits the row
+	if SettingsScreen.KEY_COL + PixelFont.width("STEERGASBRAKE", 2) + 3 * 4 + 92 + 56 + 56 + 2 * 10 > SettingsScreen.VALUE_R: bad += "the live readout runs off; "
+	# a long wheel name is cut to fit between the arrows
 	GameSettings.set_v("wheel", "name", "Logitech G923 Racing Wheel for PlayStation and PC (USB)")
 	sc.tab = 1
-	var dv := "< " + sc.value_text(sc.rows()[0]) + " >"
-	if SettingsScreen.LABEL_X + PixelFont.width("WHEEL") + 8 > SettingsScreen.VALUE_R - PixelFont.width(dv): bad += "a long wheel name collides; "
+	var dv := UiKit.fit(sc.value_text(sc.rows()[0]), SettingsScreen.VALUE_R - SettingsScreen.VAL_X - 20)
+	if PixelFont.width(dv, 2) > SettingsScreen.VALUE_R - SettingsScreen.VAL_X - 20: bad += "a long wheel name runs over; "
 	GameSettings.reset("wheel")
-	# the longest binding text in each column, cut where the screen cuts it
-	if PixelFont.width("X".repeat(36)) > SettingsScreen.PAD_COL - SettingsScreen.KEY_COL - 4: bad += "the keyboard column runs into the controller one; "
-	if SettingsScreen.PAD_COL + PixelFont.width("X".repeat(34)) > 636: bad += "the controller column runs off the screen; "
+	# the button columns sit side by side, inside the list
+	if SettingsScreen.KEY_COL - 4 + SettingsScreen.COL_W > SettingsScreen.PAD_COL - 4: bad += "the keyboard column runs into the controller one; "
+	if SettingsScreen.PAD_COL - 4 + SettingsScreen.COL_W > SettingsScreen.row_rect(0).end.x: bad += "the controller column runs off the list; "
 	check("no setting's text runs into another", bad == "", bad)
 	sc.free()
 	var hint := Hints.fmt("{updown}: PICK  {leftright}: CHANGE  {ui_accept}: SELECT  {ui_cancel}: DONE")
-	check("the key hints fit", PixelFont.width(hint) < 600, "%d" % PixelFont.width(hint))
+	check("the key hints fit", UiKit.hints_width(hint) < 600, "%d" % int(UiKit.hints_width(hint)))
 	# the pause menu and its controls card
 	var pm_bad := ""
+	var dw := PauseMenu.PANEL.size.x - 2 * UiKit.PAD
 	for it in PauseMenu.ITEMS:
-		if PixelFont.width(String(it)) > PauseMenu.PANEL.size.x - 24: pm_bad += "%s too wide; " % it
-		if Hud.wrap_lines(String(PauseMenu.DESCS[it]), 56).size() > 2: pm_bad += "%s description runs over; " % it
-	if Hud.wrap_lines(String(PauseMenu.DESCS["SET UP THE WHEEL"]), 56).size() > 2: pm_bad += "the wheel's set-up description runs over; "
-	var last_item_y := PauseMenu.PANEL.position.y + 34 + PauseMenu.ITEMS.size() * 16 + 8      # one more with a wheel to set up
-	if last_item_y > PauseMenu.PANEL.end.y - 24: pm_bad += "the items run into the description; "
+		if PixelFont.width(String(it), 2) > PauseMenu.PANEL.size.x - 40: pm_bad += "%s too wide; " % it
+		if UiKit.wrap(String(PauseMenu.DESCS[it]), dw).size() > 2: pm_bad += "%s description runs over; " % it
+	if UiKit.wrap(String(PauseMenu.DESCS["SET UP THE WHEEL"]), dw).size() > 2: pm_bad += "the wheel's set-up description runs over; "
+	var last_item := PauseMenu.item_rect(PauseMenu.ITEMS.size())      # one more with a wheel to set up
+	if last_item.end.y > PauseMenu.desc_y() - 8: pm_bad += "the items run into the description; "
+	if PauseMenu.desc_y() + 2 * UiKit.LINE_H > PauseMenu.PANEL.end.y - 2: pm_bad += "the description runs off the panel; "
 	var ls := PauseMenu.card_lines()
-	if PauseMenu.CARD.position.y + 28 + ls.size() * 12 > PauseMenu.CARD.end.y: pm_bad += "the card runs off its panel; "
+	if PauseMenu.CARD.position.y + PauseMenu.CARD_TOP + ls.size() * PauseMenu.CARD_PITCH > PauseMenu.CARD.end.y - 4: pm_bad += "the card runs off its panel; "
 	for l in ls:
-		if PixelFont.width(String(l[0])) > 156: pm_bad += "%s hits the keys; " % l[0]
-		if PixelFont.width(String(l[1]).substr(0, 21)) > 86: pm_bad += "%s keys hit the pad column; " % l[0]
-		if PauseMenu.CARD.position.x + 260 + PixelFont.width(String(l[2]).substr(0, 19)) > PauseMenu.CARD.end.x - 2: pm_bad += "%s pad runs off; " % l[0]
+		if UiKit.PAD + 2 + PixelFont.width(String(l[0]), 2) > PauseMenu.CARD_KEY_X - 8: pm_bad += "%s hits the keys; " % l[0]
+		if PixelFont.width(String(l[1]), 2) > PauseMenu.CARD_PAD_X - PauseMenu.CARD_KEY_X - 10: pm_bad += "%s keys are cut; " % l[0]
+		if PixelFont.width(String(l[2]), 2) > PauseMenu.CARD.size.x - PauseMenu.CARD_PAD_X - UiKit.PAD: pm_bad += "%s pad is cut; " % l[0]
+	# every HOW IT WORKS page fits its card
+	for g in HowItWorks.PAGES.size():
+		var y := 46.0
+		for ln in PauseMenu.guide_lines(g): y += UiKit.LINE_H if ln != "" else 6.0
+		if y > PauseMenu.CARD.size.y - 4: pm_bad += "page %d runs off; " % (g + 1)
 	check("the pause menu and controls card fit", pm_bad == "", pm_bad)

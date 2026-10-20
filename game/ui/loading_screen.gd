@@ -208,16 +208,13 @@ func _draw() -> void:
 	var kind := String(card[0])
 	var col: Color = { "TIP": GOLD, "LORE": Color("7ab8e0"), "AD": Color("e0402e"), "TRIVIA": Color("6fbf5a"), "GUS": Color("c8c0a8") }.get(kind, GOLD)
 	var name: String = { "TIP": "TIP", "LORE": "PORT RUMBLE", "AD": "A WORD FROM OUR SPONSORS", "TRIVIA": "CAR TRIVIA", "GUS": "GUS SAYS" }.get(kind, kind)
-	draw_rect(Rect2(8, 268, 624, 84), Color(0.04, 0.035, 0.05, 0.96))
-	draw_rect(Rect2(8, 268, 624, 84), Color(1, 1, 1, 0.14), false, 1.0)
-	draw_rect(Rect2(16, 262, PixelFont.width(name, 2) + 12, 14), col.darkened(0.55))
-	PixelFont.draw(self, Vector2(22, 265), name, col.lightened(0.2), 2)
+	UiKit.panel(self, Rect2(8, 268, 624, 84), name, col)
 	for k in mini(lines.size(), 4):
 		if big: BigFont.draw(self, Vector2(20, 284 + k * 17), lines[k], BONE, 2, false, INK)
 		else: BigFont.draw(self, Vector2(20, 284 + k * 12), lines[k], BONE, 1, true)
 	# progress, and where we're going
-	var pr := _progress()
-	draw_rect(Rect2(20, 340, 440, 4), Color(1, 1, 1, 0.1))
-	draw_rect(Rect2(20, 340, 440 * pr, 4), col)
-	var where := ("LOADING " + label) if label != "" else "LOADING"
-	PixelFont.draw(self, Vector2(624 - PixelFont.width(where), 338), where + ".".repeat(int(t * 3.0) % 4), ASH)
+	# the bar runs up to where the label starts, room left for the dots so it doesn't twitch
+	var where := UiKit.fit(("LOADING " + label) if label != "" else "LOADING", 300)
+	var ww := PixelFont.width(where + "...", 2)
+	PixelFont.draw(self, Vector2(622 - ww, 337), where + ".".repeat(int(t * 3.0) % 4), ASH, 2)
+	UiKit.meter(self, Rect2(20, 339, 622 - ww - 36, 4), _progress(), col)

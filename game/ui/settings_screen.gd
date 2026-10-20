@@ -14,17 +14,23 @@ const RED := Color("e0402e")
 const GREEN := Color("6fbf5a")
 const INK := Color("0b090d")
 
-## Layout, at 640x360: the tabs, the rows (scrolling), what the selected row does, the keys.
-const TAB_Y := 22.0
-const ROW_Y := 48.0
+## Layout, at 640x360: the tabs, the rows (scrolling) in their panel, what the selected row does,
+## the keys. Every row reads in three columns: the name, then either the keyboard and controller
+## buttons, or the value, which always sits in the controller column so values line up tab to tab.
+const TAB_Y := 32.0
+const LIST := Rect2(16, 50, 608, 230)
+const ROW_Y := 70.0
 const ROW_H := 13.0
-const ROWS_VIS := 18
-const LABEL_X := 20.0
-const VALUE_R := 620.0
-const KEY_COL := 330.0
-const PAD_COL := 480.0
-const DESC := Rect2(16, 284, 608, 42)
-const HINT_Y := 340.0
+const ROWS_VIS := 16
+const LABEL_X := 26.0
+const KEY_COL := 290.0
+const PAD_COL := 452.0
+const COL_W := 158.0               # a button column's cell
+const VAL_X := PAD_COL             # the value column: VAL_X to VALUE_R
+const VALUE_R := 610.0
+const SLIDER_W := 122.0
+const DESC := Rect2(16, 290, 608, 44)
+const HINT_Y := 344.0
 
 var tab := 0
 var row := 0
@@ -475,94 +481,191 @@ class Wizard:
 
 ## Where row i (counting from the top of the list) sits.
 static func row_rect(i: int) -> Rect2:
-	return Rect2(14, ROW_Y + i * ROW_H - 2, 612, ROW_H - 1)
+	return Rect2(18, ROW_Y + i * ROW_H - 2, 598, ROW_H - 1)
+
+## The tabs along the top, left to right.
+static func tab_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var x := 16.0
+	for t: String in TABS:
+		var w := PixelFont.width(t, 2) + 12
+		out.append(Rect2(x, TAB_Y, w, 14))
+		x += w + 2
+	return out
 
 func _draw() -> void:
 	if not visible: return
-	draw_rect(Rect2(0, 0, 640, 360), Color("0d0c10"))
-	PixelFont.draw(self, Vector2(16, 6), "SETTINGS", GOLD, 2)
-	var tx := 120.0
-	for i in TABS.size():
-		var w := PixelFont.width(TABS[i]) + 10
-		var r := Rect2(tx, TAB_Y - 4, w, 12)
-		draw_rect(r, Color(0.85, 0.64, 0.25, 0.22) if i == tab else Color(1, 1, 1, 0.05))
-		PixelFont.draw(self, r.position + Vector2(5, 3), TABS[i], GOLD if i == tab else ASH)
-		tx += w + 4
+	draw_rect(Rect2(0, 0, 640, 360), UiKit.BG)
+	UiKit.title(self, Vector2(16, 10), "SETTINGS")
 	var hint_tabs := Hints.fmt("{ui_tab_prev}/{ui_tab_next}: TABS")
-	PixelFont.draw(self, Vector2(624 - PixelFont.width(hint_tabs), 6), hint_tabs, ASH)
+	UiKit.hints(self, 624 - UiKit.hints_width(hint_tabs) / 2.0, 14, hint_tabs)
+	# the tabs: the open one a solid gold chip standing on a gold rule, the rest quiet
+	var trs := tab_rects()
+	draw_rect(Rect2(16, TAB_Y + 14, 608, 1), Color(GOLD, 0.6))
+	for i in TABS.size():
+		var r: Rect2 = trs[i]
+		if i == tab:
+			draw_rect(r, GOLD)
+			PixelFont.draw(self, r.position + Vector2(6, 3), TABS[i], INK, 2)
+		else:
+			draw_rect(Rect2(r.position, r.size - Vector2(0, 1)), Color(1, 1, 1, 0.05))
+			PixelFont.draw(self, r.position + Vector2(6, 3), TABS[i], ASH, 2)
 	if not wiz.is_empty():
 		_draw_wizard()
 		return
 	var rs := rows()
-	if TABS[tab] == "CONTROLS" or TABS[tab] == "WHEEL":
-		PixelFont.draw(self, Vector2(KEY_COL, ROW_Y - 10), "KEYBOARD" if TABS[tab] == "CONTROLS" else "", ASH)
-		PixelFont.draw(self, Vector2(PAD_COL, ROW_Y - 10), "CONTROLLER / WHEEL" if TABS[tab] == "CONTROLS" else "", ASH)
+	UiKit.panel(self, LIST)
+	if TABS[tab] == "CONTROLS":
+		PixelFont.draw(self, Vector2(KEY_COL, ROW_Y - 12), "KEYBOARD", ASH, 2)
+		PixelFont.draw(self, Vector2(PAD_COL, ROW_Y - 12), "CONTROLLER / WHEEL", ASH, 2)
+	if rs.size() > ROWS_VIS:
+		var cnt := "%d/%d" % [row + 1, rs.size()]
+		PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(cnt), ROW_Y - 11), cnt, ASH)
+		# the scrollbar down the right edge
+		var track := Rect2(619, ROW_Y - 2, 2, ROWS_VIS * ROW_H - 1)
+		draw_rect(track, UiKit.TRACK)
+		var th := maxf(8.0, track.size.y * ROWS_VIS / rs.size())
+		var ty := track.position.y + (track.size.y - th) * scroll / maxf(1.0, rs.size() - ROWS_VIS)
+		draw_rect(Rect2(track.position.x, ty, 2, th), Color(GOLD, 0.8))
 	for i in range(scroll, mini(rs.size(), scroll + ROWS_VIS)):
 		var r: Dictionary = rs[i]
 		var rr := row_rect(i - scroll)
 		var on := i == row
-		if on: draw_rect(rr, Color(0.85, 0.64, 0.25, 0.16))
-		var y := rr.position.y + 4
-		PixelFont.draw(self, Vector2(LABEL_X, y), String(r.label), GOLD if on else BONE)
-		if String(r.kind) == "bind":
-			var bt := bind_texts(r)
-			var cap := capturing == String(r.action)
-			if not r.get("pad_only", false):
-				var kc := BONE if not (on and col == 0) else GOLD
-				PixelFont.draw(self, Vector2(KEY_COL, y), ("..." if cap and col == 0 else String(bt[0])).substr(0, 36), kc)
-			var pc := BONE if not (on and (col == 1 or r.get("pad_only", false))) else GOLD
-			PixelFont.draw(self, Vector2(PAD_COL, y), ("..." if cap and (col == 1 or r.get("pad_only", false)) else String(bt[1])).substr(0, 34), pc)
-		elif String(r.kind) == "live":
-			_draw_live(Vector2(KEY_COL, y))
-		else:
-			var v := value_text(r)
-			if String(r.kind) in ["choice", "slider", "device"] and on: v = "< " + v + " >"
-			PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(v), y), v, GOLD if on else BONE)
-	if rs.size() > ROWS_VIS:
-		var cnt := "%d/%d" % [row + 1, rs.size()]
-		PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(cnt), ROW_Y - 10), cnt, ASH)
-	# what the selected row does
-	draw_rect(DESC, Color(1, 1, 1, 0.04))
-	var desc := note if note != "" else String((rs[row] as Dictionary).get("desc", ""))
-	var ls := Hud.wrap_lines(desc, 148)
-	for k in mini(ls.size(), 4): PixelFont.draw(self, DESC.position + Vector2(6, 5 + k * 9), ls[k], ASH if note == "" else GOLD)
-	var hint := Hints.fmt("{updown}: PICK  {leftright}: CHANGE  {ui_accept}: SELECT  {ui_cancel}: DONE")
-	PixelFont.draw_centered(self, 320, HINT_Y, hint, ASH)
+		if on: UiKit.select(self, rr)
+		elif (i - scroll) % 2 == 1: draw_rect(rr, Color(1, 1, 1, 0.02))
+		var y := rr.position.y + 2
+		var kind := String(r.kind)
+		PixelFont.draw(self, Vector2(LABEL_X, y), String(r.label), GOLD if on else (BONE if kind != "action" else Color(BONE, 0.85)), 2)
+		match kind:
+			"bind": _draw_bind(r, rr, on)
+			"live": _draw_live(Vector2(KEY_COL, y))
+			"choice", "device": _draw_choice(value_text(r), rr, on)
+			"slider": _draw_slider(r, rr, on)
+			"toggle": _draw_toggle(bool(GameSettings.get_v(String(r.sec), String(r.key))), rr, on)
+			"action": _draw_action(rr, on)
+	# what the selected row does, in a panel named after it
+	var cur: Dictionary = rs[row] if row < rs.size() else {}
+	var title := "NOTE" if note != "" else String(cur.get("label", ""))
+	UiKit.panel(self, DESC, UiKit.fit(title, DESC.size.x - 40), GOLD if note == "" else GREEN)
+	var desc := note if note != "" else String(cur.get("desc", ""))
+	var ls := UiKit.wrap(desc, DESC.size.x - 2 * UiKit.PAD)
+	for k in mini(ls.size(), 3): PixelFont.draw(self, DESC.position + Vector2(UiKit.PAD, 12 + k * UiKit.LINE_H), ls[k], BONE if note != "" else Color(BONE, 0.8), 2)
+	UiKit.hints(self, 320, HINT_Y, Hints.fmt("{updown}: PICK  {leftright}: CHANGE  {ui_accept}: SELECT  {ui_cancel}: DONE"))
 
-## The wheel as it reads right now: steering, gas, brake.
+## A button row: the keyboard column and the controller one, the one you're on boxed in gold.
+func _draw_bind(r: Dictionary, rr: Rect2, on: bool) -> void:
+	var bt := bind_texts(r)
+	var cap := capturing == String(r.action)
+	var pad_only := bool(r.get("pad_only", false))
+	var blink := int(Time.get_ticks_msec() / 300) % 2 == 0
+	for c in 2:
+		if c == 0 and pad_only: continue
+		var x := KEY_COL if c == 0 else PAD_COL
+		var here := on and (c == col or pad_only)
+		var cell := Rect2(x - 4, rr.position.y, COL_W, rr.size.y)
+		var txt := String(bt[c])
+		if cap and here: txt = "PRESS ONE..." if blink else ""
+		if here:
+			draw_rect(cell, Color(GOLD, 0.12))
+			draw_rect(cell, Color(GOLD, 0.8), false, 1.0)
+		PixelFont.draw(self, Vector2(x, rr.position.y + 2), UiKit.fit(txt, COL_W - 8), GOLD if here else (ASH if txt == "-" else BONE), 2)
+
+## A choice: the value centred in the value column, arrows either side (lit when it's yours to change).
+func _draw_choice(v: String, rr: Rect2, on: bool) -> void:
+	var y := rr.position.y + 2
+	var ac := GOLD if on else Color(ASH, 0.45)
+	PixelFont.draw(self, Vector2(VAL_X, y), "<", ac, 2)
+	PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(">", 2), y), ">", ac, 2)
+	PixelFont.draw_centered(self, (VAL_X + VALUE_R) / 2.0, y, UiKit.fit(v, VALUE_R - VAL_X - 20), GOLD if on else BONE, 2)
+
+## A slider: a bar with a knob where it's set, the number at the end.
+func _draw_slider(r: Dictionary, rr: Rect2, on: bool) -> void:
+	var v := float(GameSettings.get_v(String(r.sec), String(r.key)))
+	var frac := clampf((v - float(r.min)) / maxf(0.0001, float(r.max) - float(r.min)), 0.0, 1.0)
+	var bar := Rect2(VAL_X, rr.position.y + 4, SLIDER_W, 5)
+	UiKit.meter(self, bar, frac, GOLD if on else Color(BONE, 0.55))
+	var kx := bar.position.x + roundf((bar.size.x - 3) * frac)
+	draw_rect(Rect2(kx, bar.position.y - 2, 3, 9), GOLD if on else BONE)
+	var t := value_text(r)
+	PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(t, 2), rr.position.y + 2), t, GOLD if on else BONE, 2)
+
+## A toggle: a little switch, green when it's on, and the word.
+func _draw_toggle(v: bool, rr: Rect2, on: bool) -> void:
+	var sw := Rect2(VAL_X, rr.position.y + 2, 20, 8)
+	draw_rect(sw, Color(GREEN, 0.85) if v else UiKit.TRACK)
+	draw_rect(sw, Color(GOLD, 0.8) if on else Color(1, 1, 1, 0.18), false, 1.0)
+	draw_rect(Rect2(sw.position.x + (11 if v else 1), sw.position.y + 1, 8, 6), BONE if v else ASH)
+	PixelFont.draw(self, Vector2(VAL_X + 28, rr.position.y + 2), _t(v), GOLD if on else (BONE if v else ASH), 2)
+
+## A row that does something: a chevron, or the key that does it once you're on it.
+func _draw_action(rr: Rect2, on: bool) -> void:
+	if on:
+		var k := Hints.fmt("{ui_accept}")
+		var w := PixelFont.width(k, 2) + 6
+		var cap := Rect2(VALUE_R - w, rr.position.y + 1, w, 11)
+		draw_rect(cap, Color(GOLD, 0.2))
+		draw_rect(cap, Color(GOLD, 0.8), false, 1.0)
+		PixelFont.draw(self, cap.position + Vector2(3, 1), k, GOLD, 2)
+	else:
+		PixelFont.draw(self, Vector2(VALUE_R - PixelFont.width(">", 2), rr.position.y + 2), ">", ASH, 2)
+
+## The wheel as it reads right now: steering from the middle, the gas, the brake.
 func _draw_live(p: Vector2) -> void:
 	if not Wheel.active() and Wheel.device < 0:
-		PixelFont.draw(self, p, "NO WHEEL", ASH)
+		PixelFont.draw(self, p, "NO WHEEL PLUGGED IN", ASH, 2)
 		return
 	var ins := Wheel.inputs(0.55) if Wheel.device >= 0 else [0.0, 0.0, 0.0, 0.0]
-	var st: float = ins[2]
-	draw_rect(Rect2(p.x, p.y, 80, 5), Color(1, 1, 1, 0.1))
-	draw_rect(Rect2(p.x + 40 + minf(st, 0.0) * 40, p.y, absf(st) * 40, 5), GOLD)
-	draw_rect(Rect2(p.x + 100, p.y, 50, 5), Color(1, 1, 1, 0.1))
-	draw_rect(Rect2(p.x + 100, p.y, 50 * float(ins[0]), 5), GREEN)
-	draw_rect(Rect2(p.x + 160, p.y, 50, 5), Color(1, 1, 1, 0.1))
-	draw_rect(Rect2(p.x + 160, p.y, 50 * float(ins[1]), 5), RED)
+	var x := p.x
+	for m in [["STEER", 92.0], ["GAS", 56.0], ["BRAKE", 56.0]]:
+		var lab: String = m[0]
+		PixelFont.draw(self, Vector2(x, p.y), lab, ASH, 2)
+		x += PixelFont.width(lab, 2) + 4
+		var bar := Rect2(x, p.y + 2, float(m[1]), 5)
+		match lab:
+			"STEER": UiKit.meter_mid(self, bar, float(ins[2]))
+			"GAS": UiKit.meter(self, bar, float(ins[0]), GREEN)
+			"BRAKE": UiKit.meter(self, bar, float(ins[1]), RED)
+		x += float(m[1]) + 10
 
 func _draw_wizard() -> void:
 	var step: String = WIZ_STEPS[int(wiz.step)]
-	PixelFont.draw(self, Vector2(20, 50), "CALIBRATING: " + Input.get_joy_name(int(wiz.dev)).to_upper().substr(0, 50), GOLD)
-	var wl := Hud.wrap_lines(wiz_text(step), 70)
-	for ln_i in wl.size():
-		PixelFont.draw(self, Vector2(20, 70 + ln_i * 14), wl[ln_i], BONE, 2)
-	# the axes, live, so you can see which one is moving (the ones that have said anything)
+	UiKit.panel(self, LIST.merge(DESC))
+	var x0 := LIST.position.x + UiKit.PAD
+	var y0 := LIST.position.y + 8
+	PixelFont.draw(self, Vector2(x0, y0), "CALIBRATING", GOLD, 2)
+	PixelFont.draw(self, Vector2(x0 + PixelFont.width("CALIBRATING", 2) + 8, y0), UiKit.fit(Input.get_joy_name(int(wiz.dev)).to_upper(), 300), BONE, 2)
+	# how far through it is: a pip a step, gold behind you, bone where you are
+	var n := WIZ_STEPS.size()
+	for k in n:
+		var pr := Rect2(LIST.end.x - UiKit.PAD - (n - k) * 8 + 2, y0 + 1, 6, 6)
+		if k < int(wiz.step): draw_rect(pr, GOLD)
+		elif k == int(wiz.step): draw_rect(pr, BONE)
+		else: draw_rect(pr, Color(1, 1, 1, 0.18), false, 1.0)
+	draw_rect(Rect2(x0, y0 + 14, LIST.size.x - 2 * UiKit.PAD, 1), UiKit.RULE)
+	# what to do now, big
+	var wl := UiKit.wrap_title(wiz_text(step), LIST.size.x - 2 * UiKit.PAD)
+	for ln_i in mini(wl.size(), 4):
+		UiKit.title(self, Vector2(x0, y0 + 24 + ln_i * 18), wl[ln_i], BONE)
+	# the axes, live, so you can see which one is moving (the ones that have said anything), in
+	# two columns of six
 	var devs: Array = wiz.devs
 	var now := _axes(devs)
+	var ay := y0 + 24 + 4 * 18 + 8
+	PixelFont.draw(self, Vector2(x0, ay), "WHAT IT READS", ASH, 2)
 	var row_i := 0
 	for k in now.size():
 		var v := float(now[k])
-		if v == 0.0 or row_i >= 11: continue
-		var y := 130.0 + row_i * 13.0
+		if v == 0.0 or row_i >= 12: continue
+		var cx := x0 + (row_i / 6) * 300.0
+		var y := ay + 14 + (row_i % 6) * 13.0
 		row_i += 1
 		var lab := ("AXIS %d" % (k % JOY_AXIS_MAX)) if devs.size() == 1 else ("%d: AXIS %d" % [k / JOY_AXIS_MAX + 1, k % JOY_AXIS_MAX])
-		PixelFont.draw(self, Vector2(20, y), lab, ASH)
-		draw_rect(Rect2(80, y, 200, 6), Color(1, 1, 1, 0.08))
-		draw_rect(Rect2(180 + minf(v, 0.0) * 100, y, absf(v) * 100, 6), GOLD)
-		PixelFont.draw(self, Vector2(290, y), "%.2f" % v, BONE)
+		PixelFont.draw(self, Vector2(cx, y), lab, ASH, 2)
+		UiKit.meter_mid(self, Rect2(cx + 70, y + 2, 170, 5), v)
+		PixelFont.draw(self, Vector2(cx + 248, y), "%.2f" % v, BONE, 2)
+	if row_i == 0: PixelFont.draw(self, Vector2(x0, ay + 14), "NOTHING YET: MOVE SOMETHING.", Color(ASH, 0.7), 2)
 	if devs.size() > 1:
-		for k in devs.size(): PixelFont.draw(self, Vector2(340, 130 + k * 10), "%d: %s" % [k + 1, Input.get_joy_name(int(devs[k])).to_upper().substr(0, 40)], ASH)
-	PixelFont.draw_centered(self, 320, HINT_Y, Hints.fmt("A WHEEL BUTTON OR {ui_accept}: NEXT  {ui_cancel}: CANCEL"), ASH)
+		var names: Array = []
+		for k in devs.size(): names.append("%d: %s" % [k + 1, Input.get_joy_name(int(devs[k])).to_upper()])
+		PixelFont.draw(self, Vector2(x0, DESC.end.y - 14), UiKit.fit("   ".join(names), LIST.size.x - 2 * UiKit.PAD), ASH, 2)
+	UiKit.hints(self, 320, HINT_Y, Hints.fmt("{ui_accept}: NEXT (OR ANY BUTTON ON THE WHEEL)  {ui_cancel}: CANCEL"))

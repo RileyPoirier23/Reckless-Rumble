@@ -137,6 +137,15 @@ func _run() -> void:
 			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT").replace(".png", "_%s.png" % ("night" if night else "day")))
 		Input.action_release("throttle")
 		Prof.on = false
+		# PERF_SHOT on a drive: the HUD with every lane in use (objective, a line, a prompt), daytime
+		if OS.get_environment("PERF_SHOT") != "" and not night:
+			main.hud.objective = "DELIVER THE PIZZA TO 14 HARBOUR ROAD BEFORE IT GETS COLD. TIP RIDES ON IT."
+			main.hud.say("GUS", "TAKE THE BRIDGE, KID. THE LIGHTS ON MAIN ARE OUT AGAIN.", 3, 6.0)
+			main.hud.prompt(Hints.fmt("{use}: THE GARAGE"))
+			main.hud._prompt_t = 5.0          # (a slow frame under xvfb would outlast the usual 0.12 s)
+			for i in 20: await get_tree().process_frame
+			await RenderingServer.frame_post_draw
+			get_viewport().get_texture().get_image().save_png(OS.get_environment("PERF_SHOT"))
 		print("PROF ", Prof.report(frames))
 		var n := maxf(1.0, float(frames))
 		samples.sort()

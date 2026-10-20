@@ -130,3 +130,20 @@ static func draw(ci: CanvasItem, pos: Vector2, text: String, color: Color, scale
 
 static func draw_centered(ci: CanvasItem, center_x: float, y: float, text: String, color: Color, scale := 1, shadow := Color(0, 0, 0, 0)) -> void:
 	draw(ci, Vector2(roundf(center_x - width(text, scale) / 2.0), y), text, color, scale, shadow)
+
+## The main face at exactly `px` pixels a dot (2 makes it 10x14), for headings: `draw` picks the
+## dot size from the scale and steps it down for wide words, which a heading shouldn't do.
+static func draw_main(ci: CanvasItem, pos: Vector2, text: String, color: Color, px := 2, shadow := Color(0, 0, 0, 0)) -> void:
+	if shadow.a > 0.0:
+		draw_main(ci, pos + Vector2(px, px), text, shadow, px)
+	var x := pos.x
+	for ch in text.to_upper():
+		var g := _glyph(true, ch)
+		var rows: Array = g[1]
+		for ry in rows.size():
+			for run: Array in rows[ry]:
+				ci.draw_rect(Rect2(x + int(run[0]) * px, pos.y + ry * px, (int(run[1]) - int(run[0])) * px, px), color)
+		x += (int(g[0]) + 1) * px
+
+static func main_width(text: String, px := 2) -> int:
+	return _measure(true, text) * px

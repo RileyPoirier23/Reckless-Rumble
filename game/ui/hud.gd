@@ -201,9 +201,10 @@ func prompt_text() -> String:
 
 # ------------------------------------------------------------------ drawing
 
-func _panel(r: Rect2, a := 0.78) -> void:
-	draw_rect(r, Color(0.04, 0.035, 0.05, a))
-	draw_rect(r, Color(1, 1, 1, 0.08), false, 1.0)
+## A HUD panel: the menus' panel (UiKit), a little see-through so the road shows under it.
+func _panel(r: Rect2, a := 0.82, accent := Color(0, 0, 0, 0)) -> void:
+	UiKit.panel(self, r, "", GOLD, a / UiKit.FILL.a, UiKit.FILL)
+	if accent.a > 0.0: draw_rect(Rect2(r.position, Vector2(2, r.size.y)), accent)
 
 func _draw() -> void:
 	var _t0 := Time.get_ticks_usec()
@@ -220,15 +221,15 @@ func _draw_timed() -> void:
 	var big := PixelFont.width(title, 2) <= cb.size.x - 12
 	PixelFont.draw(self, cb.position + Vector2(6, 5 if big else 7), title if big else title.substr(0, 50), BONE, 2 if big else 1)
 	var assist_name: String = ["SIM", "STREET", "ARCADE"][sim.assist]
-	PixelFont.draw(self, cb.position + Vector2(6, 20), "%s  -  %s" % [assist_name, "AUTO" if sim.auto_gearbox else "MANUAL"], ASH)
+	PixelFont.draw(self, cb.position + Vector2(6, 18), "%s / %s" % [assist_name, "AUTO" if sim.auto_gearbox else "MANUAL"], ASH, 2)
 	# ---- top right: the world
 	var kb := HudLayout.CLOCK_BAR
 	_panel(kb)
 	PixelFont.draw(self, kb.position + Vector2(6, 5), "%s  %s" % [sky.clock_str(), sky.season.to_upper()], BONE, 2)
-	PixelFont.draw(self, kb.position + Vector2(6, 20), "%s  %d°C" % [sky.label(), int(sky.temperature())], GOLD if sky.weather in ["storm", "blizzard", "freezing", "fog"] else BONE)
+	PixelFont.draw(self, kb.position + Vector2(6, 17), "%s  %d°C" % [sky.label(), int(sky.temperature())], GOLD if sky.weather in ["storm", "blizzard", "freezing", "fog"] else BONE, 2)
 	var where := "%s - ROAD: %s" % [place, surface.to_upper()]
 	if PixelFont.width(where) > kb.size.x - 12: where = where.substr(0, int((kb.size.x - 12) / 4.0))
-	PixelFont.draw(self, kb.position + Vector2(6, 29), where, GOLD if surface in ["ice", "snow", "leaves", "mud", "water"] else ASH)
+	PixelFont.draw(self, kb.position + Vector2(6, 30), where, GOLD if surface in ["ice", "snow", "leaves", "mud", "water"] else ASH)
 	# ---- the info column: objective, subtitle, prompt
 	var ol := obj_lines()
 	var sl := sub_lines()
@@ -237,15 +238,14 @@ func _draw_timed() -> void:
 	var col := HudLayout.info(ol.size(), sl.size(), pr != "")
 	if not ol.is_empty():
 		var r: Rect2 = col[0]
-		_panel(r)
+		_panel(r, 0.82, GOLD)
 		for k in ol.size(): PixelFont.draw(self, r.position + Vector2(6, 4 + k * 8), ol[k], GOLD)
 	if not sl.is_empty():
 		var r: Rect2 = col[1]
 		var e: Dictionary = msgs[0]
 		var a := clampf(float(e.t) * 2.0, 0.0, 1.0) * clampf((float(e.dur) - float(e.t)) * 6.0 + 0.3, 0.0, 1.0)
-		_panel(r, 0.82 * a)
 		var accent := { "say": GOLD, "award": GOLD, "police": BLUE, "warn": RED, "tip": GREEN }.get(String(e.kind), ASH) as Color
-		draw_rect(Rect2(r.position, Vector2(2, r.size.y)), Color(accent, a))
+		_panel(r, 0.82 * a, Color(accent, a))
 		var who_w := 0.0
 		if String(e.who) != "": who_w = PixelFont.width(String(e.who) + ":") + 4
 		for k in sl.size():
@@ -258,11 +258,21 @@ func _draw_timed() -> void:
 				PixelFont.draw(self, p, ln, Color(BONE if String(e.kind) != "award" else GOLD, a))
 	if pr != "":
 		var r: Rect2 = col[2]
-		var w := minf(PixelFont.width(pr) + 14, r.size.x)
+		# the readable face when it fits, the small one when it doesn't
+		var sc := 2 if PixelFont.width(pr, 2) + 14 <= r.size.x else 1
+		var txt := pr if sc == 2 else pr.substr(0, int((r.size.x - 14) / 4.0))
+		var w := minf(PixelFont.width(txt, sc) + 14, r.size.x)
 		var pill := Rect2(r.position.x + (r.size.x - w) / 2.0, r.position.y, w, r.size.y)
-		draw_rect(pill, Color(0.05, 0.05, 0.07, 0.85))
+		draw_rect(pill, Color(UiKit.FILL, 0.88))
 		draw_rect(pill, Color(GOLD, 0.7), false, 1.0)
-		PixelFont.draw_centered(self, pill.get_center().x, pill.position.y + 4, pr.substr(0, int((r.size.x - 14) / 4.0)), BONE)
+		var k := txt.find(": ")
+		var x := pill.position.x + 7
+		var y := pill.position.y + (2 if sc == 2 else 4)
+		if k > 0:
+			PixelFont.draw(self, Vector2(x, y), txt.substr(0, k + 1), GOLD, sc)
+			PixelFont.draw(self, Vector2(x + PixelFont.width(txt.substr(0, k + 2), sc), y), txt.substr(k + 2), BONE, sc)
+		else:
+			PixelFont.draw(self, Vector2(x, y), txt, BONE, sc)
 	# ---- the scan tool
 	_diag()
 	# ---- the controls card, when asked for

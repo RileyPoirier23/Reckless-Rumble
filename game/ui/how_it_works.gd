@@ -11,12 +11,12 @@ const PAGES := [
 	["WHO LEO IS", "WHAT LEO SAYS IN THE CUTSCENES, AND HOW HE DRIVES IN THE STORY, MAKE HIM COOL, CALM AND COLLECTED, OR RECKLESS, OR SOMEWHERE IN BETWEEN.|PEOPLE TALK TO HIM THE WAY HE'S EARNED. THE POLICE GIVE A CALM DRIVER A LITTLE SLACK AND A RECKLESS ONE NONE. AND IT DECIDES HOW THE STORY ENDS.|THE CHAPTER CARDS SAY WHERE HE STANDS."],
 ]
 
-## A page's paragraphs, keys filled in for whatever you're holding, wrapped to `chars` of the old
-## fixed-width font.
-static func lines(page: int, chars: int) -> Array[String]:
+## A page's paragraphs, keys filled in for whatever you're holding, wrapped to `max_w` pixels of
+## the reading size (scale 2), a blank line between paragraphs.
+static func lines(page: int, max_w: float) -> Array[String]:
 	var out: Array[String] = []
 	var paras: PackedStringArray = Hints.fmt(String(PAGES[page][1])).split("|")
 	for k in paras.size():
 		if k > 0: out.append("")
-		out.append_array(Hud.wrap_lines(paras[k], chars))
+		out.append_array(UiKit.wrap(paras[k], max_w))
 	return out
