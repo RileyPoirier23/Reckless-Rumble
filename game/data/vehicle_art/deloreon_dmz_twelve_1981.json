@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/deloreon_dmz_twelve_1981.png",
 		"runtime_dir": "res://art/vehicles/runtime/deloreon_dmz_twelve_1981",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -64,8 +64,8 @@
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.306,
-				"y_m": -0.806,
+				"x_m": 1.037,
+				"y_m": -0.829,
 				"slice": 5.0
 			},
 			{
@@ -106,8 +106,8 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.306,
-				"y_m": 0.806,
+				"x_m": 1.037,
+				"y_m": 0.829,
 				"slice": 5.0
 			}
 		]

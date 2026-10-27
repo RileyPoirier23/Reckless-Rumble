@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/porch_nine_forty_for_1987.png",
 		"runtime_dir": "res://art/vehicles/runtime/porch_nine_forty_for_1987",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,15 +52,15 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.83,
-				"y_m": -0.653,
+				"x_m": -1.808,
+				"y_m": -0.639,
 				"slice": 7.7
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.843,
-				"y_m": -0.728,
-				"slice": 7.54
+				"x_m": -1.817,
+				"y_m": -0.719,
+				"slice": 7.52
 			},
 			{
 				"kind": "signal_left",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.83,
-				"y_m": 0.653,
+				"x_m": -1.808,
+				"y_m": 0.639,
 				"slice": 7.7
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.843,
-				"y_m": 0.728,
-				"slice": 7.54
+				"x_m": -1.817,
+				"y_m": 0.719,
+				"slice": 7.52
 			},
 			{
 				"kind": "reverse",

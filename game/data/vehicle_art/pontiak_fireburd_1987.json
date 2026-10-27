@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/pontiak_fireburd_1987.png",
 		"runtime_dir": "res://art/vehicles/runtime/pontiak_fireburd_1987",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,21 +52,21 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.164,
-				"y_m": -0.66,
-				"slice": 7.87
+				"x_m": -2.159,
+				"y_m": -0.657,
+				"slice": 7.78
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.168,
-				"y_m": -0.733,
-				"slice": 7.85
+				"x_m": -2.16,
+				"y_m": -0.731,
+				"slice": 7.73
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.673,
-				"y_m": -0.708,
-				"slice": 4.86
+				"x_m": 1.792,
+				"y_m": -0.694,
+				"slice": 4.67
 			},
 			{
 				"kind": "head",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.164,
-				"y_m": 0.66,
-				"slice": 7.87
+				"x_m": -2.159,
+				"y_m": 0.657,
+				"slice": 7.78
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.168,
-				"y_m": 0.733,
-				"slice": 7.85
+				"x_m": -2.16,
+				"y_m": 0.731,
+				"slice": 7.73
 			},
 			{
 				"kind": "reverse",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.673,
-				"y_m": 0.708,
-				"slice": 4.86
+				"x_m": 1.792,
+				"y_m": 0.694,
+				"slice": 4.67
 			}
 		]
 	},

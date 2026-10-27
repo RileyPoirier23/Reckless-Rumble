@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/nissun_mikra_2015.png",
 		"runtime_dir": "res://art/vehicles/runtime/nissun_mikra_2015",
-		"slice_count": 16,
+		"slice_count": 15,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -60,13 +60,13 @@
 				"kind": "brake",
 				"x_m": -1.782,
 				"y_m": -0.549,
-				"slice": 8.03
+				"slice": 8.0
 			},
 			{
 				"kind": "signal_left",
 				"x_m": -1.792,
 				"y_m": -0.621,
-				"slice": 7.78
+				"slice": 7.74
 			},
 			{
 				"kind": "head",
@@ -84,13 +84,13 @@
 				"kind": "brake",
 				"x_m": -1.782,
 				"y_m": 0.549,
-				"slice": 8.03
+				"slice": 8.0
 			},
 			{
 				"kind": "signal_right",
 				"x_m": -1.792,
 				"y_m": 0.621,
-				"slice": 7.78
+				"slice": 7.74
 			},
 			{
 				"kind": "reverse",

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/beemer_werke_zee_dreier_1998.png",
 		"runtime_dir": "res://art/vehicles/runtime/beemer_werke_zee_dreier_1998",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

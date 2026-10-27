@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/chevrolay_shovelle_ess_ess_1970.png",
 		"runtime_dir": "res://art/vehicles/runtime/chevrolay_shovelle_ess_ess_1970",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -51,22 +51,22 @@
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
-				"kind": "signal_left",
-				"x_m": 2.083,
-				"y_m": -0.97,
-				"slice": 6.29
-			},
-			{
 				"kind": "brake",
-				"x_m": -2.475,
-				"y_m": -0.434,
-				"slice": 7.59
+				"x_m": -2.428,
+				"y_m": -0.454,
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.455,
-				"y_m": -0.527,
-				"slice": 8.11
+				"x_m": -2.372,
+				"y_m": -0.556,
+				"slice": 8.1
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.267,
+				"y_m": -0.942,
+				"slice": 5.6
 			},
 			{
 				"kind": "head",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.475,
-				"y_m": 0.434,
-				"slice": 7.59
+				"x_m": -2.428,
+				"y_m": 0.454,
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.455,
-				"y_m": 0.527,
-				"slice": 8.11
+				"x_m": -2.372,
+				"y_m": 0.556,
+				"slice": 8.1
 			},
 			{
 				"kind": "reverse",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 2.083,
-				"y_m": 0.97,
-				"slice": 6.29
+				"x_m": 2.267,
+				"y_m": 0.942,
+				"slice": 5.6
 			}
 		]
 	},

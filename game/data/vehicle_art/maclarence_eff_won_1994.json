@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/maclarence_eff_won_1994.png",
 		"runtime_dir": "res://art/vehicles/runtime/maclarence_eff_won_1994",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,9 +52,9 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.822,
+				"x_m": -1.808,
 				"y_m": -0.618,
-				"slice": 7.43
+				"slice": 7.52
 			},
 			{
 				"kind": "signal_left",
@@ -64,15 +64,15 @@
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.177,
-				"y_m": -0.74,
-				"slice": 4.63
+				"x_m": 1.286,
+				"y_m": -0.732,
+				"slice": 4.57
 			},
 			{
 				"kind": "head",
-				"x_m": 1.917,
-				"y_m": -0.505,
-				"slice": 5.56
+				"x_m": 1.667,
+				"y_m": -0.528,
+				"slice": 5.67
 			},
 			{
 				"kind": "reverse",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.822,
+				"x_m": -1.808,
 				"y_m": 0.618,
-				"slice": 7.43
+				"slice": 7.52
 			},
 			{
 				"kind": "head",
-				"x_m": 1.917,
-				"y_m": 0.505,
-				"slice": 5.56
+				"x_m": 1.667,
+				"y_m": 0.528,
+				"slice": 5.67
 			},
 			{
 				"kind": "signal_right",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.177,
-				"y_m": 0.74,
-				"slice": 4.63
+				"x_m": 1.286,
+				"y_m": 0.732,
+				"slice": 4.57
 			}
 		]
 	},

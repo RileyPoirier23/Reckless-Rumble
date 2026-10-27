@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/awdi_arr_ate_2011.png",
 		"runtime_dir": "res://art/vehicles/runtime/awdi_arr_ate_2011",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,7 +52,7 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.926,
+				"x_m": -1.917,
 				"y_m": -0.728,
 				"slice": 7.29
 			},
@@ -65,14 +65,14 @@
 			{
 				"kind": "signal_left",
 				"x_m": 1.183,
-				"y_m": -0.825,
+				"y_m": -0.842,
 				"slice": 5.0
 			},
 			{
 				"kind": "head",
-				"x_m": 1.78,
-				"y_m": -0.61,
-				"slice": 5.45
+				"x_m": 1.571,
+				"y_m": -0.619,
+				"slice": 5.57
 			},
 			{
 				"kind": "reverse",
@@ -82,7 +82,7 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.926,
+				"x_m": -1.917,
 				"y_m": 0.728,
 				"slice": 7.29
 			},
@@ -94,9 +94,9 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 1.78,
-				"y_m": 0.61,
-				"slice": 5.45
+				"x_m": 1.571,
+				"y_m": 0.619,
+				"slice": 5.57
 			},
 			{
 				"kind": "signal_right",
@@ -107,7 +107,7 @@
 			{
 				"kind": "signal_right",
 				"x_m": 1.183,
-				"y_m": 0.825,
+				"y_m": 0.842,
 				"slice": 5.0
 			}
 		]

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/dodgy_grand_caravann_2004.png",
 		"runtime_dir": "res://art/vehicles/runtime/dodgy_grand_caravann_2004",
-		"slice_count": 16,
+		"slice_count": 17,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

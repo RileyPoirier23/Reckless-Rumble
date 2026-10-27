@@ -28,7 +28,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/kenwerth_tee_six_eighty_ate_2016.png",
 		"runtime_dir": "res://art/vehicles/runtime/kenwerth_tee_six_eighty_ate_2016",
-		"slice_count": 16,
+		"slice_count": 38,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

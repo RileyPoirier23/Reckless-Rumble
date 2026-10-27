@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/emmgee_bee_1974.png",
 		"runtime_dir": "res://art/vehicles/runtime/emmgee_bee_1974",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

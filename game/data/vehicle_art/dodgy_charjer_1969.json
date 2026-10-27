@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/dodgy_charjer_1969.png",
 		"runtime_dir": "res://art/vehicles/runtime/dodgy_charjer_1969",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -58,14 +58,14 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.579,
-				"y_m": -0.444,
+				"x_m": -2.553,
+				"y_m": -0.454,
 				"slice": 7.6
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.542,
-				"y_m": -0.542,
+				"x_m": -2.497,
+				"y_m": -0.556,
 				"slice": 8.1
 			},
 			{
@@ -76,14 +76,14 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.579,
-				"y_m": 0.444,
+				"x_m": -2.553,
+				"y_m": 0.454,
 				"slice": 7.6
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.542,
-				"y_m": 0.542,
+				"x_m": -2.497,
+				"y_m": 0.556,
 				"slice": 8.1
 			},
 			{

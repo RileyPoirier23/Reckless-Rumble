@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/plymooth_cudda_1970.png",
 		"runtime_dir": "res://art/vehicles/runtime/plymooth_cudda_1970",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,9 +52,9 @@
 		"lamps": [
 			{
 				"kind": "signal_left",
-				"x_m": 1.952,
-				"y_m": -0.97,
-				"slice": 6.14
+				"x_m": 2.014,
+				"y_m": -0.958,
+				"slice": 5.83
 			},
 			{
 				"kind": "brake",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.952,
-				"y_m": 0.97,
-				"slice": 6.14
+				"x_m": 2.014,
+				"y_m": 0.958,
+				"slice": 5.83
 			}
 		]
 	},

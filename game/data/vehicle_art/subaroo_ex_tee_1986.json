@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/subaroo_ex_tee_1986.png",
 		"runtime_dir": "res://art/vehicles/runtime/subaroo_ex_tee_1986",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,19 +52,19 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.863,
-				"y_m": -0.658,
-				"slice": 7.59
+				"x_m": -1.986,
+				"y_m": -0.632,
+				"slice": 7.72
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.794,
-				"y_m": -0.731,
-				"slice": 7.53
+				"x_m": -1.958,
+				"y_m": -0.708,
+				"slice": 7.72
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.708,
+				"x_m": 1.653,
 				"y_m": -0.625,
 				"slice": 5.0
 			},
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.863,
-				"y_m": 0.658,
-				"slice": 7.59
+				"x_m": -1.986,
+				"y_m": 0.632,
+				"slice": 7.72
 			},
 			{
 				"kind": "head",
@@ -94,9 +94,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.794,
-				"y_m": 0.731,
-				"slice": 7.53
+				"x_m": -1.958,
+				"y_m": 0.708,
+				"slice": 7.72
 			},
 			{
 				"kind": "reverse",
@@ -106,7 +106,7 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.708,
+				"x_m": 1.653,
 				"y_m": 0.625,
 				"slice": 5.0
 			}

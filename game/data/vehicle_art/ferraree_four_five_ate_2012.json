@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/ferraree_four_five_ate_2012.png",
 		"runtime_dir": "res://art/vehicles/runtime/ferraree_four_five_ate_2012",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,27 +52,27 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.955,
-				"y_m": -0.686,
-				"slice": 7.23
+				"x_m": -1.75,
+				"y_m": -0.743,
+				"slice": 7.26
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.017,
-				"y_m": -0.811,
-				"slice": 7.12
+				"x_m": -1.883,
+				"y_m": -0.858,
+				"slice": 7.1
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.065,
-				"y_m": -0.839,
-				"slice": 4.86
+				"x_m": 1.101,
+				"y_m": -0.851,
+				"slice": 5.0
 			},
 			{
 				"kind": "head",
-				"x_m": 2.051,
-				"y_m": -0.569,
-				"slice": 5.44
+				"x_m": 1.74,
+				"y_m": -0.599,
+				"slice": 5.62
 			},
 			{
 				"kind": "reverse",
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.955,
-				"y_m": 0.686,
-				"slice": 7.23
+				"x_m": -1.75,
+				"y_m": 0.743,
+				"slice": 7.26
 			},
 			{
 				"kind": "reverse",
@@ -94,21 +94,21 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 2.051,
-				"y_m": 0.569,
-				"slice": 5.44
+				"x_m": 1.74,
+				"y_m": 0.599,
+				"slice": 5.62
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.017,
-				"y_m": 0.811,
-				"slice": 7.12
+				"x_m": -1.883,
+				"y_m": 0.858,
+				"slice": 7.1
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.065,
-				"y_m": 0.839,
-				"slice": 4.86
+				"x_m": 1.101,
+				"y_m": 0.851,
+				"slice": 5.0
 			}
 		]
 	},

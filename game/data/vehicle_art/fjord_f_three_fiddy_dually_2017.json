@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/fjord_f_three_fiddy_dually_2017.png",
 		"runtime_dir": "res://art/vehicles/runtime/fjord_f_three_fiddy_dually_2017",
-		"slice_count": 16,
+		"slice_count": 20,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

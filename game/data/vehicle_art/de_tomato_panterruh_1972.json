@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/de_tomato_panterruh_1972.png",
 		"runtime_dir": "res://art/vehicles/runtime/de_tomato_panterruh_1972",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -46,32 +46,32 @@
 		"rear_bumper_m": -2.125,
 		"track_m": 1.56,
 		"wheel_radius_m": 0.38,
-		"roof_z_slice": 11,
-		"procedural_slices": 12,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.876,
-				"y_m": -0.7,
+				"x_m": -1.772,
+				"y_m": -0.698,
 				"slice": 7.63
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.826,
-				"y_m": -0.737,
-				"slice": 7.81
+				"x_m": -1.849,
+				"y_m": -0.745,
+				"slice": 7.91
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.202,
+				"x_m": 1.238,
 				"y_m": -0.732,
 				"slice": 5.43
 			},
 			{
 				"kind": "reverse",
-				"x_m": -2.083,
-				"y_m": -0.5,
+				"x_m": -1.625,
+				"y_m": -0.562,
 				"slice": 6.0
 			},
 			{
@@ -82,20 +82,20 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.876,
-				"y_m": 0.7,
+				"x_m": -1.772,
+				"y_m": 0.698,
 				"slice": 7.63
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.826,
-				"y_m": 0.737,
-				"slice": 7.81
+				"x_m": -1.849,
+				"y_m": 0.745,
+				"slice": 7.91
 			},
 			{
 				"kind": "reverse",
-				"x_m": -2.083,
-				"y_m": 0.5,
+				"x_m": -1.625,
+				"y_m": 0.563,
 				"slice": 6.0
 			},
 			{
@@ -106,7 +106,7 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.202,
+				"x_m": 1.238,
 				"y_m": 0.732,
 				"slice": 5.43
 			}

@@ -311,6 +311,8 @@ godot --headless --path game -s tests/jobs_tests.gd
 godot --headless --path game -s tests/catalog_tests.gd
 godot --headless --path game -s tests/cargen_tests.gd
 godot --headless --path game -s tests/top_down_tests.gd
+godot --headless --path game -s tests/vehicle_art_tests.gd
+godot --headless --path game -s tests/runtime_art_tests.gd
 godot --headless --fixed-fps 60 --path game -- --traffic-test --seeds 1,2,3
 godot --headless --path game -- --race-test
 godot --path game -- --mission-test
@@ -324,6 +326,8 @@ The engine sound (`render/engine_audio.gd`) is made on its own thread from the s
 The race test (`--race-test`) runs inside the drive scene: three AI racers round the Downtown Box through traffic (they have to finish, stay on the route and not get stuck), a race you win and get paid for, a pull-over and a ticket, a chase you get away from, an impound, a deer and a moose, a pink-slip race, a HOPP-IN ride, a trip to the salvage yard, a night at the meet, and the impound auction. The jobs tests check the routes follow real roads, the field is matched to your car, and the ticket and impound rules.
 
 The traffic soak (`--traffic-test`) parks you in the North End, downtown, on the Trans-Canada and in Salisbury and lets the traffic run: no pile-ups between drivers, nobody stuck for a minute, cars getting somewhere. With `--fixed-fps 60` a run is the same every time; `--seeds 1,2,3` runs every spot once per seed (different cars, turns and light phases), `--quick` only the first, and `--why` prints what a stuck car is waiting on.
+
+**The vehicle art pipeline** (DEV ADDITIONS.md, Phase A) lives under `art/vehicles/`: a manifest a car in `data/vehicle_art/<id>.json` (`tools/build_vehicle_manifests.gd`, measured off the painter: archetype out of `data/vehicle_archetypes.gd`, axles, bumpers, roof slice, lamps, the body-shop slots that really draw on that car), a 256x96 showroom sprite and paint mask a car in `art/vehicles/showroom/` (`tools/export_showroom.gd`) with review sheets by era and class in `contact_sheets/` (`tools/build_contact_sheets.gd`), and every car's top-down stack as files in `art/vehicles/runtime/<id>/` (`tools/export_runtime.gd`: a `body_NN.png` a slice, the paint and lamp masks, the bumpers that come off, the front wheel). The game reads an authored showroom sprite or runtime stack when the car is stock and undamaged, so a hand-painted file dropped in wins over the painter with no code change; `tools/validate_vehicle_art.gd` runs the spec's gates. PIPELINE.md, SHOWROOM.md and RUNTIME.md there are the artists' contracts.
 
 The car tests: the catalogue tests (`catalog_tests.gd`) check every car's line turns into a car that drives, no real make or model gets in, and traffic picks by zone. The side-view tests (`cargen_tests.gd`) check the same car is the same picture every time, cars of a class differ, era shapes, trucks on frames, the hand-drawn cars over their wheels, every mod and kind of damage, and nothing solid under the road. The top-down tests (`top_down_tests.gd`) check every car and fleet vehicle draws from its side view, cars differ in shape from above, every garage option shows on the road, the traffic's wear and signs show, the fleet is never for sale and keeps its hours, trailers follow, and every parking spot in town can be filled at once with nothing touching a lane, a junction, a house or another car.
 

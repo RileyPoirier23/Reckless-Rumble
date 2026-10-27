@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/dodgy_challenjer_hellcatt_2017.png",
 		"runtime_dir": "res://art/vehicles/runtime/dodgy_challenjer_hellcatt_2017",
-		"slice_count": 16,
+		"slice_count": 15,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -57,22 +57,22 @@
 				"slice": 6.0
 			},
 			{
-				"kind": "brake",
-				"x_m": -2.324,
-				"y_m": -0.468,
-				"slice": 8.13
-			},
-			{
-				"kind": "signal_left",
-				"x_m": -2.283,
-				"y_m": -0.602,
-				"slice": 8.43
-			},
-			{
 				"kind": "head",
 				"x_m": 2.318,
 				"y_m": -0.713,
 				"slice": 7.21
+			},
+			{
+				"kind": "brake",
+				"x_m": -2.386,
+				"y_m": -0.438,
+				"slice": 8.17
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.403,
+				"y_m": -0.559,
+				"slice": 8.55
 			},
 			{
 				"kind": "reverse",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.324,
-				"y_m": 0.468,
-				"slice": 8.13
+				"x_m": -2.386,
+				"y_m": 0.438,
+				"slice": 8.17
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.283,
-				"y_m": 0.602,
-				"slice": 8.43
+				"x_m": -2.403,
+				"y_m": 0.559,
+				"slice": 8.55
 			},
 			{
 				"kind": "reverse",

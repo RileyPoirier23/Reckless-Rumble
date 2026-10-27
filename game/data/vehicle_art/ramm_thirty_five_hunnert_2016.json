@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/ramm_thirty_five_hunnert_2016.png",
 		"runtime_dir": "res://art/vehicles/runtime/ramm_thirty_five_hunnert_2016",
-		"slice_count": 16,
+		"slice_count": 20,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

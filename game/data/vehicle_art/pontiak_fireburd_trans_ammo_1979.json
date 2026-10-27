@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/pontiak_fireburd_trans_ammo_1979.png",
 		"runtime_dir": "res://art/vehicles/runtime/pontiak_fireburd_trans_ammo_1979",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,27 +52,27 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.349,
-				"y_m": -0.687,
-				"slice": 7.59
+				"x_m": -2.286,
+				"y_m": -0.706,
+				"slice": 7.39
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.304,
-				"y_m": -0.744,
-				"slice": 7.95
+				"x_m": -2.204,
+				"y_m": -0.775,
+				"slice": 7.65
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.565,
-				"y_m": -0.732,
-				"slice": 5.43
+				"x_m": 1.667,
+				"y_m": -0.722,
+				"slice": 5.33
 			},
 			{
 				"kind": "head",
-				"x_m": 2.139,
-				"y_m": -0.514,
-				"slice": 5.83
+				"x_m": 2.375,
+				"y_m": -0.475,
+				"slice": 5.9
 			},
 			{
 				"kind": "reverse",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 2.139,
-				"y_m": 0.514,
-				"slice": 5.83
+				"x_m": 2.375,
+				"y_m": 0.475,
+				"slice": 5.9
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.349,
-				"y_m": 0.688,
-				"slice": 7.59
+				"x_m": -2.286,
+				"y_m": 0.706,
+				"slice": 7.39
 			},
 			{
 				"kind": "reverse",
@@ -100,15 +100,15 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.304,
-				"y_m": 0.744,
-				"slice": 7.95
+				"x_m": -2.204,
+				"y_m": 0.775,
+				"slice": 7.65
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.565,
-				"y_m": 0.732,
-				"slice": 5.43
+				"x_m": 1.667,
+				"y_m": 0.722,
+				"slice": 5.33
 			}
 		]
 	},

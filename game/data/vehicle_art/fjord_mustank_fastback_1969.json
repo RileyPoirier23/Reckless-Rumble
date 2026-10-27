@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/fjord_mustank_fastback_1969.png",
 		"runtime_dir": "res://art/vehicles/runtime/fjord_mustank_fastback_1969",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -58,15 +58,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.3,
-				"y_m": -0.413,
-				"slice": 7.58
+				"x_m": -2.327,
+				"y_m": -0.403,
+				"slice": 7.57
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.233,
-				"y_m": -0.483,
-				"slice": 8.29
+				"x_m": -2.284,
+				"y_m": -0.466,
+				"slice": 8.3
 			},
 			{
 				"kind": "head",
@@ -76,15 +76,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.3,
-				"y_m": 0.413,
-				"slice": 7.58
+				"x_m": -2.327,
+				"y_m": 0.403,
+				"slice": 7.57
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.233,
-				"y_m": 0.483,
-				"slice": 8.29
+				"x_m": -2.284,
+				"y_m": 0.466,
+				"slice": 8.3
 			},
 			{
 				"kind": "head",

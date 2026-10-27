@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/mitsubishy_monteareo_1997.png",
 		"runtime_dir": "res://art/vehicles/runtime/mitsubishy_monteareo_1997",
-		"slice_count": 16,
+		"slice_count": 20,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

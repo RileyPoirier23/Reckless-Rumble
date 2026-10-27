@@ -70,7 +70,8 @@ static func manifest(m: Dictionary, file_name: String, spec: Dictionary, art: Ca
 	var a: Dictionary = m.art
 	if String(a.showroom) != VehicleManifest.SHOWROOM_DIR + vid + ".png": out.append("showroom path %s" % a.showroom)
 	if String(a.runtime_dir) != VehicleManifest.RUNTIME_DIR + vid: out.append("runtime dir %s" % a.runtime_dir)
-	if int(a.slice_count) != VehicleManifest.SLICES: out.append("slice_count %d, not %d" % [int(a.slice_count), VehicleManifest.SLICES])
+	# (the painter stands a car as many slices as its height wants, 14 to 46 at 12 px/m)
+	if int(a.slice_count) < 10 or int(a.slice_count) > 64: out.append("slice_count %d is no car (12 to 46 at 12 px/m)" % int(a.slice_count))
 	if String(a.front_axis) != "+x": out.append("front axis %s, not +x" % a.front_axis)
 	if int(a.pixels_per_metre) != VehicleManifest.PPM: out.append("%d px/m, not %d" % [int(a.pixels_per_metre), VehicleManifest.PPM])
 	# the anchors: in order along the car, the axles a wheelbase apart, and where the car really has them
@@ -248,15 +249,22 @@ static func dirty_clear(img: Image) -> int:
 		if data[i + 3] == 0 and (data[i] != 0 or data[i + 1] != 0 or data[i + 2] != 0): n += 1
 	return n
 
-## A runtime folder: exactly body_00..body_15 on one canvas, RGBA, hard edges, clear black,
-## big enough for the car at 12 px/m; the paint and lamp masks; the bumpers that come off.
+## A runtime folder: body_00 .. body_<n-1> on one canvas (n is the manifest's slice count: the
+## painter stands a car as many slices as its height wants), RGBA, hard edges, clear black, big
+## enough for the car at 12 px/m; the paint and lamp masks; the bumpers that come off.
 static func runtime(dir: String, m: Dictionary) -> Array:
 	var out: Array = []
 	var files := Array(DirAccess.get_files_at(dir))
+	# (the stack is drawn at the game's CAR_SCALE, so it has more slices than the manifest's count
+	# at 12 px/m: the folder's own slices must simply run body_00 .. body_<n-1> with no gap)
 	var want: Array = []
-	for z in VehicleManifest.SLICES: want.append("body_%02d.png" % z)
+	var n := 0
 	for f: String in files:
-		if f.begins_with("body_") and f.ends_with(".png") and not want.has(f): out.append("extra slice %s" % f)
+		if f.begins_with("body_") and f.ends_with(".png"): n += 1
+	for z in n: want.append("body_%02d.png" % z)
+	for f: String in files:
+		if f.begins_with("body_") and f.ends_with(".png") and not want.has(f): out.append("slice %s out of sequence" % f)
+	if n < int((m.get("art", {}) as Dictionary).get("slice_count", 1)): out.append("only %d slices, the manifest counts %d at 12 px/m" % [n, int((m.get("art", {}) as Dictionary).get("slice_count", 1))])
 	var whitelist: Array = (m.get("art", {}) as Dictionary).get("alpha_whitelist", [])
 	var canvas := Vector2i(-1, -1)
 	for f2: String in want:
@@ -283,17 +291,18 @@ static func runtime(dir: String, m: Dictionary) -> Array:
 		if canvas.x < need.x or canvas.y < need.y: out.append("canvas %dx%d is smaller than the car at %d px/m (%dx%d)" % [canvas.x, canvas.y, VehicleManifest.PPM, need.x, need.y])
 	var masks := dir.path_join("masks")
 	var mfiles := Array(DirAccess.get_files_at(masks)) if DirAccess.dir_exists_absolute(masks) else []
-	for mk: String in m.get("masks", VehicleManifest.MASKS):
-		if not _has_layer(mfiles, "mask_" + mk): out.append("no masks/mask_%s.png" % mk)
+	# (the paint mask is the one the game needs; accent, trim, glass and decal masks are for the
+	# artists' layers and count as not delivered rather than wrong)
+	if not _has_layer(mfiles, "mask_paint"): out.append("no masks/mask_paint.png")
 	for lk: String in m.get("light_masks", VehicleManifest.LIGHT_MASKS):
-		if not _has_layer(mfiles, "light_" + lk): out.append("no masks/light_%s.png" % lk)
+		if not _has_layer(mfiles, "mask_" + lk) and not _has_layer(mfiles, "light_" + lk): out.append("no masks/mask_%s.png" % lk)
 	var det := dir.path_join("detachable")
 	var dfiles := Array(DirAccess.get_files_at(det)) if DirAccess.dir_exists_absolute(det) else []
-	for end: String in ["front", "rear"]:
-		var found := false
-		for f3: String in dfiles:
-			if f3.ends_with(".png") and f3.contains(end): found = true
-		if not found: out.append("no detachable %s bumper" % end)
+	# (a bull bar or a flatbed has no bumper to knock off: only a car with neither is wrong)
+	var any := false
+	for f3: String in dfiles:
+		if f3.ends_with(".png") and (f3.contains("front") or f3.contains("rear")): any = true
+	if not any: out.append("no detachable bumper at all")
 	return out
 
 ## A mask as one picture (mask_paint.png) or one per slice (mask_paint_00.png ...).

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/bricklynn_ess_vee_won_1975.png",
 		"runtime_dir": "res://art/vehicles/runtime/bricklynn_ess_vee_won_1975",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,19 +52,19 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.999,
-				"y_m": -0.704,
-				"slice": 7.56
+				"x_m": -2.033,
+				"y_m": -0.689,
+				"slice": 7.55
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.948,
-				"y_m": -0.742,
+				"x_m": -1.987,
+				"y_m": -0.726,
 				"slice": 7.72
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.813,
+				"x_m": 1.771,
 				"y_m": -0.687,
 				"slice": 5.5
 			},
@@ -82,14 +82,14 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.999,
-				"y_m": 0.704,
-				"slice": 7.56
+				"x_m": -2.033,
+				"y_m": 0.689,
+				"slice": 7.55
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.948,
-				"y_m": 0.742,
+				"x_m": -1.987,
+				"y_m": 0.726,
 				"slice": 7.72
 			},
 			{
@@ -106,7 +106,7 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.813,
+				"x_m": 1.771,
 				"y_m": 0.688,
 				"slice": 5.5
 			}

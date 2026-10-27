@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/mazduh_roto_seven_1993.png",
 		"runtime_dir": "res://art/vehicles/runtime/mazduh_roto_seven_1993",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -51,18 +51,6 @@
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
-				"kind": "brake",
-				"x_m": -1.869,
-				"y_m": -0.47,
-				"slice": 7.64
-			},
-			{
-				"kind": "signal_left",
-				"x_m": -2.0,
-				"y_m": -0.573,
-				"slice": 7.38
-			},
-			{
 				"kind": "head",
 				"x_m": 1.833,
 				"y_m": -0.625,
@@ -75,6 +63,18 @@
 				"slice": 3.0
 			},
 			{
+				"kind": "brake",
+				"x_m": -1.861,
+				"y_m": -0.437,
+				"slice": 7.58
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.028,
+				"y_m": -0.542,
+				"slice": 7.17
+			},
+			{
 				"kind": "reverse",
 				"x_m": -2.083,
 				"y_m": -0.375,
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.869,
-				"y_m": 0.47,
-				"slice": 7.64
+				"x_m": -1.861,
+				"y_m": 0.438,
+				"slice": 7.58
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.0,
-				"y_m": 0.573,
-				"slice": 7.38
+				"x_m": -2.028,
+				"y_m": 0.542,
+				"slice": 7.17
 			},
 			{
 				"kind": "reverse",

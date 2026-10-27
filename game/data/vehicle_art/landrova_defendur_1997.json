@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/landrova_defendur_1997.png",
 		"runtime_dir": "res://art/vehicles/runtime/landrova_defendur_1997",
-		"slice_count": 16,
+		"slice_count": 22,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

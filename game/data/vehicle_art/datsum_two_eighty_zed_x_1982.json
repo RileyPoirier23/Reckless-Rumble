@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/datsum_two_eighty_zed_x_1982.png",
 		"runtime_dir": "res://art/vehicles/runtime/datsum_two_eighty_zed_x_1982",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -58,15 +58,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.036,
-				"y_m": -0.618,
-				"slice": 7.22
+				"x_m": -1.96,
+				"y_m": -0.632,
+				"slice": 7.24
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.009,
-				"y_m": -0.66,
-				"slice": 7.37
+				"x_m": -1.921,
+				"y_m": -0.673,
+				"slice": 7.38
 			},
 			{
 				"kind": "head",
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.036,
-				"y_m": 0.618,
-				"slice": 7.22
+				"x_m": -1.96,
+				"y_m": 0.632,
+				"slice": 7.24
 			},
 			{
 				"kind": "reverse",
@@ -94,9 +94,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.009,
-				"y_m": 0.66,
-				"slice": 7.37
+				"x_m": -1.921,
+				"y_m": 0.673,
+				"slice": 7.38
 			},
 			{
 				"kind": "head",

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/toyoda_previous_1993.png",
 		"runtime_dir": "res://art/vehicles/runtime/toyoda_previous_1993",
-		"slice_count": 16,
+		"slice_count": 17,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

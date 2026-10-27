@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/isuzoo_impulsive_1990.png",
 		"runtime_dir": "res://art/vehicles/runtime/isuzoo_impulsive_1990",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/lamberghini_coontash_1985.png",
 		"runtime_dir": "res://art/vehicles/runtime/lamberghini_coontash_1985",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,20 +52,20 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.78,
-				"y_m": -0.832,
-				"slice": 7.5
+				"x_m": -1.87,
+				"y_m": -0.811,
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.746,
-				"y_m": -0.864,
-				"slice": 7.57
+				"x_m": -1.845,
+				"y_m": -0.845,
+				"slice": 7.68
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 0.938,
-				"y_m": -0.844,
+				"x_m": 1.125,
+				"y_m": -0.825,
 				"slice": 5.0
 			},
 			{
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.78,
-				"y_m": 0.832,
-				"slice": 7.5
+				"x_m": -1.87,
+				"y_m": 0.811,
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.746,
-				"y_m": 0.864,
-				"slice": 7.57
+				"x_m": -1.845,
+				"y_m": 0.845,
+				"slice": 7.68
 			},
 			{
 				"kind": "head",
@@ -106,8 +106,8 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 0.938,
-				"y_m": 0.844,
+				"x_m": 1.125,
+				"y_m": 0.825,
 				"slice": 5.0
 			}
 		]

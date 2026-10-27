@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/suzooki_aerioh_2004.png",
 		"runtime_dir": "res://art/vehicles/runtime/suzooki_aerioh_2004",
-		"slice_count": 16,
+		"slice_count": 15,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

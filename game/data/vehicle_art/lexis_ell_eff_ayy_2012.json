@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/lexis_ell_eff_ayy_2012.png",
 		"runtime_dir": "res://art/vehicles/runtime/lexis_ell_eff_ayy_2012",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,21 +52,21 @@
 		"lamps": [
 			{
 				"kind": "signal_left",
-				"x_m": 1.903,
+				"x_m": 1.889,
 				"y_m": -0.847,
 				"slice": 5.17
 			},
 			{
 				"kind": "head",
-				"x_m": 1.912,
+				"x_m": 1.894,
 				"y_m": -0.657,
 				"slice": 6.39
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.042,
+				"x_m": -2.033,
 				"y_m": -0.577,
-				"slice": 7.53
+				"slice": 7.63
 			},
 			{
 				"kind": "signal_left",
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.042,
+				"x_m": -2.033,
 				"y_m": 0.577,
-				"slice": 7.53
+				"slice": 7.63
 			},
 			{
 				"kind": "signal_right",
@@ -100,13 +100,13 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 1.912,
+				"x_m": 1.894,
 				"y_m": 0.657,
 				"slice": 6.39
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.903,
+				"x_m": 1.889,
 				"y_m": 0.847,
 				"slice": 5.17
 			}

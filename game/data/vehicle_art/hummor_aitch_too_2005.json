@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/hummor_aitch_too_2005.png",
 		"runtime_dir": "res://art/vehicles/runtime/hummor_aitch_too_2005",
-		"slice_count": 16,
+		"slice_count": 22,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

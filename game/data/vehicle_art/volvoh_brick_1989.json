@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/volvoh_brick_1989.png",
 		"runtime_dir": "res://art/vehicles/runtime/volvoh_brick_1989",
-		"slice_count": 16,
+		"slice_count": 17,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

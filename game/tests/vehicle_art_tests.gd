@@ -125,7 +125,7 @@ func _gates(cars: Dictionary) -> void:
 	var spec2 := CarCatalog.spec("silvio")
 	var broken: Array = []
 	for edit: Array in [["dimensions_m", "length", 4.9], ["classification", "archetype", "minivan"], ["display", "year", 2021],
-			["art", "slice_count", 13], ["review", "reference_notes", "two\nlines"]]:
+			["art", "slice_count", 3], ["review", "reference_notes", "two\nlines"]]:
 		var m2 := m.duplicate(true)
 		m2[edit[0]][edit[1]] = edit[2]
 		if VehicleArtChecks.manifest(m2, "nissun_silvio_1991.json", spec2).is_empty(): broken.append(edit)
@@ -269,10 +269,10 @@ func _runtime_gate() -> void:
 	DirAccess.remove_absolute(dir.path_join("body_07.png"))
 	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a missing slice")
 	blank.save_png(dir.path_join("body_07.png"))
-	# a seventeenth
-	blank.save_png(dir.path_join("body_16.png"))
-	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a seventeenth slice")
-	DirAccess.remove_absolute(dir.path_join("body_16.png"))
+	# a slice out of sequence (the count is the car's own; a gap or a stray index isn't)
+	blank.save_png(dir.path_join("body_17.png"))
+	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a slice out of sequence")
+	DirAccess.remove_absolute(dir.path_join("body_17.png"))
 	# a slice on another canvas
 	Image.create(art.size.x + 2, art.size.y, false, Image.FORMAT_RGBA8).save_png(dir.path_join("body_03.png"))
 	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a different canvas")
@@ -287,12 +287,14 @@ func _runtime_gate() -> void:
 	dirty.save_png(dir.path_join("body_04.png"))
 	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a clear pixel that isn't black")
 	blank.save_png(dir.path_join("body_04.png"))
-	# no glass mask, no rear bumper
-	DirAccess.remove_absolute(dir.path_join("masks/mask_glass.png"))
+	# no paint mask (the one the game needs)
+	DirAccess.remove_absolute(dir.path_join("masks/mask_paint.png"))
 	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("a missing mask")
-	blank.save_png(dir.path_join("masks/mask_glass.png"))
+	blank.save_png(dir.path_join("masks/mask_paint.png"))
+	# (one bumper is enough: a bull bar truck has no front one to knock off; none at all is wrong)
 	DirAccess.remove_absolute(dir.path_join("detachable/bumper_rear.png"))
-	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("no rear bumper")
+	DirAccess.remove_absolute(dir.path_join("detachable/bumper_front.png"))
+	if VehicleArtChecks.runtime(dir, m).is_empty(): missed.append("no bumper at all")
 	check("a missing or extra slice, another canvas, a soft or dirty pixel, a missing mask or bumper fails", missed.is_empty(), str(missed))
 	_clear(dir)
 

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/lamberghini_meeura_1968.png",
 		"runtime_dir": "res://art/vehicles/runtime/lamberghini_meeura_1968",
-		"slice_count": 16,
+		"slice_count": 11,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -63,16 +63,16 @@
 				"slice": 7.13
 			},
 			{
-				"kind": "signal_left",
-				"x_m": 1.097,
-				"y_m": -0.792,
-				"slice": 4.0
-			},
-			{
 				"kind": "head",
 				"x_m": 2.014,
 				"y_m": -0.5,
 				"slice": 4.5
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 2.042,
+				"y_m": -0.625,
+				"slice": 3.0
 			},
 			{
 				"kind": "brake",
@@ -94,9 +94,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.097,
-				"y_m": 0.792,
-				"slice": 4.0
+				"x_m": 2.042,
+				"y_m": 0.625,
+				"slice": 3.0
 			}
 		]
 	},

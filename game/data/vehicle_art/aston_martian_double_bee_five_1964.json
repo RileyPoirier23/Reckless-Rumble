@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/aston_martian_double_bee_five_1964.png",
 		"runtime_dir": "res://art/vehicles/runtime/aston_martian_double_bee_five_1964",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -51,22 +51,22 @@
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
+				"kind": "brake",
+				"x_m": -2.139,
+				"y_m": -0.344,
+				"slice": 7.2
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.069,
+				"y_m": -0.398,
+				"slice": 7.72
+			},
+			{
 				"kind": "signal_left",
 				"x_m": 1.917,
 				"y_m": -0.75,
 				"slice": 5.5
-			},
-			{
-				"kind": "brake",
-				"x_m": -2.217,
-				"y_m": -0.312,
-				"slice": 7.14
-			},
-			{
-				"kind": "signal_left",
-				"x_m": -2.198,
-				"y_m": -0.349,
-				"slice": 7.69
 			},
 			{
 				"kind": "head",
@@ -76,15 +76,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.217,
-				"y_m": 0.313,
-				"slice": 7.14
+				"x_m": -2.139,
+				"y_m": 0.344,
+				"slice": 7.2
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.198,
-				"y_m": 0.349,
-				"slice": 7.69
+				"x_m": -2.069,
+				"y_m": 0.398,
+				"slice": 7.72
 			},
 			{
 				"kind": "head",

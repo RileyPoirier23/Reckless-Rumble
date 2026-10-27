@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/acurra_in_tegruh_1994.png",
 		"runtime_dir": "res://art/vehicles/runtime/acurra_in_tegruh_1994",
-		"slice_count": 16,
+		"slice_count": 15,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -54,13 +54,13 @@
 				"kind": "brake",
 				"x_m": -2.061,
 				"y_m": -0.558,
-				"slice": 7.63
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_left",
 				"x_m": -2.095,
 				"y_m": -0.673,
-				"slice": 7.36
+				"slice": 7.29
 			},
 			{
 				"kind": "signal_left",
@@ -84,13 +84,13 @@
 				"kind": "brake",
 				"x_m": -2.061,
 				"y_m": 0.558,
-				"slice": 7.63
+				"slice": 7.6
 			},
 			{
 				"kind": "signal_right",
 				"x_m": -2.095,
 				"y_m": 0.673,
-				"slice": 7.36
+				"slice": 7.29
 			},
 			{
 				"kind": "reverse",

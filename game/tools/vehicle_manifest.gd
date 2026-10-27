@@ -178,7 +178,7 @@ static func build(car_id: String) -> Dictionary:
 		"art": {
 			"showroom": SHOWROOM_DIR + vid + ".png",
 			"runtime_dir": RUNTIME_DIR + vid,
-			"slice_count": SLICES,
+			"slice_count": art.n,                # (the painter stands a car as many slices as its height wants: 14 to 46)
 			"front_axis": "+x",
 			"pixels_per_metre": PPM,
 			"showroom_size": [SHOWROOM_SIZE.x, SHOWROOM_SIZE.y],

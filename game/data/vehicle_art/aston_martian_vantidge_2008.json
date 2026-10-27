@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/aston_martian_vantidge_2008.png",
 		"runtime_dir": "res://art/vehicles/runtime/aston_martian_vantidge_2008",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,27 +52,27 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.944,
-				"y_m": -0.579,
-				"slice": 7.37
+				"x_m": -1.934,
+				"y_m": -0.559,
+				"slice": 7.38
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.906,
-				"y_m": -0.703,
-				"slice": 7.13
-			},
-			{
-				"kind": "signal_left",
-				"x_m": 1.861,
-				"y_m": -0.764,
-				"slice": 5.0
+				"x_m": -1.856,
+				"y_m": -0.701,
+				"slice": 7.0
 			},
 			{
 				"kind": "head",
-				"x_m": 2.038,
-				"y_m": -0.561,
-				"slice": 5.85
+				"x_m": 1.982,
+				"y_m": -0.583,
+				"slice": 5.86
+			},
+			{
+				"kind": "signal_left",
+				"x_m": 1.983,
+				"y_m": -0.742,
+				"slice": 4.6
 			},
 			{
 				"kind": "reverse",
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.944,
-				"y_m": 0.579,
-				"slice": 7.37
+				"x_m": -1.934,
+				"y_m": 0.559,
+				"slice": 7.38
 			},
 			{
 				"kind": "reverse",
@@ -94,21 +94,21 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 2.038,
-				"y_m": 0.561,
-				"slice": 5.85
+				"x_m": 1.982,
+				"y_m": 0.583,
+				"slice": 5.86
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.906,
-				"y_m": 0.703,
-				"slice": 7.13
+				"x_m": -1.856,
+				"y_m": 0.701,
+				"slice": 7.0
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.861,
-				"y_m": 0.764,
-				"slice": 5.0
+				"x_m": 1.983,
+				"y_m": 0.742,
+				"slice": 4.6
 			}
 		]
 	},

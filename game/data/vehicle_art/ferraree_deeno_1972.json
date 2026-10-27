@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/ferraree_deeno_1972.png",
 		"runtime_dir": "res://art/vehicles/runtime/ferraree_deeno_1972",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -46,57 +46,57 @@
 		"rear_bumper_m": -2.125,
 		"track_m": 1.45,
 		"wheel_radius_m": 0.362,
-		"roof_z_slice": 10,
-		"procedural_slices": 11,
+		"roof_z_slice": 12,
+		"procedural_slices": 13,
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.968,
-				"y_m": -0.548,
+				"x_m": -1.802,
+				"y_m": -0.594,
 				"slice": 7.0
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.935,
-				"y_m": -0.588,
-				"slice": 7.22
+				"x_m": -1.85,
+				"y_m": -0.617,
+				"slice": 7.2
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.262,
+				"x_m": 1.321,
 				"y_m": -0.732,
-				"slice": 5.29
+				"slice": 5.0
 			},
 			{
 				"kind": "head",
-				"x_m": 1.99,
-				"y_m": -0.49,
-				"slice": 6.13
+				"x_m": 1.935,
+				"y_m": -0.514,
+				"slice": 6.11
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.968,
-				"y_m": 0.548,
+				"x_m": -1.802,
+				"y_m": 0.594,
 				"slice": 7.0
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.935,
-				"y_m": 0.588,
-				"slice": 7.22
+				"x_m": -1.85,
+				"y_m": 0.617,
+				"slice": 7.2
 			},
 			{
 				"kind": "head",
-				"x_m": 1.99,
-				"y_m": 0.49,
-				"slice": 6.13
+				"x_m": 1.935,
+				"y_m": 0.514,
+				"slice": 6.11
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.262,
+				"x_m": 1.321,
 				"y_m": 0.732,
-				"slice": 5.29
+				"slice": 5.0
 			}
 		]
 	},

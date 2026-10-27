@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/oldsmobeel_tornadoh_1967.png",
 		"runtime_dir": "res://art/vehicles/runtime/oldsmobeel_tornadoh_1967",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,51 +52,51 @@
 		"lamps": [
 			{
 				"kind": "signal_left",
-				"x_m": 2.444,
-				"y_m": -0.958,
-				"slice": 5.5
-			},
-			{
-				"kind": "head",
-				"x_m": 2.554,
-				"y_m": -0.753,
-				"slice": 6.08
+				"x_m": 2.304,
+				"y_m": -0.97,
+				"slice": 5.86
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.599,
-				"y_m": -0.424,
+				"x_m": -2.568,
+				"y_m": -0.445,
 				"slice": 7.57
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.579,
-				"y_m": -0.517,
-				"slice": 8.11
+				"x_m": -2.524,
+				"y_m": -0.547,
+				"slice": 8.07
+			},
+			{
+				"kind": "head",
+				"x_m": 2.359,
+				"y_m": -0.781,
+				"slice": 6.44
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.599,
-				"y_m": 0.424,
+				"x_m": -2.568,
+				"y_m": 0.445,
 				"slice": 7.57
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.579,
-				"y_m": 0.517,
-				"slice": 8.11
+				"x_m": -2.524,
+				"y_m": 0.547,
+				"slice": 8.07
 			},
 			{
 				"kind": "head",
-				"x_m": 2.554,
-				"y_m": 0.753,
-				"slice": 6.08
+				"x_m": 2.359,
+				"y_m": 0.781,
+				"slice": 6.44
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 2.444,
-				"y_m": 0.958,
-				"slice": 5.5
+				"x_m": 2.304,
+				"y_m": 0.97,
+				"slice": 5.86
 			}
 		]
 	},

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/fiatt_strada_ish_1981.png",
 		"runtime_dir": "res://art/vehicles/runtime/fiatt_strada_ish_1981",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

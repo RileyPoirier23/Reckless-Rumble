@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/plymooth_road_rooner_1969.png",
 		"runtime_dir": "res://art/vehicles/runtime/plymooth_road_rooner_1969",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,49 +52,49 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.368,
-				"y_m": -0.733,
-				"slice": 7.52
+				"x_m": -2.331,
+				"y_m": -0.74,
+				"slice": 7.53
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.343,
-				"y_m": -0.763,
-				"slice": 7.65
+				"x_m": -2.299,
+				"y_m": -0.77,
+				"slice": 7.67
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 2.317,
+				"x_m": 2.283,
 				"y_m": -0.958,
 				"slice": 5.6
 			},
 			{
 				"kind": "head",
-				"x_m": 2.377,
-				"y_m": -0.745,
-				"slice": 6.91
+				"x_m": 2.276,
+				"y_m": -0.74,
+				"slice": 7.04
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.368,
-				"y_m": 0.733,
-				"slice": 7.52
+				"x_m": -2.331,
+				"y_m": 0.74,
+				"slice": 7.53
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.343,
-				"y_m": 0.763,
-				"slice": 7.65
+				"x_m": -2.299,
+				"y_m": 0.77,
+				"slice": 7.67
 			},
 			{
 				"kind": "head",
-				"x_m": 2.377,
-				"y_m": 0.745,
-				"slice": 6.91
+				"x_m": 2.276,
+				"y_m": 0.74,
+				"slice": 7.04
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 2.317,
+				"x_m": 2.283,
 				"y_m": 0.958,
 				"slice": 5.6
 			}

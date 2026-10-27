@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/chevrolay_camareo_1985.png",
 		"runtime_dir": "res://art/vehicles/runtime/chevrolay_camareo_1985",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,27 +52,27 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.213,
+				"x_m": -2.206,
 				"y_m": -0.692,
-				"slice": 7.61
+				"slice": 7.58
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.168,
+				"x_m": -2.159,
 				"y_m": -0.733,
-				"slice": 7.81
+				"slice": 7.78
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.673,
-				"y_m": -0.708,
-				"slice": 4.86
+				"x_m": 1.792,
+				"y_m": -0.694,
+				"slice": 4.67
 			},
 			{
 				"kind": "head",
-				"x_m": 2.15,
-				"y_m": -0.492,
-				"slice": 5.5
+				"x_m": 2.282,
+				"y_m": -0.468,
+				"slice": 5.56
 			},
 			{
 				"kind": "reverse",
@@ -82,21 +82,21 @@
 			},
 			{
 				"kind": "head",
-				"x_m": 2.15,
-				"y_m": 0.492,
-				"slice": 5.5
+				"x_m": 2.282,
+				"y_m": 0.468,
+				"slice": 5.56
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.213,
+				"x_m": -2.206,
 				"y_m": 0.692,
-				"slice": 7.61
+				"slice": 7.58
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.168,
+				"x_m": -2.159,
 				"y_m": 0.733,
-				"slice": 7.81
+				"slice": 7.78
 			},
 			{
 				"kind": "reverse",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.673,
-				"y_m": 0.708,
-				"slice": 4.86
+				"x_m": 1.792,
+				"y_m": 0.694,
+				"slice": 4.67
 			}
 		]
 	},

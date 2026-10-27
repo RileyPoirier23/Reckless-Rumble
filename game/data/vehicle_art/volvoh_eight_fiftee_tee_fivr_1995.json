@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/volvoh_eight_fiftee_tee_fivr_1995.png",
 		"runtime_dir": "res://art/vehicles/runtime/volvoh_eight_fiftee_tee_fivr_1995",
-		"slice_count": 16,
+		"slice_count": 17,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/nissun_three_hundred_zed_x_1990.png",
 		"runtime_dir": "res://art/vehicles/runtime/nissun_three_hundred_zed_x_1990",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,15 +52,15 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.027,
-				"y_m": -0.588,
-				"slice": 7.76
+				"x_m": -2.017,
+				"y_m": -0.566,
+				"slice": 7.48
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.0,
-				"y_m": -0.692,
-				"slice": 7.8
+				"x_m": -1.965,
+				"y_m": -0.702,
+				"slice": 7.23
 			},
 			{
 				"kind": "signal_left",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.027,
-				"y_m": 0.588,
-				"slice": 7.76
+				"x_m": -2.017,
+				"y_m": 0.566,
+				"slice": 7.48
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.0,
-				"y_m": 0.692,
-				"slice": 7.8
+				"x_m": -1.965,
+				"y_m": 0.702,
+				"slice": 7.23
 			},
 			{
 				"kind": "reverse",

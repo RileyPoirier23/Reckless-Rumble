@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/isuzoo_pupp_1985.png",
 		"runtime_dir": "res://art/vehicles/runtime/isuzoo_pupp_1985",
-		"slice_count": 16,
+		"slice_count": 17,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

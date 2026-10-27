@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/hummor_aitch_won_1996.png",
 		"runtime_dir": "res://art/vehicles/runtime/hummor_aitch_won_1996",
-		"slice_count": 16,
+		"slice_count": 19,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -51,22 +51,22 @@
 		"exhaust_side": "rear_right",
 		"lamps": [
 			{
+				"kind": "signal_left",
+				"x_m": 1.385,
+				"y_m": -1.076,
+				"slice": 10.41
+			},
+			{
 				"kind": "brake",
-				"x_m": -2.203,
-				"y_m": -0.964,
+				"x_m": -2.083,
+				"y_m": -0.972,
+				"slice": 13.0
+			},
+			{
+				"kind": "signal_left",
+				"x_m": -2.057,
+				"y_m": -0.995,
 				"slice": 13.06
-			},
-			{
-				"kind": "signal_left",
-				"x_m": -2.19,
-				"y_m": -0.988,
-				"slice": 13.14
-			},
-			{
-				"kind": "signal_left",
-				"x_m": 1.447,
-				"y_m": -1.064,
-				"slice": 10.07
 			},
 			{
 				"kind": "head",
@@ -82,21 +82,21 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.203,
-				"y_m": 0.964,
+				"x_m": -2.083,
+				"y_m": 0.972,
+				"slice": 13.0
+			},
+			{
+				"kind": "signal_right",
+				"x_m": -2.057,
+				"y_m": 0.995,
 				"slice": 13.06
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.19,
-				"y_m": 0.988,
-				"slice": 13.14
-			},
-			{
-				"kind": "signal_right",
-				"x_m": 1.447,
-				"y_m": 1.064,
-				"slice": 10.07
+				"x_m": 1.385,
+				"y_m": 1.076,
+				"slice": 10.41
 			}
 		]
 	},

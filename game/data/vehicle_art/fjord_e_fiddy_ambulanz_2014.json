@@ -28,7 +28,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/fjord_e_fiddy_ambulanz_2014.png",
 		"runtime_dir": "res://art/vehicles/runtime/fjord_e_fiddy_ambulanz_2014",
-		"slice_count": 16,
+		"slice_count": 32,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [

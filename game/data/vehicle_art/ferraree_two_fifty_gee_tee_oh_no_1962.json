@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/ferraree_two_fifty_gee_tee_oh_no_1962.png",
 		"runtime_dir": "res://art/vehicles/runtime/ferraree_two_fifty_gee_tee_oh_no_1962",
-		"slice_count": 16,
+		"slice_count": 12,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,7 +52,7 @@
 		"lamps": [
 			{
 				"kind": "head",
-				"x_m": 1.747,
+				"x_m": 1.696,
 				"y_m": -0.561,
 				"slice": 6.46
 			},
@@ -64,32 +64,32 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.042,
-				"y_m": -0.531,
-				"slice": 6.88
+				"x_m": -1.829,
+				"y_m": -0.56,
+				"slice": 6.89
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.0,
-				"y_m": -0.604,
+				"x_m": -1.771,
+				"y_m": -0.646,
 				"slice": 7.25
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.042,
-				"y_m": 0.531,
-				"slice": 6.88
+				"x_m": -1.829,
+				"y_m": 0.56,
+				"slice": 6.89
 			},
 			{
 				"kind": "head",
-				"x_m": 1.747,
+				"x_m": 1.696,
 				"y_m": 0.561,
 				"slice": 6.46
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.0,
-				"y_m": 0.604,
+				"x_m": -1.771,
+				"y_m": 0.646,
 				"slice": 7.25
 			},
 			{

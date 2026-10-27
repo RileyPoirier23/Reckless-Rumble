@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/mazduh_roto_seven_1985.png",
 		"runtime_dir": "res://art/vehicles/runtime/mazduh_roto_seven_1985",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,21 +52,21 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -1.958,
-				"y_m": -0.615,
+				"x_m": -1.921,
+				"y_m": -0.622,
 				"slice": 7.04
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -1.917,
-				"y_m": -0.662,
-				"slice": 7.2
+				"x_m": -1.871,
+				"y_m": -0.669,
+				"slice": 7.19
 			},
 			{
 				"kind": "signal_left",
-				"x_m": 1.917,
-				"y_m": -0.75,
-				"slice": 4.5
+				"x_m": 1.681,
+				"y_m": -0.764,
+				"slice": 5.0
 			},
 			{
 				"kind": "head",
@@ -82,15 +82,15 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -1.958,
-				"y_m": 0.615,
+				"x_m": -1.921,
+				"y_m": 0.622,
 				"slice": 7.04
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -1.917,
-				"y_m": 0.662,
-				"slice": 7.2
+				"x_m": -1.871,
+				"y_m": 0.669,
+				"slice": 7.19
 			},
 			{
 				"kind": "reverse",
@@ -106,9 +106,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": 1.917,
-				"y_m": 0.75,
-				"slice": 4.5
+				"x_m": 1.681,
+				"y_m": 0.764,
+				"slice": 5.0
 			}
 		]
 	},

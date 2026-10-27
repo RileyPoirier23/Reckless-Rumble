@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/chevrolay_camareo_ess_ess_2016.png",
 		"runtime_dir": "res://art/vehicles/runtime/chevrolay_camareo_ess_ess_2016",
-		"slice_count": 16,
+		"slice_count": 14,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,14 +52,14 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.113,
-				"y_m": -0.696,
+				"x_m": -2.184,
+				"y_m": -0.67,
 				"slice": 8.02
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.12,
-				"y_m": -0.769,
+				"x_m": -2.219,
+				"y_m": -0.742,
 				"slice": 8.03
 			},
 			{
@@ -82,14 +82,14 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.113,
-				"y_m": 0.696,
+				"x_m": -2.184,
+				"y_m": 0.67,
 				"slice": 8.02
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.12,
-				"y_m": 0.769,
+				"x_m": -2.219,
+				"y_m": 0.742,
 				"slice": 8.03
 			},
 			{

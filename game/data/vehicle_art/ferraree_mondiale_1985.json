@@ -26,7 +26,7 @@
 	"art": {
 		"showroom": "res://art/vehicles/showroom/ferraree_mondiale_1985.png",
 		"runtime_dir": "res://art/vehicles/runtime/ferraree_mondiale_1985",
-		"slice_count": 16,
+		"slice_count": 13,
 		"front_axis": "+x",
 		"pixels_per_metre": 12,
 		"showroom_size": [
@@ -52,15 +52,15 @@
 		"lamps": [
 			{
 				"kind": "brake",
-				"x_m": -2.071,
-				"y_m": -0.703,
-				"slice": 7.56
+				"x_m": -2.151,
+				"y_m": -0.684,
+				"slice": 7.55
 			},
 			{
 				"kind": "signal_left",
-				"x_m": -2.017,
-				"y_m": -0.752,
-				"slice": 7.76
+				"x_m": -2.121,
+				"y_m": -0.731,
+				"slice": 7.77
 			},
 			{
 				"kind": "signal_left",
@@ -82,9 +82,9 @@
 			},
 			{
 				"kind": "brake",
-				"x_m": -2.071,
-				"y_m": 0.703,
-				"slice": 7.56
+				"x_m": -2.151,
+				"y_m": 0.684,
+				"slice": 7.55
 			},
 			{
 				"kind": "reverse",
@@ -94,9 +94,9 @@
 			},
 			{
 				"kind": "signal_right",
-				"x_m": -2.017,
-				"y_m": 0.752,
-				"slice": 7.76
+				"x_m": -2.121,
+				"y_m": 0.731,
+				"slice": 7.77
 			},
 			{
 				"kind": "head",
